@@ -40,13 +40,13 @@
     const top = D().productos.map(p => ({ p, n: vendidos(p.id, 7) })).filter(x => x.n).sort((a, b) => b.n - a.n).slice(0, 4);
     const pct = tAyer ? Math.round((tHoy - tAyer) / tAyer * 100) : null;
     v.innerHTML = `<div class="entra">
-      ${Orbe.hero({ etiqueta: `Vendido hoy · ${vh.length} ${vh.length === 1 ? 'venta' : 'ventas'}`, monto: tHoy, pildora: pct === null ? null : { c: pct >= 0 ? 'bien' : 'mal', t: `${pct >= 0 ? '+' : ''}${pct}% vs ayer` },
+      ${Orbe.hero({ etiqueta: `Vendido hoy en ${vh.length} ${vh.length === 1 ? 'venta' : 'ventas'}`, monto: tHoy, pildora: pct === null ? null : { c: pct >= 0 ? 'bien' : 'mal', t: `${pct >= 0 ? '+' : ''}${pct}% vs ayer` },
         anillo: { p: prom ? Math.min(1, tHoy / prom) : 0, t: `${prom ? Math.round(tHoy / prom * 100) : 0}%`, sub: 'de tu promedio' },
         barras: dias14.map(x => x / max),
         chips: [{ t: 'Ganancia hoy', v: dinero(ganancia(vh)), c: '#7ff0c4' }, { t: 'En estantes', v: dinero(valor) }, { t: 'Por reponer', v: b.length, c: b.length ? '#ffb3c2' : '' }] })}
       <section class="seccion"><div class="seccion-cab"><h2>Para hacer hoy</h2>${tareas.length ? `<span class="cuenta">${tareas.length}</span>` : ''}</div>${Orbe.tareas(tareas, 'Tu inventario está en orden.')}</section>
       <section class="seccion"><div class="seccion-cab"><h2>Lo que más se vende</h2><span class="texto-ayuda">7 días</span></div>
-        ${top.length ? `<div class="tarjeta">${top.map(x => `<button type="button" class="tarea" data-p="${x.p.id}">${Orbe.ini(x.p.nombre, colorCat(x.p.cat))}<span class="info"><b>${esc(x.p.nombre)}</b><span>${cant(x.n)} ${esc(und(x.p))} vendidos · quedan ${cant(x.p.stock)}</span></span><span class="monto">${dinero(x.n * x.p.precio)}</span></button>`).join('')}</div>` : '<div class="vacio">Aún no hay ventas. Toca + para registrar la primera.</div>'}</section></div>`;
+        ${top.length ? `<div class="tarjeta">${top.map(x => `<button type="button" class="tarea" data-p="${x.p.id}">${Orbe.ini(x.p.nombre, colorCat(x.p.cat))}<span class="info"><b>${esc(x.p.nombre)}</b><span>${cant(x.n)} ${esc(und(x.p))} vendidos / quedan ${cant(x.p.stock)}</span></span><span class="monto">${dinero(x.n * x.p.precio)}</span></button>`).join('')}</div>` : '<div class="vacio">Aún no hay ventas. Toca + para registrar la primera.</div>'}</section></div>`;
     Orbe.activarTareas(v, tareas);
     v.querySelectorAll('[data-p]').forEach(x => x.onclick = () => detalle(x.dataset.p));
   }
@@ -63,10 +63,10 @@
     const mg = ps.map(margen).filter(x => x !== null), mprom = mg.length ? Math.round(mg.reduce((s, x) => s + x, 0) / mg.length * 100) : 0;
     v.innerHTML = `<label class="buscar">${ICON.buscar}<input id="buscar" type="search" placeholder="Buscar entre ${ps.length} productos" value="${esc(busca)}" aria-label="Buscar producto"></label>
       <div class="pestanas">${[['todos', 'Todo', ps.length, null], ['bajos', 'Por reponer', b.length, 'var(--out)']].concat(cats.map(c => ['cat:' + c, c, ps.filter(p => p.cat === c).length, colorCat(c)])).map(([k, t, n, c]) => `<button class="pestana" type="button" data-f="${esc(k)}" aria-pressed="${filtro === k}">${c ? `<i style="background:${c}"></i>` : ''}${esc(t)} <em>${n}</em></button>`).join('')}</div>
-      <p class="texto-ayuda" style="margin-top:12px"><b style="color:var(--ink)">${dinero(valor)}</b> en estantes · <b style="color:var(--ink)">${mprom}%</b> de ganancia promedio</p>
+      <p class="texto-ayuda" style="margin-top:12px"><b style="color:var(--ink)">${dinero(valor)}</b> en estantes / <b style="color:var(--ink)">${mprom}%</b> de ganancia promedio</p>
       <section class="seccion" style="margin-top:12px"><div class="lista entra">${lista.length ? lista.map(p => {
         const [k, t] = estado(p), m = margen(p), col = k === 'mal' ? 'var(--out)' : k === 'warn' ? 'var(--warn)' : 'var(--in)';
-        return `<button class="fila toque" type="button" data-p="${p.id}">${Orbe.ini(p.nombre, colorCat(p.cat))}<span class="info"><b>${esc(p.nombre)}</b><div class="progreso"><i style="width:${Math.min(100, Math.max(3, p.stock / Math.max(1, p.min * 3) * 100))}%;background:${col}"></i></div><span>${p.costo ? `Costo ${dinero(p.costo)} · ` : ''}Precio ${dinero(p.precio)}${m !== null ? ` · Ganas ${Math.round(m * 100)}%` : ''}</span></span>
+        return `<button class="fila toque" type="button" data-p="${p.id}">${Orbe.ini(p.nombre, colorCat(p.cat))}<span class="info"><b>${esc(p.nombre)}</b><div class="progreso"><i style="width:${Math.min(100, Math.max(3, p.stock / Math.max(1, p.min * 3) * 100))}%;background:${col}"></i></div><span>${p.costo ? `Costo ${dinero(p.costo)} / ` : ''}Precio ${dinero(p.precio)}${m !== null ? ` / Ganas ${Math.round(m * 100)}%` : ''}</span></span>
           <span class="derecha"><span class="monto" style="color:${col}">${cant(p.stock)} ${esc(und(p))}</span>${t ? `<small style="color:${col}">${t}</small>` : ''}</span></button>`;
       }).join('') : `<div class="vacio">${busca ? 'No hay productos con ese nombre.' : filtro === 'bajos' ? '<b>Todo en orden</b>Ningún producto está por acabarse.' : '<b>Agrega tu primer producto</b>Toca + y pon cuántos tienes y cuál es el mínimo.'}</div>`}</div></section>
       ${ps.length ? `<button type="button" class="btn ancho" style="margin-top:14px" id="precios">${ICON.wa} Mandar lista de precios</button>` : ''}`;
@@ -88,11 +88,11 @@
     const cats = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
     const dor = dormidos();
     v.innerHTML = `<div class="entra">
-      <section class="seccion" style="margin-top:14px"><div class="tarjeta p"><div class="seccion-cab" style="margin:0"><h2 style="font-size:16px">Ventas · 14 días</h2><b class="num">${dinero(vals.reduce((s, x) => s + x, 0))}</b></div>${Orbe.grafico(vals, dias.map((f, i) => i % 2 ? '' : Orbe.fecha(f, { day: 'numeric' })))}</div></section>
+      <section class="seccion" style="margin-top:14px"><div class="tarjeta p"><div class="seccion-cab" style="margin:0"><h2 style="font-size:16px">Ventas / 14 días</h2><b class="num">${dinero(vals.reduce((s, x) => s + x, 0))}</b></div>${Orbe.grafico(vals, dias.map((f, i) => i % 2 ? '' : Orbe.fecha(f, { day: 'numeric' })))}</div></section>
       <div class="dos" style="margin-top:12px"><div class="tarjeta p"><small class="texto-ayuda">Vendido en 30 días</small><div class="monto-xl" style="font-size:24px">${Orbe.montoHTML(t30)}</div></div><div class="tarjeta p"><small class="texto-ayuda">Ganancia en 30 días</small><div class="monto-xl" style="font-size:24px;color:var(--in)">${Orbe.montoHTML(g30)}</div></div></div>
       <section class="seccion"><div class="seccion-cab"><h2>Productos estrella</h2><span class="texto-ayuda">30 días</span></div><div class="tarjeta p">${top.length ? Orbe.orbe(top.map((o, i) => ({ n: o.p.nombre, v: o.x, c: Orbe.paleta[i % 8] })), t30) : '<p class="texto-ayuda">Sin ventas todavía.</p>'}</div></section>
       <section class="seccion"><div class="seccion-cab"><h2>Por categoría</h2></div><div class="tarjeta p">${cats.length ? Orbe.orbe(cats.map(([c, x]) => ({ n: c, v: x, c: colorCat(c === 'Sin categoría' ? '' : c) })), t30) : '<p class="texto-ayuda">Sin ventas todavía.</p>'}</div></section>
-      ${dor.length ? `<section class="seccion"><div class="seccion-cab"><h2>Sin ventas en 30 días</h2><button type="button" class="enlace" id="oferta">Crear oferta</button></div><div class="tarjeta">${dor.map(p => `<button type="button" class="tarea" data-p="${p.id}">${Orbe.ini(p.nombre, colorCat(p.cat))}<span class="info"><b>${esc(p.nombre)}</b><span>${cant(p.stock)} ${esc(und(p))} paradas · ${dinero(p.stock * (p.costo || 0))} en dinero</span></span></button>`).join('')}</div></section>` : ''}</div>`;
+      ${dor.length ? `<section class="seccion"><div class="seccion-cab"><h2>Sin ventas en 30 días</h2><button type="button" class="enlace" id="oferta">Crear oferta</button></div><div class="tarjeta">${dor.map(p => `<button type="button" class="tarea" data-p="${p.id}">${Orbe.ini(p.nombre, colorCat(p.cat))}<span class="info"><b>${esc(p.nombre)}</b><span>${cant(p.stock)} ${esc(und(p))} paradas / ${dinero(p.stock * (p.costo || 0))} en dinero</span></span></button>`).join('')}</div></section>` : ''}</div>`;
     v.querySelectorAll('[data-p]').forEach(x => x.onclick = () => detalle(x.dataset.p));
     const o = document.getElementById('oferta'); if (o) o.onclick = () => oferta(dor);
   }
@@ -105,12 +105,12 @@
       pie: '<button class="btn principal ancho" type="submit" data-total disabled>Elige productos</button>' });
     const pinta = () => {
       const ps = D().productos.filter(p => !q || p.nombre.toLowerCase().includes(q)).sort((a, b) => vendidos(b.id, 30) - vendidos(a.id, 30));
-      d.querySelector('[data-lista]').innerHTML = ps.map(p => `<div class="fila" style="box-shadow:none">${Orbe.ini(p.nombre, colorCat(p.cat))}<span class="info"><b>${esc(p.nombre)}</b><span>${dinero(p.precio)} · quedan ${cant(p.stock)}</span></span>
+      d.querySelector('[data-lista]').innerHTML = ps.map(p => `<div class="fila" style="box-shadow:none">${Orbe.ini(p.nombre, colorCat(p.cat))}<span class="info"><b>${esc(p.nombre)}</b><span>${dinero(p.precio)} / quedan ${cant(p.stock)}</span></span>
         <span style="display:flex;align-items:center;gap:6px">${carro[p.id] ? `<button type="button" class="icono-btn" data-menos="${p.id}" aria-label="Quitar uno">−</button><b class="num" style="min-width:22px;text-align:center">${cant(carro[p.id])}</b>` : ''}<button type="button" class="icono-btn" data-mas="${p.id}" aria-label="Agregar uno" style="background:var(--c);color:var(--c-ink)" ${p.stock - (carro[p.id] || 0) <= 0 ? 'disabled' : ''}>+</button></span></div>`).join('') || '<p class="texto-ayuda">Sin resultados.</p>';
       d.querySelectorAll('[data-mas]').forEach(x => x.onclick = () => { carro[x.dataset.mas] = (carro[x.dataset.mas] || 0) + 1; pinta(); });
       d.querySelectorAll('[data-menos]').forEach(x => x.onclick = () => { carro[x.dataset.menos]--; if (carro[x.dataset.menos] <= 0) delete carro[x.dataset.menos]; pinta(); });
       const t = Object.entries(carro).reduce((s, [id, n]) => s + n * prod(id).precio, 0), u = Object.values(carro).reduce((s, n) => s + n, 0);
-      const btn = d.querySelector('[data-total]'); btn.disabled = !u; btn.textContent = u ? `Cobrar ${dinero(t)} · ${cant(u)} ${u === 1 ? 'producto' : 'productos'}` : 'Elige productos';
+      const btn = d.querySelector('[data-total]'); btn.disabled = !u; btn.textContent = u ? `Cobrar ${dinero(t)} / ${cant(u)} ${u === 1 ? 'producto' : 'productos'}` : 'Elige productos';
     };
     d.querySelector('[data-q]').oninput = e => { q = e.target.value.trim().toLowerCase(); pinta(); }; pinta();
     d.querySelector('form').onsubmit = e => {
@@ -124,7 +124,7 @@
   function pedido() {
     const b = bajos(); if (!b.length) return aviso('No hay productos por reponer');
     const sug = p => Math.max(1, Math.ceil(Math.max(p.min * 2, porDia(p) * 14) - Math.max(0, p.stock)));
-    const d = hoja({ titulo: 'Pedido al proveedor', cuerpo: `<p class="texto-ayuda">Cantidad sugerida para cubrir unas 2 semanas de ventas. Puedes cambiarla.</p><div class="tarjeta">${b.map(p => `<div class="mov"><div class="info"><b>${esc(p.nombre)}</b><span>Quedan ${cant(p.stock)} · vendes ${cant(Math.round(porDia(p) * 10) / 10)} al día</span></div><input data-pid="${p.id}" inputmode="decimal" value="${sug(p)}" style="width:72px;text-align:center;font-weight:700;border:0;background:var(--soft);border-radius:12px;padding:9px;font-size:16px"><span class="texto-ayuda">${esc(und(p))}</span></div>`).join('')}</div>`,
+    const d = hoja({ titulo: 'Pedido al proveedor', cuerpo: `<p class="texto-ayuda">Cantidad sugerida para cubrir unas 2 semanas de ventas. Puedes cambiarla.</p><div class="tarjeta">${b.map(p => `<div class="mov"><div class="info"><b>${esc(p.nombre)}</b><span>Quedan ${cant(p.stock)} / vendes ${cant(Math.round(porDia(p) * 10) / 10)} al día</span></div><input data-pid="${p.id}" inputmode="decimal" value="${sug(p)}" style="width:72px;text-align:center;font-weight:700;border:0;background:var(--soft);border-radius:12px;padding:9px;font-size:16px"><span class="texto-ayuda">${esc(und(p))}</span></div>`).join('')}</div>`,
       pie: `<button type="button" class="btn wa ancho" data-enviar>${ICON.wa} Enviar pedido por WhatsApp</button>${D().ajustes.proveedor ? '' : '<p class="texto-ayuda" style="text-align:center">Guarda el WhatsApp de tu proveedor en Menú › Ajustes.</p>'}` });
     d.querySelector('[data-enviar]').onclick = () => {
       const neg = D().ajustes.negocio;
@@ -181,7 +181,7 @@
 
   function cantidad(p, tipo) {
     const t = { venta: ['Vendí', '¿Cuántos vendiste?'], entrada: ['Llegó mercancía', '¿Cuántos llegaron?'], ajuste: ['Contar de nuevo', '¿Cuántos hay realmente?'] }[tipo];
-    const d = hoja({ titulo: `${t[0]} · ${p.nombre}`, cuerpo: `<label class="campo">${t[1]}<input name="n" class="grande" inputmode="decimal" placeholder="0" autocomplete="off"></label>${tipo === 'entrada' ? `<label class="campo">Costo por unidad<input name="costo" inputmode="decimal" value="${p.costo || ''}"><small>Si cambió, se actualiza.</small></label>` : ''}<p class="texto-ayuda">Ahora hay ${cant(p.stock)} ${esc(und(p))}.</p>`, pie: '<button class="btn principal ancho" type="submit">Guardar</button>' });
+    const d = hoja({ titulo: `${t[0]} / ${p.nombre}`, cuerpo: `<label class="campo">${t[1]}<input name="n" class="grande" inputmode="decimal" placeholder="0" autocomplete="off"></label>${tipo === 'entrada' ? `<label class="campo">Costo por unidad<input name="costo" inputmode="decimal" value="${p.costo || ''}"><small>Si cambió, se actualiza.</small></label>` : ''}<p class="texto-ayuda">Ahora hay ${cant(p.stock)} ${esc(und(p))}.</p>`, pie: '<button class="btn principal ancho" type="submit">Guardar</button>' });
     const f = d.querySelector('form');
     f.onsubmit = e => {
       e.preventDefault(); const n = Orbe.num(f.n.value);
@@ -200,11 +200,11 @@
     const nombres = { venta: 'Venta', entrada: 'Entrada', ajuste: 'Conteo' };
     const d = hoja({
       titulo: p.nombre,
-      cuerpo: `${Orbe.hero({ etiqueta: `Tienes · ${esc(p.cat || 'sin categoría')}`, texto: `${cant(p.stock)} <span class="dec">${esc(und(p))}</span>`, pildora: t ? { c: k === 'mal' ? 'mal' : '', t } : { c: 'bien', t: isFinite(dq) ? `Alcanza para ~${Math.round(dq)} días` : 'Bien surtido' },
+      cuerpo: `${Orbe.hero({ etiqueta: p.cat ? `Tienes en ${esc(p.cat)}` : 'Tienes', texto: `${cant(p.stock)} <span class="dec">${esc(und(p))}</span>`, pildora: t ? { c: k === 'mal' ? 'mal' : '', t } : { c: 'bien', t: isFinite(dq) ? `Alcanza para ~${Math.round(dq)} días` : 'Bien surtido' },
           anillo: m !== null ? { p: Math.max(0, m), t: Math.round(m * 100) + '%', sub: 'de ganancia' } : null,
           chips: [{ t: 'Vendidos 14 días', v: cant(vendidos(id, 14)) }, { t: 'Precio', v: dinero(p.precio) }, { t: 'Mínimo', v: cant(p.min) }] })}
         <div class="dos"><button type="button" class="btn principal" data-x="venta">Vendí</button><button type="button" class="btn" data-x="entrada">Llegó mercancía</button></div>
-        <div class="tarjeta"><h3 style="font-size:15px;padding:12px 0 2px">Últimos movimientos</h3>${movs.length ? movs.map(x => `<div class="mov"><div class="info"><b>${nombres[x.tipo]}${x.nota ? ` · ${esc(x.nota)}` : ''}</b><span>${Orbe.fecha(x.fecha, { weekday: 'short', day: 'numeric', month: 'short' })}</span></div><span class="monto">${x.tipo === 'venta' ? '−' : x.tipo === 'entrada' ? '+' : '='}${cant(x.cant)}</span></div>`).join('') : '<p class="texto-ayuda" style="padding:6px 0 14px">Sin movimientos todavía.</p>'}</div>
+        <div class="tarjeta"><h3 style="font-size:15px;padding:12px 0 2px">Últimos movimientos</h3>${movs.length ? movs.map(x => `<div class="mov"><div class="info"><b>${nombres[x.tipo]}${x.nota ? ` / ${esc(x.nota)}` : ''}</b><span>${Orbe.fecha(x.fecha, { weekday: 'short', day: 'numeric', month: 'short' })}</span></div><span class="monto">${x.tipo === 'venta' ? '−' : x.tipo === 'entrada' ? '+' : '='}${cant(x.cant)}</span></div>`).join('') : '<p class="texto-ayuda" style="padding:6px 0 14px">Sin movimientos todavía.</p>'}</div>
         <div class="dos"><button type="button" class="btn" data-x="ajuste">Contar de nuevo</button><button type="button" class="btn" data-x="editar">Editar</button></div>
         <button type="button" class="btn peligro ancho" data-x="borrar">Eliminar producto</button>`
     });

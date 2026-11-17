@@ -7,9 +7,9 @@
   --in: #0c9f6e; --warn: #c76a00; --out: #e03b5a; --accent: var(--c);
   --sombra: 0 10px 30px -18px rgba(40,30,120,.35); --sombra-g: 0 16px 40px -20px rgba(40,30,120,.45);
   --r: 24px; --spring: cubic-bezier(.32,.72,0,1);
-  --display: "Space Grotesk", "Plus Jakarta Sans", system-ui, sans-serif;
-  --letra: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --mono: "Space Grotesk", ui-monospace, monospace;
+  --display: "Schibsted Grotesk", system-ui, sans-serif;
+  --letra: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: "Schibsted Grotesk", system-ui, sans-serif;
   --fondo: linear-gradient(160deg, #e9ecff 0%, #f6f1ff 42%, #fff5ec 100%);
   --blur: blur(22px) saturate(1.5);
   color-scheme: light;
@@ -32,13 +32,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; touch-action: manipulation; }
 :focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
 [hidden] { display: none !important; }
-h1, h2, h3 { font-family: var(--letra); letter-spacing: -.02em; margin: 0; line-height: 1.2; font-weight: 700; }
+h1, h2, h3 { font-family: var(--letra); letter-spacing: -.015em; margin: 0; line-height: 1.2; font-weight: 700; }
 .num { font-family: var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 .envoltura { max-width: 720px; margin: 0 auto; padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); position: relative; }
 .vidrio, .hero, .tarjeta, .fila, .nota, .todo-bien, .buscar, .vacio, .demo { background: var(--card); border: 1px solid var(--vidrio-borde); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
 @keyframes entra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.entra > * { animation: entra .45s var(--spring) both; }
-.entra > *:nth-child(2) { animation-delay: .04s; } .entra > *:nth-child(3) { animation-delay: .08s; } .entra > *:nth-child(4) { animation-delay: .12s; } .entra > *:nth-child(n+5) { animation-delay: .16s; }
 .toque { transition: transform .3s var(--spring); }
 .toque:active { transform: scale(.98); }
 
@@ -65,8 +63,9 @@ h1, h2, h3 { font-family: var(--letra); letter-spacing: -.02em; margin: 0; line-
 
 /* Tarjeta principal */
 .hero { margin-top: 14px; border-radius: 28px; padding: 18px; box-shadow: var(--sombra-g); position: relative; overflow: hidden; }
-.hero small { font-size: 12.5px; color: var(--muted); }
-.monto-xl { font-family: var(--display); font-weight: 600; font-size: 44px; letter-spacing: -.05em; line-height: 1.08; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 4px; }
+.hero > small { font-size: 14px; font-weight: 500; color: var(--muted); }
+.hero .chips small { color: var(--muted); }
+.monto-xl { font-family: var(--display); font-weight: 800; font-size: 46px; letter-spacing: -.045em; line-height: 1.08; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 4px; }
 .monto-xl .dec { font-size: .52em; color: var(--muted); letter-spacing: -.03em; }
 .hero .pildora { display: inline-flex; margin-top: 6px; font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 99px; background: var(--ink); color: var(--paper); }
 .hero .pildora.bien { background: var(--in); color: #fff; }
@@ -84,26 +83,26 @@ h1, h2, h3 { font-family: var(--letra); letter-spacing: -.02em; margin: 0; line-
 .curva circle { fill: var(--c); stroke: var(--card-solida); stroke-width: 3; }
 @keyframes trazo { to { stroke-dashoffset: 0; } }
 .hero .chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-.hero .chips div { background: var(--card); border: 1px solid var(--vidrio-borde); border-radius: 18px; padding: 9px 11px; min-width: 0; }
+.hero .chips div { background: var(--card); border: 1px solid var(--vidrio-borde); border-radius: 12px; padding: 9px 11px; min-width: 0; }
 .hero .chips small { font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hero .chips b { display: block; font-family: var(--display); font-size: 16px; font-weight: 600; letter-spacing: -.03em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 
 /* Secciones */
 .seccion { margin-top: 24px; }
 .seccion-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-.seccion-cab h2 { font-size: 16px; }
+.seccion-cab h2 { font-size: 18px; font-weight: 800; letter-spacing: -.025em; }
 .cuenta { font: 600 12px var(--display); color: var(--paper); background: var(--ink); border-radius: 99px; padding: 1px 8px; }
 .enlace { border: 0; background: none; color: var(--c); font-weight: 600; font-size: 13.5px; padding: 6px 0; }
 @media (prefers-color-scheme: dark) { .enlace { color: color-mix(in srgb, var(--c) 50%, #fff); } }
-.tarjeta { border-radius: var(--r); padding: 4px 16px; box-shadow: var(--sombra); }
+.tarjeta { border-radius: 22px; padding: 4px 16px; }
 .tarjeta.p { padding: 16px; }
 .lista { display: flex; flex-direction: column; gap: 8px; }
-.fila { border-radius: 22px; padding: 11px 13px; display: flex; align-items: center; gap: 12px; min-width: 0; text-align: left; width: 100%; box-shadow: var(--sombra); }
+.fila { border-radius: 18px; padding: 11px 13px; display: flex; align-items: center; gap: 12px; min-width: 0; text-align: left; width: 100%; }
 .fila .info { flex: 1; min-width: 0; }
 .fila .info b { display: block; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fila .info > span:not(.chip) { display: block; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fila .derecha { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.fila .monto { font-family: var(--display); font-weight: 600; font-size: 16px; letter-spacing: -.03em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fila .monto { font-family: var(--display); font-weight: 700; font-size: 16px; letter-spacing: -.03em; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .fila .derecha small { display: block; font-size: 11.5px; color: var(--muted); }
 .ini { width: 40px; height: 40px; border-radius: 13px; flex-shrink: 0; display: grid; place-items: center; font: 700 13px var(--letra); color: #fff; }
 .ini svg { width: 19px; height: 19px; }
@@ -117,7 +116,7 @@ h1, h2, h3 { font-family: var(--letra); letter-spacing: -.02em; margin: 0; line-
 
 /* Pendientes */
 .notas { display: flex; flex-direction: column; gap: 8px; }
-.nota { --t: var(--c); display: flex; align-items: center; gap: 12px; padding: 11px 13px; border-radius: 22px; text-align: left; width: 100%; color: var(--ink); box-shadow: var(--sombra); transition: transform .3s var(--spring); }
+.nota { --t: var(--c); display: flex; align-items: center; gap: 12px; padding: 11px 13px; border-radius: 18px; text-align: left; width: 100%; color: var(--ink); transition: transform .3s var(--spring); }
 .nota:active { transform: scale(.98); }
 .nota .ico { width: 38px; height: 38px; border-radius: 13px; display: grid; place-items: center; flex-shrink: 0; color: #fff; background: #14151c; position: relative; }
 @media (prefers-color-scheme: dark) { .nota .ico { background: #2a2c3d; } }
@@ -240,3 +239,5 @@ dialog.hoja::backdrop { background: rgba(20,21,40,.3); -webkit-backdrop-filter: 
 .marca-pie { text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px; }
 .marca-pie a { color: inherit; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } .curva path.l { stroke-dashoffset: 0; } .curva path.a { opacity: 1; } }
+/* Schibsted Grotesk: cifras proporcionales para que la coma decimal no quede separada */
+.monto-xl, .fila .monto, .tarea .monto, .mov .monto, .hero .chips b, .reparto .leyenda b, .num, .campo .grande, .dia b, .pestana em { font-variant-numeric: lining-nums proportional-nums; }
