@@ -151,7 +151,7 @@
   }
   function recordar(c) {
     let tono = 'amable';
-    const d = hoja({ titulo: `Cuenta de ${c.nombre}`, cuerpo: `<div class="segmento" style="margin:0"><button type="button" data-tono="amable" aria-pressed="true">Amable</button><button type="button" data-tono="directo" aria-pressed="false">Directo</button></div><div class="tarjeta p" style="white-space:pre-wrap;font-size:14px;background:#dcf8c6;color:#10221a" data-texto></div>${c.tel ? '' : '<p class="texto-ayuda">No tiene WhatsApp guardado: elegirás el chat al enviar.</p>'}`,
+    const d = hoja({ titulo: `Cuenta de ${c.nombre}`, cuerpo: `<div class="segmento" style="margin:0"><button type="button" data-tono="amable" aria-pressed="true">Amable</button><button type="button" data-tono="directo" aria-pressed="false">Directo</button></div><div class="mensaje-wa" style="" data-texto></div>${c.tel ? '' : '<p class="texto-ayuda">No tiene WhatsApp guardado: elegirás el chat al enviar.</p>'}`,
       pie: `<button type="button" class="btn wa ancho" data-enviar>${ICON.wa} Enviar por WhatsApp</button>` });
     const pon = () => d.querySelector('[data-texto]').textContent = textoCuenta(c, tono); pon();
     d.querySelectorAll('[data-tono]').forEach(b => b.onclick = () => { tono = b.dataset.tono; d.querySelectorAll('[data-tono]').forEach(x => x.setAttribute('aria-pressed', x === b)); pon(); });
