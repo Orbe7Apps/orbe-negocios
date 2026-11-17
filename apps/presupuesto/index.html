@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Presupuesto del mes · Orbe Apps</title>
+<meta name="description" content="Cuánto entra, cuánto sale y cuánto te queda. Con límites por categoría y avisos antes de pasarte.">
+<meta name="theme-color" content="#d63f6e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icono-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Manrope:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="../base/app.css">
+<style>:root { --c: #d63f6e; --c-ink: #fff; } @media (prefers-color-scheme: dark) { :root { --c: #ff8fb3; --c-ink: #2a0815; } }
+.mes { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+.mes h2 { font-size: 20px; }
+.queda { margin-top: 12px; background: var(--c); color: var(--c-ink); border-radius: 24px; padding: 18px 20px; }
+.queda small { font-weight: 700; opacity: .85; } .queda b { display: block; font: 800 38px/1.1 var(--display); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.queda .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; font-size: 13.5px; font-weight: 700; }
+.queda .dos span { background: rgba(255,255,255,.16); border-radius: 14px; padding: 8px 12px; } .queda .dos b { font-size: 18px; }
+.cat { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; width: 100%; text-align: left; display: block; }
+.cat .top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.cat .top b { font-size: 15px; } .cat .top span { font-size: 13px; color: var(--muted); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cat .barra-prog { display: block; }
+.cat.warn .barra-prog i { background: var(--warn); } .cat.mal .barra-prog i { background: var(--mal); }
+.cat small { display: block; margin-top: 6px; font-size: 12.5px; color: var(--muted); font-weight: 700; } .cat.warn small { color: var(--warn); } .cat.mal small { color: var(--mal); }
+.mov { display: flex; gap: 12px; align-items: center; } .mov .monto.in { color: var(--ok); }
+.tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px; }
+.serv { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); } .serv:last-child { border: 0; } .serv span { flex: 1; } .serv small { color: var(--muted); }</style>
+</head>
+<body>
+<header class="barra" id="barra"></header>
+<main class="envoltura">
+  <div class="prueba" id="prueba" hidden></div>
+  <div class="mes"><button class="icono-btn" type="button" id="ant" aria-label="Mes anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="titulo-mes"></h2><button class="icono-btn" type="button" id="sig" aria-label="Mes siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
+  <div class="queda" id="queda"></div>
+  <section class="seccion"><div class="seccion-cab"><h2>Tus límites</h2><button class="enlace" type="button" id="btn-cats">Editar</button></div><div class="lista" id="cats"></div></section>
+  <section class="seccion"><div class="seccion-cab"><h2>Movimientos</h2></div><div class="lista" id="lista"></div></section>
+  <p class="marca-pie">Hecha por <a href="https://orbe7apps.github.io/orbe-negocios/servicios/" target="_blank" rel="noopener">Orbe Apps</a></p>
+</main>
+<button class="btn principal fab" id="nuevo" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Anotar gasto</button>
+<script src="../base/app.js"></script>
+<script src="presupuesto.js"></script>
+</body>
+</html>
