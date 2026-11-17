@@ -29,7 +29,7 @@
     papel: sv('<path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>'),
     wa: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>'
   };
-  const PALETA = ['#a99bff', '#4fdc9a', '#ffc43d', '#ff8fa3', '#7cc8ff', '#d9a3ff', '#ffa66b', '#5fd6c9'];
+  const PALETA = ['#4f46e5', '#0f766e', '#b45309', '#be123c', '#0369a1', '#7c3aed', '#c2410c', '#15803d'];
 
   const Orbe = window.Orbe = {
     ICON, esc, sv,
@@ -83,7 +83,7 @@
     },
     tareas(lista, vacio = 'Todo al día. Nada pendiente por ahora.') {
       if (!lista.length) return `<div class="todo-bien"><span class="ini">${ICON.check}</span>${vacio}</div>`;
-      return `<div class="notas">${lista.map((t, i) => `<button type="button" class="nota" data-tarea="${i}" style="background:color-mix(in srgb, ${t.color} 32%, #fffdf8)"><span class="ico">${t.icono}</span><b>${t.titulo}</b><span>${t.sub}</span><em>${t.cta || 'Resolver'} ${ICON.flecha}</em></button>`).join('')}</div>`;
+      return `<div class="notas">${lista.map((t, i) => `<button type="button" class="nota" data-tarea="${i}" style="--t:${t.color}"><span class="ico">${t.icono}</span><span class="txt"><b>${t.titulo}</b><span>${t.sub}</span></span><em>${ICON.flecha}</em></button>`).join('')}</div>`;
     },
     activarTareas(raiz, lista) { raiz.querySelectorAll('[data-tarea]').forEach(b => b.onclick = () => lista[+b.dataset.tarea].accion()); },
     grafico(valores, etiquetas, iHoy = valores.length - 1) {
@@ -266,6 +266,7 @@
       document.getElementById('sub').innerHTML = esc(n || (Orbe.enDemo() ? 'Ejemplo' : 'Toca ⋯ para poner el nombre de tu negocio')) + ' · ' + esc(Orbe.fecha(Orbe.hoy(), { weekday: 'short', day: 'numeric', month: 'short' }));
     },
     pintarTabs() {
+      const fab = document.getElementById('fab'); if (fab) fab.innerHTML = ICON.mas + `<span>${esc(Orbe.app.fabTexto ? Orbe.app.fabTexto(Orbe.vista) : 'Nuevo')}</span>`;
       const t = Orbe.app.tabs; if (!t) return;
       document.getElementById('tabbar').innerHTML = t.map(x => `<button type="button" class="tab" data-tab="${x.id}" ${x.id === Orbe.vista ? 'aria-current="page"' : ''}>${x.icono}<span>${x.nombre}</span></button>`).join('');
       document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => Orbe.ir(b.dataset.tab));
@@ -277,7 +278,7 @@
       Orbe.app = app; Orbe.vista = app.tabs ? app.tabs[0].id : null;
       document.getElementById('barra').innerHTML = `<div class="envoltura"><div class="app-ico" aria-hidden="true">${app.icono}</div><div class="titulo"><h1>${esc(app.nombre)}</h1><small id="sub"></small></div><button class="icono-btn" type="button" id="btn-menu" aria-label="Menú">${ICON.menu}</button></div>`;
       document.getElementById('btn-menu').onclick = Orbe.menu;
-      const fab = document.getElementById('fab'); if (fab) { fab.innerHTML = ICON.mas; fab.onclick = () => app.fab(); }
+      const fab = document.getElementById('fab'); if (fab) fab.onclick = () => app.fab();
       const q = new URLSearchParams(location.search).get('codigo');
       if (q) { history.replaceState(null, '', location.pathname); if (Orbe.validar(q)) { localStorage.setItem('orbe-licencia-' + app.id, q.toUpperCase()); setTimeout(() => { Orbe.aviso('Tu app quedó activada para siempre. Ya puedes usarla con tu negocio.'); setTimeout(Orbe.ajustes, 900); }, 300); } }
       Orbe.cargar(); Orbe.pintarTodo();

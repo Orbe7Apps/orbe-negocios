@@ -273,6 +273,7 @@
     datos: () => ({ servicios: [], citas: [], ajustes: { negocio: '', moneda: '$', dias: [1, 2, 3, 4, 5, 6], desde: '09:00', hasta: '18:00', intervalo: 30, whatsapp: '', resena: '' } }),
     icono: Orbe.sv('<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M9 14.5l2 2 4-4"/>'),
     tabs: [{ id: 'agenda', nombre: 'Agenda', icono: ICON.calendario }, { id: 'clientas', nombre: 'Clientas', icono: ICON.personas }, { id: 'reportes', nombre: 'Reportes', icono: ICON.grafico }],
+    fabTexto: () => 'Cita',
     fab: () => nueva(dia),
     extrasMenu: `<button type="button" class="fila" data-a="servicios"><span class="info"><b>Servicios y precios</b><span>Lo que ofreces y cuánto dura</span></span></button>
       <button type="button" class="fila" data-a="horario"><span class="info"><b>Horario</b><span>Días y horas que atiendes</span></span></button>

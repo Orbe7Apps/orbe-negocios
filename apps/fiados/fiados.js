@@ -216,6 +216,7 @@
     datos: () => ({ clientes: [] }),
     icono: Orbe.sv('<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><circle cx="17" cy="15.5" r="3.2"/>'),
     tabs: [{ id: 'hoy', nombre: 'Hoy', icono: ICON.inicio }, { id: 'clientes', nombre: 'Clientes', icono: ICON.personas }, { id: 'historial', nombre: 'Historial', icono: ICON.reloj }],
+    fabTexto: () => 'Anotar',
     fab: () => anotar('fiado')
   });
 })();

@@ -240,6 +240,7 @@
     datos: () => ({ productos: [], movs: [] }),
     icono: ICON.caja,
     tabs: [{ id: 'hoy', nombre: 'Hoy', icono: ICON.inicio }, { id: 'productos', nombre: 'Productos', icono: ICON.caja }, { id: 'reportes', nombre: 'Reportes', icono: ICON.grafico }],
+    fabTexto: v => v === 'productos' ? 'Producto' : 'Vender',
     fab: () => Orbe.vista === 'productos' ? formulario() : vender(),
     extrasMenu: '<button type="button" class="fila" data-a="precios"><span class="info"><b>Lista de precios</b><span>Para tus estados y clientes</span></span></button>',
     alAccion: x => x === 'precios' ? (listaPrecios(), true) : false,

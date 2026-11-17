@@ -212,6 +212,7 @@
     datos: () => ({ categorias: base.map((n, i) => ({ id: 'c' + i, nombre: n, limite: 0 })), fijos: [], movs: [] }),
     icono: ICON.dinero,
     tabs: [{ id: 'mes', nombre: 'Mes', icono: ICON.inicio }, { id: 'movimientos', nombre: 'Movimientos', icono: ICON.lista }, { id: 'fijos', nombre: 'Fijos', icono: ICON.calendario }],
+    fabTexto: v => v === 'fijos' ? 'Pago fijo' : 'Anotar',
     fab: () => Orbe.vista === 'fijos' ? fijo() : anotar('gasto'),
     extrasMenu: '<button type="button" class="fila" data-a="categorias"><span class="info"><b>Categorías y límites</b><span>En qué gastas y cuánto te permites</span></span></button>',
     alAccion: x => x === 'categorias' ? (categorias(), true) : false
