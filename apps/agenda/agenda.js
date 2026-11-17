@@ -160,7 +160,7 @@
     return `Hola ${nom}. Te recuerdo tu cita${neg ? ` en ${neg}` : ''}:\n\n${cuando}\n${s?.nombre || 'Cita'}\n\n¿Me confirmas que vienes?`;
   }
   function preguntarWa(c, tipo) {
-    const d = hoja({ titulo: '¿Le avisas por WhatsApp?', cuerpo: `<div class="tarjeta p" style="white-space:pre-wrap;font-size:14px;background:#dcf8c6;color:#10221a">${esc(texto(c, tipo))}</div>`, pie: `<button type="button" class="btn wa ancho" data-si>${ICON.wa} Enviar</button><button type="button" class="btn ancho" data-no>Ahora no</button>` });
+    const d = hoja({ titulo: '¿Le avisas por WhatsApp?', cuerpo: `<div class="mensaje-wa" style="">${esc(texto(c, tipo))}</div>`, pie: `<button type="button" class="btn wa ancho" data-si>${ICON.wa} Enviar</button><button type="button" class="btn ancho" data-no>Ahora no</button>` });
     d.querySelector('[data-si]').onclick = () => { Orbe.whatsapp(c.tel, texto(c, tipo)); d.close(); };
     d.querySelector('[data-no]').onclick = () => d.close();
   }
@@ -175,7 +175,7 @@
   function invitar(x) {
     const neg = D().ajustes.negocio;
     const t = `Hola ${x.nombre.split(' ')[0]}, ¿cómo estás? Hace tiempo no te vemos${neg ? ` en ${neg}` : ''} y te extrañamos.\n\nEsta semana tengo horarios libres. ¿Te aparto uno? Responde por aquí y te lo reservo.`;
-    const d = hoja({ titulo: `Invitar a ${x.nombre}`, cuerpo: `<p class="texto-ayuda">Vino hace ${x.sin} días${x.cada ? ` y suele venir cada ${x.cada}` : ''}. Ha gastado ${dinero(x.gastado)} contigo.</p><div class="tarjeta p" style="white-space:pre-wrap;font-size:14px;background:#dcf8c6;color:#10221a">${esc(t)}</div>`, pie: `<button type="button" class="btn wa ancho" data-e>${ICON.wa} Enviar invitación</button>` });
+    const d = hoja({ titulo: `Invitar a ${x.nombre}`, cuerpo: `<p class="texto-ayuda">Vino hace ${x.sin} días${x.cada ? ` y suele venir cada ${x.cada}` : ''}. Ha gastado ${dinero(x.gastado)} contigo.</p><div class="mensaje-wa" style="">${esc(t)}</div>`, pie: `<button type="button" class="btn wa ancho" data-e>${ICON.wa} Enviar invitación</button>` });
     d.querySelector('[data-e]').onclick = () => { Orbe.whatsapp(x.tel, t); d.close(); };
   }
 

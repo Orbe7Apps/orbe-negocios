@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Agenda de citas · Orbe Apps</title>
 <meta name="description" content="Tus citas del día en orden, recordatorios por WhatsApp y un link para que tus clientas pidan cita.">
-<meta name="theme-color" content="#12a37a">
+<meta name="theme-color" content="#4fdc9a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icono-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
 <link rel="stylesheet" href="../base/app.css">
-<style>:root { --c: #12a37a; --c-ink: #fff; } @media (prefers-color-scheme: dark) { :root { --c: #3ddc9f; --c-ink: #06261a; } }
+<style>:root { --c: #4fdc9a; --c-ink: #191714; }
 .dias-tira { margin-top: 14px; }
-.dia { flex: 0 0 54px; border: 1.5px solid transparent; background: var(--surface); border-radius: 18px; padding: 8px 0 6px; display: flex; flex-direction: column; align-items: center; box-shadow: var(--sombra); transition: border-color .3s var(--spring), background .3s; }
+.dia { flex: 0 0 54px; border: 2px solid var(--borde); background: var(--card); border-radius: 16px; padding: 7px 0 6px; display: flex; flex-direction: column; align-items: center; transition: border-color .3s var(--spring), background .3s; }
 .dia small { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
-.dia b { font-size: 19px; font-weight: 700; line-height: 1.2; }
-.dia i { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--c-ink); background: var(--c); border-radius: 99px; min-width: 17px; padding: 0 4px; line-height: 15px; text-align: center; }
-.dia[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }</style>
+.dia b { font: 800 20px/1.15 var(--display); }
+.dia i { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--c-ink); background: var(--c); border: 1.5px solid var(--borde); border-radius: 99px; min-width: 17px; padding: 0 4px; line-height: 15px; text-align: center; }
+.dia[aria-pressed="true"] { background: var(--ink); color: var(--paper); box-shadow: 3px 3px 0 var(--c); } .dia[aria-pressed="true"] small { color: inherit; opacity: .7; }</style>
 </head>
 <body>
 <header class="barra" id="barra"></header>

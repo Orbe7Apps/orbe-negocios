@@ -29,7 +29,7 @@
     papel: sv('<path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>'),
     wa: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>'
   };
-  const PALETA = ['#8f84ff', '#12a37a', '#f0a020', '#e8436a', '#3ba7e6', '#b36bf0', '#ff8a4c', '#2bb5a8'];
+  const PALETA = ['#a99bff', '#4fdc9a', '#ffc43d', '#ff8fa3', '#7cc8ff', '#d9a3ff', '#ffa66b', '#5fd6c9'];
 
   const Orbe = window.Orbe = {
     ICON, esc, sv,
@@ -74,23 +74,25 @@
       return `<svg class="rings" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">${h}</svg>`;
     },
     hero({ etiqueta, monto, texto, pildora, anillo, chips, barras }) {
-      return `<section class="hero"><div class="fila-top"><div style="min-width:0"><small>${etiqueta}</small><div class="monto-xl">${monto !== undefined ? Orbe.montoHTML(monto) : texto}</div>${pildora ? `<span class="pildora ${pildora.c || ''}">${pildora.t}</span>` : ''}</div>
-        ${anillo ? `<div class="anillo">${Orbe.rings([{ p: anillo.p, c: anillo.c || 'var(--c)' }], 92, 9, 0)}<b>${anillo.t}</b>${anillo.sub ? `<i>${anillo.sub}</i>` : ''}</div>` : ''}</div>
-        ${barras ? `<div class="barras-mini">${barras.map((v, i) => `<i class="${i === barras.length - 1 ? 'hoy' : ''}" style="height:${Math.max(4, v * 100)}%;animation-delay:${i * 0.02}s"></i>`).join('')}</div>` : ''}
-        ${chips ? `<div class="chips">${chips.map(x => `<div><small>${x.t}</small><b style="color:${x.c || 'inherit'}">${x.v}</b></div>`).join('')}</div>` : ''}</section>`;
+      const col = c => ({ '#7ff0c4': 'var(--in)', '#ffb3c2': 'var(--out)' }[c] || c || 'inherit');
+      const on = anillo ? Math.round(Math.max(0, Math.min(1, anillo.p || 0)) * 20) : 0;
+      return `<section class="hero"><small>${etiqueta}</small><div class="monto-xl">${monto !== undefined ? Orbe.montoHTML(monto) : texto}</div>${pildora ? `<span class="pildora ${pildora.c || ''}">${pildora.t}</span>` : ''}
+        ${anillo ? `<div class="medidor"><div class="top"><span>${anillo.sub || ''}</span><b>${anillo.t}</b></div><div class="bloques">${Array.from({ length: 20 }, (_, k) => `<i class="${k < on ? 'on' : ''}" style="animation-delay:${k * 0.025}s"></i>`).join('')}</div></div>` : ''}
+        ${barras ? `<div class="barras-mini">${barras.map((v, k) => `<i class="${k === barras.length - 1 ? 'hoy' : ''}" style="height:${Math.max(4, v * 100)}%;animation-delay:${k * 0.02}s"></i>`).join('')}</div>` : ''}
+        ${chips ? `<div class="chips">${chips.map(x => `<div><small>${x.t}</small><b style="color:${col(x.c)}">${x.v}</b></div>`).join('')}</div>` : ''}</section>`;
     },
     tareas(lista, vacio = 'Todo al día. Nada pendiente por ahora.') {
-      if (!lista.length) return `<div class="tarjeta"><div class="todo-bien"><span class="ini" style="background:var(--in);width:38px;height:38px;border-radius:12px">${ICON.check}</span>${vacio}</div></div>`;
-      return `<div class="tarjeta">${lista.map((t, i) => `<button type="button" class="tarea" data-tarea="${i}"><span class="ico" style="background:${t.color}">${t.icono}</span><span class="info"><b>${t.titulo}</b><span>${t.sub}</span></span><span class="flecha">${ICON.flecha}</span></button>`).join('')}</div>`;
+      if (!lista.length) return `<div class="todo-bien"><span class="ini">${ICON.check}</span>${vacio}</div>`;
+      return `<div class="notas">${lista.map((t, i) => `<button type="button" class="nota" data-tarea="${i}" style="background:color-mix(in srgb, ${t.color} 32%, #fffdf8)"><span class="ico">${t.icono}</span><b>${t.titulo}</b><span>${t.sub}</span><em>${t.cta || 'Resolver'} ${ICON.flecha}</em></button>`).join('')}</div>`;
     },
     activarTareas(raiz, lista) { raiz.querySelectorAll('[data-tarea]').forEach(b => b.onclick = () => lista[+b.dataset.tarea].accion()); },
     grafico(valores, etiquetas, iHoy = valores.length - 1) {
       const max = Math.max(...valores, 0.0001);
       return `<div class="grafico">${valores.map((v, i) => `<div class="col ${i === iHoy ? 'hoy' : ''}"><i style="height:${Math.max(2, v / max * 100)}%;animation-delay:${i * 0.025}s"></i><small>${etiquetas[i]}</small></div>`).join('')}</div>`;
     },
-    orbe(items, total) { // reparto en anillos concéntricos
-      const top = items.slice(0, 5);
-      return `<div class="orbe">${Orbe.rings(top.map(x => ({ p: total ? x.v / total : 0, c: x.c })), 132, 10, 5)}<div class="leyenda">${top.map(x => `<div><i style="background:${x.c}"></i><span>${esc(x.n)}</span><b>${x.etq ?? Orbe.dinero(x.v)}</b></div>`).join('')}</div></div>`;
+    orbe(items, total) { // reparto: barra apilada y lista con porcentaje
+      const top = items.slice(0, 6), t = total || 1;
+      return `<div class="reparto"><div class="apilada">${top.map((x, k) => `<i style="width:${x.v / t * 100}%;background:${x.c};animation-delay:${k * 0.05}s" title="${esc(x.n)}"></i>`).join('')}</div><div class="leyenda">${top.map(x => `<div><i style="background:${x.c}"></i><span>${esc(x.n)}</span><em>${Math.round(x.v / t * 100)}%</em><b>${x.etq ?? Orbe.dinero(x.v)}</b></div>`).join('')}</div></div>`;
     },
 
     /* Datos: en modo de ejemplo se usan datos de muestra aparte */
@@ -186,7 +188,7 @@
       if (!Orbe.enDemo()) { el.hidden = true; return; }
       el.hidden = false;
       const usado = Orbe.datos._propios >= 1;
-      el.innerHTML = `<i class="punto"></i><span><b>Estás viendo un ejemplo.</b> ${usado ? 'Ya probaste agregar uno tuyo.' : `Puedes agregar ${esc(Orbe.app.unidad)} para probar.`}</span><button type="button">Activar</button>`;
+      el.innerHTML = `<i class="punto"></i><span>${usado ? 'Ya probaste agregar uno tuyo. Actívala para usarla con tu negocio.' : `Datos de muestra. Puedes agregar ${esc(Orbe.app.unidad)} para probar.`}</span><button type="button">Activar</button>`;
       el.querySelector('button').onclick = () => Orbe.activar('Al activarla empiezas con tu app vacía, lista para tu negocio.');
     },
 

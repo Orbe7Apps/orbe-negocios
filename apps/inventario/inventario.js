@@ -124,7 +124,7 @@
   function pedido() {
     const b = bajos(); if (!b.length) return aviso('No hay productos por reponer');
     const sug = p => Math.max(1, Math.ceil(Math.max(p.min * 2, porDia(p) * 14) - Math.max(0, p.stock)));
-    const d = hoja({ titulo: 'Pedido al proveedor', cuerpo: `<p class="texto-ayuda">Cantidad sugerida para cubrir unas 2 semanas de ventas. Puedes cambiarla.</p><div class="tarjeta">${b.map(p => `<div class="mov"><div class="info"><b>${esc(p.nombre)}</b><span>Quedan ${cant(p.stock)} · vendes ${cant(Math.round(porDia(p) * 10) / 10)} al día</span></div><input data-pid="${p.id}" inputmode="decimal" value="${sug(p)}" style="width:72px;text-align:center;font-weight:700;border:0;background:var(--fill);border-radius:12px;padding:9px;font-size:16px"><span class="texto-ayuda">${esc(und(p))}</span></div>`).join('')}</div>`,
+    const d = hoja({ titulo: 'Pedido al proveedor', cuerpo: `<p class="texto-ayuda">Cantidad sugerida para cubrir unas 2 semanas de ventas. Puedes cambiarla.</p><div class="tarjeta">${b.map(p => `<div class="mov"><div class="info"><b>${esc(p.nombre)}</b><span>Quedan ${cant(p.stock)} · vendes ${cant(Math.round(porDia(p) * 10) / 10)} al día</span></div><input data-pid="${p.id}" inputmode="decimal" value="${sug(p)}" style="width:72px;text-align:center;font-weight:700;border:0;background:var(--soft);border-radius:12px;padding:9px;font-size:16px"><span class="texto-ayuda">${esc(und(p))}</span></div>`).join('')}</div>`,
       pie: `<button type="button" class="btn wa ancho" data-enviar>${ICON.wa} Enviar pedido por WhatsApp</button>${D().ajustes.proveedor ? '' : '<p class="texto-ayuda" style="text-align:center">Guarda el WhatsApp de tu proveedor en Menú › Ajustes.</p>'}` });
     d.querySelector('[data-enviar]').onclick = () => {
       const neg = D().ajustes.negocio;
@@ -137,14 +137,14 @@
     const neg = D().ajustes.negocio, porCat = {};
     D().productos.filter(p => p.stock > 0).forEach(p => (porCat[p.cat || 'Otros'] = porCat[p.cat || 'Otros'] || []).push(p));
     const txt = `*${neg || 'Lista de precios'}*\nPrecios de hoy, ${Orbe.fecha(Orbe.hoy(), { day: 'numeric', month: 'long' })}:\n` + Object.entries(porCat).sort().map(([c, ps]) => `\n*${c}*\n` + ps.sort((a, b) => a.nombre.localeCompare(b.nombre)).map(p => `• ${p.nombre}: ${dinero(p.precio)}`).join('\n')).join('\n') + '\n\nHaz tu pedido por aquí.';
-    const d = hoja({ titulo: 'Lista de precios', cuerpo: `<p class="texto-ayuda">Solo productos con existencia. Compártela en tus estados o con tus clientes.</p><div class="tarjeta p" style="white-space:pre-wrap;font-size:14px;background:#dcf8c6;color:#10221a;max-height:46dvh;overflow:auto">${esc(txt)}</div>`, pie: `<button type="button" class="btn wa ancho" data-e>${ICON.wa} Compartir por WhatsApp</button>` });
+    const d = hoja({ titulo: 'Lista de precios', cuerpo: `<p class="texto-ayuda">Solo productos con existencia. Compártela en tus estados o con tus clientes.</p><div class="mensaje-wa" style=";max-height:46dvh;overflow:auto">${esc(txt)}</div>`, pie: `<button type="button" class="btn wa ancho" data-e>${ICON.wa} Compartir por WhatsApp</button>` });
     d.querySelector('[data-e]').onclick = () => { Orbe.whatsapp('', txt); d.close(); };
   }
 
   function oferta(ps) {
     const neg = D().ajustes.negocio;
     const txt = `*Ofertas de la semana${neg ? ' en ' + neg : ''}*\n\n` + ps.map(p => `• ${p.nombre}: antes ${dinero(p.precio)}, ahora *${dinero(Math.round(p.precio * 0.85 * 100) / 100)}*`).join('\n') + '\n\nHasta agotar existencias. Pídelo por aquí.';
-    const d = hoja({ titulo: 'Oferta para moverlos', cuerpo: `<p class="texto-ayuda">Un 15% de descuento en lo que no se vende. Es mejor recuperar el dinero que dejarlo parado.</p><div class="tarjeta p" style="white-space:pre-wrap;font-size:14px;background:#dcf8c6;color:#10221a">${esc(txt)}</div>`, pie: `<button type="button" class="btn wa ancho" data-e>${ICON.wa} Compartir oferta</button>` });
+    const d = hoja({ titulo: 'Oferta para moverlos', cuerpo: `<p class="texto-ayuda">Un 15% de descuento en lo que no se vende. Es mejor recuperar el dinero que dejarlo parado.</p><div class="mensaje-wa" style="">${esc(txt)}</div>`, pie: `<button type="button" class="btn wa ancho" data-e>${ICON.wa} Compartir oferta</button>` });
     d.querySelector('[data-e]').onclick = () => { Orbe.whatsapp('', txt); d.close(); };
   }
 
