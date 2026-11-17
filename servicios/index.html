@@ -376,7 +376,7 @@ footer a { color: var(--luz); }
 :root {
   --noche: #14151c; --noche2: rgba(255,255,255,.58); --noche3: #ffffff; --luz: #14151c; --luz2: #6b6d7c;
   --bg: #f3f1fb; --surface: rgba(255,255,255,.58); --ink: #14151c; --muted: #6b6d7c; --line: rgba(20,21,28,.08);
-  --morado: #5b4bff; --lila: #8b7dff; --lila2: #5b4bff; --verde: #0ca678; --ambar: #f08c00; --rosa: #e64980;
+  --morado: #6a5cf2; --lila: #8b7dff; --lila2: #5b4bff; --verde: #0ca678; --ambar: #f08c00; --rosa: #e64980;
   --display: "Plus Jakarta Sans", system-ui, sans-serif; --body: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif; --cifra: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
   --vidrio: rgba(255,255,255,.58); --vborde: rgba(255,255,255,.9); --blur: blur(22px) saturate(1.5);
   --sombra-v: 0 18px 44px -24px rgba(40,30,120,.4);
@@ -392,23 +392,8 @@ h2 { font-weight: 800; }
 .eti::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--morado); }
 .proyectos .eti, .cierre .eti { color: var(--ink) !important; }
 .btn { font-weight: 700; }
-.btn-luz { background: linear-gradient(135deg, #5b4bff, #b04bd6 55%, #e64980); color: #fff; box-shadow: 0 14px 30px -12px rgba(91,75,255,.7); }
-.btn-luz:hover { box-shadow: 0 18px 36px -12px rgba(91,75,255,.85); }
-.btn-borde, .btn-claro, .btn-probar { background: var(--vidrio) !important; color: var(--ink) !important; box-shadow: none !important; border: 1px solid var(--vborde) !important; -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
-.btn-morado, .btn-micro { background: var(--ink); color: #fff; box-shadow: 0 12px 26px -14px rgba(20,21,28,.7); }
-.btn-micro:hover { background: #2a2c3d; }
-.vidrio-base, .dolor, .plan, .micro-app, .micro-paso, .suscrip, form, .etiqueta-viva, .chip-flota, .vivo-pasos li::before { background: var(--vidrio); border: 1px solid var(--vborde); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--sombra-v); }
+.vidrio-base, .dolor, .plan, .micro-app, .micro-paso, .suscrip, form, .vivo-pasos li::before { background: var(--vidrio); border: 1px solid var(--vborde); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--sombra-v); }
 /* Portada */
-.portada { background: transparent; color: var(--ink); }
-.portada::after { content: ""; position: absolute; width: 520px; height: 520px; right: -120px; top: 60px; border-radius: 50%; background: radial-gradient(#e64980, transparent 65%); opacity: .22; pointer-events: none; }
-.nav-links a { color: var(--muted); } .nav-links a:hover { color: var(--ink); }
-.hero h1 .gira { background-image: linear-gradient(90deg, #5b4bff, #e64980, #f08c00, #0ca678, #5b4bff); }
-.hero .lead, .sellos { color: var(--muted); }
-.sellos span::before { box-shadow: none; }
-.etiqueta-viva { color: var(--ink); }
-.cinta { border-top: 1px solid rgba(20,21,28,.06); }
-.cinta .pista { color: var(--muted); font-family: var(--body); font-weight: 700; }
-.cinta .pista span::after { color: var(--morado); }
 /* Problemas */
 .dolor { border-radius: 26px; }
 .dolor .num { font-family: var(--cifra); font-weight: 600; background: linear-gradient(120deg, #5b4bff, #e64980); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -416,9 +401,6 @@ h2 { font-weight: 800; }
 .proyectos { background: transparent; color: var(--ink); }
 .texto .tipo { background: rgba(91,75,255,.1); color: var(--morado); }
 .funciones li::before { background: radial-gradient(circle at 50% 50%, var(--verde) 0 4px, rgba(12,166,120,.18) 5px); }
-.chip-flota { color: var(--ink); }
-.chip-flota b { font-family: var(--cifra); font-weight: 600; }
-.chip-flota .punto { box-shadow: none; }
 .puntos button { background: rgba(20,21,28,.18); }
 .puntos button.vis { background: var(--ink); }
 .pc { box-shadow: 0 40px 80px -40px rgba(40,30,120,.55), 0 0 0 1px rgba(0,0,0,.6); }
@@ -471,10 +453,16 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--m
 .aviso { color: var(--verde); }
 footer { background: transparent; color: var(--muted); border-top: 1px solid rgba(20,21,28,.08); }
 footer a { color: var(--ink); }
-.fijo .btn { box-shadow: 0 16px 34px -12px rgba(91,75,255,.8); }
 /* Sin etiquetas en mayúsculas (skill frontend-design) */
 .texto .tipo, .micro-tag, .plan .chip, .hito .dia, .sello-centro small { text-transform: none; letter-spacing: 0; font-weight: 700; }
 .precio-sello text { letter-spacing: .08em; }
+/* Portada: el espacio oscuro con estrellas de antes */
+.portada { --luz: #efeefe; --luz2: #b9b5d9; --noche: #0b0a14; --ink: #efeefe; color: var(--luz); background: radial-gradient(1200px 600px at 75% 30%, #241f55 0%, transparent 60%), #0b0a14; }
+.portada .eti { color: var(--luz) !important; background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.14); }
+.portada .eti::before { background: #3ddc9f; }
+.portada .etiqueta-viva { color: #0b0a14; }
+/* Burbujas de los gráficos como antes */
+.chip-flota { --luz: #efeefe; --luz2: #b9b5d9; }
 </style>
 </head>
 <body class="no-js">
@@ -484,7 +472,7 @@ footer a { color: var(--ink); }
   <canvas id="cielo" aria-hidden="true"></canvas>
   <div class="wrap">
     <nav class="nav">
-      <a class="marca" href="#"><svg class="logo-anim" width="38" height="38" viewBox="0 0 120 120" aria-hidden="true"><defs><mask id="mN" maskUnits="userSpaceOnUse" x="-20" y="-20" width="160" height="160"><rect x="-20" y="-20" width="160" height="80" fill="#fff"/><circle cx="60" cy="60" r="30" fill="#000"/></mask><clipPath id="cN" clipPathUnits="userSpaceOnUse"><rect x="-20" y="60" width="160" height="80"/></clipPath></defs><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#f1eefc" stroke-width="15"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><g mask="url(#mN)"><circle r="11" fill="#f1eefc"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g><g clip-path="url(#cN)"><circle r="11" fill="#f1eefc"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g></g></svg> Orbe Apps</a>
+      <a class="marca" href="#"><svg class="logo-anim" width="38" height="38" viewBox="0 0 120 120" aria-hidden="true"><defs><mask id="mN" maskUnits="userSpaceOnUse" x="-20" y="-20" width="160" height="160"><rect x="-20" y="-20" width="160" height="80" fill="#fff"/><circle cx="60" cy="60" r="30" fill="#000"/></mask><clipPath id="cN" clipPathUnits="userSpaceOnUse"><rect x="-20" y="60" width="160" height="80"/></clipPath></defs><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#0b0a14" stroke-width="15"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><g mask="url(#mN)"><circle r="11" fill="#0b0a14"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g><g clip-path="url(#cN)"><circle r="11" fill="#0b0a14"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g></g></svg> Orbe Apps</a>
       <div class="nav-links">
         <a href="#trabajos">Trabajos</a>
         <a href="#microapps">Microapps</a>
@@ -861,7 +849,7 @@ if (!quieto && matchMedia('(hover: hover)').matches) document.querySelectorAll('
     cx.clearRect(0, 0, w, h);
     for (const s of estrellas) {
       const a = .35 + .45 * Math.sin(s.f + t / 1000 * s.v);
-      cx.globalAlpha = a * .55; cx.fillStyle = '#6b5cff';
+      cx.globalAlpha = a; cx.fillStyle = '#e6e3ff';
       cx.beginPath(); cx.arc(s.x + mx * s.r * 14, s.y + my * s.r * 14, s.r, 0, 7); cx.fill();
     }
     cx.globalAlpha = 1;
