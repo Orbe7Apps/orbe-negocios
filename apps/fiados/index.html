@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuaderno de fiados · Orbe Apps</title>
+<meta name="description" content="Quién te debe, cuánto y desde cuándo. Con abonos y el recordatorio listo para mandar por WhatsApp.">
+<meta name="theme-color" content="#d98a0b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icono-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Manrope:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="../base/app.css">
+<style>:root { --c: #d98a0b; --c-ink: #1a1203; } @media (prefers-color-scheme: dark) { :root { --c: #f0a020; } }
+.saldo-grande { font: 800 40px/1 var(--display); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.mov { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.mov:last-child { border-bottom: 0; }
+.mov .info { flex: 1; min-width: 0; } .mov .info b { display: block; font-size: 14.5px; } .mov .info span { font-size: 12.5px; color: var(--muted); }
+.mov .monto { font-weight: 800; font-variant-numeric: tabular-nums; }
+.mov .borrar { border: 0; background: none; color: var(--muted); padding: 6px; }
+.tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px; }
+.acciones3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }</style>
+</head>
+<body>
+<header class="barra" id="barra"></header>
+<main class="envoltura">
+  <div class="prueba" id="prueba" hidden></div>
+  <div class="resumen" id="resumen"></div>
+  <label class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="buscar" type="search" placeholder="Buscar cliente" aria-label="Buscar cliente"></label>
+  <div class="pestanas" id="filtros"></div>
+  <section class="seccion"><div class="lista" id="lista"></div></section>
+  <p class="marca-pie">Hecha por <a href="https://orbe7apps.github.io/orbe-negocios/servicios/" target="_blank" rel="noopener">Orbe Apps</a></p>
+</main>
+<button class="btn principal fab" id="nuevo" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Anotar fiado</button>
+<script src="../base/app.js"></script>
+<script src="fiados.js"></script>
+</body>
+</html>

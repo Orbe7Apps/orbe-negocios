@@ -194,6 +194,11 @@ section { padding-block: 110px; }
 .micro-pie b { font: 800 1.8rem/1 var(--display); letter-spacing: -.04em; }
 .btn-micro { background: var(--ink); color: #fff; padding: .7em 1.1em; font-size: .9rem; }
 .btn-micro:hover { background: var(--morado); }
+.micro-pie:has(.micro-btns) { flex-direction: column; align-items: stretch; gap: 12px; }
+.micro-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.micro-btns .btn { justify-content: center; white-space: nowrap; }
+.btn-probar { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); padding: .7em 1em; font-size: .9rem; }
+.btn-probar:hover { box-shadow: inset 0 0 0 1.5px var(--ink); }
 .micro-cinta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
 .micro-paso { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px dashed #cfc9ff; border-radius: 18px; padding: 14px 18px; font-weight: 700; }
 .micro-paso b { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: var(--morado); color: #fff; font: 800 .95rem var(--display); }
@@ -497,7 +502,7 @@ footer a { color: var(--luz); }
       <div class="cab" style="margin-bottom:0">
         <div class="eti rev">Microapps listas</div>
         <h2 class="rev" style="--d:.08s">Una app para cada problema.<br><span class="gira-suave">Desde $17.</span></h2>
-        <p class="rev" style="--d:.14s">Herramientas pequeñas que resuelven una sola cosa y la resuelven bien. Las compras, las abres y ya funcionan: en tu teléfono, sin internet y sin mensualidad. ¿Quieres una con tu marca o con cambios? Esa va a medida, desde $149.</p>
+        <p class="rev" style="--d:.14s">Herramientas pequeñas que resuelven una sola cosa y la resuelven bien. Pruébalas gratis aquí mismo y, si te sirven, pagas una vez y quedan tuyas: en tu teléfono, sin internet y sin mensualidad. ¿Quieres una con tu marca o con cambios? Esa va a medida, desde $149.</p>
       </div>
       <div class="precio-sello rev" style="--d:.2s" aria-label="Precio de lanzamiento 17 dólares, pago único">
         <svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="arcoSello" d="M100 100 m-88 0 a88 88 0 1 1 176 0 a88 88 0 1 1 -176 0"/></defs><text textLength="548" lengthAdjust="spacingAndGlyphs"><textPath href="#arcoSello" textLength="548" lengthAdjust="spacingAndGlyphs">PAGO ÚNICO · ACCESO DE POR VIDA · PAGO ÚNICO · ACCESO DE POR VIDA ·</textPath></text></svg>
@@ -511,35 +516,35 @@ footer a { color: var(--luz); }
         <span class="micro-tag">Para no quedarte sin</span>
         <h3>Inventario simple</h3>
         <p>Cuánto tienes de cada producto, qué se vende más y un aviso cuando algo está por acabarse.</p>
-        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Inventario simple">Lo quiero</button></div>
+        <div class="micro-pie"><b>$17</b><span class="micro-btns"><a class="btn btn-probar" href="../apps/inventario/" target="_blank" rel="noopener">Probar gratis</a><button class="btn btn-micro" type="button" data-micro="Inventario simple">Lo quiero</button></span></div>
       </article>
       <article class="micro-app rev" style="--c:#3ddc9f;--d:.08s">
         <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M9 14.5l2 2 4-4"/></svg></div>
         <span class="micro-tag">Para servicios</span>
         <h3>Agenda de citas</h3>
-        <p>Tus clientas ven los horarios libres y apartan solas. Para uñas, barberías, estéticas y consultorios.</p>
-        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Agenda de citas">Lo quiero</button></div>
+        <p>Tus citas en orden, recordatorios por WhatsApp y un link para que tus clientas pidan cita. Para uñas, barberías y consultorios.</p>
+        <div class="micro-pie"><b>$17</b><span class="micro-btns"><a class="btn btn-probar" href="../apps/agenda/" target="_blank" rel="noopener">Probar gratis</a><button class="btn btn-micro" type="button" data-micro="Agenda de citas">Lo quiero</button></span></div>
       </article>
       <article class="micro-app rev" style="--c:#f0a020;--d:.16s">
         <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><circle cx="17" cy="15.5" r="3.2"/><path d="M17 14v1.5l1 .8"/></svg></div>
         <span class="micro-tag">Para fiar sin perder</span>
         <h3>Cuaderno de fiados</h3>
         <p>Quién te debe, cuánto y desde cuándo. Con abonos y el recordatorio listo para mandar por WhatsApp.</p>
-        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Cuaderno de fiados">Lo quiero</button></div>
+        <div class="micro-pie"><b>$17</b><span class="micro-btns"><a class="btn btn-probar" href="../apps/fiados/" target="_blank" rel="noopener">Probar gratis</a><button class="btn btn-micro" type="button" data-micro="Cuaderno de fiados">Lo quiero</button></span></div>
       </article>
       <article class="micro-app rev" style="--c:#ff8fb3;--d:.24s">
         <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M16.5 7.5c0-1.7-2-3-4.5-3s-4.5 1.3-4.5 3 2 2.6 4.5 3 4.5 1.3 4.5 3-2 3-4.5 3-4.5-1.3-4.5-3"/></svg></div>
         <span class="micro-tag">Para tus cuentas</span>
         <h3>Presupuesto del mes</h3>
         <p>Cuánto entra, cuánto sale y cuánto te queda. Con límites por categoría y avisos antes de pasarte.</p>
-        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Presupuesto del mes">Lo quiero</button></div>
+        <div class="micro-pie"><b>$17</b><span class="micro-btns"><a class="btn btn-probar" href="../apps/presupuesto/" target="_blank" rel="noopener">Probar gratis</a><button class="btn btn-micro" type="button" data-micro="Presupuesto del mes">Lo quiero</button></span></div>
       </article>
     </div>
 
     <div class="micro-cinta rev">
-      <div class="micro-paso"><b>1</b><span>Eliges tu microapp</span></div>
-      <div class="micro-paso"><b>2</b><span>Pagas una sola vez</span></div>
-      <div class="micro-paso"><b>3</b><span>Te llega tu acceso y la instalas</span></div>
+      <div class="micro-paso"><b>1</b><span>La pruebas gratis</span></div>
+      <div class="micro-paso"><b>2</b><span>Pagas $17 una sola vez</span></div>
+      <div class="micro-paso"><b>3</b><span>Te llega tu código y queda tuya</span></div>
     </div>
 
     <div class="suscrip rev">
