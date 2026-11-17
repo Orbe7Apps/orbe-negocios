@@ -213,7 +213,7 @@
           <button type="button" class="fila" data-a="restaurar"><span class="info"><b>Restaurar una copia</b><span>Recupera tus datos desde un archivo</span></span></button>
           <button type="button" class="fila" data-a="borrar"><span class="info"><b style="color:var(--out)">Borrar todos los datos</b><span>Empieza de cero en este teléfono</span></span></button>`}
         </div>
-        <p class="texto-ayuda" style="text-align:center;margin-top:6px">${demo ? 'Modo de ejemplo' : 'App activada'} · Los datos se guardan solo en este teléfono.</p>`
+        <p class="texto-ayuda" style="text-align:center;margin-top:6px">${demo ? 'Modo de ejemplo.' : 'App activada.'} Los datos se guardan solo en este teléfono.</p>`
       });
       d.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { d.close(); setTimeout(() => Orbe.accion(b.dataset.a), 150); });
     },
@@ -270,7 +270,7 @@
 
     pintarBarra() {
       const n = Orbe.datos.ajustes.negocio;
-      document.getElementById('sub').innerHTML = esc(n || (Orbe.enDemo() ? 'Ejemplo' : 'Toca ⋯ para poner el nombre de tu negocio')) + ' · ' + esc(Orbe.fecha(Orbe.hoy(), { weekday: 'short', day: 'numeric', month: 'short' }));
+      document.getElementById('sub').innerHTML = esc(n || (Orbe.enDemo() ? 'Ejemplo' : 'Toca ⋯ para poner el nombre de tu negocio')) + ', ' + esc(Orbe.fecha(Orbe.hoy(), { weekday: 'short', day: 'numeric', month: 'short' }));
     },
     pintarTabs() {
       const fab = document.getElementById('fab'); if (fab) fab.innerHTML = ICON.mas + `<span>${esc(Orbe.app.fabTexto ? Orbe.app.fabTexto(Orbe.vista) : 'Nuevo')}</span>`;

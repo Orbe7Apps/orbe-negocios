@@ -38,7 +38,7 @@
     cs.filter(c => c.limite && saldo(c) > c.limite).forEach(c => tareas.push({ color: 'var(--warn)', icono: ICON.alerta, titulo: `${esc(c.nombre)} pasó su límite`, sub: `Debe ${dinero(saldo(c))} y su límite es ${dinero(c.limite)}.`, accion: () => detalle(c.id) }));
     const recientes = movs.sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 5);
     v.innerHTML = `<div class="entra">
-      ${Orbe.hero({ etiqueta: `Te deben · ${deudores.length} ${deudores.length === 1 ? 'cliente' : 'clientes'}`, monto: total, pildora: viejos.length ? { c: 'mal', t: `${viejos.length} con más de 15 días` } : { c: 'bien', t: 'Ninguna deuda vieja' },
+      ${Orbe.hero({ etiqueta: `Lo que te deben ${deudores.length} ${deudores.length === 1 ? 'cliente' : 'clientes'}`, monto: total, pildora: viejos.length ? { c: 'mal', t: `${viejos.length} con más de 15 días` } : { c: 'bien', t: 'Ninguna deuda vieja' },
         anillo: { p: cobrado + total ? cobrado / (cobrado + total) : 0, t: `${cobrado + total ? Math.round(cobrado / (cobrado + total) * 100) : 0}%`, sub: 'cobrado del mes', c: 'var(--c)' },
         barras: barras.map(x => x / maxB),
         chips: [{ t: 'Cobrado', v: dinero(cobrado) }, { t: 'Fiado',  v: dinero(movs.filter(m => m.tipo === 'fiado' && m.fecha.startsWith(mes)).reduce((s, m) => s + m.monto, 0)) }, { t: 'Más vieja', v: deudores.length ? Math.max(...deudores.map(dias)) + ' días' : '—' }] })}
@@ -49,7 +49,7 @@
     v.querySelectorAll('[data-ir]').forEach(b => b.onclick = () => Orbe.ir(b.dataset.ir));
     v.querySelectorAll('[data-cm]').forEach(b => b.onclick = () => detalle(b.dataset.cm));
   }
-  const filaMov = m => `<button type="button" class="tarea" data-cm="${m.c.id}"><span class="ini" style="width:38px;height:38px;border-radius:12px;font-size:13px;background:${Orbe.color(m.c.nombre)}">${esc(Orbe.iniciales(m.c.nombre))}</span><span class="info"><b>${esc(m.c.nombre)}</b><span>${m.tipo === 'fiado' ? esc(m.detalle || 'Fiado') : 'Abono' + (m.detalle ? ' · ' + esc(m.detalle) : '')} · ${Orbe.hace(m.fecha)}</span></span><span class="monto" style="color:${m.tipo === 'abono' ? 'var(--in)' : 'inherit'}">${m.tipo === 'abono' ? '−' : '+'}${dinero(m.monto)}</span></button>`;
+  const filaMov = m => `<button type="button" class="tarea" data-cm="${m.c.id}"><span class="ini" style="width:38px;height:38px;border-radius:12px;font-size:13px;background:${Orbe.color(m.c.nombre)}">${esc(Orbe.iniciales(m.c.nombre))}</span><span class="info"><b>${esc(m.c.nombre)}</b><span>${m.tipo === 'fiado' ? esc(m.detalle || 'Fiado') : 'Abono' + (m.detalle ? ' / ' + esc(m.detalle) : '')} / ${Orbe.hace(m.fecha)}</span></span><span class="monto" style="color:${m.tipo === 'abono' ? 'var(--in)' : 'inherit'}">${m.tipo === 'abono' ? '−' : '+'}${dinero(m.monto)}</span></button>`;
 
   function pintarClientes(v) {
     const cs = D().clientes;
@@ -64,7 +64,7 @@
         const s = saldo(c), d = dias(c), f = fama(c);
         const col = d >= 30 ? 'var(--out)' : d >= 15 ? 'var(--warn)' : 'var(--in)';
         return `<button class="fila toque" type="button" data-c="${c.id}">${Orbe.ini(c.nombre)}<span class="info"><b>${esc(c.nombre)}</b>
-          ${s > 0.004 ? `<div class="progreso"><i style="width:${Math.max(4, s / maxS * 100)}%;background:${col}"></i></div><span>Debe desde ${Orbe.hace(cuenta(c).desde)}${f ? ' · ' + f[1].toLowerCase() : ''}</span>` : `<span>Al día${f ? ' · ' + f[1].toLowerCase() : ''}</span>`}</span>
+          ${s > 0.004 ? `<div class="progreso"><i style="width:${Math.max(4, s / maxS * 100)}%;background:${col}"></i></div><span>Debe desde ${Orbe.hace(cuenta(c).desde)}${f ? ' / ' + f[1].toLowerCase() : ''}</span>` : `<span>Al día${f ? ' / ' + f[1].toLowerCase() : ''}</span>`}</span>
           <span class="derecha"><span class="monto" style="color:${s > 0.004 ? col : 'var(--in)'}">${dinero(Math.max(0, s))}</span>${c.limite ? `<small>de ${dinero(c.limite)}</small>` : ''}</span></button>`;
       }).join('') : `<div class="vacio">${busca ? 'No hay clientes con ese nombre.' : filtro === 'deben' ? '<b>Nadie te debe</b>Todos tus clientes están al día.' : 'No hay clientes aquí todavía.'}</div>`}</div></section>`;
     const inp = document.getElementById('buscar');
@@ -91,7 +91,7 @@
       titulo: tipo === 'fiado' ? 'Anotar fiado' : 'Registrar abono',
       cuerpo: `<div class="segmento" style="margin:0"><button type="button" data-t="fiado" aria-pressed="${tipo === 'fiado'}">Se llevó fiado</button><button type="button" data-t="abono" aria-pressed="${tipo === 'abono'}">Me abonó</button></div>
         <label class="campo">Monto<input name="monto" class="grande" inputmode="decimal" placeholder="${esc(Orbe.simbolo())}0" autocomplete="off"></label>
-        <label class="campo">Cliente<select name="cliente"><option value="__nuevo">+ Cliente nuevo</option>${D().clientes.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(c => `<option value="${c.id}" ${c.id === idCliente ? 'selected' : ''}>${esc(c.nombre)}${debe(c) ? ' · debe ' + dinero(saldo(c)) : ''}</option>`).join('')}</select></label>
+        <label class="campo">Cliente<select name="cliente"><option value="__nuevo">+ Cliente nuevo</option>${D().clientes.slice().sort((a, b) => a.nombre.localeCompare(b.nombre)).map(c => `<option value="${c.id}" ${c.id === idCliente ? 'selected' : ''}>${esc(c.nombre)}${debe(c) ? ' / debe ' + dinero(saldo(c)) : ''}</option>`).join('')}</select></label>
         <div data-nuevo class="fila2"><label class="campo">Nombre<input name="nombre" placeholder="Ej. Sra. Carmen" autocomplete="off"></label><label class="campo">WhatsApp<input name="tel" inputmode="tel" placeholder="Opcional" autocomplete="off"></label></div>
         <label class="campo" data-det><span data-det-t>Qué se llevó</span><input name="detalle" placeholder="Ej. 2 harinas y 1 aceite" autocomplete="off"></label>
         <label class="campo">Fecha<input name="fecha" type="date" value="${Orbe.hoy()}"></label>
@@ -170,7 +170,7 @@
         <div class="dos"><button type="button" class="btn" data-x="fiado">${ICON.mas} Fió</button><button type="button" class="btn principal" data-x="abono" ${s > 0.004 ? '' : 'disabled'}>Abonó</button></div>
         ${s > 0.004 ? `<button type="button" class="btn wa ancho" data-x="wa">${ICON.wa} Mandar su cuenta</button>` : ''}
         <div class="tarjeta"><h3 style="font-size:15px;padding:12px 0 2px">Movimientos</h3>
-          ${movs.length ? movs.map(m => `<div class="mov"><div class="info"><b>${m.tipo === 'fiado' ? esc(m.detalle || 'Fiado') : 'Abono' + (m.detalle ? ' · ' + esc(m.detalle) : '')}</b><span>${Orbe.fecha(m.fecha, { weekday: 'short', day: 'numeric', month: 'short' })}</span></div><span class="monto" style="color:${m.tipo === 'abono' ? 'var(--in)' : 'inherit'}">${m.tipo === 'abono' ? '−' : '+'}${dinero(m.monto)}</span><button type="button" class="borrar" data-borrar="${m.id}" aria-label="Borrar movimiento">${ICON.cerrar}</button></div>`).join('') : '<p class="texto-ayuda" style="padding:8px 0 14px">Sin movimientos.</p>'}
+          ${movs.length ? movs.map(m => `<div class="mov"><div class="info"><b>${m.tipo === 'fiado' ? esc(m.detalle || 'Fiado') : 'Abono' + (m.detalle ? ' / ' + esc(m.detalle) : '')}</b><span>${Orbe.fecha(m.fecha, { weekday: 'short', day: 'numeric', month: 'short' })}</span></div><span class="monto" style="color:${m.tipo === 'abono' ? 'var(--in)' : 'inherit'}">${m.tipo === 'abono' ? '−' : '+'}${dinero(m.monto)}</span><button type="button" class="borrar" data-borrar="${m.id}" aria-label="Borrar movimiento">${ICON.cerrar}</button></div>`).join('') : '<p class="texto-ayuda" style="padding:8px 0 14px">Sin movimientos.</p>'}
         </div>
         <div class="dos"><button type="button" class="btn" data-x="editar">Editar datos</button><button type="button" class="btn peligro" data-x="eliminar">Eliminar</button></div>`
     });

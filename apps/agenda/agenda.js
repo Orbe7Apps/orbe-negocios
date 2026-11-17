@@ -58,13 +58,13 @@
       const sinMarcar = D().citas.filter(c => c.estado === 'pendiente' && pasada(c) && c.fecha >= Orbe.sumarDias(hoy, -7));
       if (sinMarcar.length) tareas.push({ color: 'var(--warn)', icono: ICON.check, titulo: `${sinMarcar.length} ${sinMarcar.length === 1 ? 'cita por marcar' : 'citas por marcar'}`, sub: '¿Vinieron o no? Así tus reportes quedan bien.', accion: () => marcarPendientes(sinMarcar) });
       const porRecordar = activas(manana).filter(c => c.estado === 'pendiente' && !c.recordada);
-      if (porRecordar.length) tareas.push({ color: '#128c5e', icono: ICON.wa, titulo: porRecordar.length === 1 ? 'Recordar la cita de mañana' : `Recordar las ${porRecordar.length} citas de mañana`, sub: porRecordar.slice(0, 3).map(c => `${esc(c.cliente.split(' ')[0])} ${c.hora}`).join(' · '), accion: () => recordarVarias(porRecordar) });
+      if (porRecordar.length) tareas.push({ color: '#128c5e', icono: ICON.wa, titulo: porRecordar.length === 1 ? 'Recordar la cita de mañana' : `Recordar las ${porRecordar.length} citas de mañana`, sub: porRecordar.slice(0, 3).map(c => `${esc(c.cliente.split(' ')[0])} ${c.hora}`).join(' / '), accion: () => recordarVarias(porRecordar) });
       const perdidas = clientas().filter(x => x.perdida).sort((a, b) => b.gastado - a.gastado);
       if (perdidas.length) tareas.push({ color: 'var(--out)', icono: ICON.personas, titulo: `${perdidas.length} ${perdidas.length === 1 ? 'clienta no ha vuelto' : 'clientas no han vuelto'}`, sub: `${esc(perdidas[0].nombre)} vino hace ${perdidas[0].sin} días. Invítalas a volver.`, accion: () => { Orbe.ir('clientas'); } });
       if (lb.length >= 4) tareas.push({ color: '#3ba7e6', icono: ICON.calendario, titulo: `Tienes ${lb.length} horarios libres hoy`, sub: 'Comparte tu link de reservas en tus estados.', accion: enlace });
     }
     v.innerHTML = `<div class="entra">
-      ${Orbe.hero({ etiqueta: `${dia === hoy ? 'Hoy' : Orbe.fecha(dia, { weekday: 'long', day: 'numeric', month: 'short' })} · ${act.length} ${act.length === 1 ? 'cita' : 'citas'}`, monto: esperado,
+      ${Orbe.hero({ etiqueta: `${dia === hoy ? 'Hoy tienes' : Orbe.fecha(dia, { weekday: 'long', day: 'numeric', month: 'short' }).replace(/^./, x => x.toUpperCase()) + ':'} ${act.length} ${act.length === 1 ? 'cita' : 'citas'}`, monto: esperado,
         pildora: dia === hoy ? (prox ? { t: `Próxima: ${esc(prox.cliente.split(' ')[0])} a las ${prox.hora}` } : { c: 'bien', t: act.length ? 'Sin más citas por hoy' : 'Día libre' }) : (abre(dia) ? { t: `${lb.length} horarios libres` } : { t: 'No atiendes este día' }),
         anillo: { p: ocupacion(dia), t: Math.round(ocupacion(dia) * 100) + '%', sub: 'del día ocupado' } })}
       <div class="pestanas dias-tira" id="dias"></div>
@@ -73,7 +73,7 @@
         <div class="lista">${cs.length ? cs.map(c => {
           const s = serv(c.servicio), st = { hecha: ['ok', 'Atendida'], cancelada: ['', 'Cancelada'], novino: ['mal', 'No vino'] }[c.estado];
           return `<button type="button" class="fila toque" data-c="${c.id}" style="${c.estado !== 'pendiente' ? 'opacity:.6' : ''}"><span style="min-width:52px;text-align:left"><b class="num" style="font-size:17px">${c.hora}</b><small style="display:block;color:var(--muted);font-size:12px">${dur(c)} min</small></span><span style="width:4px;align-self:stretch;border-radius:4px;background:${colServ(c.servicio)}"></span>
-            <span class="info"><b style="${c.estado === 'cancelada' ? 'text-decoration:line-through' : ''}">${esc(c.cliente)}</b><span>${esc(s?.nombre || 'Cita')}${c.recordada && c.estado === 'pendiente' ? ' · recordada' : ''}</span></span>
+            <span class="info"><b style="${c.estado === 'cancelada' ? 'text-decoration:line-through' : ''}">${esc(c.cliente)}</b><span>${esc(s?.nombre || 'Cita')}${c.recordada && c.estado === 'pendiente' ? ' / recordada' : ''}</span></span>
             <span class="derecha">${s?.precio ? `<span class="monto">${dinero(s.precio)}</span>` : ''}${st ? `<small><span class="chip ${st[0]}">${st[1]}</span></small>` : ''}</span></button>`;
         }).join('') : `<div class="vacio">${abre(dia) ? '<b>Sin citas</b>Toca un horario libre o el botón + para agendar.' : '<b>Día de descanso</b>Puedes cambiarlo en Menú › Horario.'}</div>`}</div></section>
       ${lb.length ? `<section class="seccion"><div class="seccion-cab"><h2>Horarios libres</h2><span class="texto-ayuda">${lb.length}</span></div><div class="opciones">${lb.map(t => `<button type="button" class="opcion" data-libre="${hhmm(t)}">${hhmm(t)}</button>`).join('')}</div></section>` : ''}</div>`;
@@ -96,7 +96,7 @@
     const maxG = Math.max(...cs.map(x => x.gastado), 1);
     v.innerHTML = `<label class="buscar">${ICON.buscar}<input id="buscar" type="search" placeholder="Buscar entre ${total} clientas" value="${esc(buscaCli)}" aria-label="Buscar clienta"></label>
       ${perdidas ? `<p class="texto-ayuda" style="margin-top:12px"><b style="color:var(--out)">${perdidas}</b> no han vuelto en más tiempo del normal. Escríbeles para que reserven otra vez.</p>` : ''}
-      <section class="seccion" style="margin-top:12px"><div class="lista entra">${cs.length ? cs.map(x => `<div class="fila">${Orbe.ini(x.nombre)}<span class="info"><b>${esc(x.nombre)}</b><div class="progreso"><i style="width:${Math.max(3, x.gastado / maxG * 100)}%;background:var(--c)"></i></div><span>${x.hechas} ${x.hechas === 1 ? 'visita' : 'visitas'}${x.cada ? ` · viene cada ${x.cada} días` : ''}${x.faltas ? ` · ${x.faltas} ${x.faltas === 1 ? 'falta' : 'faltas'}` : ''}</span></span>
+      <section class="seccion" style="margin-top:12px"><div class="lista entra">${cs.length ? cs.map(x => `<div class="fila">${Orbe.ini(x.nombre)}<span class="info"><b>${esc(x.nombre)}</b><div class="progreso"><i style="width:${Math.max(3, x.gastado / maxG * 100)}%;background:var(--c)"></i></div><span>${x.hechas} ${x.hechas === 1 ? 'visita' : 'visitas'}${x.cada ? ` / viene cada ${x.cada} días` : ''}${x.faltas ? ` / ${x.faltas} ${x.faltas === 1 ? 'falta' : 'faltas'}` : ''}</span></span>
           <span class="derecha"><span class="monto">${dinero(x.gastado)}</span>${x.prox ? `<small>Vuelve el ${Orbe.fecha(x.prox.fecha)}</small>` : x.perdida ? `<button type="button" class="chip mal" style="border:0" data-volver="${esc(x.nombre)}">Invitar</button>` : x.ultima ? `<small>${Orbe.hace(x.ultima)}</small>` : ''}</span></div>`).join('') : '<div class="vacio">Tus clientas aparecen aquí cuando agendas citas.</div>'}</div></section>`;
     const inp = document.getElementById('buscar');
     inp.oninput = e => { buscaCli = e.target.value.trim().toLowerCase(); const p = inp.selectionStart; pintarClientas(v); const n = document.getElementById('buscar'); n.focus(); n.setSelectionRange(p, p); };
@@ -126,7 +126,7 @@
       titulo: editar ? 'Cambiar cita' : 'Nueva cita',
       cuerpo: `<div class="fila2"><label class="campo">Clienta o cliente<input name="cliente" value="${esc(c.cliente)}" placeholder="Nombre" autocomplete="off" list="clientes"></label><label class="campo">WhatsApp<input name="tel" inputmode="tel" value="${esc(c.tel)}" placeholder="Opcional" autocomplete="off"></label></div>
         <datalist id="clientes">${nombres.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
-        <div class="campo"><span>Servicio</span><div class="opciones">${D().servicios.map(s => `<button type="button" class="opcion" data-s="${s.id}" aria-pressed="${s.id === c.servicio}">${esc(s.nombre)} · ${s.dur} min</button>`).join('')}</div></div>
+        <div class="campo"><span>Servicio</span><div class="opciones">${D().servicios.map(s => `<button type="button" class="opcion" data-s="${s.id}" aria-pressed="${s.id === c.servicio}">${esc(s.nombre)} / ${s.dur} min</button>`).join('')}</div></div>
         <div class="fila2"><label class="campo">Día<input name="fecha" type="date" value="${c.fecha}"></label><label class="campo">Hora<input name="hora" type="time" value="${c.hora}" step="300"></label></div>
         <div class="opciones" data-sug></div>
         <label class="campo">Nota<input name="nota" value="${esc(c.nota)}" placeholder="Opcional, ej. diseño francés" autocomplete="off"></label>`,
@@ -155,7 +155,7 @@
 
   function texto(c, tipo) {
     const s = serv(c.servicio), neg = D().ajustes.negocio, cuando = `${Orbe.fecha(c.fecha, { weekday: 'long', day: 'numeric', month: 'long' })} a las ${h12(c.hora)}`, nom = c.cliente.split(' ')[0];
-    if (tipo === 'confirmar' || tipo === 'cambio') return `Hola ${nom}. Tu cita${neg ? ` en ${neg}` : ''} ${tipo === 'cambio' ? 'cambió y ahora es' : 'quedó agendada'}:\n\n${cuando}\n${s?.nombre || 'Cita'}${s?.precio ? ` · ${dinero(s.precio)}` : ''}\n\nSi necesitas cambiarla, avísame por aquí. ¡Te espero!`;
+    if (tipo === 'confirmar' || tipo === 'cambio') return `Hola ${nom}. Tu cita${neg ? ` en ${neg}` : ''} ${tipo === 'cambio' ? 'cambió y ahora es' : 'quedó agendada'}:\n\n${cuando}\n${s?.nombre || 'Cita'}${s?.precio ? ` / ${dinero(s.precio)}` : ''}\n\nSi necesitas cambiarla, avísame por aquí. ¡Te espero!`;
     if (tipo === 'gracias') return `¡Gracias por venir, ${nom}!${neg ? ` Fue un gusto atenderte en ${neg}.` : ''}${D().ajustes.resena ? `\n\nSi te gustó, ¿nos dejas una reseña? Nos ayuda muchísimo:\n${D().ajustes.resena}` : ''}\n\nCuando quieras tu próxima cita, escríbeme por aquí.`;
     return `Hola ${nom}. Te recuerdo tu cita${neg ? ` en ${neg}` : ''}:\n\n${cuando}\n${s?.nombre || 'Cita'}\n\n¿Me confirmas que vienes?`;
   }
@@ -165,11 +165,11 @@
     d.querySelector('[data-no]').onclick = () => d.close();
   }
   function recordarVarias(lista) {
-    const d = hoja({ titulo: 'Citas de mañana', cuerpo: `<p class="texto-ayuda">Toca cada una para mandarle su recordatorio. Las que confirmes quedan marcadas.</p><div class="tarjeta">${lista.map(c => `<button type="button" class="tarea" data-r="${c.id}"><span class="ico" style="background:#128c5e">${ICON.wa}</span><span class="info"><b>${esc(c.cliente)} · ${c.hora}</b><span>${esc(serv(c.servicio)?.nombre || '')}${c.tel ? '' : ' · sin número guardado'}</span></span><span class="flecha">${ICON.flecha}</span></button>`).join('')}</div>` });
+    const d = hoja({ titulo: 'Citas de mañana', cuerpo: `<p class="texto-ayuda">Toca cada una para mandarle su recordatorio. Las que confirmes quedan marcadas.</p><div class="tarjeta">${lista.map(c => `<button type="button" class="tarea" data-r="${c.id}"><span class="ico" style="background:#128c5e">${ICON.wa}</span><span class="info"><b>${esc(c.cliente)} / ${c.hora}</b><span>${esc(serv(c.servicio)?.nombre || '')}${c.tel ? '' : ' / sin número guardado'}</span></span><span class="flecha">${ICON.flecha}</span></button>`).join('')}</div>` });
     d.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const c = D().citas.find(x => x.id === b.dataset.r); Orbe.whatsapp(c.tel, texto(c, 'recordar')); c.recordada = true; Orbe.guardar(); b.style.opacity = .45; pintar(); });
   }
   function marcarPendientes(lista) {
-    const d = hoja({ titulo: 'Citas por marcar', cuerpo: `<div class="tarjeta">${lista.map(c => `<div class="mov" data-m="${c.id}"><div class="info"><b>${esc(c.cliente)}</b><span>${Orbe.fecha(c.fecha, { weekday: 'short', day: 'numeric' })} · ${c.hora} · ${esc(serv(c.servicio)?.nombre || '')}</span></div><button type="button" class="chip ok" style="border:0;padding:7px 11px" data-e="hecha">Vino</button><button type="button" class="chip mal" style="border:0;padding:7px 11px" data-e="novino">No vino</button></div>`).join('')}</div>` });
+    const d = hoja({ titulo: 'Citas por marcar', cuerpo: `<div class="tarjeta">${lista.map(c => `<div class="mov" data-m="${c.id}"><div class="info"><b>${esc(c.cliente)}</b><span>${Orbe.fecha(c.fecha, { weekday: 'short', day: 'numeric' })} / ${c.hora} / ${esc(serv(c.servicio)?.nombre || '')}</span></div><button type="button" class="chip ok" style="border:0;padding:7px 11px" data-e="hecha">Vino</button><button type="button" class="chip mal" style="border:0;padding:7px 11px" data-e="novino">No vino</button></div>`).join('')}</div>` });
     d.querySelectorAll('[data-e]').forEach(b => b.onclick = () => { const row = b.closest('[data-m]'), c = D().citas.find(x => x.id === row.dataset.m); c.estado = b.dataset.e; Orbe.guardar(); row.style.opacity = .4; row.querySelectorAll('button').forEach(x => x.disabled = true); pintar(); });
   }
   function invitar(x) {
@@ -184,7 +184,7 @@
     const s = serv(c.servicio), x = clientas().find(y => y.nombre.toLowerCase() === c.cliente.trim().toLowerCase());
     const d = hoja({
       titulo: c.cliente,
-      cuerpo: `${Orbe.hero({ etiqueta: `${Orbe.fecha(c.fecha, { weekday: 'long', day: 'numeric', month: 'long' })} · ${dur(c)} min`, texto: h12(c.hora), pildora: { t: esc(s?.nombre || 'Cita') + (s?.precio ? ' · ' + dinero(s.precio) : '') },
+      cuerpo: `${Orbe.hero({ etiqueta: `${Orbe.fecha(c.fecha, { weekday: 'long', day: 'numeric', month: 'long' })}, ${dur(c)} min`, texto: h12(c.hora), pildora: { t: esc(s?.nombre || 'Cita') + (s?.precio ? ' / ' + dinero(s.precio) : '') },
           chips: x ? [{ t: 'Visitas', v: x.hechas }, { t: 'Ha gastado', v: dinero(x.gastado) }, { t: 'Faltas', v: x.faltas, c: x.faltas ? '#ffb3c2' : '' }] : null })}
         ${c.nota ? `<p class="texto-ayuda">Nota: ${esc(c.nota)}</p>` : ''}
         ${c.estado === 'pendiente' ? `<button type="button" class="btn wa ancho" data-x="recordar">${ICON.wa} ${c.recordada ? 'Recordar otra vez' : 'Mandar recordatorio'}</button>
@@ -207,7 +207,7 @@
 
   function servicios() {
     const lista = d => {
-      d.querySelector('[data-lista]').innerHTML = D().servicios.length ? D().servicios.map(s => `<div class="mov"><span style="width:10px;height:10px;border-radius:50%;background:${colServ(s.id)}"></span><div class="info"><b>${esc(s.nombre)}</b><span>${s.dur} min${s.precio ? ' · ' + dinero(s.precio) : ''}</span></div><button type="button" class="borrar" data-q="${s.id}" aria-label="Quitar ${esc(s.nombre)}">${ICON.cerrar}</button></div>`).join('') : '<p class="texto-ayuda" style="padding:12px 0">Aún no tienes servicios.</p>';
+      d.querySelector('[data-lista]').innerHTML = D().servicios.length ? D().servicios.map(s => `<div class="mov"><span style="width:10px;height:10px;border-radius:50%;background:${colServ(s.id)}"></span><div class="info"><b>${esc(s.nombre)}</b><span>${s.dur} min${s.precio ? ' / ' + dinero(s.precio) : ''}</span></div><button type="button" class="borrar" data-q="${s.id}" aria-label="Quitar ${esc(s.nombre)}">${ICON.cerrar}</button></div>`).join('') : '<p class="texto-ayuda" style="padding:12px 0">Aún no tienes servicios.</p>';
       d.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { D().servicios = D().servicios.filter(s => s.id !== b.dataset.q); Orbe.guardar(); lista(d); pintar(); });
     };
     const d = hoja({ titulo: 'Tus servicios', cuerpo: `<div class="tarjeta" data-lista></div><label class="campo">Servicio nuevo<input name="nombre" placeholder="Ej. Manicure semipermanente" autocomplete="off"></label>
