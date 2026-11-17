@@ -13,10 +13,10 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0b0a14">
+<meta name="theme-color" content="#eeeaff">
 <link rel="icon" href="logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
 <style>
 :root {
   --noche: #0b0a14; --noche2: #15132a; --noche3: #1f1c3a; --luz: #efeefe; --luz2: #b9b5d9;
@@ -371,6 +371,110 @@ footer a { color: var(--luz); }
   .js .rev { opacity: 1; transform: none; }
   html { scroll-behavior: auto; }
 }
+
+/* ===== Estilo "vidrio claro" (el mismo de las microapps) ===== */
+:root {
+  --noche: #14151c; --noche2: rgba(255,255,255,.58); --noche3: #ffffff; --luz: #14151c; --luz2: #6b6d7c;
+  --bg: #f3f1fb; --surface: rgba(255,255,255,.58); --ink: #14151c; --muted: #6b6d7c; --line: rgba(20,21,28,.08);
+  --morado: #5b4bff; --lila: #8b7dff; --lila2: #5b4bff; --verde: #0ca678; --ambar: #f08c00; --rosa: #e64980;
+  --display: "Plus Jakarta Sans", system-ui, sans-serif; --body: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif; --cifra: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
+  --vidrio: rgba(255,255,255,.58); --vborde: rgba(255,255,255,.9); --blur: blur(22px) saturate(1.5);
+  --sombra-v: 0 18px 44px -24px rgba(40,30,120,.4);
+}
+html { background: #f3f1fb; }
+body { background: linear-gradient(160deg, #e9ecff 0%, #f6f1ff 40%, #fff5ec 100%) fixed; }
+body::before, body::after { content: ""; position: fixed; border-radius: 50%; pointer-events: none; z-index: -1; filter: blur(10px); }
+body::before { width: 620px; height: 620px; top: -220px; left: -220px; background: radial-gradient(#8b7dff, transparent 65%); opacity: .4; }
+body::after { width: 560px; height: 560px; bottom: -200px; right: -220px; background: radial-gradient(#ffb38a, transparent 65%); opacity: .5; }
+h1, h2, h3 { letter-spacing: -.04em; }
+h2 { font-weight: 800; }
+.eti { display: inline-flex; align-items: center; gap: 8px; justify-self: start; font: 700 .8rem var(--body); letter-spacing: 0; text-transform: none; color: var(--ink); background: var(--vidrio); border: 1px solid var(--vborde); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); padding: 6px 13px; border-radius: 99px; }
+.eti::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--morado); }
+.proyectos .eti, .cierre .eti { color: var(--ink) !important; }
+.btn { font-weight: 700; }
+.btn-luz { background: linear-gradient(135deg, #5b4bff, #b04bd6 55%, #e64980); color: #fff; box-shadow: 0 14px 30px -12px rgba(91,75,255,.7); }
+.btn-luz:hover { box-shadow: 0 18px 36px -12px rgba(91,75,255,.85); }
+.btn-borde, .btn-claro, .btn-probar { background: var(--vidrio) !important; color: var(--ink) !important; box-shadow: none !important; border: 1px solid var(--vborde) !important; -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.btn-morado, .btn-micro { background: var(--ink); color: #fff; box-shadow: 0 12px 26px -14px rgba(20,21,28,.7); }
+.btn-micro:hover { background: #2a2c3d; }
+.vidrio-base, .dolor, .plan, .micro-app, .micro-paso, .suscrip, form, .etiqueta-viva, .chip-flota, .vivo-pasos li::before { background: var(--vidrio); border: 1px solid var(--vborde); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--sombra-v); }
+/* Portada */
+.portada { background: transparent; color: var(--ink); }
+.portada::after { content: ""; position: absolute; width: 520px; height: 520px; right: -120px; top: 60px; border-radius: 50%; background: radial-gradient(#e64980, transparent 65%); opacity: .22; pointer-events: none; }
+.nav-links a { color: var(--muted); } .nav-links a:hover { color: var(--ink); }
+.hero h1 .gira { background-image: linear-gradient(90deg, #5b4bff, #e64980, #f08c00, #0ca678, #5b4bff); }
+.hero .lead, .sellos { color: var(--muted); }
+.sellos span::before { box-shadow: none; }
+.etiqueta-viva { color: var(--ink); }
+.cinta { border-top: 1px solid rgba(20,21,28,.06); }
+.cinta .pista { color: var(--muted); font-family: var(--body); font-weight: 700; }
+.cinta .pista span::after { color: var(--morado); }
+/* Problemas */
+.dolor { border-radius: 26px; }
+.dolor .num { font-family: var(--cifra); font-weight: 600; background: linear-gradient(120deg, #5b4bff, #e64980); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Trabajos */
+.proyectos { background: transparent; color: var(--ink); }
+.texto .tipo { background: rgba(91,75,255,.1); color: var(--morado); }
+.funciones li::before { background: radial-gradient(circle at 50% 50%, var(--verde) 0 4px, rgba(12,166,120,.18) 5px); }
+.chip-flota { color: var(--ink); }
+.chip-flota b { font-family: var(--cifra); font-weight: 600; }
+.chip-flota .punto { box-shadow: none; }
+.puntos button { background: rgba(20,21,28,.18); }
+.puntos button.vis { background: var(--ink); }
+.pc { box-shadow: 0 40px 80px -40px rgba(40,30,120,.55), 0 0 0 1px rgba(0,0,0,.6); }
+.movil { box-shadow: 0 40px 70px -30px rgba(40,30,120,.6), 0 0 0 1px #000; }
+.tel-vivo { box-shadow: 0 50px 90px -40px rgba(40,30,120,.7), 0 0 0 1px #000; }
+/* Microapps */
+.micro { background: transparent; }
+.gira-suave { background-image: linear-gradient(90deg, #5b4bff, #e64980, #f08c00, #0ca678, #5b4bff); }
+.micro-app::after { opacity: .18; filter: blur(8px); }
+.micro-ico { background: var(--ink); box-shadow: 0 14px 30px -14px rgba(20,21,28,.6); position: relative; }
+.micro-ico::after { content: ""; position: absolute; right: -3px; bottom: -3px; width: 15px; height: 15px; border-radius: 50%; background: var(--c); border: 2.5px solid #fff; }
+.micro-tag { background: color-mix(in srgb, var(--c) 16%, transparent); }
+.micro-pie b, .plan .precio, .sello-centro b { font-family: var(--cifra); font-weight: 600; }
+.precio-sello text { fill: var(--ink); }
+.sello-centro { background: linear-gradient(135deg, #14151c, #2a2560); }
+.sello-centro small { color: #8be0bd; }
+.micro-paso { border-style: solid; }
+.micro-paso b { background: var(--ink); font-family: var(--cifra); }
+.suscrip { color: var(--ink); }
+.suscrip::before { background: radial-gradient(500px 220px at 0% 50%, rgba(91,75,255,.18), transparent 70%); }
+.suscrip-txt p { color: var(--muted); }
+.suscrip .micro-tag { color: var(--verde); background: rgba(12,166,120,.12); }
+.aviso-micro { color: var(--morado); }
+/* Catálogo y precios */
+.vivo-pasos li::before { color: var(--ink); font-family: var(--cifra); }
+.plan { border-radius: 28px; }
+.plan .chip { background: rgba(12,166,120,.14); color: var(--verde); }
+.plan .plazo { color: var(--morado); }
+.plan.top { --luz: #fff; --luz2: #b9bccb; background: linear-gradient(160deg, #1d1b3a, #14151c 70%); border-color: transparent; color: #fff; box-shadow: 0 30px 60px -28px rgba(91,75,255,.7); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.plan.top::before { background: linear-gradient(140deg, #8b7dff, #e64980, #f08c00); }
+.plan.top .chip { background: rgba(139,224,189,.16); color: #8be0bd; }
+.plan.top .plazo { color: #8be0bd; }
+/* Proceso */
+.linea-tiempo::before { background: rgba(20,21,28,.1); }
+.linea-tiempo .progreso { background: linear-gradient(90deg, #5b4bff, #e64980, #f08c00); }
+.hito::before { background: #fff; border-color: var(--morado); box-shadow: 0 0 0 6px rgba(243,241,251,.9); }
+.hito .dia { color: var(--morado); }
+/* Preguntas */
+.faq details { border-bottom: 1px solid rgba(20,21,28,.08); }
+.faq summary::after { color: var(--morado); }
+/* Cierre y pie */
+.cierre { background: transparent; color: var(--ink); }
+.cierre .lead { color: var(--muted); }
+.planeta-grande { opacity: .12; }
+.planeta-grande circle { fill: #5b4bff; } .planeta-grande path { stroke: #8b7dff; }
+form { border-radius: 28px; }
+label { color: var(--muted); }
+input, select, textarea { background: #fff; color: var(--ink); border: 1px solid rgba(20,21,28,.1); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--morado); box-shadow: 0 0 0 4px rgba(91,75,255,.15); }
+.aviso { color: var(--verde); }
+footer { background: transparent; color: var(--muted); border-top: 1px solid rgba(20,21,28,.08); }
+footer a { color: var(--ink); }
+.fijo .btn { box-shadow: 0 16px 34px -12px rgba(91,75,255,.8); }
+/* Sin etiquetas en mayúsculas (skill frontend-design) */
+.texto .tipo, .micro-tag, .plan .chip, .hito .dia, .sello-centro small { text-transform: none; letter-spacing: 0; font-weight: 700; }
+.precio-sello text { letter-spacing: .08em; }
 </style>
 </head>
 <body class="no-js">
@@ -380,7 +484,7 @@ footer a { color: var(--luz); }
   <canvas id="cielo" aria-hidden="true"></canvas>
   <div class="wrap">
     <nav class="nav">
-      <a class="marca" href="#"><svg class="logo-anim" width="38" height="38" viewBox="0 0 120 120" aria-hidden="true"><defs><mask id="mN" maskUnits="userSpaceOnUse" x="-20" y="-20" width="160" height="160"><rect x="-20" y="-20" width="160" height="80" fill="#fff"/><circle cx="60" cy="60" r="30" fill="#000"/></mask><clipPath id="cN" clipPathUnits="userSpaceOnUse"><rect x="-20" y="60" width="160" height="80"/></clipPath></defs><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#0b0a14" stroke-width="15"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><g mask="url(#mN)"><circle r="11" fill="#0b0a14"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g><g clip-path="url(#cN)"><circle r="11" fill="#0b0a14"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g></g></svg> Orbe Apps</a>
+      <a class="marca" href="#"><svg class="logo-anim" width="38" height="38" viewBox="0 0 120 120" aria-hidden="true"><defs><mask id="mN" maskUnits="userSpaceOnUse" x="-20" y="-20" width="160" height="160"><rect x="-20" y="-20" width="160" height="80" fill="#fff"/><circle cx="60" cy="60" r="30" fill="#000"/></mask><clipPath id="cN" clipPathUnits="userSpaceOnUse"><rect x="-20" y="60" width="160" height="80"/></clipPath></defs><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#f1eefc" stroke-width="15"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><g mask="url(#mN)"><circle r="11" fill="#f1eefc"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g><g clip-path="url(#cN)"><circle r="11" fill="#f1eefc"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g></g></svg> Orbe Apps</a>
       <div class="nav-links">
         <a href="#trabajos">Trabajos</a>
         <a href="#microapps">Microapps</a>
@@ -548,7 +652,7 @@ footer a { color: var(--luz); }
     </div>
 
     <div class="suscrip rev">
-      <div class="suscrip-ico" aria-hidden="true"><svg viewBox="0 0 120 120"><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#15132a" stroke-width="14"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="78.5" cy="76" r="11" fill="#15132a"/><circle cx="78.5" cy="76" r="7.5" fill="#3ddc9f"/></g></svg></div>
+      <div class="suscrip-ico" aria-hidden="true"><svg viewBox="0 0 120 120"><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#f1eefc" stroke-width="14"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="78.5" cy="76" r="11" fill="#f1eefc"/><circle cx="78.5" cy="76" r="7.5" fill="#3ddc9f"/></g></svg></div>
       <div class="suscrip-txt">
         <span class="micro-tag" style="--c:#3ddc9f">Muy pronto · plan mensual</span>
         <h3>Orbe en la nube</h3>
@@ -757,7 +861,7 @@ if (!quieto && matchMedia('(hover: hover)').matches) document.querySelectorAll('
     cx.clearRect(0, 0, w, h);
     for (const s of estrellas) {
       const a = .35 + .45 * Math.sin(s.f + t / 1000 * s.v);
-      cx.globalAlpha = a; cx.fillStyle = '#e6e3ff';
+      cx.globalAlpha = a * .55; cx.fillStyle = '#6b5cff';
       cx.beginPath(); cx.arc(s.x + mx * s.r * 14, s.y + my * s.r * 14, s.r, 0, 7); cx.fill();
     }
     cx.globalAlpha = 1;
