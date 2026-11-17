@@ -152,7 +152,7 @@ section { padding-block: 110px; }
 .vivo-pasos span { color: var(--muted); font-size: .98rem; }
 
 /* Planes */
-.planes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+.planes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
 .plan { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 26px; display: flex; flex-direction: column; gap: 14px; transition: transform .4s var(--suave), box-shadow .4s; }
 .plan:hover { transform: translateY(-6px); box-shadow: 0 30px 60px -36px rgba(26,23,51,.4); }
 .plan.top { background: var(--noche); color: var(--luz); border-color: transparent; box-shadow: 0 30px 70px -30px rgba(106,92,242,.7); }
@@ -255,7 +255,7 @@ footer a { color: var(--luz); }
 @media (max-width: 960px) {
   .hero, .proyecto, .vivo, .cierre-in { grid-template-columns: 1fr; }
   .proyecto.inverso .texto { order: 0; }
-  .planes { grid-template-columns: 1fr 1fr; }
+  .planes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .micro-grid { grid-template-columns: 1fr 1fr; }
   .suscrip { grid-template-columns: auto 1fr; }
   .suscrip .btn { grid-column: 1 / -1; justify-content: center; }
@@ -497,7 +497,7 @@ footer a { color: var(--luz); }
       <div class="cab" style="margin-bottom:0">
         <div class="eti rev">Microapps listas</div>
         <h2 class="rev" style="--d:.08s">Una app para cada problema.<br><span class="gira-suave">Desde $17.</span></h2>
-        <p class="rev" style="--d:.14s">Herramientas pequeñas que resuelven una sola cosa y la resuelven bien. Las compras, las abres y ya funcionan: en tu teléfono, sin internet y sin mensualidad.</p>
+        <p class="rev" style="--d:.14s">Herramientas pequeñas que resuelven una sola cosa y la resuelven bien. Las compras, las abres y ya funcionan: en tu teléfono, sin internet y sin mensualidad. ¿Quieres una con tu marca o con cambios? Esa va a medida, desde $149.</p>
       </div>
       <div class="precio-sello rev" style="--d:.2s" aria-label="Precio de lanzamiento 17 dólares, pago único">
         <svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="arcoSello" d="M100 100 m-88 0 a88 88 0 1 1 176 0 a88 88 0 1 1 -176 0"/></defs><text textLength="548" lengthAdjust="spacingAndGlyphs"><textPath href="#arcoSello" textLength="548" lengthAdjust="spacingAndGlyphs">PAGO ÚNICO · ACCESO DE POR VIDA · PAGO ÚNICO · ACCESO DE POR VIDA ·</textPath></text></svg>
@@ -507,11 +507,11 @@ footer a { color: var(--luz); }
 
     <div class="micro-grid">
       <article class="micro-app rev" style="--c:#8f84ff">
-        <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16l-1.5 11a2 2 0 0 1-2 1.7h-9a2 2 0 0 1-2-1.7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg></div>
-        <span class="micro-tag">Para vender</span>
-        <h3>Catálogo exprés</h3>
-        <p>Tu catálogo con pedidos por WhatsApp. Pegas tus productos en una hoja y queda listo para tu bio.</p>
-        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Catálogo exprés">Lo quiero</button></div>
+        <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8 12 3.5 20.5 8v8L12 20.5 3.5 16Z"/><path d="M3.5 8 12 12.5 20.5 8M12 12.5v8"/></svg></div>
+        <span class="micro-tag">Para no quedarte sin</span>
+        <h3>Inventario simple</h3>
+        <p>Cuánto tienes de cada producto, qué se vende más y un aviso cuando algo está por acabarse.</p>
+        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Inventario simple">Lo quiero</button></div>
       </article>
       <article class="micro-app rev" style="--c:#3ddc9f;--d:.08s">
         <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M9 14.5l2 2 4-4"/></svg></div>
@@ -529,7 +529,7 @@ footer a { color: var(--luz); }
       </article>
       <article class="micro-app rev" style="--c:#ff8fb3;--d:.24s">
         <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M16.5 7.5c0-1.7-2-3-4.5-3s-4.5 1.3-4.5 3 2 2.6 4.5 3 4.5 1.3 4.5 3-2 3-4.5 3-4.5-1.3-4.5-3"/></svg></div>
-        <span class="micro-tag">Para tu bolsillo</span>
+        <span class="micro-tag">Para tus cuentas</span>
         <h3>Presupuesto del mes</h3>
         <p>Cuánto entra, cuánto sale y cuánto te queda. Con límites por categoría y avisos antes de pasarte.</p>
         <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Presupuesto del mes">Lo quiero</button></div>
@@ -561,7 +561,7 @@ footer a { color: var(--luz); }
     <div>
       <div class="eti rev">El más pedido</div>
       <h2 class="rev" style="--d:.08s;margin-top:16px">Un catálogo que trabaja mientras tú atiendes.</h2>
-      <p class="rev" style="--d:.14s;color:var(--muted);font-size:1.12rem;margin-top:18px">Es el mismo que recibe tu negocio, con tus productos y tu número. Pruébalo, funciona de verdad.</p>
+      <p class="rev" style="--d:.14s;color:var(--muted);font-size:1.12rem;margin-top:18px">Es el mismo que recibe tu negocio, con tus productos, tus colores y tu número. Yo lo armo por ti en 5 días por <b style="color:var(--ink)">$49</b>. Pruébalo, funciona de verdad.</p>
       <ol class="vivo-pasos">
         <li class="rev" style="--d:.18s"><div><b>Tu cliente elige</b><span>Ve fotos, precios y categorías, y arma su pedido sin preguntar.</span></div></li>
         <li class="rev" style="--d:.24s"><div><b>Pone sus datos</b><span>Domicilio o retiro, día, hora y forma de pago.</span></div></li>
@@ -583,35 +583,28 @@ footer a { color: var(--luz); }
       <div class="plan top rev">
         <span class="chip">Más pedido</span>
         <h3>Catálogo con pedidos</h3>
-        <div class="precio">$79 <small>pago único</small></div>
-        <ul><li>Hasta 40 productos con foto y precio</li><li>Carrito y pedido completo a tu WhatsApp</li><li>Precios que cambias desde el teléfono</li><li>Enlace para tu bio y código QR</li></ul>
+        <div class="precio">$49 <small>pago único</small></div>
+        <ul><li>Hasta 40 productos con foto y precio</li><li>Con tu marca y tus colores, armado por mí</li><li>Carrito y pedido completo a tu WhatsApp</li><li>Precios que cambias desde el teléfono</li><li>Enlace para tu bio y código QR</li></ul>
         <div class="plazo">Listo en 5 días</div>
         <a class="btn btn-luz" href="#cotizar" data-plan="Catálogo con pedidos">Lo quiero</a>
       </div>
       <div class="plan rev" style="--d:.08s">
         <h3>Página de negocio</h3>
-        <div class="precio">$129 <small>pago único</small></div>
+        <div class="precio">$89 <small>pago único</small></div>
         <ul><li>Hasta 5 secciones</li><li>Dominio propio y aparecer en Google</li><li>Ubicación, horario y contacto</li><li>Rápida en datos móviles</li></ul>
         <div class="plazo">Lista en 7 días</div>
         <a class="btn btn-claro" href="#cotizar" data-plan="Página de negocio">Cotizar</a>
       </div>
       <div class="plan rev" style="--d:.16s">
-        <h3>Microapp a medida</h3>
-        <div class="precio">$199 <small>desde</small></div>
-        <ul><li>Citas, fiados, inventario o pedidos</li><li>Se instala como una app</li><li>Funciona sin internet</li><li>Hecha a tu medida</li></ul>
-        <div class="plazo">2 a 3 semanas</div>
-        <a class="btn btn-claro" href="#cotizar" data-plan="Microapp">Cotizar</a>
-      </div>
-      <div class="plan rev" style="--d:.24s">
-        <h3>App completa</h3>
-        <div class="precio">$490 <small>desde</small></div>
-        <ul><li>Ventas, clientes y reportes</li><li>Teléfono y computadora</li><li>Usuarios y permisos</li><li>Como Orbe Negocios, a tu medida</li></ul>
-        <div class="plazo">4 a 8 semanas</div>
-        <a class="btn btn-claro" href="#cotizar" data-plan="App completa">Cotizar</a>
+        <h3>App a medida</h3>
+        <div class="precio">$149 <small>desde</small></div>
+        <ul><li>Una microapp con tu marca y tus cambios, desde $149</li><li>O una app completa con ventas, clientes y reportes, desde $349</li><li>Teléfono y computadora, funciona sin internet</li><li>Como Orbe Negocios, hecha para ti</li></ul>
+        <div class="plazo">1 a 6 semanas, según lo que necesites</div>
+        <a class="btn btn-claro" href="#cotizar" data-plan="App a medida">Cotizar</a>
       </div>
     </div>
     <p class="desliza" aria-hidden="true">Desliza para ver más planes →</p>
-    <p class="nota rev">Mantenimiento opcional: $10 al mes con cambios, fotos nuevas y copias de seguridad.</p>
+    <p class="nota rev">¿Algo más sencillo? Las <a href="#microapps">microapps listas</a> cuestan $17. Mantenimiento opcional: $7 al mes con cambios, fotos nuevas y copias de seguridad.</p>
   </div>
 </section>
 
@@ -634,7 +627,7 @@ footer a { color: var(--luz); }
 <section id="preguntas" style="padding-top:20px">
   <div class="wrap faq">
     <div class="cab"><div class="eti rev">Preguntas</div><h2 class="rev" style="--d:.08s">Antes de empezar.</h2></div>
-    <details class="rev"><summary>¿Tengo que pagar todos los meses?</summary><p>No. El catálogo, la página y las apps son un pago único. El mantenimiento de $10 al mes es opcional; sin él solo pagas el dominio propio si lo quieres, unos $12 al año.</p></details>
+    <details class="rev"><summary>¿Tengo que pagar todos los meses?</summary><p>No. El catálogo, la página y las apps son un pago único. El mantenimiento de $7 al mes es opcional; sin él solo pagas el dominio propio si lo quieres, unos $12 al año.</p></details>
     <details class="rev"><summary>¿Cobran comisión por cada pedido?</summary><p>No. Los pedidos te llegan directo a tu WhatsApp y el dinero va directo a ti.</p></details>
     <details class="rev"><summary>No sé nada de tecnología. ¿Igual puedo?</summary><p>Sí. Yo me encargo de todo y te dejo un video corto que muestra cómo cambiar precios y productos desde el teléfono.</p></details>
     <details class="rev"><summary>¿En qué países trabajan?</summary><p>En toda Latinoamérica y con negocios hispanos de EE. UU. y España. Todo se hace por mensaje y videollamada.</p></details>
@@ -654,7 +647,7 @@ footer a { color: var(--luz); }
       <label for="negocio">Nombre del negocio<input id="negocio" required placeholder="Ej. Dulce Hogar Repostería" autocomplete="organization"></label>
       <label for="plan">Qué necesitas
         <select id="plan">
-          <option>Microapp de $17</option><option>Catálogo con pedidos</option><option>Página de negocio</option><option>Microapp</option><option>App completa</option><option>No sé todavía</option>
+          <option>Microapp de $17</option><option>Catálogo con pedidos</option><option>Página de negocio</option><option>App a medida</option><option>No sé todavía</option>
         </select>
       </label>
       <label for="detalle">Qué vendes y dónde estás<textarea id="detalle" placeholder="Ej. Tortas y postres en Medellín, hoy vendo por Instagram"></textarea></label>
