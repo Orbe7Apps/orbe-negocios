@@ -29,7 +29,7 @@
     papel: sv('<path d="M6 3h9l4 4v14H6Z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>'),
     wa: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>'
   };
-  const PALETA = ['#4f46e5', '#0f766e', '#b45309', '#be123c', '#0369a1', '#7c3aed', '#c2410c', '#15803d'];
+  const PALETA = ['#5b4bff', '#0ca678', '#f08c00', '#e64980', '#1c7ed6', '#9c36b5', '#f76707', '#12b886'];
 
   const Orbe = window.Orbe = {
     ICON, esc, sv,
@@ -78,8 +78,15 @@
       const on = anillo ? Math.round(Math.max(0, Math.min(1, anillo.p || 0)) * 20) : 0;
       return `<section class="hero"><small>${etiqueta}</small><div class="monto-xl">${monto !== undefined ? Orbe.montoHTML(monto) : texto}</div>${pildora ? `<span class="pildora ${pildora.c || ''}">${pildora.t}</span>` : ''}
         ${anillo ? `<div class="medidor"><div class="top"><span>${anillo.sub || ''}</span><b>${anillo.t}</b></div><div class="bloques">${Array.from({ length: 20 }, (_, k) => `<i class="${k < on ? 'on' : ''}" style="animation-delay:${k * 0.025}s"></i>`).join('')}</div></div>` : ''}
-        ${barras ? `<div class="barras-mini">${barras.map((v, k) => `<i class="${k === barras.length - 1 ? 'hoy' : ''}" style="height:${Math.max(4, v * 100)}%;animation-delay:${k * 0.02}s"></i>`).join('')}</div>` : ''}
+        ${barras ? Orbe.curva(barras) : ''}
         ${chips ? `<div class="chips">${chips.map(x => `<div><small>${x.t}</small><b style="color:${col(x.c)}">${x.v}</b></div>`).join('')}</div>` : ''}</section>`;
+    },
+    curva(vals) { // línea suave de valores entre 0 y 1
+      const n = vals.length, W = 300, H = 60, x = k => (n > 1 ? k / (n - 1) : 0) * W, y = v => H - 4 - Math.max(0, Math.min(1, v)) * (H - 10);
+      let d = `M${x(0)} ${y(vals[0])}`;
+      for (let k = 1; k < n; k++) { const cx = (x(k - 1) + x(k)) / 2; d += ` C${cx} ${y(vals[k - 1])} ${cx} ${y(vals[k])} ${x(k)} ${y(vals[k])}`; }
+      const id = 'g' + Math.random().toString(36).slice(2, 7);
+      return `<svg class="curva" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--c)" stop-opacity=".28"/><stop offset="1" stop-color="var(--c)" stop-opacity="0"/></linearGradient></defs><path class="a" d="${d} L${W} ${H} L0 ${H}Z" fill="url(#${id})"/><path class="l" pathLength="1" d="${d}" vector-effect="non-scaling-stroke"/><circle cx="${x(n - 1)}" cy="${y(vals[n - 1])}" r="4.5" vector-effect="non-scaling-stroke"/></svg>`;
     },
     tareas(lista, vacio = 'Todo al día. Nada pendiente por ahora.') {
       if (!lista.length) return `<div class="todo-bien"><span class="ini">${ICON.check}</span>${vacio}</div>`;
