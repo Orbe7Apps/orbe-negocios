@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Orbe Apps · Páginas, catálogos y apps para tu negocio</title>
-<meta name="description" content="Páginas web, catálogos con pedidos por WhatsApp, microapps y apps para negocios de Latinoamérica. Entrega rápida, precio cerrado y todo a distancia.">
+<meta name="description" content="Páginas web, catálogos con pedidos por WhatsApp, microapps listas desde 17 USD y apps a medida para negocios y personas de Latinoamérica.">
 <meta property="og:title" content="Orbe Apps · Páginas, catálogos y apps para tu negocio">
-<meta property="og:description" content="Catálogo con pedidos a WhatsApp en 5 días desde 180 USD. Microapps de citas, fiados e inventario.">
+<meta property="og:description" content="Microapps listas desde 17 USD, catálogos con pedidos por WhatsApp y apps a medida. Pago único, sin comisiones.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://orbe7apps.github.io/orbe-negocios/servicios/">
 <meta property="og:image" content="https://orbe7apps.github.io/orbe-negocios/servicios/portada.png">
@@ -168,6 +168,46 @@ section { padding-block: 110px; }
 .plan .btn-claro { background: #ebe8ff; color: #3d32b8; box-shadow: inset 0 0 0 1.5px #cfc9ff; }
 .plan .btn-claro:hover { background: #ded9ff; }
 .nota { margin-top: 22px; color: var(--muted); }
+/* Microapps */
+.micro { background: radial-gradient(900px 500px at 10% 0%, rgba(143,132,255,.16), transparent 60%), var(--bg); }
+.micro-cab { display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; margin-bottom: 48px; }
+.gira-suave { background: linear-gradient(90deg, var(--morado), #2fb886, #d98a00, #e0558a, var(--morado)) 0 0 / 200% 100% repeat-x; -webkit-background-clip: text; background-clip: text; color: transparent; animation: brillo 7s linear infinite; }
+.precio-sello { position: relative; width: 190px; height: 190px; display: grid; place-items: center; text-align: center; }
+.precio-sello svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: girar 22s linear infinite; }
+.precio-sello text { font: 800 13px var(--body); letter-spacing: .24em; fill: var(--morado); }
+.precio-sello text { font-size: 12px; letter-spacing: .12em; }
+.sello-centro { position: relative; width: calc(100% - 64px); aspect-ratio: 1; border-radius: 50%; background: var(--noche); box-shadow: 0 24px 50px -20px rgba(106,92,242,.8); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.sello-centro b { font: 800 2.7rem/1 var(--display); color: #fff; letter-spacing: -.05em; }
+.sello-centro small { font-size: .6rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--verde); }
+@keyframes girar { to { transform: rotate(360deg); } }
+.micro-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.micro-app { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 24px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; transition: transform .45s var(--suave), box-shadow .45s; }
+.micro-app::after { content: ""; position: absolute; right: -60px; top: -60px; width: 160px; height: 160px; border-radius: 50%; background: var(--c); opacity: .12; transition: transform .6s var(--suave), opacity .4s; }
+.micro-app:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -34px rgba(26,23,51,.45); }
+.micro-app:hover::after { transform: scale(1.6); opacity: .2; }
+.micro-ico { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: var(--c); box-shadow: 0 14px 30px -14px var(--c); animation: flota 6s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.micro-ico svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.micro-tag { align-self: flex-start; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: color-mix(in srgb, var(--c) 22%, transparent); padding: 5px 10px; border-radius: 999px; margin-top: 8px; }
+.micro-app h3 { font-size: 1.25rem; }
+.micro-app p { color: var(--muted); font-size: .95rem; flex: 1; }
+.micro-pie { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; position: relative; z-index: 1; }
+.micro-pie b { font: 800 1.8rem/1 var(--display); letter-spacing: -.04em; }
+.btn-micro { background: var(--ink); color: #fff; padding: .7em 1.1em; font-size: .9rem; }
+.btn-micro:hover { background: var(--morado); }
+.micro-cinta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
+.micro-paso { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px dashed #cfc9ff; border-radius: 18px; padding: 14px 18px; font-weight: 700; }
+.micro-paso b { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: var(--morado); color: #fff; font: 800 .95rem var(--display); }
+.suscrip { margin-top: 26px; display: grid; grid-template-columns: auto 1fr auto; gap: 26px; align-items: center; background: var(--noche2); color: var(--luz); border-radius: 28px; padding: 26px 30px; position: relative; overflow: hidden; }
+.suscrip::before { content: ""; position: absolute; inset: 0; background: radial-gradient(500px 200px at 0% 50%, rgba(143,132,255,.25), transparent 70%); pointer-events: none; }
+.suscrip-ico { width: 92px; height: 92px; position: relative; animation: girar 30s linear infinite; }
+.suscrip-ico svg { width: 100%; height: 100%; }
+.suscrip-txt { position: relative; }
+.suscrip-txt h3 { font-size: 1.6rem; margin-top: 10px; }
+.suscrip-txt p { color: var(--luz2); margin-top: 6px; max-width: 58ch; }
+.suscrip .micro-tag { color: var(--verde); background: rgba(61,220,159,.14); margin-top: 0; }
+.suscrip .btn { position: relative; }
+.aviso-micro { margin-top: 16px; font-weight: 700; color: var(--morado); }
+
 .desliza { display: none; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; font-weight: 700; margin-top: 4px; }
 .solo-movil { display: none !important; }
 .fijo { display: none; position: fixed; z-index: 20; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); justify-content: center; transform: translateY(140%); transition: transform .45s var(--suave); }
@@ -216,6 +256,9 @@ footer a { color: var(--luz); }
   .hero, .proyecto, .vivo, .cierre-in { grid-template-columns: 1fr; }
   .proyecto.inverso .texto { order: 0; }
   .planes { grid-template-columns: 1fr 1fr; }
+  .micro-grid { grid-template-columns: 1fr 1fr; }
+  .suscrip { grid-template-columns: auto 1fr; }
+  .suscrip .btn { grid-column: 1 / -1; justify-content: center; }
   .nav-links a:not(.btn) { display: none; }
   .hero { padding-block: 20px 80px; }
   .escena { margin-top: 20px; }
@@ -283,6 +326,17 @@ footer a { color: var(--luz); }
   .vivo-pasos li { grid-template-columns: 38px 1fr; }
   .vivo-pasos li::before { width: 38px; height: 38px; border-radius: 12px; font-size: 1rem; }
   .solo-movil { display: inline-flex !important; }
+  /* Microapps */
+  .micro-cab { grid-template-columns: 1fr; gap: 20px; margin-bottom: 32px; }
+  .precio-sello { width: 150px; height: 150px; justify-self: center; }
+  .sello-centro { width: calc(100% - 50px); }
+  .sello-centro b { font-size: 2.1rem; }
+  .micro-grid { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -20px; padding: 6px 20px 18px; scrollbar-width: none; }
+  .micro-grid::-webkit-scrollbar { display: none; }
+  .micro-app { flex: 0 0 78%; scroll-snap-align: center; }
+  .micro-cinta { grid-template-columns: 1fr; gap: 10px; }
+  .suscrip { grid-template-columns: 1fr; text-align: left; padding: 22px; gap: 16px; }
+  .suscrip-ico { width: 70px; height: 70px; }
   /* Precios: carrusel que se desliza */
   .planes { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -20px; padding: 6px 20px 18px; scrollbar-width: none; }
   .planes::-webkit-scrollbar { display: none; }
@@ -324,6 +378,7 @@ footer a { color: var(--luz); }
       <a class="marca" href="#"><svg class="logo-anim" width="38" height="38" viewBox="0 0 120 120" aria-hidden="true"><defs><mask id="mN" maskUnits="userSpaceOnUse" x="-20" y="-20" width="160" height="160"><rect x="-20" y="-20" width="160" height="80" fill="#fff"/><circle cx="60" cy="60" r="30" fill="#000"/></mask><clipPath id="cN" clipPathUnits="userSpaceOnUse"><rect x="-20" y="60" width="160" height="80"/></clipPath></defs><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#0b0a14" stroke-width="15"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="7" stroke-linecap="round"/><g mask="url(#mN)"><circle r="11" fill="#0b0a14"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g><g clip-path="url(#cN)"><circle r="11" fill="#0b0a14"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle><circle r="8" fill="#3ddc9f"><animateMotion dur="6s" repeatCount="indefinite" path="M6 60 A54 17 0 1 0 114 60 A54 17 0 1 0 6 60"/></circle></g></g></svg> Orbe Apps</a>
       <div class="nav-links">
         <a href="#trabajos">Trabajos</a>
+        <a href="#microapps">Microapps</a>
         <a href="#precios">Precios</a>
         <a href="#preguntas">Preguntas</a>
         <a class="btn btn-luz" href="#cotizar">Cotizar gratis</a>
@@ -333,12 +388,12 @@ footer a { color: var(--luz); }
       <div>
         <div class="eti rev" style="color:var(--verde)">Páginas · catálogos · apps</div>
         <h1 class="rev" style="--d:.08s;margin-top:18px">Tu negocio, <span class="gira">en órbita</span>.</h1>
-        <p class="lead rev" style="--d:.16s">Hacemos el catálogo, la página o la app que tu negocio necesita para vender más por WhatsApp. En días, con precio cerrado y sin comisiones.</p>
+        <p class="lead rev" style="--d:.16s">Microapps listas desde $17 y apps hechas a tu medida para vender más por WhatsApp y llevar tus números en orden. Pago único y sin comisiones.</p>
         <div class="acc rev" style="--d:.24s">
           <a class="btn btn-luz" href="#cotizar">Quiero el mío</a>
           <a class="btn btn-borde" href="#trabajos">Ver trabajos</a>
         </div>
-        <div class="sellos rev" style="--d:.32s"><span>Listo en 5 días</span><span>Pago único</span><span>Toda Latinoamérica</span></div>
+        <div class="sellos rev" style="--d:.32s"><span>Microapps desde $17</span><span>Pago único</span><span>Toda Latinoamérica</span></div>
       </div>
       <div class="escena rev" style="--d:.2s">
         <svg class="orbita" viewBox="0 0 600 600" aria-hidden="true">
@@ -412,18 +467,18 @@ footer a { color: var(--luz); }
       <div class="texto">
         <span class="tipo rev">App personal · finanzas</span>
         <h3 class="rev" style="--d:.06s">Orbe finanzas</h3>
-        <p class="rev" style="--d:.12s">Gastos, ingresos y ahorro en la moneda de tu país, en dólares, euros y USDT. Metas con su propio símbolo y avisos de pagos, todo desde el teléfono.</p>
+        <p class="rev" style="--d:.12s">Tu dinero de un vistazo: cuentas y metas en anillos que se llenan, en qué se te va cada mes y un asistente que responde tus dudas. En la moneda de tu país, en dólares, euros y USDT.</p>
         <ul class="funciones rev" style="--d:.18s">
-          <li>Varias monedas y tasas del día</li><li>Metas de ahorro con progreso</li>
-          <li>Cuentas y saldos al día</li><li>Límites por categoría</li>
-          <li>Resumen de cada mes</li><li>Se instala como una app</li>
+          <li>Cuentas en anillos, también en 3D</li><li>Metas que se llenan solas</li>
+          <li>En qué se va tu dinero</li><li>Asistente que responde dudas</li>
+          <li>Varias monedas y tasas del día</li><li>Se instala como una app</li>
         </ul>
         <div class="acc rev" style="--d:.24s"><a class="btn btn-luz" href="https://orbe7apps.github.io/misgastos/" target="_blank" rel="noopener">Abrir la demo</a></div>
       </div>
       <div>
         <div class="vitrina solo rev" style="--d:.1s">
           <div class="chip-flota" style="left:0;top:6%;animation-delay:-1s"><svg class="anillo" viewBox="0 0 40 40" style="--p:40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="5"/><circle cx="20" cy="20" r="16" fill="none" stroke="#0e9aa7" stroke-width="5" stroke-linecap="round" pathLength="100" transform="rotate(-90 20 20)"/></svg><span><small>Viaje a la playa</small><b>60%</b></span></div>
-          <div class="chip-flota" style="right:0;bottom:10%;animation-delay:-3.5s"><span class="punto"></span><span><small>Te queda este mes</small><b>$684,00</b></span></div>
+          <div class="chip-flota" style="right:0;bottom:10%;animation-delay:-3.5s"><span class="punto"></span><span><small>Ahorrado este mes</small><b>$360,00</b></span></div>
           <div class="movil" data-carrusel="fin"><div class="pantallas">
             <video class="vis" data-dur="11200" preload="auto" muted loop playsinline poster="img/finanzas-cuentas.webp" aria-label="Orbe finanzas en uso: cuentas con su gráfico y en qué se va el dinero"><source src="img/finanzas-cuentas.webm" type="video/webm"><source src="img/finanzas-cuentas.mp4" type="video/mp4"></video>
             <img src="img/finanzas-historial.webp" alt="Historial de ingresos y gastos" loading="lazy">
@@ -433,6 +488,70 @@ footer a { color: var(--luz); }
         <div class="puntos-wrap" style="justify-content:center"><div class="puntos" data-puntos="fin"></div><span data-nombre="fin">Cuentas en acción</span></div>
       </div>
     </article>
+  </div>
+</section>
+
+<section class="micro" id="microapps">
+  <div class="wrap">
+    <div class="micro-cab">
+      <div class="cab" style="margin-bottom:0">
+        <div class="eti rev">Microapps listas</div>
+        <h2 class="rev" style="--d:.08s">Una app para cada problema.<br><span class="gira-suave">Desde $17.</span></h2>
+        <p class="rev" style="--d:.14s">Herramientas pequeñas que resuelven una sola cosa y la resuelven bien. Las compras, las abres y ya funcionan: en tu teléfono, sin internet y sin mensualidad.</p>
+      </div>
+      <div class="precio-sello rev" style="--d:.2s" aria-label="Precio de lanzamiento 17 dólares, pago único">
+        <svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="arcoSello" d="M100 100 m-88 0 a88 88 0 1 1 176 0 a88 88 0 1 1 -176 0"/></defs><text textLength="548" lengthAdjust="spacingAndGlyphs"><textPath href="#arcoSello" textLength="548" lengthAdjust="spacingAndGlyphs">PAGO ÚNICO · ACCESO DE POR VIDA · PAGO ÚNICO · ACCESO DE POR VIDA ·</textPath></text></svg>
+        <span class="sello-centro"><b>$17</b><small>lanzamiento</small></span>
+      </div>
+    </div>
+
+    <div class="micro-grid">
+      <article class="micro-app rev" style="--c:#8f84ff">
+        <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16l-1.5 11a2 2 0 0 1-2 1.7h-9a2 2 0 0 1-2-1.7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg></div>
+        <span class="micro-tag">Para vender</span>
+        <h3>Catálogo exprés</h3>
+        <p>Tu catálogo con pedidos por WhatsApp. Pegas tus productos en una hoja y queda listo para tu bio.</p>
+        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Catálogo exprés">Lo quiero</button></div>
+      </article>
+      <article class="micro-app rev" style="--c:#3ddc9f;--d:.08s">
+        <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M9 14.5l2 2 4-4"/></svg></div>
+        <span class="micro-tag">Para servicios</span>
+        <h3>Agenda de citas</h3>
+        <p>Tus clientas ven los horarios libres y apartan solas. Para uñas, barberías, estéticas y consultorios.</p>
+        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Agenda de citas">Lo quiero</button></div>
+      </article>
+      <article class="micro-app rev" style="--c:#f0a020;--d:.16s">
+        <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><circle cx="17" cy="15.5" r="3.2"/><path d="M17 14v1.5l1 .8"/></svg></div>
+        <span class="micro-tag">Para fiar sin perder</span>
+        <h3>Cuaderno de fiados</h3>
+        <p>Quién te debe, cuánto y desde cuándo. Con abonos y el recordatorio listo para mandar por WhatsApp.</p>
+        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Cuaderno de fiados">Lo quiero</button></div>
+      </article>
+      <article class="micro-app rev" style="--c:#ff8fb3;--d:.24s">
+        <div class="micro-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M16.5 7.5c0-1.7-2-3-4.5-3s-4.5 1.3-4.5 3 2 2.6 4.5 3 4.5 1.3 4.5 3-2 3-4.5 3-4.5-1.3-4.5-3"/></svg></div>
+        <span class="micro-tag">Para tu bolsillo</span>
+        <h3>Presupuesto del mes</h3>
+        <p>Cuánto entra, cuánto sale y cuánto te queda. Con límites por categoría y avisos antes de pasarte.</p>
+        <div class="micro-pie"><b>$17</b><button class="btn btn-micro" type="button" data-micro="Presupuesto del mes">Lo quiero</button></div>
+      </article>
+    </div>
+
+    <div class="micro-cinta rev">
+      <div class="micro-paso"><b>1</b><span>Eliges tu microapp</span></div>
+      <div class="micro-paso"><b>2</b><span>Pagas una sola vez</span></div>
+      <div class="micro-paso"><b>3</b><span>Te llega tu acceso y la instalas</span></div>
+    </div>
+
+    <div class="suscrip rev">
+      <div class="suscrip-ico" aria-hidden="true"><svg viewBox="0 0 120 120"><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#15132a" stroke-width="14"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="78.5" cy="76" r="11" fill="#15132a"/><circle cx="78.5" cy="76" r="7.5" fill="#3ddc9f"/></g></svg></div>
+      <div class="suscrip-txt">
+        <span class="micro-tag" style="--c:#3ddc9f">Muy pronto · plan mensual</span>
+        <h3>Orbe en la nube</h3>
+        <p>Tus apps conectadas entre teléfono y computadora, con copias automáticas y tu equipo trabajando a la vez. Pagas al mes y cancelas cuando quieras.</p>
+      </div>
+      <button class="btn btn-luz" type="button" data-micro="Orbe en la nube (plan mensual)">Quiero enterarme primero</button>
+    </div>
+    <p class="aviso-micro" id="aviso-micro" hidden></p>
   </div>
 </section>
 
@@ -477,7 +596,7 @@ footer a { color: var(--luz); }
         <a class="btn btn-claro" href="#cotizar" data-plan="Página de negocio">Cotizar</a>
       </div>
       <div class="plan rev" style="--d:.16s">
-        <h3>Microapp</h3>
+        <h3>Microapp a medida</h3>
         <div class="precio">$450 <small>desde</small></div>
         <ul><li>Citas, fiados, inventario o pedidos</li><li>Se instala como una app</li><li>Funciona sin internet</li><li>Hecha a tu medida</li></ul>
         <div class="plazo">2 a 3 semanas</div>
@@ -535,7 +654,7 @@ footer a { color: var(--luz); }
       <label for="negocio">Nombre del negocio<input id="negocio" required placeholder="Ej. Dulce Hogar Repostería" autocomplete="organization"></label>
       <label for="plan">Qué necesitas
         <select id="plan">
-          <option>Catálogo con pedidos</option><option>Página de negocio</option><option>Microapp</option><option>App completa</option><option>No sé todavía</option>
+          <option>Microapp de $17</option><option>Catálogo con pedidos</option><option>Página de negocio</option><option>Microapp</option><option>App completa</option><option>No sé todavía</option>
         </select>
       </label>
       <label for="detalle">Qué vendes y dónde estás<textarea id="detalle" placeholder="Ej. Tortas y postres en Medellín, hoy vendo por Instagram"></textarea></label>
@@ -648,6 +767,17 @@ if (!quieto && matchMedia('(hover: hover)').matches) document.querySelectorAll('
   };
   medir(); addEventListener('resize', medir); requestAnimationFrame(dibuja);
 })();
+
+// Microapps: lista de espera por Instagram con el mensaje copiado
+document.querySelectorAll('[data-micro]').forEach(b => b.addEventListener('click', () => {
+  const texto = `Hola, quiero la microapp "${b.dataset.micro}". ¿Cómo la consigo?`;
+  const aviso = document.getElementById('aviso-micro');
+  const abrir = () => { location.href = WHATSAPP ? 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(texto) : 'https://ig.me/m/' + INSTAGRAM; };
+  if (WHATSAPP) return abrir();
+  aviso.hidden = false;
+  navigator.clipboard.writeText(texto).then(() => { aviso.textContent = 'Copiamos tu mensaje. Pégalo en el chat de Instagram que se abre ahora.'; setTimeout(abrir, 1400); },
+    () => { aviso.textContent = 'Escríbenos por Instagram: ' + texto; setTimeout(abrir, 3500); });
+}));
 
 // Formulario
 document.getElementById('enviar').textContent = WHATSAPP ? "Enviar por WhatsApp" : INSTAGRAM ? "Enviar por Instagram" : "Enviar mensaje";
