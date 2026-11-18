@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; }
+body { font-family: "Manrope", sans-serif; color: #efeefe; -webkit-font-smoothing: antialiased;
+  background: radial-gradient(1000px 800px at 85% 15%, #2a2462 0%, transparent 62%), radial-gradient(900px 700px at 0% 95%, #1d1a40 0%, transparent 60%), #0b0a14; }
+.estrella { position: absolute; border-radius: 50%; background: #e6e3ff; }
+.capa { position: absolute; inset: 0; }
+[data-a] { opacity: 0; will-change: transform, opacity; }
+.sora, h1, h2 { font-family: "Sora", sans-serif; font-weight: 800; letter-spacing: -.045em; line-height: 1.02; }
+.centro { position: absolute; left: 90px; right: 90px; text-align: center; }
+.izqda { position: absolute; left: 90px; right: 150px; }
+h2 { font-size: 94px; }
+.lead { font-size: 46px; line-height: 1.32; color: #c9c5ea; font-weight: 600; }
+.gira { background: linear-gradient(90deg, #c9c0ff, #3ddc9f 55%, #f0a020); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tel { position: absolute; width: 460px; height: 996px; border-radius: 64px; background: #000; padding: 14px; box-shadow: 0 60px 120px -40px rgba(0,0,0,.9), 0 0 0 2px #2a2745; }
+.tel img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 52px; display: block; }
+.chip { position: absolute; display: flex; align-items: center; gap: 16px; padding: 20px 28px; border-radius: 26px; background: rgba(31,28,58,.86); border: 2px solid rgba(255,255,255,.1); font-size: 34px; font-weight: 700; white-space: nowrap; box-shadow: 0 30px 60px -30px #000; }
+.chip i { width: 18px; height: 18px; border-radius: 50%; background: #3ddc9f; box-shadow: 0 0 18px #3ddc9f; }
+.precio { display: flex; justify-content: space-between; align-items: center; gap: 24px; background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.1); border-radius: 30px; padding: 30px 36px; font-size: 42px; font-weight: 700; }
+.precio b { font: 800 56px "Sora"; letter-spacing: -.04em; white-space: nowrap; }
+.precio.top { background: linear-gradient(135deg, #7d6fff, #5a4bf0); border-color: transparent; }
+.marca { display: flex; align-items: center; justify-content: center; gap: 22px; font: 800 64px "Sora"; letter-spacing: -.04em; }
+.boton { display: inline-block; background: linear-gradient(135deg, #7d6fff, #5a4bf0); color: #fff; font: 800 52px "Sora"; letter-spacing: -.03em; padding: 34px 64px; border-radius: 999px; box-shadow: 0 30px 60px -20px rgba(106,92,242,.9); }
+.ico { width: 150px; height: 150px; border-radius: 42px; display: grid; place-items: center; }
+.ico svg { width: 78px; height: 78px; }
+</style></head><body>
+<div class="capa" id="cielo"></div>
+
+<!-- 1 · Hola, somos Orbe Apps (0 a 3,4 s) -->
+<div class="centro" style="top:520px" data-a="escala" data-in="0.15" data-out="3.1" data-d="0.9"><svg data-flota="0" width="420" height="420" viewBox="0 0 120 120"><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#0b0a14" stroke-width="14"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="78.5" cy="76" r="11" fill="#0b0a14"/><circle cx="78.5" cy="76" r="7.5" fill="#3ddc9f"/></g></svg></div>
+<p class="centro lead" style="top:1010px" data-a="sube" data-in="0.7" data-out="3.1">Hola, somos</p>
+<h1 class="centro" style="top:1080px;font-size:150px" data-a="sube" data-in="0.95" data-out="3.1">Orbe Apps</h1>
+
+<!-- 2 · Qué hacemos (3,4 a 7,6 s) -->
+<h2 class="izqda" style="top:250px" data-a="sube" data-in="3.4" data-out="7.3">Apps para que tu negocio <span class="gira">venda más</span></h2>
+<div class="tel" style="left:310px;top:740px" data-a="sube" data-in="3.8" data-out="7.3" data-d="0.9" data-rot="-4"><img src="../../../img/negocios-hoy.webp" alt=""></div>
+<div class="chip" style="left:90px;top:1180px" data-a="izq" data-in="4.6" data-out="7.3"><i></i>Vendido hoy $67,05</div>
+
+<!-- 3 · Catálogos (7,6 a 11,6 s) -->
+<h2 class="izqda" style="top:250px" data-a="sube" data-in="7.6" data-out="11.3">Catálogos con pedidos por WhatsApp</h2>
+<div class="tel" style="left:310px;top:740px" data-a="sube" data-in="8.0" data-out="11.3" data-d="0.9" data-rot="3"><img src="img/catalogo.webp" alt=""></div>
+<div class="chip" style="left:90px;top:1220px" data-a="izq" data-in="8.8" data-out="11.3"><i></i>Listo en 5 días, $49</div>
+
+<!-- 4 · Microapps (11,6 a 15,6 s) -->
+<h2 class="izqda" style="top:250px" data-a="sube" data-in="11.6" data-out="15.3">Microapps listas desde <span class="gira">$17</span></h2>
+<div class="tel" style="left:60px;top:760px;width:420px;height:910px" data-a="sube" data-in="12.0" data-out="15.3" data-d="0.9" data-rot="-5"><img src="img/inventario.webp" alt=""></div>
+<div class="tel" style="left:520px;top:700px;width:420px;height:910px" data-a="sube" data-in="12.3" data-out="15.3" data-d="0.9" data-rot="5"><img src="img/agenda.webp" alt=""></div>
+
+<!-- 5 · Precios (15,6 a 19,4 s) -->
+<h2 class="izqda" style="top:250px" data-a="sube" data-in="15.6" data-out="19.1">Pago único. Sin mensualidad.</h2>
+<div class="izqda" style="top:650px;right:90px;display:flex;flex-direction:column;gap:22px">
+  <div class="precio top" data-a="der" data-in="16.0" data-out="19.1"><span>Microapp lista</span><b>$17</b></div>
+  <div class="precio" data-a="der" data-in="16.3" data-out="19.1"><span>Catálogo con pedidos</span><b>$49</b></div>
+  <div class="precio" data-a="der" data-in="16.6" data-out="19.1"><span>Página de negocio</span><b>$89</b></div>
+  <div class="precio" data-a="der" data-in="16.9" data-out="19.1"><span>App a medida</span><b>desde $149</b></div>
+</div>
+<p class="izqda lead" style="top:1300px;right:90px" data-a="sube" data-in="17.4" data-out="19.1">Toda Latinoamérica, a distancia.</p>
+
+<!-- 6 · Cierre (19,4 a 23 s) -->
+<div class="centro" style="top:480px" data-a="escala" data-in="19.4" data-d="0.9"><svg width="300" height="300" viewBox="0 0 120 120"><g transform="rotate(-22 60 60)"><path d="M6 60 A54 17 0 0 1 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="60" cy="60" r="30" fill="#8f84ff"/><path d="M25.3 73 A54 17 0 0 0 94.7 73" fill="none" stroke="#0b0a14" stroke-width="14"/><path d="M6 60 A54 17 0 0 0 114 60" fill="none" stroke="#c9c0ff" stroke-width="6" stroke-linecap="round"/><circle cx="78.5" cy="76" r="11" fill="#0b0a14"/><circle cx="78.5" cy="76" r="7.5" fill="#3ddc9f"/></g></svg></div>
+<h2 class="centro" style="top:830px" data-a="sube" data-in="19.8">¿Hablamos de tu negocio?</h2>
+<div class="centro" style="top:1120px" data-a="sube" data-in="20.3"><span class="boton">Escríbenos por DM</span></div>
+<p class="centro lead" style="top:1300px" data-a="sube" data-in="20.6">@orbe.apps</p>
+
+<script>
+// Cielo con estrellas (posiciones fijas para que el video sea siempre igual)
+(function () { let s = 11; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280; const c = document.getElementById('cielo');
+  for (let i = 0; i < 120; i++) { const d = document.createElement('i'), z = [2, 2, 3, 3, 4, 5][Math.floor(r() * 6)]; d.className = 'estrella'; d.style.cssText = `left:${r() * 1080}px;top:${r() * 1920}px;width:${z}px;height:${z}px`; c.appendChild(d); } })();
+</script>
+<script src="../../herramientas/motor.js"></script>
+</body></html>
