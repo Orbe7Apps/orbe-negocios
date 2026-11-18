@@ -5,11 +5,13 @@ import { iniciarDatos, useDatos, leer, guardarTasa, guardarTasaExtra, tasaEuro, 
 import { Recorrido } from './recorrido.js';
 import { ChipTasa } from './pantallas/tasas.js';
 import { puede, rolDe } from './permisos.js';
-import { pais, tipo, dinero, leerTasa } from './paises.js';
+import { pais, dinero, leerTasa } from './paises.js';
+import { tipoNegocio } from './rubros.js';
 import { Icono, LogoOrbe, Avisos, iniciales, avisar, TONOS, Bandera, MarcaNegocio, useAtras } from './ui.js';
 import { Inicio } from './pantallas/inicio.js';
 import { Hoy } from './pantallas/hoy.js';
 import { Ordenes } from './pantallas/ordenes.js';
+import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -32,6 +34,7 @@ const esTelefono = () => {
 const SECCIONES = {
   hoy: { n: 'Hoy', npc: 'Panel', i: 'inicio', C: Hoy },
   vender: { n: 'Vender', npc: 'Caja', i: 'carrito', C: Vender },
+  agenda: { n: 'Agenda', i: 'calendario', C: Agenda },
   ordenes: { n: 'Órdenes', i: 'orden', C: Ordenes },
   clientes: { n: 'Clientes', i: 'personas', C: Clientes },
   inventario: { n: 'Inventario', i: 'caja', C: Inventario },
@@ -41,7 +44,9 @@ const SECCIONES = {
   mas: { n: 'Más', npc: 'Ajustes', i: 'mas', ipc: 'ajustes', C: Mas }
 };
 // Secciones que necesitan un permiso para verse.
-const PERMISO_SEC = { vender: 'vender', gastos: 'gastos', reportes: 'ganancias', equipo: 'equipo', ordenes: 'ordenes' };
+const PERMISO_SEC = { vender: 'vender', gastos: 'gastos', reportes: 'ganancias', equipo: 'equipo', ordenes: 'ordenes', agenda: 'vender' };
+// Secciones que dependen de una función que se puede apagar.
+const MODULO_SEC = { ordenes: 'ordenes', agenda: 'agenda' };
 
 function aplicarTema(tema) {
   const r = document.documentElement;
@@ -93,9 +98,11 @@ function App() {
   const yo = perfilActual();
   if (!yo) return html`<${Acceso} tel=${tel} /><${Avisos} />`;
   const pd = k => puede(S, yo, k);
-  const permitida = s => SECCIONES[s] && (!PERMISO_SEC[s] || pd(PERMISO_SEC[s]));
+  // El tipo de negocio con su rubro y sus funciones encendidas (Ajustes → Funciones).
+  const T = tipoNegocio(S.negocio);
+  const permitida = s => SECCIONES[s] && (!PERMISO_SEC[s] || pd(PERMISO_SEC[s])) && (!MODULO_SEC[s] || T.mod(MODULO_SEC[s]));
 
-  const P = pais(S.negocio.pais), T = tipo(S.negocio.tipo), D = dinero(P, S.tasa.valor, S.negocio.euro ? tasaEuro() : 0);
+  const P = pais(S.negocio.pais), D = dinero(P, S.tasa.valor, S.negocio.euro ? tasaEuro() : 0);
   // Varios locales: aparece el selector de sucursal y los gráficos por sucursal (sea negocio o empresa).
   const E = S.negocio.sucursales.length > 1;
   const valida = permitida(sec) ? sec : 'hoy';
@@ -109,11 +116,13 @@ function App() {
   const Tour = tour ? html`<${Recorrido} onFin=${() => { setTour(false); if (!yo.tour) marcarTour(Date.now()); }} />` : null;
   const nombreSec = s => s === 'vender' ? (tel ? T.vender : 'Caja') : s === 'inventario' && !T.inv ? 'Servicios' : tel ? SECCIONES[s].n : (SECCIONES[s].npc || SECCIONES[s].n);
   const Pantalla = SECCIONES[valida].C;
-  const cuenta = { clientes: deudores().filter(c => c.deuda > 0).length, inventario: bajoMinimo().length, gastos: porPagar().length, ordenes: S.ordenes.filter(o => ordenAtrasada(o)).length };
+  const cuenta = { clientes: deudores().filter(c => c.deuda > 0).length, inventario: bajoMinimo().length, gastos: porPagar().length, ordenes: S.ordenes.filter(o => ordenAtrasada(o)).length, agenda: T.mod('agenda') ? citasPendientesHoy(S) : 0 };
 
   if (tel) {
     // Barra de abajo: cuatro secciones y, en el centro, el botón Orbe con lo demás (crear y otras secciones).
-    const tabs = ['hoy', 'vender', 'inventario', 'mas'].filter(permitida);
+    // Negocios con citas (barbería, salón…): la agenda ocupa el lugar de inventario; inventario queda en el botón Orbe.
+    const cuarta = permitida('agenda') && (['citas', 'indep'].includes(T.id) || !T.inv) ? 'agenda' : 'inventario';
+    const tabs = ['hoy', 'vender', cuarta, 'mas'].filter(permitida);
     const mitad = Math.ceil(tabs.length / 2);
     const Tab = t => html`<button type="button" key=${t} class=${'toca' + (t === valida ? ' on' : '')} aria-current=${t === valida ? 'page' : 'false'} onClick=${() => ir(t)}>
             <${Icono} n=${t === 'inventario' && !T.inv ? 'lista' : SECCIONES[t].i} t=${22} /><span>${nombreSec(t)}</span></button>`;
@@ -125,7 +134,7 @@ function App() {
         <nav class="nav-tel" aria-label="Secciones" style=${{ gridTemplateColumns: 'repeat(' + (tabs.length + 1) + ', minmax(0, 1fr))' }}>
           ${tabs.slice(0, mitad).map(Tab)}<span class="nav-hueco" aria-hidden="true"></span>${tabs.slice(mitad).map(Tab)}
         </nav>
-        <${BotonOrbe} seccion=${valida} />
+        <${BotonOrbe} seccion=${valida} tabs=${tabs} />
       </div>
       ${hoja && html`<${HojaActual} key=${hoja.n} hoja=${hoja} cerrar=${() => setHoja(null)} />`}
       ${Tour}
@@ -133,8 +142,8 @@ function App() {
     </${Ctx.Provider}>`;
   }
 
-  const grupos = [['Día a día', ['hoy', 'vender', 'ordenes', 'clientes']], ['Operación', ['inventario', 'gastos']], ['Gestión', ['reportes', 'equipo']]].map(g => [g[0], g[1].filter(permitida)]).filter(g => g[1].length);
-  const colores = { clientes: 'var(--c3)', inventario: 'var(--c3)', gastos: 'var(--c5)', ordenes: 'var(--c5)' };
+  const grupos = [['Día a día', ['hoy', 'vender', 'agenda', 'ordenes', 'clientes']], ['Operación', ['inventario', 'gastos']], ['Gestión', ['reportes', 'equipo']]].map(g => [g[0], g[1].filter(permitida)]).filter(g => g[1].length);
+  const colores = { agenda: 'var(--c2)', clientes: 'var(--c3)', inventario: 'var(--c3)', gastos: 'var(--c5)', ordenes: 'var(--c5)' };
   return html`<${Ctx.Provider} value=${ctx}>
     <div class="marco-pc">
       <aside class="lateral" aria-label="Menú">

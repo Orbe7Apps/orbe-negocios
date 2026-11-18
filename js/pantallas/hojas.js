@@ -1,7 +1,7 @@
 // Todas las hojas (teléfono) o ventanas (computadora) de la app.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { leer, vender, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo } from '../datos.js';
+import { leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
 import { Hoja, Icono, Interruptor, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd } from '../ui.js';
@@ -20,6 +20,8 @@ import { imprimir, lineasRecibo, lineasZ, ajustesImpresora } from '../impresora.
 import { Orden, NuevaOrden, AbonoOrden, CancelarOrden } from './ordenes.js';
 import { buscar, parecidos } from '../buscar.js';
 import { descargar } from './reportes.js';
+import { Cita, NuevaCita } from './agenda.js';
+import { ElegirRubro } from './funciones.js';
 
 const CATS = ['Mercancía', 'Alquiler', 'Servicios', 'Sueldos', 'Transporte', 'Otro'];
 const VENCE = [{ v: 7, n: 'En 7 días' }, { v: 15, n: 'En 15 días' }, { v: 30, n: 'En 30 días' }];
@@ -47,7 +49,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  const H = { rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
 
@@ -60,7 +62,10 @@ function Cobrar({ d, cerrar }) {
   // Orden de trabajo o pedido: lo ya adelantado se descuenta y se paga con «Anticipo» (ya entró a la caja).
   const anticipo = D.redondo(d.anticipo || 0);
   const clientes = deudores(), cliObj = clientes.find(x => x.id === cli), saldoCli = cliObj ? cliObj.saldo : 0;
-  const metodos = S.negocio.pays.concat(puede('fiado') ? [fiadoN] : [], saldoCli > 0 ? ['Saldo a favor'] : []);
+  const metodos = S.negocio.pays.concat(puede('fiado') && T.mod('fiado') ? [fiadoN] : [], saldoCli > 0 ? ['Saldo a favor'] : []);
+  // Quién atendió (barbería, salón, taller…): para la comisión de cada uno.
+  const conPro = T.mod('comisiones'), pros = conPro ? S.perfiles.filter(p => !p.inactivo && !p.borrado) : [];
+  const [pro, setPro] = useState(d.pro || (pros.some(p => p.id === S.ajustes.perfil) ? S.ajustes.perfil : (pros[0] || {}).id || ''));
   const total = D.redondo(d.tt.total - anticipo);
   const fp = usePagos(total, metodos, undefined, m => P.id === 'VE' && S.negocio.igtf && esDivisa(m) ? 1.03 : 1);
   const [recibe, setRecibe] = useState(0);
@@ -94,6 +99,7 @@ function Cobrar({ d, cerrar }) {
     const items = d.items.map(it => Object.assign({}, it));
     const venta = vender({ items, pagos: (anticipo > 0 ? [{ m: 'Anticipo', v: anticipo }] : []).concat(total > 0 ? partes : []), cli, suc: suc || S.negocio.sucursales[0], fiado: fiado || usaSaldo > 0, total: total + anticipo, igtf });
     if (d.orden) venta.orden = d.orden;
+    if (conPro && pro) guardarAtendio(venta.id, pro);
     // Lo que se ahorró por promociones y descuentos queda en la venta (sale en el recibo).
     const ahorro = D.redondo(items.reduce((a, it) => a + (it.pLista != null ? it.q * (it.pLista - it.p) : 0), 0));
     if (ahorro > 0) venta.descuento = ahorro;
@@ -122,6 +128,7 @@ function Cobrar({ d, cerrar }) {
           <button type="button" class=${'chip chico toca' + (comoSaldo ? ' on' : '')} onClick=${() => setComoSaldo(!comoSaldo)}>Dejar como saldo a favor</button>
         </div>
       </div>`}
+      ${conPro && pros.length > 1 && html`<div class="campo"><span>¿Quién atendió?</span><div class="chips">${pros.map((x, i) => html`<button type="button" key=${x.id} class=${'chip chico toca' + (pro === x.id ? ' on' : '')} aria-pressed=${pro === x.id ? 'true' : 'false'} onClick=${() => setPro(x.id)}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:22px;height:22px;font-size:9px;margin-left:-4px">${iniciales(x.n)}</span>${x.n.split(' ')[0]}</button>`)}</div></div>`}
       ${pideCli ? html`<div class="campo entra"><span>${fiado ? '¿A quién se lo anotas?' + (parteFiada < total - 0.001 ? ' (' + D.m(parteFiada) + ')' : '') : comoSaldo ? '¿De quién es el saldo a favor?' : 'Cliente'}</span>
         <div class="chips">${clientes.map((x, i) => html`<button type="button" class=${'chip toca' + (cli === x.id ? ' on calido' : '')} style="padding-left:6px;color:var(--ink)" onClick=${() => setCli(cli === x.id ? '' : x.id)}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:28px;height:28px;font-size:11px">${iniciales(x.n)}</span>${x.n.split(' ')[0]}${x.saldo > 0 ? html`<span class="sub in" style="font-size:11px">+${D.m(x.saldo)}</span>` : null}</button>`)}
         <button type="button" class="chip toca" style="border:1.5px dashed var(--line);background:transparent" onClick=${() => c(() => abrir('nuevoCliente', { volver: d }))}>+ Nuevo</button></div>
@@ -132,16 +139,22 @@ function Cobrar({ d, cerrar }) {
 }
 
 // ---------- recibo ----------
+// Garantía de una línea: hasta cuándo y el número de serie.
+export function garantiaTxt(v, it) {
+  if (!it.gar && !it.serial) return '';
+  const d = new Date(v.t); d.setMonth(d.getMonth() + (it.gar || 0));
+  return [it.gar ? 'Garantía hasta ' + d.toLocaleDateString('es') : '', it.serial ? 'S/N ' + it.serial : ''].filter(Boolean).join(' · ');
+}
 export function textoRecibo(v, S, D, P) {
   const cli = S.clientes.find(c => c.id === v.cli);
-  return [S.negocio.nombre + (S.negocio.razon ? ' · ' + S.negocio.razon : ''), S.negocio.fiscal ? P.fiscal[0] + ' ' + S.negocio.fiscal : '', 'Recibo #' + v.n + ' · ' + new Date(v.t).toLocaleString('es'), (S.perfiles || []).find(p => p.id === v.por) ? 'Te atendió ' + S.perfiles.find(p => p.id === v.por).n.split(' ')[0] : '', '',
-    ...v.items.map(it => it.q + ' x ' + it.n + ': ' + D.m(it.q * it.p)), '', 'Total: ' + D.m(v.total) + (D.dual ? ' (' + D.s(v.total) + ')' : ''),
+  return [S.negocio.nombre + (S.negocio.razon ? ' · ' + S.negocio.razon : ''), S.negocio.fiscal ? P.fiscal[0] + ' ' + S.negocio.fiscal : '', 'Recibo #' + v.n + ' · ' + new Date(v.t).toLocaleString('es'), (S.perfiles || []).find(p => p.id === (v.pro || v.por)) ? 'Te atendió ' + S.perfiles.find(p => p.id === (v.pro || v.por)).n.split(' ')[0] : '', '',
+    ...v.items.map(it => it.q + ' x ' + it.n + ': ' + D.m(it.q * it.p) + (garantiaTxt(v, it) ? '\n   ' + garantiaTxt(v, it) : '')), '', 'Total: ' + D.m(v.total) + (D.dual ? ' (' + D.s(v.total) + ')' : ''),
     v.igtf > 0 ? 'IGTF 3 %: ' + D.m(v.igtf) : '',
     ...v.pagos.map(p => p.m + (p.ref ? ' (ref ' + p.ref + ')' : '') + ': ' + D.m(p.v)), cli ? 'Cliente: ' + cli.n : '', '', '¡Gracias por tu compra!'].filter((x, i, a) => x !== '' || a[i - 1] !== '').join('\n');
 }
 function Recibo({ d, cerrar }) {
   const { S, P, D, tel, abrir, puede } = useApp();
-  const v = S.ventas.find(x => x.id === d.venta.id) || d.venta, cli = S.clientes.find(c => c.id === v.cli), atendio = S.perfiles.find(p => p.id === v.por);
+  const v = S.ventas.find(x => x.id === d.venta.id) || d.venta, cli = S.clientes.find(c => c.id === v.cli), atendio = S.perfiles.find(p => p.id === (v.pro || v.por));
   const quien = id => { const p = S.perfiles.find(x => x.id === id); return p ? p.n.split(' ')[0] : ''; };
   const quedan = v.items.some(it => it.q - ((v.devuelto || {})[claveItem(it)] || 0) > 0);
   const corregir = puede('anular') && !v.anulada && !v.dev;
@@ -164,7 +177,7 @@ function Recibo({ d, cerrar }) {
         <span style="text-align:center;color:#625f7d">${v.dev ? 'Devolución' : 'Recibo'} #${v.n} · ${fechaCorta(v.t)} ${hora(v.t)}${cli ? ' · ' + cli.n : ''}</span>
         ${atendio && html`<span style="text-align:center;color:#625f7d">Te atendió ${atendio.n.split(' ')[0]}${S.negocio.sucursales.length > 1 ? ' · ' + v.suc : ''}</span>`}
         <span style="border-top:1px dashed #c9c6e0"></span>
-        ${v.items.map(it => html`<span class="fila" style="justify-content:space-between;gap:8px"><span>${verQ(Math.abs(it.q), it.u)} x ${it.n}</span><span>${D.m(it.q * (it.pLista != null ? it.pLista : it.p))}</span></span>
+        ${v.items.map(it => html`<span class="fila" style="justify-content:space-between;gap:8px"><span>${verQ(Math.abs(it.q), it.u)} x ${it.n}</span><span>${D.m(it.q * (it.pLista != null ? it.pLista : it.p))}</span></span>${garantiaTxt(v, it) && html`<span style="font-size:11px;color:#625f7d;margin-top:-2px">${garantiaTxt(v, it)}</span>`}
           ${it.pLista != null && Math.abs(it.pLista - it.p) > 1e-9 && html`<span class="fila" style="justify-content:space-between;gap:8px;color:#0d7f5f;font-size:12px"><span>  ${it.promo ? 'Promo ' + it.promo : it.desc ? 'Descuento ' + it.desc + ' %' : 'Descuento'}</span><span>−${D.m(it.q * (it.pLista - it.p))}</span></span>`}`)}
         ${v.descuento > 0 && html`<span class="fila" style="justify-content:space-between;color:#0d7f5f;font-weight:600"><span>Ahorraste</span><span>${D.m(v.descuento)}</span></span>`}
         <span style="border-top:1px dashed #c9c6e0"></span>
@@ -410,6 +423,8 @@ function Producto({ d, cerrar }) {
   };
   const [f, setF] = useState(p0 ? { n: p0.n, p: coma(p0.p), c: coma(p0.c), q: p0.q == null ? '' : coma(p0.q), min: coma(p0.min), dur: p0.dur || 60, cod: p0.cod || '', usd: p0.usd ? String(p0.usd).replace('.', ',') : '' } : { n: d.n || '', p: '', c: '', q: d.q != null ? coma(d.q) : '', min: '', dur: 60, cod: d.cod || '', usd: '' });
   const [enDolar, setEnDolar] = useState(!!(p0 && p0.usd));
+  // Garantía en meses (electrodomésticos, repuestos, equipos).
+  const [gar, setGar] = useState(p0 && p0.gar || 0);
   // Impuesto del producto: general, una tasa reducida del país o exento.
   const [imp, setImp] = useState(p0 && p0.imp != null ? p0.imp : 'gen');
   // Grupo: uno de los que hay o uno nuevo escrito aquí mismo.
@@ -438,7 +453,7 @@ function Producto({ d, cerrar }) {
     const codRep = varsOk.find(v => v.cod && (mismoCodigo(v.cod, cod) || varsOk.some(w => w !== v && mismoCodigo(w.cod, v.cod)) || listaProductos().some(x => (!p0 || x.id !== p0.id) && (mismoCodigo(x.cod, v.cod) || (x.vars || []).some(w => mismoCodigo(w.cod, v.cod))))));
     if (codRep) { avisar('El código de ' + codRep.n + ' ya lo tiene otro producto o variante'); return; }
     const cant = x => u ? Math.round(numero(x) * 1000) / 1000 : Math.round(numero(x));
-    guardarProducto({ id: p0 ? p0.id : undefined, n: f.n.trim(), ab: iniciales2(f.n.trim()), p, c: co, q: inv ? (varsOk.length ? varsOk.reduce((a2, v) => a2 + (v.q || 0), 0) : cant(f.q)) : null, min: inv ? cant(f.min) : 0, u: inv && u ? u : undefined, vars: inv && varsOk.length ? varsOk : undefined, dur: T.inv ? 0 : f.dur, cod, usd: enDolar && atable ? usd : 0, imp: imp === 'gen' ? undefined : imp, foto, g: grupoNuevo && grupoNuevo.trim() ? guardarGrupo({ n: grupoNuevo.trim() }) : grupo });
+    guardarProducto({ id: p0 ? p0.id : undefined, n: f.n.trim(), ab: iniciales2(f.n.trim()), p, c: co, q: inv ? (varsOk.length ? varsOk.reduce((a2, v) => a2 + (v.q || 0), 0) : cant(f.q)) : null, min: inv ? cant(f.min) : 0, u: inv && u ? u : undefined, vars: inv && varsOk.length ? varsOk : undefined, dur: T.inv ? 0 : f.dur, cod, usd: enDolar && atable ? usd : 0, imp: imp === 'gen' ? undefined : imp, foto, gar: gar || 0, g: grupoNuevo && grupoNuevo.trim() ? guardarGrupo({ n: grupoNuevo.trim() }) : grupo });
     // Si se creó desde el escáner, se vuelve a él con el producto ya reconocido.
     c(() => { avisar('Guardado: ' + f.n.trim()); if (d.escaner && cod) abrir('escaner', Object.assign({}, d.escaner, { mostrar: cod })); });
   };
@@ -457,8 +472,8 @@ function Producto({ d, cerrar }) {
       ${enDolar && atable && html`<label class="campo entra"><span>Precio en dólares</span><input class="num" type="text" inputmode="decimal" value=${f.usd} placeholder="0" onInput=${e => pon({ usd: e.target.value })} /></label>${usd > 0 && html`<span class="sub num">Hoy son ${D.m(p)} (US$ 1 = ${D.m(D.tasa)})</span>`}`}
       <div class="rejilla-2" style="gap:10px">${enDolar && atable ? html`<div class="campo"><span>Precio</span><b class="num" style="min-height:52px;display:flex;align-items:center;font-size:18px">${D.m(p)}</b></div>` : html`<label class="campo"><span>Precio</span><input type="text" inputmode="decimal" value=${f.p} placeholder="0" onInput=${e => pon({ p: e.target.value })} /></label>`}<label class="campo"><span>Te cuesta</span><input type="text" inputmode="decimal" value=${f.c} placeholder="0" onInput=${e => pon({ c: e.target.value })} /></label></div>
       ${p > 0 && html`<span class="sub entra">Ganas <b class="in num">${D.m(p - co)}</b> por cada uno (${Math.round((p - co) / p * 100)} %)</span>`}
-      ${T.inv && html`<${Interruptor} on=${svc} onCambio=${setSvc} titulo="Es un servicio" sub="Mano de obra, instalación, revisión, envío… No lleva existencia." />`}
-      ${inv && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }]} valor=${u} onCambio=${setU} chico />${u && html`<span class="sub faint entra" style="font-size:12px">El precio es por ${u}. Al vender se escribe cuánto lleva (o cuánto quiere gastar). Lee las etiquetas de balanza que empiezan con 2.</span>`}</div>`}
+      ${T.inv && (T.mod('servicios') || svc) && html`<${Interruptor} on=${svc} onCambio=${setSvc} titulo="Es un servicio" sub="Mano de obra, instalación, revisión, envío… No lleva existencia." />`}
+      ${inv && (T.mod('medidas') || u) && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }]} valor=${u} onCambio=${setU} chico />${u && html`<span class="sub faint entra" style="font-size:12px">El precio es por ${u}. Al vender se escribe cuánto lleva (o cuánto quiere gastar). Lee las etiquetas de balanza que empiezan con 2.</span>`}</div>`}
       ${inv && vars.length > 0 ? html`<span class="sub">Tienes ${vars.reduce((a2, v) => a2 + numero(v.q), 0)}${u ? ' ' + u : ''} en total (la suma de las variantes).</span>`
       : inv ? html`<div class="rejilla-2" style="gap:10px"><label class="campo"><span>Tienes${u ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avísame con menos de</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
         : T.inv ? null : html`<div class="campo"><span>Dura</span><${Chips} opciones=${[{ v: 30, n: '30 min' }, { v: 45, n: '45 min' }, { v: 60, n: '1 hora' }, { v: 120, n: '2 horas' }]} valor=${f.dur} onCambio=${v => pon({ dur: v })} /></div>`}
@@ -468,7 +483,7 @@ function Producto({ d, cerrar }) {
         <button type="button" class=${'chip chico toca' + (grupoNuevo != null ? ' on' : '')} style="border:1.5px dashed var(--line)" onClick=${() => setGrupoNuevo(grupoNuevo == null ? '' : null)}>+ Nuevo</button></div>
         ${grupoNuevo != null && html`<input class="entra" type="text" value=${grupoNuevo} placeholder="Nombre del grupo nuevo" autocomplete="off" onInput=${e => setGrupoNuevo(e.target.value)} />`}</div>
       ${S.negocio.taxOn && html`<div class="campo"><span>${P.tax[0]} de este ${T.inv ? 'producto' : 'servicio'}</span><${Chips} opciones=${opcionesImp} valor=${imp} onCambio=${setImp} chico /></div>`}
-      ${inv && !u && html`<div class="campo"><span>Variantes (talla, color, sabor…)</span>
+      ${inv && !u && (T.mod('variantes') || vars.length > 0) && html`<div class="campo"><span>Variantes (talla, color, sabor…)</span>
         ${vars.length ? html`<div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);padding:8px 12px;gap:0">${vars.map((v, i) => html`<div class="variante-fila entra" key=${v.id}>
           <div class="fila" style="gap:6px"><input type="text" class="crece" value=${v.n} placeholder="Ej.: M · Rojo" aria-label="Nombre de la variante" autocomplete="off" onInput=${e => ponVar(i, { n: e.target.value })} /><button type="button" class="icono-btn chico toca" style="width:30px;height:30px" aria-label="Quitar variante" onClick=${() => setVars(vars.filter((_, k) => k !== i))}><${Icono} n="cerrar" t=${12} g=${2.6} /></button></div>
           <div class="variante-datos">
@@ -480,7 +495,8 @@ function Producto({ d, cerrar }) {
         <div class="chips"><button type="button" class="chip chico toca" onClick=${() => setVars(vars.concat([nuevaVar()]))}>+ Variante</button>
           ${!vars.length && [['S', 'M', 'L', 'XL'], ['Chico', 'Mediano', 'Grande']].map(g => html`<button type="button" class="chip chico toca" onClick=${() => setVars(g.map(nuevaVar))}>${g.join(' · ')}</button>`)}</div>
         ${vars.length > 0 && html`<span class="sub faint" style="font-size:12px">Sin precio, la variante usa el del producto. Al vender se elige cuál.</span>`}</div>`}
-      ${inv && html`<label class="campo"><span>Código de barras (opcional)</span><input class="num" type="text" inputmode="numeric" autocomplete="off" value=${f.cod} placeholder="Pásalo por el lector o escríbelo" onInput=${e => pon({ cod: e.target.value })} /></label>`}`,
+      ${inv && html`<label class="campo"><span>Código de barras (opcional)</span><input class="num" type="text" inputmode="numeric" autocomplete="off" value=${f.cod} placeholder="Pásalo por el lector o escríbelo" onInput=${e => pon({ cod: e.target.value })} /></label>`}
+      ${(T.mod('garantia') || gar > 0) && html`<div class="campo"><span>Garantía</span><${Chips} opciones=${[{ v: 0, n: 'Sin garantía' }, { v: 3, n: '3 meses' }, { v: 6, n: '6 meses' }, { v: 12, n: '1 año' }, { v: 24, n: '2 años' }]} valor=${gar} onCambio=${setGar} chico />${gar > 0 && html`<span class="sub faint entra" style="font-size:12px">Sale en el recibo con la fecha en que vence. Al vender puedes anotar el número de serie.</span>`}</div>`}`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar</button>${p0 ? Pie2('Borrar ' + (T.inv ? 'producto' : 'servicio'), () => borrar(c), 'rojo') : null}`
   })} />`;
 }
@@ -596,20 +612,20 @@ function Locales({ d, cerrar }) {
 
 // ---------- perfiles del equipo ----------
 function Perfil({ d, cerrar }) {
-  const { S, E, yo, puede, abrir } = useApp();
+  const { S, E, T, yo, puede, abrir } = useApp();
   const p0 = S.perfiles.find(p => p.id === d.pid) || null;
   // Sin permiso de equipo solo se cambia el nombre y el PIN propio, nunca el rol.
   const admin = puede('equipo');
   const esDueno = p0 && p0.rol === 'dueno', soloDatos = esDueno || !admin, soyYo = p0 && p0.id === yo.id;
   const rolesPosibles = S.roles.filter(r => !r.fijo && puedeEditarRol(yo, r.id));
-  const [f, setF] = useState(p0 ? { n: p0.n, rol: p0.rol, pin: '', pin2: '', sucs: p0.sucs || [], inactivo: !!p0.inactivo } : { n: '', rol: (rolesPosibles.find(r => r.id === 'cajero') || rolesPosibles[0] || {}).id, pin: '', pin2: '', sucs: [], inactivo: false });
+  const [f, setF] = useState(p0 ? { n: p0.n, rol: p0.rol, pin: '', pin2: '', sucs: p0.sucs || [], inactivo: !!p0.inactivo, com: p0.com != null ? p0.com : 40 } : { com: 40, n: '', rol: (rolesPosibles.find(r => r.id === 'cajero') || rolesPosibles[0] || {}).id, pin: '', pin2: '', sucs: [], inactivo: false });
   const pon = o => setF(x => Object.assign({}, x, o));
   const guardar = c => {
     if (!f.n.trim()) { avisar('Escribe el nombre'); return; }
     if (!p0 && f.pin && !/^\d{4}$/.test(f.pin)) { avisar('El PIN son 4 números'); return; }
     if (!p0 && f.pin !== f.pin2) { avisar('Los dos PIN no son iguales'); return; }
     if (soyYo && f.inactivo) { avisar('No puedes desactivar tu propio perfil'); return; }
-    guardarPerfil(Object.assign({ id: p0 ? p0.id : undefined }, { n: f.n.trim() }, p0 ? {} : { pin: f.pin }, soloDatos ? {} : { rol: f.rol, sucs: f.sucs, inactivo: f.inactivo }));
+    guardarPerfil(Object.assign({ id: p0 ? p0.id : undefined }, { n: f.n.trim() }, T.mod('comisiones') && admin ? { com: f.com } : {}, p0 ? {} : { pin: f.pin }, soloDatos ? {} : { rol: f.rol, sucs: f.sucs, inactivo: f.inactivo }));
     c(() => avisar(p0 ? 'Perfil guardado' : 'Perfil creado: ' + f.n.trim().split(' ')[0] + (f.pin ? ' entra con su PIN' : '')));
   };
   // Eliminar: solo quien maneja el equipo, nunca al dueño ni a uno mismo.
@@ -622,6 +638,7 @@ function Perfil({ d, cerrar }) {
       ${p0 && html`<div class="fila" style="gap:12px"><span class=${'logo redondo ' + TONOS[i % 5]} style="width:52px;height:52px;font-size:18px">${iniciales(f.n || p0.n)}</span>
         <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0"><b class="corta" style="font-size:17px">${f.n || p0.n}</b><span class="sub">${(S.roles.find(r => r.id === p0.rol) || {}).n || ''}${p0.inactivo ? ' · desactivado' : ''}</span></span></div>`}
       <label class="campo"><span>Nombre</span><input type="text" value=${f.n} placeholder="Ej.: Luisa Pino" autocomplete="off" onInput=${e => pon({ n: e.target.value })} /></label>
+      ${T.mod('comisiones') && admin && html`<div class="campo"><span>Comisión por lo que atiende</span><${Chips} opciones=${[0, 30, 40, 50, 60].map(v => ({ v, n: v ? v + ' %' : 'Sin comisión' }))} valor=${f.com} onCambio=${v => pon({ com: v })} chico /></div>`}
       ${esDueno || !admin ? esDueno && html`<div class="tarjeta fila" style="background:var(--accent-soft);box-shadow:none"><${Icono} n="escudo" t=${18} c="var(--accent)" /><span class="sub" style="color:var(--ink)">Es el dueño: siempre puede todo y nadie le puede quitar permisos.</span></div>`
         : html`<div class="campo"><span>Rol</span><${Chips} opciones=${rolesPosibles.map(r => ({ v: r.id, n: r.n }))} valor=${f.rol} onCambio=${v => pon({ rol: v })} /></div>
           ${rolActual && html`<span class="sub faint entra" key=${f.rol}>Puede: ${Object.keys(rolActual.p).filter(k => rolActual.p[k]).length} de ${PERMISOS.length} permisos. Los cambias en «Qué puede hacer cada rol».</span>`}`}
@@ -687,7 +704,7 @@ function Rol({ d, cerrar }) {
 
 // ---------- datos del negocio ----------
 function Negocio({ d, cerrar }) {
-  const { S, P, T } = useApp();
+  const { S, P, T, abrir: abrirH } = useApp();
   const n = S.negocio;
   const [f, setF] = useState({ nombre: n.nombre, razon: n.razon || '', fiscal: n.fiscal || '', tipo: n.tipo, escala: n.escala, pais: n.pais, logo: n.logo || '', tel: n.tel || '', dir: n.dir || '' });
   const [latido, setLatido] = useState(false);
@@ -730,7 +747,7 @@ function Negocio({ d, cerrar }) {
         <label class="campo"><span>Razón social${f.escala === 'empresa' ? '' : ' (opcional)'}</span><input type="text" value=${f.razon} placeholder=${f.nombre + (P2.suf ? ' ' + P2.suf : '')} onInput=${e => pon({ razon: e.target.value })} /></label>
         <label class="campo"><span>${P2.fiscal[0]}${f.escala === 'empresa' ? '' : ' (opcional)'}</span><input type="text" value=${f.fiscal} placeholder=${P2.fiscal[1] || 'Número fiscal'} onInput=${e => pon({ fiscal: e.target.value })} /></label>
       </div>
-      <div class="campo"><span>Tipo</span><${Chips} opciones=${TIPOS.map(t => ({ v: t.id, n: html`<span class="simb"><${Icono} n=${t.id} t=${13} g=${2.2} /></span>${t.n}` }))} valor=${f.tipo} onCambio=${v => pon({ tipo: v })} /></div>
+      <div class="campo"><span>Rubro</span><button type="button" class="btn2 toca" style="justify-content:flex-start;gap:10px;min-height:50px;border-radius:16px" onClick=${() => c(() => abrirH('rubro'))}><${Icono} n=${T.icono} t=${17} /><span class="crece" style="text-align:left">${T.n}</span><span class="acento-txt">Cambiar</span></button></div>
       ${T2.inv !== T.inv && html`<span class="sub entra" style="line-height:1.45">${T2.inv ? 'Ahora vas a llevar inventario: ponle existencia a tus productos en Inventario.' : 'Ahora vendes servicios: se deja de contar el inventario.'}</span>`}
       <label class="campo"><span class="fila" style="gap:8px"><${Bandera} id=${f.pais} t=${18} />País y moneda</span><select value=${f.pais} onChange=${e => pon({ pais: e.target.value })}>${PAISES.map(x => html`<option value=${x.id}>${x.n} · ${x.cur}</option>`)}</select></label>
       ${otroPais && html`<div class="tarjeta fila entra" style="background:var(--amber-soft);box-shadow:none;gap:10px;align-items:flex-start"><${Icono} n="alerta" t=${18} c="var(--amber)" /><span class="sub" style="color:var(--ink);line-height:1.45"><b>Ojo:</b> los precios y montos guardados no se convierten. Si cambias de ${P.cur} a ${P2.cur}, el número se queda igual. Las formas de pago pasan a las de ${P2.n}.</span></div>`}`,

@@ -7,6 +7,8 @@ import { nombreTasa } from '../paises.js';
 import { inicioMes } from './gastos.js';
 import { descargar, ventasCSV } from './reportes.js';
 import { COND_ORDEN } from '../ordenpdf.js';
+import { Funciones } from './funciones.js';
+import { MODULOS } from '../rubros.js';
 import { ajustesImpresora, hayBluetooth, conectarBluetooth, olvidarBluetooth, conectada, nombreImpresora, imprimir } from '../impresora.js';
 
 // Impresora térmica: tamaño del papel, cómo se imprime, cajón y prueba.
@@ -47,13 +49,14 @@ function useTemas() {
         <span class="crece" style="display:flex;flex-direction:column"><b style="font-size:16px">${yo.n}</b><span class="sub">${rol ? rol.n : ''} · ${yo.pin ? 'con PIN' : 'sin PIN'}</span></span></div>
       ${Botones(html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('perfil', { pid: yo.id })}><${Icono} n="lapiz" t=${14} />Editar perfil</button>`, html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('pin', { pid: yo.id })}><${Icono} n="candado" t=${14} />${yo.pin ? 'Cambiar PIN' : 'Poner PIN'}</button>`, html`<button type="button" class="btn2 chico acento toca" onClick=${() => salir()}>Cambiar de perfil</button>`)}` },
     puede('gastos') && { k: 'gastos', g: 'Dinero', i: 'dinero', c: 't-ros', n: 'Gastos y por pagar', r: pp.length ? D.m(ppTot) + ' por pagar · ' + pp.length + (pp.length === 1 ? ' cuenta' : ' cuentas') : 'Gastado este mes: ' + D.m(gastosMes), ir: () => ir('gastos'), solo: true },
-    puede('vender') && { k: 'caja', g: 'Dinero', i: 'billete', c: 't-ver', n: 'Caja y turnos', r: cajaAbierta() ? 'Caja abierta · retiros y turnos' : 'Abrir caja, retiros y turnos', ir: () => abrir('caja'), solo: true },
+    puede('vender') && T.mod('caja') && { k: 'caja', g: 'Dinero', i: 'billete', c: 't-ver', n: 'Caja y turnos', r: cajaAbierta() ? 'Caja abierta · retiros y turnos' : 'Abrir caja, retiros y turnos', ir: () => abrir('caja'), solo: true },
     puede('cierre') && { k: 'cierre', g: 'Dinero', i: 'candado', c: 't-vio', n: 'Cierre del día', r: cz ? 'Cerrado a las ' + new Date(cz.t).toLocaleTimeString('es', { hour: 'numeric', minute: '2-digit' }) : 'Cuenta la caja al cerrar', ir: () => abrir('cierre'), solo: true },
     puede('ganancias') && { k: 'reportes', g: 'Dinero', i: 'grafico', c: 't-azu', n: 'Reportes', r: 'Ganancia real de ' + nombreMes + ': ' + D.m(rm.ganancia - gastosMes), ir: () => ir('reportes'), solo: true },
     aj && { k: 'negocio', g: 'Tu negocio', i: n.escala === 'empresa' ? 'edificio' : 'tienda', c: 't-vio', n: 'Datos y logo', r: n.nombre + ' · ' + T.n, cuerpo: () => html`
       ${Dato('Nombre', n.nombre)}${n.razon ? Dato('Razón social', n.razon) : null}${n.fiscal ? Dato(P.fiscal[0], n.fiscal) : null}${n.tel ? Dato('Teléfono', n.tel) : null}${n.dir ? Dato('Dirección', n.dir) : null}
       ${Dato('Tipo', T.n)}${Dato('Tamaño', n.escala === 'empresa' ? 'Empresa' : 'Negocio')}
       ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('negocio')}><${Icono} n="lapiz" t=${14} />Cambiar datos y logo</button>`)}` },
+    aj && { k: 'funciones', g: 'Tu negocio', i: 'ajustes', c: 't-ver', n: 'Funciones', r: T.n + ' · ' + MODULOS.filter(m => T.mod(m.k)).length + ' encendidas', cuerpo: () => html`<${Funciones} />` },
     puede('equipo') && tel && { k: 'equipo', g: 'Tu negocio', i: 'personas', c: 't-ver', n: 'Equipo y permisos', r: S.perfiles.filter(x => !x.inactivo && !x.borrado).length + ' personas', ir: () => ir('equipo'), solo: true },
     aj && { k: 'locales', g: 'Tu negocio', i: 'edificio', c: 't-azu', n: 'Locales', r: n.sucursales.length === 1 ? '1 local' : n.sucursales.length + ' locales', cuerpo: () => html`
       ${n.sucursales.length > 1 ? n.sucursales.map((x, k) => Dato('Local ' + (k + 1), x)) : html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Tienes un solo local, así que Orbe no te muestra sucursales. Si abres otro, agrégalo aquí.</p>`}
@@ -76,7 +79,7 @@ function useTemas() {
         <div class="fila" style="gap:10px;margin-top:12px"><span class="sub crece" style="line-height:1.4">Tasa general. A cada producto le puedes poner una reducida o exento.</span>
           <div class="pago-monto" style="width:110px;min-height:44px"><input class="num" type="text" inputmode="decimal" aria-label="Tasa general" placeholder=${String(P.tax[1])} value=${n.taxGen != null ? String(n.taxGen).replace('.', ',') : ''} onChange=${e => { const v = parseFloat(e.target.value.replace(',', '.')); cambiarNegocio({ taxGen: isFinite(v) && v >= 0 && v < 100 ? v : undefined }); }} /><span class="sub">%</span></div></div>`}` },
     aj && { k: 'impresora', g: 'Ventas y cobro', i: 'doc', c: 't-ver', n: 'Impresora de tickets', r: imp.ancho + ' mm · ' + (imp.modo === 'bluetooth' ? 'Bluetooth' : 'del sistema') + (imp.auto ? ' · imprime al cobrar' : ''), cuerpo: () => html`<${Impresora} />` },
-    aj && { k: 'ordenes', g: 'Ventas y cobro', i: 'orden', c: 't-azu', n: 'Órdenes de trabajo', r: 'Condiciones del PDF', cuerpo: () => html`
+    aj && T.mod('ordenes') && { k: 'ordenes', g: 'Ventas y cobro', i: 'orden', c: 't-azu', n: 'Órdenes de trabajo', r: 'Condiciones del PDF', cuerpo: () => html`
       <p class="sub" style="margin:0 0 8px;line-height:1.45">Siempre activas: las creas desde el botón Orbe o desde Órdenes.</p>
       <label class="campo"><span>Condiciones que salen en la orden impresa y en el PDF</span><textarea rows="4" value=${n.condOrden != null ? n.condOrden : COND_ORDEN} onChange=${e => cambiarNegocio({ condOrden: e.target.value.trim() })}></textarea></label>
       ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${() => ir('ordenes')}>Ir a Órdenes</button>`)}` },

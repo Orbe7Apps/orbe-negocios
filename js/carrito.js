@@ -38,6 +38,9 @@ export function lineasDe(cart, prods) {
     const v = varDe(p, vid), meta = cart.meta[k] || {};
     const base = v && v.p > 0 ? v.p : p.p, pLista = meta.pm != null ? meta.pm : base;
     const it = Object.assign({ pid: p.id, n: v ? p.n + ' · ' + v.n : p.n, q, p: pLista, c: p.c, k }, v ? { vid: v.id, nb: p.n } : {}, p.imp != null ? { imp: p.imp } : {}, porPeso(p) ? { u: p.u } : {});
+    // Garantía (meses) y número de serie: salen en el recibo.
+    if (p.gar) it.gar = p.gar;
+    if (meta.serial) it.serial = meta.serial;
     if (meta.desc > 0) { it.p = pLista * (1 - meta.desc / 100); it.desc = meta.desc; }
     else { const pr = promoDe(p, q, pLista, promos); if (pr) { it.p = pr.p; it.promo = pr.n === pr.txt ? pr.n : pr.n + ' (' + pr.txt + ')'; } }
     if (Math.abs(it.p - base) > 1e-9 || meta.pm != null) it.pLista = base;

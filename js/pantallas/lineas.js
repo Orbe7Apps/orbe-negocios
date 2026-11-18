@@ -49,6 +49,8 @@ export function Linea({ d, cerrar }) {
   const [precio, setPrecio] = useState(it ? String(it.pLista != null ? it.pLista : it.p).replace('.', ',') : '');
   const [desc, setDesc] = useState(it && it.desc ? it.desc : 0);
   const [otro, setOtro] = useState('');
+  // Número de serie (productos con garantía).
+  const [serial, setSerial] = useState(it && it.serial || '');
   if (!it) return null;
   const pd = puede('descuentos'), base = it.pLista != null ? it.pLista : it.p;
   const qN = numero(cant), pN = numero(precio), dN = desc === 'otro' ? numero(otro) : desc;
@@ -56,13 +58,16 @@ export function Linea({ d, cerrar }) {
   const listo = c => {
     if (!(qN > 0)) { avisar('La cantidad debe ser mayor que cero'); return; }
     if (!it.u && !Number.isInteger(qN)) { avisar('Este producto se vende por unidad'); return; }
-    if (pd) d.onMeta(Object.assign({}, Math.abs(pN - base) > 1e-9 ? { pm: pN } : {}, dN > 0 ? { desc: Math.min(100, dN) } : {}));
+    const sn = serial.trim() ? { serial: serial.trim() } : {};
+    if (pd) d.onMeta(Object.assign({}, Math.abs(pN - base) > 1e-9 ? { pm: pN } : {}, dN > 0 ? { desc: Math.min(100, dN) } : {}, sn));
+    else if (it.gar) d.onMeta(sn);
     d.onCant(qN);
     c(() => {});
   };
   return html`<${Hoja} titulo=${it.n} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       <label class="campo"><span>Cantidad${it.u ? ' en ' + it.u : ''}</span><input class="num" type="text" inputmode="decimal" autocomplete="off" value=${cant} aria-label="Cantidad" onInput=${e => setCant(e.target.value)} /></label>
+      ${it.gar > 0 && html`<label class="campo"><span>Número de serie · garantía de ${it.gar >= 12 && it.gar % 12 === 0 ? (it.gar / 12 === 1 ? '1 año' : it.gar / 12 + ' años') : it.gar + ' meses'}</span><input type="text" autocomplete="off" value=${serial} placeholder="Opcional: sale en el recibo" aria-label="Número de serie" onInput=${e => setSerial(e.target.value)} /></label>`}
       ${pd ? html`
         <label class="campo"><span>Precio ${it.u ? 'por ' + it.u : 'de cada uno'}</span><input class="num" type="text" inputmode="decimal" autocomplete="off" value=${precio} aria-label="Precio" onInput=${e => setPrecio(e.target.value)} /></label>
         <div class="campo"><span>Descuento a esta línea</span><${Chips} opciones=${[0, 5, 10, 15, 20].map(v => ({ v, n: v ? v + ' %' : 'Ninguno' })).concat([{ v: 'otro', n: 'Otro' }])} valor=${desc} onCambio=${setDesc} chico /></div>

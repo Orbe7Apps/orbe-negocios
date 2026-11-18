@@ -3,13 +3,14 @@
 import { useState, useEffect } from './lib/preact-htm.js';
 import { pais, tipo, dinero, TASA_VE_RESPALDO, esDivisa, EUR_USD } from './paises.js';
 import { ROLES_BASE } from './permisos.js';
+import { rubro, modulosDe } from './rubros.js';
 import { encadenar, revisar, firmaVenta, firmaRegistro, firmaCierre } from './hash.js';
 
 const CLAVE = 'orbe-negocios';
 const subs = new Set();
 let S = vacio();
 
-function vacio() { return { v: 2, negocio: null, productos: [], clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], ordenes: [], movCaja: [], turnos: [], promos: [], perfiles: [], roles: ROLES_BASE(), registro: [], ajustes: { tema: 'auto', perfil: '' }, tasa: { modo: 'auto', valor: 0, fuente: 'oficial', fecha: '' }, tasas: {}, historialTasas: [], grupos: [] }; }
+function vacio() { return { v: 2, negocio: null, productos: [], clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], ordenes: [], citas: [], movCaja: [], turnos: [], promos: [], perfiles: [], roles: ROLES_BASE(), registro: [], ajustes: { tema: 'auto', perfil: '' }, tasa: { modo: 'auto', valor: 0, fuente: 'oficial', fecha: '' }, tasas: {}, historialTasas: [], grupos: [] }; }
 // Datos guardados con versiones anteriores: se completan sin perder nada.
 function migrar(d) {
   if (!Array.isArray(d.roles) || !d.roles.length) d.roles = ROLES_BASE();
@@ -25,6 +26,7 @@ function migrar(d) {
   if (!Array.isArray(d.historialTasas)) d.historialTasas = [];
   if (!Array.isArray(d.grupos)) d.grupos = [];
   if (!Array.isArray(d.ordenes)) d.ordenes = [];
+  if (!Array.isArray(d.citas)) d.citas = [];
   if (!Array.isArray(d.movCaja)) d.movCaja = [];
   if (!Array.isArray(d.promos)) d.promos = [];
   if (Array.isArray(d.perfiles) && d.perfiles.some(p => !p.id)) d.perfiles = d.perfiles.map(p => p.id ? p : Object.assign({}, p, { id: 'u' + Math.random().toString(36).slice(2, 10) }));
@@ -212,7 +214,7 @@ const GRUPOS_EJ = {
 const VENTAS_DIA = { tienda: 26, comida: 38, citas: 8, online: 7, indep: 2 };
 const NOMBRES = { tienda: 'Bodega La Esquina', comida: 'Sabor Express', citas: 'Estudio Bella', online: 'Estampa Store', indep: 'Ana Ruiz Estudio' };
 const NOMBRES_EMP = { tienda: 'Comercial La Esquina', comida: 'Grupo Sabor Express', citas: 'Estudios Bella', online: 'Estampa Store', indep: 'Ruiz y Asociados' };
-export const nombreSugerido = (t, esc) => (esc === 'empresa' ? NOMBRES_EMP : NOMBRES)[t] || 'Mi negocio';
+export const nombreSugerido = (t, esc, rid) => { const r = rubro(rid); return esc === 'empresa' ? (r && r.nombre ? 'Grupo ' + r.nombre : NOMBRES_EMP[t] || 'Mi empresa') : (r && r.nombre) || NOMBRES[t] || 'Mi negocio'; };
 
 function azar(semilla) { let a = semilla >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function elegir(r, pesos) { const tot = pesos.reduce((a, b) => a + b, 0); let x = r() * tot; for (let i = 0; i < pesos.length; i++) { x -= pesos[i]; if (x <= 0) return i; } return pesos.length - 1; }
@@ -223,20 +225,66 @@ export function crearNegocio(cfg, conEjemplo) {
   // Si tiene un solo local no se habla de sucursales en ninguna parte de la app.
   const nSuc = Math.max(1, Math.min(5, cfg.sucN || 1)), NOM = ['Centro', 'Norte', 'Este', 'Oeste', 'Sur'];
   const sucursales = nSuc === 1 ? ['Principal'] : Array.from({ length: nSuc }, (_, i) => ((cfg.sucNombres || [])[i] || '').trim() || NOM[i]);
-  const productos = CATALOGO[T.id].map((x, i) => ({ id: 'p' + i, ab: x[0], n: x[1], p: D.precio(x[2]), c: D.precio(x[3]), q: x[4] < 0 ? null : Math.round(x[4] * (E ? 3 : 1)), min: Math.round(x[5] * (E ? 3 : 1)), dur: x[6] || 0, pop: x[7], cod: '759' + String(1234000 + i * 37) }));
-  const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala), razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
+  // Rubro (barbería, ferretería…): su catálogo y sus grupos; si no tiene, los del tipo de negocio.
+  const R = rubro(cfg.rubro), cat = R && Array.isArray(R.cat) ? R.cat : CATALOGO[(R && R.cat) || T.id], gruposEj = (R && R.grupos) || GRUPOS_EJ[(R && R.cat) || T.id] || [];
+  const productos = cat.map((x, i) => {
+    const ex = x[8] || {}, k = E ? 3 : 1;
+    const p = { id: 'p' + i, ab: x[0], n: x[1], p: D.precio(x[2]), c: D.precio(x[3]), q: x[4] < 0 ? null : Math.round(x[4] * k), min: Math.round(x[5] * k), dur: x[6] || 0, pop: x[7], cod: x[4] < 0 ? '' : '759' + String(1234000 + i * 37) };
+    if (ex.u) p.u = ex.u;
+    if (ex.gar) p.gar = ex.gar;
+    if (ex.vars) { p.vars = ex.vars.map((n, j) => ({ id: 'v' + j, n, q: Math.round([4, 7, 5, 3, 6, 2][j % 6] * k) })); p.q = p.vars.reduce((a, v) => a + v.q, 0); }
+    return p;
+  });
+  const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala, cfg.rubro), rubro: R ? R.id : '', mods: {}, razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
   const perfiles = [{ id: 'u0', n: (cfg.dueno || '').trim() || 'Dueño', rol: 'dueno', pin: '', sucs: [], creado: Date.now() }];
   if (conEjemplo) perfiles.push(
     { id: 'u1', n: 'Carla Méndez', rol: 'encargado', pin: '1111', sucs: [], creado: Date.now() },
     { id: 'u2', n: 'Luis Pino', rol: 'cajero', pin: '2222', sucs: sucursales.length > 1 ? [sucursales[0]] : [], creado: Date.now() });
-  const grupos = (GRUPOS_EJ[T.id] || []).map((g, i) => ({ id: 'g' + i, n: g[0], c: i }));
-  productos.forEach(p => { const i = (GRUPOS_EJ[T.id] || []).findIndex(g => g[1].includes(p.ab)); if (i >= 0) p.g = 'g' + i; });
+  const grupos = gruposEj.map((g, i) => ({ id: 'g' + i, n: g[0], c: i }));
+  productos.forEach(p => { const i = gruposEj.findIndex(g => g[1].includes(p.ab)); if (i >= 0) p.g = 'g' + i; });
   const cT = S.tasa.valor || (P.id === 'VE' ? TASA_VE_RESPALDO : P.r), base = { grupos, negocio, productos: productos.map(({ pop, ...p }) => Object.assign(p, { cT })), clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], perfiles, roles: ROLES_BASE(), registro: [], ajustes: Object.assign({}, S.ajustes, { perfil: 'u0' }) };
   // Países con moneda inestable sin fuente automática: la tasa arranca con la de referencia y se escribe a mano.
   if (P.usd2 && P.id !== 'AR') base.tasa = { modo: 'manual', valor: P.r, fuente: 'oficial', fecha: diaClave(Date.now()) };
   if (conEjemplo) Object.assign(base, ejemplo(negocio, productos, D, perfiles));
   else base.historialTasas = [];
   cambiar(() => base);
+}
+
+// Órdenes de ejemplo de algunos rubros: [qué, detalle, [[línea, precio, cantidad]], estado, entrega en días, anticipo]
+const ORDENES_EJ = {
+  taller: [['Toyota Corolla 2015 — ruido al frenar', 'Placa AB123CD. Cliente espera presupuesto.', [['Pastillas de freno', 28], ['Rectificar discos', 25], ['Mano de obra', 20]], 'proceso', -1, 30],
+    ['Moto Bera — servicio de 5.000 km', 'Cambio de aceite y frenos.', [['Aceite y filtro', 25], ['Pastillas de freno', 18], ['Mano de obra', 22]], 'lista', 0, 20],
+    ['Chevrolet Aveo — no enciende', 'Revisar batería y motor de arranque.', [['Diagnóstico', 15]], 'recibida', 1, 0],
+    ['Ford Fiesta — alineación y balanceo', '', [['Alineación y balanceo', 20]], 'recibida', 2, 0]],
+  electro: [['Entrega: nevera 14 pies', 'Dirección: Av. principal, edificio Sol, piso 3. Llamar antes.', [['Nevera 14 pies', 520], ['Entrega a domicilio', 8]], 'proceso', 0, 260],
+    ['Instalación de aire 12.000 BTU', 'Casa de dos pisos. Llevar escalera.', [['Instalación de aire', 45]], 'recibida', 1, 0],
+    ['Garantía: TV 50" sin imagen', 'Comprado hace 4 meses. Serial TV50-88213.', [['Revisión en garantía', 0]], 'proceso', 3, 0],
+    ['Apartado: lavadora 12 kg', 'Paga en 3 partes. Retira al terminar de pagar.', [['Lavadora 12 kg', 380]], 'recibida', 14, 130]],
+  ferreteria: [['Encargo: 20 sacos de cemento', 'Para la obra de la calle 5. Entregar en camión.', [['Cemento gris 42,5 kg', 9.8, 20]], 'proceso', 1, 100],
+    ['Corte de 6 láminas de vidrio', 'Medidas en la nota del cliente.', [['Corte de vidrio', 4, 6]], 'lista', 0, 0],
+    ['Pedido: cerámica para baño', '18 m² de cerámica 60x60 gris.', [['Cerámica 60x60', 12.5, 18]], 'recibida', 4, 50]]
+};
+// Citas de ejemplo: las de hoy (algunas ya atendidas) y las de los próximos dos días.
+function citasEjemplo(r, productos, clientes, perfiles, hoy0, ahora) {
+  const srv = productos.filter(p => p.q == null && p.dur > 0), pros = perfiles.slice(0, 3), citas = [];
+  if (!srv.length) return citas;
+  const nombres = ['Andrés Mora', 'Kevin Salas', 'Daniela Ríos', 'Miguel Ángel', 'Sofía Paz', 'Jorge Luna', 'Valeria Gil', 'Pablo Rey', 'Camila Soto', 'Diego León'];
+  for (let d = 0; d <= 2; d++) {
+    // Hoy: alrededor de la hora actual (unas ya atendidas y otras por venir); los otros días, de 9 a 6.
+    const ya = Math.floor((ahora - hoy0) / 60000 / 30) * 30, desde = d === 0 ? Math.max(8 * 60, ya - 240) : 9 * 60, hasta = d === 0 ? Math.min(23 * 60, Math.max(18 * 60, ya + 300)) : 18 * 60;
+    pros.forEach((pro, k) => {
+      let h = desde + k * 30 + Math.floor(r() * 2) * 30;
+      while (h < hasta) {
+        if (r() < (d === 0 ? 0.62 : 0.45)) {
+          const s1 = srv[elegir(r, srv.map(p => p.pop))], t = hoy0 + d * DIA + h * 60000, c = r() < 0.4 ? clientes[Math.floor(r() * clientes.length)] : null;
+          const pasada = t + s1.dur * 60000 < ahora;
+          citas.push({ id: 'ci' + id(), t, dur: s1.dur, srv: [s1.id], pro: pro.id, cli: c ? c.id : '', nom: c ? c.n : nombres[Math.floor(r() * nombres.length)], tel: c ? c.tel : '0412-555-' + String(3000 + Math.floor(r() * 900)), estado: pasada ? 'atendida' : t < ahora ? 'llego' : 'pendiente', nota: '' });
+          h += Math.max(30, Math.ceil(s1.dur / 30) * 30);
+        } else h += 30;
+      }
+    });
+  }
+  return citas.sort((a, b) => a.t - b.t);
 }
 
 function ejemplo(neg, productos, D, perfiles) {
@@ -248,7 +296,8 @@ function ejemplo(neg, productos, D, perfiles) {
   const pesosPago = neg.pays.map((_, i) => [5, 3, 2, 1.2, 0.8, 0.6][i] || 0.5);
   const pesosHora = [0, 0, 0, 0, 0, 0, 0, 1, 3, 5, 6, 8, 9, 7, 5, 4, 5, 7, 8, 6, 3, 1, 0, 0];
   const pesosSuc = neg.sucursales.map((_, i) => 1 / (i + 1.4));
-  const porDia = VENTAS_DIA[neg.tipo] * (E ? 2.5 : 1) * (neg.sucursales.length > 1 && !E ? 1.6 : 1);
+  const R = rubro(neg.rubro), mods = modulosDe(neg);
+  const porDia = ((R && R.ventas) || VENTAS_DIA[neg.tipo]) * (E ? 2.5 : 1) * (neg.sucursales.length > 1 && !E ? 1.6 : 1);
   const ventas = []; const stock = {}; productos.forEach(p => { stock[p.id] = 0; });
   let n = 1000;
   const horaAhora = new Date(ahora).getHours();
@@ -263,15 +312,22 @@ function ejemplo(neg, productos, D, perfiles) {
       if (t > ahora) continue;
       const lineas = {}; const nItems = neg.tipo === 'indep' || neg.tipo === 'citas' ? 1 : 1 + elegir(r, [5, 3, 1.5, 0.5]);
       for (let j = 0; j < nItems; j++) { const pi = elegir(r, productos.map(p => p.pop)); lineas[pi] = (lineas[pi] || 0) + 1 + (r() < 0.2 ? 1 : 0); }
-      const items = Object.keys(lineas).map(pi => { const p = productos[pi]; return { pid: p.id, n: p.n, q: lineas[pi], p: p.p, c: p.c }; });
+      const items = Object.keys(lineas).map(pi => {
+        const p = productos[pi], it = { pid: p.id, n: p.n, q: lineas[pi], p: p.p, c: p.c };
+        if (p.vars) { const v = p.vars[Math.floor(r() * p.vars.length)]; Object.assign(it, { vid: v.id, n: p.n + ' · ' + v.n, nb: p.n }); }
+        if (p.u) { it.u = p.u; it.q = Math.round((p.u === 'm²' || p.u === 'm' ? 2 + r() * 10 : 0.5 + r() * 2) * 4) / 4; }
+        if (p.gar && mods.garantia) it.gar = p.gar;
+        return it;
+      });
       const total = D.redondo(items.reduce((a, it) => a + it.q * it.p, 0));
       // Cada cliente fía en una ventana distinta: unos deben de hace poco y otros ya están vencidos.
       const ci = elegir(r, clientes.map((c, i) => E && i < 3 ? 3 : 1));
-      const fiado = d < [6, 11, 24, 3, 9, 2][ci] && r() < 0.1;
+      const fiado = mods.fiado && d < [6, 11, 24, 3, 9, 2][ci] && r() < 0.1;
       const cli = fiado || r() < 0.15 ? clientes[ci].id : '';
       const m = fiado ? 'Fiado' : neg.pays[elegir(r, pesosPago)];
       items.forEach(it => { stock[it.pid] += it.q; });
-      ventas.push({ id: id(), n: n++, t, items, total, pagos: [{ m, v: total }], cli, suc: neg.sucursales[elegir(r, pesosSuc)], fiado, por: perfiles[elegir(r, [2, 4, 5].slice(0, perfiles.length))].id });
+      const por = perfiles[elegir(r, [2, 4, 5].slice(0, perfiles.length))].id;
+      ventas.push(Object.assign({ id: id(), n: n++, t, items, total, pagos: [{ m, v: total }], cli, suc: neg.sucursales[elegir(r, pesosSuc)], fiado, por }, mods.comisiones ? { pro: perfiles[elegir(r, [3, 4, 4].slice(0, perfiles.length))].id } : {}));
     }
   }
   ventas.sort((a, b) => a.t - b.t); ventas.forEach((v, i) => { v.n = 1001 + i; });
@@ -302,8 +358,9 @@ function ejemplo(neg, productos, D, perfiles) {
     for (let d = 63; d >= 1; d--) historialTasas.push({ dia: diaClave(hoy0 - d * DIA), f: 'oficial', v: tasaDia(hoy0 - d * DIA) });
   }
   // Órdenes de ejemplo (se ven si el negocio usa órdenes): una atrasada, una lista y dos recién recibidas.
-  const taller = neg.tipo === 'citas' || neg.tipo === 'indep', hora17 = d => { const x = new Date(hoy0 + d * DIA); x.setHours(17, 0, 0, 0); return x.getTime(); };
-  const ej = taller
+  const taller = neg.rubro ? ['taller', 'indep'].includes(neg.rubro) : neg.tipo === 'citas' || neg.tipo === 'indep', hora17 = d => { const x = new Date(hoy0 + d * DIA); x.setHours(17, 0, 0, 0); return x.getTime(); };
+  const ej = !mods.ordenes ? [] : ORDENES_EJ[neg.rubro] ? ORDENES_EJ[neg.rubro]
+    : taller
     ? [['Laptop HP 15 — no enciende', 'Con cargador. Rayón en la tapa.', [['Diagnóstico', 15], ['Puerto de carga', 35], ['Mano de obra', 35]], 'proceso', -1, 40],
       ['iPhone 12 — cambio de pantalla', 'Pantalla rota, táctil funciona.', [['Pantalla original', 90], ['Mano de obra', 30]], 'lista', 0, 60],
       ['Impresora Epson L3150 — atasco de papel', '', [['Revisión', 10]], 'recibida', 2, 0],
@@ -322,7 +379,8 @@ function ejemplo(neg, productos, D, perfiles) {
   });
   ordenes.forEach((o, i) => { const a = abonos.find(x => x.ord === o.id); if (a) a.nota = 'Anticipo ' + (o.tipo === 'pedido' ? 'PED-' : 'OT-') + String(i + 1).padStart(4, '0'); });
   // Lo vendido sale del inventario, pero el ejemplo arranca con lo que hay ahora.
-  return { clientes, ventas, abonos, gastos, cierres: [], historialTasas, ordenes };
+  const citas = mods.agenda ? citasEjemplo(r, productos, clientes, perfiles, hoy0, ahora) : [];
+  return { clientes, ventas, abonos, gastos, cierres: [], historialTasas, ordenes, citas };
 }
 
 // ---------- acciones ----------
@@ -445,6 +503,23 @@ export function editarOrden(oid, cambios) {
 export function estadoOrden(oid, estado, txt) {
   const o0 = S.ordenes.find(o => o.id === oid); if (!o0 || o0.estado === estado) return;
   cambiarOrden(oid, o => Object.assign({}, o, { estado }, estado === 'lista' ? { lista: Date.now() } : {}, { hist: o.hist.concat([histOrden(txt, estado)]) }));
+}
+// Quién atendió la venta (comisiones). No entra en la firma de la venta: se puede corregir después.
+export function guardarAtendio(vid, pro) { cambiar(s => ({ ventas: s.ventas.map(v => v.id === vid ? Object.assign({}, v, { pro }) : v) })); }
+// ---------- citas (agenda) ----------
+// Una cita: cuándo (t), cuánto dura (dur, minutos), qué servicios (srv), con quién (pro) y para quién (cli o nom + tel).
+export const ESTADOS_CITA = { pendiente: 'Por llegar', llego: 'En espera', atendida: 'Atendida', cancelada: 'Cancelada', falto: 'No vino' };
+export const citaActiva = c => c.estado === 'pendiente' || c.estado === 'llego';
+export function guardarCita(c) {
+  const es = c.id && S.citas.some(x => x.id === c.id);
+  const cita = Object.assign({ estado: 'pendiente', nota: '' }, c, { id: c.id || 'ci' + id() });
+  const cuando = new Date(cita.t).toLocaleString('es', { weekday: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  cambiar(s => Object.assign({ citas: es ? s.citas.map(x => x.id === cita.id ? Object.assign({}, x, cita) : x) : s.citas.concat([cita]) }, nota(s, (es ? 'Cambió la cita de ' : 'Agendó a ') + (cita.nom || 'un cliente') + ' (' + cuando + ')')));
+  return cita.id;
+}
+export function estadoCita(cid, estado, extra) {
+  const c0 = S.citas.find(x => x.id === cid); if (!c0) return;
+  cambiar(s => Object.assign({ citas: s.citas.map(x => x.id === cid ? Object.assign({}, x, { estado }, extra || {}) : x) }, estado === 'cancelada' || estado === 'falto' ? nota(s, (estado === 'falto' ? 'No vino ' : 'Canceló ') + (c0.nom || 'un cliente')) : {}));
 }
 export function notaOrden(oid, txt) { cambiarOrden(oid, o => Object.assign({}, o, { hist: o.hist.concat([histOrden(txt)]) })); }
 export function avisadoOrden(oid) { cambiarOrden(oid, o => Object.assign({}, o, { avisado: Date.now(), hist: o.hist.concat([histOrden('Se avisó al cliente por WhatsApp')]) })); }

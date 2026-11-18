@@ -1,6 +1,7 @@
 // Primer uso: país, tipo de negocio, tamaño y datos. Al final se arma el negocio.
 import { html, useState } from '../lib/preact-htm.js';
 import { PAISES, TIPOS, pais } from '../paises.js';
+import { RUBROS, MODULOS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
 import { crearNegocio, nombreSugerido } from '../datos.js';
 import { Icono, LogoOrbe, Interruptor, avisar, Bandera } from '../ui.js';
 
@@ -11,15 +12,17 @@ const TONO = { vio: 't-vio', amb: 't-amb', ver: 't-ver', ros: 't-ros', azu: 't-a
 
 export function Inicio({ tel }) {
   const [paso, setPaso] = useState(-1);
-  const [c, setC] = useState({ pais: '', tipo: '', escala: 'negocio', nombre: '', razon: '', fiscal: '', sucN: 1, sucNombres: [], dueno: '', pays: null, taxOn: null, taxIncl: true });
+  const [busca, setBusca] = useState('');
+  const [c, setC] = useState({ pais: '', rubro: '', tipo: '', escala: 'negocio', nombre: '', razon: '', fiscal: '', sucN: 1, sucNombres: [], dueno: '', pays: null, taxOn: null, taxIncl: true });
   const [ejemplo, setEjemplo] = useState(true);
   const P = pais(c.pais || 'VE');
   const pon = o => setC(x => Object.assign({}, x, o));
   const i = PASOS.indexOf(paso);
-  const puede = paso === 'pais' ? !!c.pais : paso === 'tipo' ? !!c.tipo : true;
+  const puede = paso === 'pais' ? !!c.pais : paso === 'tipo' ? !!c.rubro : true;
+  const R = rubro(c.rubro), mods = modulosDe({ rubro: c.rubro, tipo: c.tipo });
   const siguiente = () => {
     if (!puede) return;
-    if (paso === 'listo') { crearNegocio(Object.assign({}, c, { nombre: c.nombre || nombreSugerido(c.tipo, c.escala) }), ejemplo); avisar(ejemplo ? 'Listo. Cargamos un mes de ventas de ejemplo' : '¡Bienvenido a Orbe Negocios!'); return; }
+    if (paso === 'listo') { crearNegocio(Object.assign({}, c, { nombre: c.nombre || nombreSugerido(c.tipo, c.escala, c.rubro) }), ejemplo); avisar(ejemplo ? 'Listo. Cargamos un mes de ventas de ejemplo' : '¡Bienvenido a Orbe Negocios!'); return; }
     setPaso(PASOS[i + 1]);
   };
   const atras = () => setPaso(i <= 0 ? -1 : PASOS[i - 1]);
@@ -45,10 +48,10 @@ export function Inicio({ tel }) {
 
   const titulos = {
     pais: ['¿Dónde está tu negocio?', 'Así ponemos tu moneda, las formas de pago de tu país y tus impuestos.'],
-    tipo: ['¿Qué tipo de negocio tienes?', 'Orbe muestra solo lo que te sirve. Lo demás lo activas cuando quieras.'],
+    tipo: ['¿A qué se dedica tu negocio?', 'Escríbelo o elígelo. Orbe se arma para tu rubro y lo demás lo activas cuando quieras.'],
     tam: ['¿De qué tamaño es?', 'Si es una empresa, tus recibos llevan razón social y número fiscal.'],
     datos: [E ? 'Tu empresa' : 'Tu negocio', 'Ya lo llenamos según ' + P.n + '. Cambia lo que quieras.'],
-    listo: ['Tu Orbe está listo', 'Armado para ' + (TIPOS.find(t => t.id === c.tipo) || TIPOS[0]).n.toLowerCase() + ' en ' + P.n + '.']
+    listo: ['Tu Orbe está listo', 'Armado para ' + (R ? R.n.toLowerCase() : 'tu negocio') + ' en ' + P.n + '.']
   }[paso];
 
   let cuerpo;
@@ -58,11 +61,23 @@ export function Inicio({ tel }) {
       <span style="flex:1;display:flex;flex-direction:column;text-align:left;gap:1px"><b style="font-size:15px">${p.n}</b><span class="sub" style="font-weight:500">${p.id === 'VE' ? 'Dólares y bolívares, con la tasa BCV' : p.usd2 ? p.cur.charAt(0).toUpperCase() + p.cur.slice(1) + ' y dólares' : p.cur.charAt(0).toUpperCase() + p.cur.slice(1) + ' · ' + p.pays.slice(0, 2).join(', ')}</span></span>
       ${on && html`<span style="width:24px;height:24px;border-radius:12px;background:var(--accent);display:grid;place-items:center;animation:pop .4s var(--spring)"><${Icono} n="check" t=${14} g=${3} c="#0b0a14" /></span>`}
     </button>`; })}</div>`;
-  if (paso === 'tipo') cuerpo = html`<div class="pila" style="gap:10px">${TIPOS.map((t, k) => { const on = c.tipo === t.id; return html`
-    <button type="button" key=${t.id} class=${'chip toca entra' + (on ? ' on' : '')} style=${{ '--i': k * 2, minHeight: '76px', borderRadius: '22px', justifyContent: 'flex-start', gap: '14px', color: 'var(--ink)', padding: '14px', background: on ? '' : 'var(--surface)' }} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ tipo: t.id })}>
-      <span class=${'ic ' + TONO[t.color]} style="width:46px;height:46px;border-radius:14px"><${Icono} n=${t.id} t=${22} /></span>
-      <span style="flex:1;display:flex;flex-direction:column;gap:3px;text-align:left"><b style="font-size:16px">${t.n}</b><span class="sub" style="font-weight:500">${t.ex}</span></span>
-    </button>`; })}</div>`;
+  if (paso === 'tipo') {
+    // Lo que escribe la persona ordena la lista: primero lo que se parece a su negocio.
+    const sug = adivinarRubro(busca), resto = RUBROS.filter(r => !sug.includes(r));
+    const Tarjeta = (r, k) => { const on = c.rubro === r.id; return html`
+      <button type="button" key=${r.id} class=${'chip toca entra rubro-op' + (on ? ' on' : '')} style=${{ '--i': k }} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ rubro: r.id, tipo: r.t })}>
+        <span class=${'ic ' + TONO[r.c]} style="width:42px;height:42px;border-radius:13px"><${Icono} n=${r.i} t=${21} /></span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:2px;text-align:left;min-width:0"><b style="font-size:15px">${r.n}</b><span class="sub corta" style="font-weight:500">${r.ex}</span></span>
+        ${on && html`<span style="width:24px;height:24px;border-radius:12px;background:var(--accent);display:grid;place-items:center;flex:none;animation:pop .4s var(--spring)"><${Icono} n="check" t=${14} g=${3} c="#fff" /></span>`}
+      </button>`; };
+    cuerpo = html`<div class="pila" style="gap:10px">
+      <label class="buscador" style="background:var(--surface);min-height:54px;border-radius:18px"><${Icono} n="buscar" t=${18} c="var(--muted)" /><input type="search" value=${busca} placeholder="Ej.: barbería, vendo neveras, ferretería…" aria-label="A qué se dedica tu negocio" autocomplete="off" onInput=${e => { setBusca(e.target.value); const g = adivinarRubro(e.target.value); if (g.length) pon({ rubro: g[0].id, tipo: g[0].t }); }} /></label>
+      ${busca.trim().length >= 3 && html`<span class="sub entra" style="padding:0 4px">${sug.length ? 'Te sugerimos:' : 'No lo encontré: elige el más parecido. Todo se ajusta después.'}</span>`}
+      ${sug.map(Tarjeta)}
+      ${sug.length > 0 && html`<span class="sub" style="padding:6px 4px 0">Otros rubros</span>`}
+      ${resto.map((r, k) => Tarjeta(r, k + sug.length))}
+    </div>`;
+  }
   if (paso === 'tam') cuerpo = html`<div class="pila">${[['negocio', 'Negocio', 'Hasta 10 personas, uno o dos locales', 'tienda', 't-vio', ['Vender, clientes, gastos y cierre del día', 'Dueño y algunos empleados']], ['empresa', 'Empresa', 'Varias sucursales o un equipo grande', 'edificio', 't-ver', ['Razón social y número fiscal en tus recibos', 'Ventas y caja por sucursal', 'Reportes por sucursal']]].map((z, k) => { const on = c.escala === z[0]; return html`
     <button type="button" key=${z[0]} class=${'chip toca entra' + (on ? ' on' : '')} style=${{ '--i': k * 3, flexDirection: 'column', alignItems: 'stretch', gap: '14px', borderRadius: '22px', padding: '16px', color: 'var(--ink)', background: on ? '' : 'var(--surface)' }} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ escala: z[0], sucN: z[0] === 'empresa' ? Math.max(2, c.sucN) : c.sucN })}>
       <span class="fila"><span class=${'ic ' + z[4]} style="width:46px;height:46px;border-radius:14px"><${Icono} n=${z[3]} t=${22} /></span><span style="flex:1;display:flex;flex-direction:column;gap:3px;text-align:left"><b style="font-size:17px">${z[1]}</b><span class="sub" style="font-weight:500">${z[2]}</span></span></span>
@@ -70,9 +85,9 @@ export function Inicio({ tel }) {
     </button>`; })}</div>`;
   if (paso === 'datos') cuerpo = html`<div class="pila" style="gap:18px">
     <label class="campo"><span>Tu nombre (serás el dueño)</span><input type="text" value=${c.dueno} placeholder="Ej.: Ana Ruiz" onInput=${e => pon({ dueno: e.target.value })} autocomplete="name" /></label>
-    <label class="campo"><span>${E ? 'Nombre comercial' : 'Nombre del negocio'}</span><input type="text" value=${c.nombre} placeholder=${nombreSugerido(c.tipo, c.escala)} onInput=${e => pon({ nombre: e.target.value })} autocomplete="organization" /></label>
+    <label class="campo"><span>${E ? 'Nombre comercial' : 'Nombre del negocio'}</span><input type="text" value=${c.nombre} placeholder=${nombreSugerido(c.tipo, c.escala, c.rubro)} onInput=${e => pon({ nombre: e.target.value })} autocomplete="organization" /></label>
     ${E && html`<div class="pila entra" style="gap:18px">
-      <label class="campo"><span>Razón social</span><input type="text" value=${c.razon} placeholder=${(c.nombre || nombreSugerido(c.tipo, c.escala)) + ' ' + (P.suf || 'S.A.')} onInput=${e => pon({ razon: e.target.value })} /></label>
+      <label class="campo"><span>Razón social</span><input type="text" value=${c.razon} placeholder=${(c.nombre || nombreSugerido(c.tipo, c.escala, c.rubro)) + ' ' + (P.suf || 'S.A.')} onInput=${e => pon({ razon: e.target.value })} /></label>
       <label class="campo"><span>${P.fiscal[0]} (sale en tus recibos)</span><input type="text" value=${c.fiscal} placeholder=${P.fiscal[1] || 'Tu número fiscal'} onInput=${e => pon({ fiscal: e.target.value })} /></label>
     </div>`}
     <div class="campo"><span>${E ? '¿Cuántas sucursales tienes?' : '¿Cuántos locales tienes?'}</span>
@@ -90,10 +105,13 @@ export function Inicio({ tel }) {
   </div>`;
   if (paso === 'listo') cuerpo = html`<div class="pila">
     <span style="width:76px;height:76px;border-radius:50%;background:var(--in);display:grid;place-items:center;animation:pop .55s var(--spring) both"><${Icono} n="check" t=${36} g=${2.8} c="#0b0a14" /></span>
-    <div class="tarjeta"><div class="tarjeta-tit"><span class="sub">Encendido para ti</span></div><div class="pila">
-      ${[['carrito', 'Vender y cobrar con ' + pays.slice(0, 2).join(', ') + (pays.length > 2 ? ' y más' : '')], ['personas', 'Clientes y lo que te deben'], [(TIPOS.find(t => t.id === c.tipo) || {}).inv ? 'caja' : 'lista', (TIPOS.find(t => t.id === c.tipo) || {}).inv ? 'Inventario y stock mínimo' : 'Servicios con precio y duración'], ].concat([['orden', 'Órdenes de trabajo y pedidos, con anticipo y PDF por WhatsApp']], [['dinero', 'Gastos y cuentas por pagar'], ['grafico', 'Reportes con gráficos'], ['candado', 'Cierre del día'], ['escudo', 'Perfiles para tu equipo, con permisos'], ['guardar', 'Copias y modo sin conexión']]).map((m, k) => html`
-        <div class="fila entra" style=${{ '--i': 4 + k * 2, gap: '12px' }}><span class="ic t-ver" style="width:32px;height:32px;border-radius:10px"><${Icono} n=${m[0]} t=${16} g=${2.2} /></span><b style="font-size:14px;font-weight:600;line-height:1.35;min-width:0">${m[1]}</b></div>`)}
+    <div class="tarjeta"><div class="tarjeta-tit"><span class="sub">Encendido para ${R ? R.n.toLowerCase() : 'ti'}</span></div><div class="pila" style="gap:10px">
+      ${[['carrito', 'Vender y cobrar con ' + pays.slice(0, 2).join(', ') + (pays.length > 2 ? ' y más' : '')], ['personas', 'Clientes, gastos y cierre del día']].concat(MODULOS.filter(m => mods[m.k]).map(m => [m.i, m.n])).map((m, k) => html`
+        <div class="fila entra" style=${{ '--i': 3 + k, gap: '12px' }}><span class="ic t-ver" style="width:32px;height:32px;border-radius:10px"><${Icono} n=${m[0]} t=${16} g=${2.2} /></span><b style="font-size:14px;font-weight:600;line-height:1.35;min-width:0">${m[1]}</b></div>`)}
     </div></div>
+    <div class="tarjeta"><div class="tarjeta-tit"><span class="sub">Apagado por ahora</span></div>
+      <div class="chips">${MODULOS.filter(m => !mods[m.k]).map(m => html`<span class="chip chico" style="cursor:default;color:var(--muted)"><${Icono} n=${m.i} t=${13} />${m.n}</span>`)}</div>
+      <span class="sub faint" style="display:block;margin-top:10px;font-size:12px;line-height:1.4">Si lo necesitas, lo activas en Ajustes → Funciones con un toque.</span></div>
     <div class="tarjeta" style="padding:4px 16px"><${Interruptor} on=${ejemplo} onCambio=${setEjemplo} titulo="Llenar con un mes de ventas de ejemplo" sub="Para probar. Trae dos empleados de prueba: Carla (encargada, PIN 1111) y Luis (cajero, PIN 2222)." /></div>
   </div>`;
 

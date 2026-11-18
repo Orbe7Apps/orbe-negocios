@@ -1,9 +1,9 @@
 // Reportes: ventas, ganancia real, formas de pago, productos y días de la semana.
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { resumen, serieDias, gastosEntre, inicioDia, leer, gastoAlt, gastoEur } from '../datos.js';
+import { resumen, serieDias, gastosEntre, inicioDia, leer, gastoAlt, gastoEur, vigentes } from '../datos.js';
 import { Barras, Linea, Reparto, BarrasH, Monto, color } from '../graficos.js';
-import { Icono, Chips, avisar, fechaCorta } from '../ui.js';
+import { Icono, Chips, avisar, fechaCorta, iniciales, TONOS } from '../ui.js';
 import { inicioMes } from './gastos.js';
 
 const DIA = 86400000;
@@ -38,7 +38,7 @@ export function ventasCSV(desde, hasta) {
 }
 
 export function Reportes() {
-  const { S, P, D, E, tel, suc } = useApp();
+  const { S, P, D, E, T, tel, suc, abrir } = useApp();
   const [per, setPer] = useState(30);
   // Venezuela y Argentina: ver los números en la otra moneda con la tasa del día de cada venta (si no, la inflación engaña).
   const [mon, setMon] = useState('p');
@@ -84,6 +84,10 @@ export function Reportes() {
   const fv = flecha(tot(r), tot(ant)), fg = flecha(gan(r), gan(ant)), fgs = flecha(gastos, gastosAnt, true), fr = flecha(real, gan(ant) - gastosAnt);
   const Cifras = [['Ventas', tot(r), fv[0], 'var(--ink)', fv[1], 'sube'], ['Ganancia bruta', gan(r), fg[0] || (r.total ? Math.round(r.ganancia / r.total * 100) + ' % de lo vendido' : ''), 'var(--in)', fg[1], 'dinero'], ['Gastos', gastos, fgs[0] || 'alquiler, sueldos, servicios…', 'var(--out)', fgs[1], 'rayo'], ['Ganancia real', real, fr[0] || 'lo que de verdad te queda', real >= 0 ? 'var(--in)' : 'var(--out)', fr[1], 'check']];
 
+  // Comisiones: lo que vendió (o atendió) cada persona y lo que le toca según su porcentaje.
+  const porPro = {};
+  if (T.mod('comisiones')) vigentes().filter(v => v.t >= desde && v.t < hasta && (!suc || v.suc === suc)).forEach(v => { const k = v.pro || v.por || ''; const x = porPro[k] || (porPro[k] = { n: 0, v: 0 }); x.n++; x.v += v.total; });
+  const comisiones = S.perfiles.filter(p => porPro[p.id]).map(p => ({ p, n: porPro[p.id].n, v: porPro[p.id].v, pct: p.com != null ? p.com : 40 })).sort((a, b) => b.v - a.v);
   const bloques = {
     linea: html`<section class="tarjeta entra llena" style="--i:4"><div class="tarjeta-tit">Ventas por día<span class="sub">${r.n} ventas · ticket ${D.m(r.ticket)}</span></div>
       ${(alt || enEur) && html`<span class="sub" style="display:block;margin:-6px 0 8px">En ${enEur ? 'euros' : simb2}, con la tasa de cada día</span>`}
@@ -99,6 +103,11 @@ export function Reportes() {
       <${Barras} key=${'sem' + dias + suc} datos=${semana} alto=${tel ? 120 : 170} resaltar=${semana.indexOf(mejor)} llenar=${!tel} /></section>`,
     horas: html`<section class="tarjeta entra llena" style="--i:9"><div class="tarjeta-tit">Tus horas de más venta<span class="sub">${horaPico.n} es la mejor</span></div>
       <${Barras} key=${'hor' + dias + suc} datos=${horas} alto=${tel ? 110 : 150} resaltar=${horas.indexOf(horaPico)} llenar=${!tel} /></section>`,
+    comisiones: comisiones.length ? html`<section class="tarjeta entra" style="--i:9;padding-bottom:6px"><div class="tarjeta-tit">Comisiones del período<span class="sub">toca para cambiar el %</span></div>
+      <div class="lista">${comisiones.map((x, i) => html`<button type="button" class="item toca" key=${x.p.id} style="color:var(--ink)" onClick=${() => abrir('perfil', { pid: x.p.id })}>
+        <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(x.p) % 5]} style="width:36px;height:36px;font-size:12px">${iniciales(x.p.n)}</span>
+        <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px">${x.p.n}</b><span class="sub">${x.n} ventas · ${D.m(x.v)}</span></span>
+        <span style="display:flex;flex-direction:column;align-items:flex-end"><b class="num in" style="font-size:15px">${D.m(x.v * x.pct / 100)}</b><span class="sub">${x.pct} %</span></span></button>`)}</div></section>` : null,
     sucursales: E && !suc ? html`<section class="tarjeta entra" style="--i:9"><div class="tarjeta-tit">Por sucursal</div>
       <${BarrasH} datos=${S.negocio.sucursales.map((s, i) => ({ n: s, v: r.porSuc[s] || 0, txt: D.m(r.porSuc[s] || 0), c: color(i) }))} /></section>` : null
   };
@@ -107,13 +116,13 @@ export function Reportes() {
     <div class="fila entra"><h1 class="titulo crece">Reportes</h1>${Acciones}</div>
     <div class="fila" style="gap:8px;flex-wrap:wrap"><${Chips} opciones=${PERIODOS} valor=${per} onCambio=${setPer} chico /><span style="flex:1"></span>${Moneda}</div>
     <div class="rejilla-2">${Cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[5]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} key=${mon} v=${k[1]} f=${fm} clase="v" /><span class="faint" style=${{ fontSize: '11px', color: k[4] }}>${k[2]}</span></div>`)}</div>
-    ${bloques.linea}${bloques.resultado}${bloques.pagos}${bloques.productos}${bloques.semana}${bloques.horas}${bloques.sucursales}`;
+    ${bloques.linea}${bloques.resultado}${bloques.pagos}${bloques.productos}${bloques.semana}${bloques.comisiones}${bloques.horas}${bloques.sucursales}`;
 
   return html`
     <div class="fila"><${Chips} opciones=${PERIODOS} valor=${per} onCambio=${setPer} chico /><span style="flex:1"></span>${Moneda}${Acciones}</div>
     <div class="cifras">${Cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[5]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} key=${mon} v=${k[1]} f=${fm} clase="v" /><span class="sub" style=${{ color: k[4] || 'var(--faint)' }}>${k[2]}</span></div>`)}</div>
     <div class="dos-uno">${bloques.linea}${bloques.resultado}</div>
     <div class="tres estira">${bloques.pagos}${bloques.productos}${bloques.semana}</div>
-    ${bloques.horas}
+    ${bloques.comisiones && html`<div class="mitades">${bloques.comisiones}${bloques.horas}</div>`}${!bloques.comisiones && bloques.horas}
     ${bloques.sucursales}`;
 }

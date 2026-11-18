@@ -6,9 +6,9 @@ import { useApp } from '../ctx.js';
 import { ordenAtrasada } from '../datos.js';
 import { Icono, useAtras } from '../ui.js';
 
-const COLORES = { servicio: '#3d9be9', venta: '#6a5cf2', orden: '#2f7fd1', gasto: '#e8436a', escanear: '#12a37a', cliente: '#c98512', caja: '#8f84ff' };
+const COLORES = { cita: '#12a37a', inventario: '#e8961a', servicio: '#3d9be9', venta: '#6a5cf2', orden: '#2f7fd1', gasto: '#e8436a', escanear: '#12a37a', cliente: '#c98512', caja: '#8f84ff' };
 
-export function BotonOrbe({ seccion }) {
+export function BotonOrbe({ seccion, tabs = [] }) {
   const { S, T, ir, abrir, puede, ver } = useApp();
   const [abierto, setAbierto] = useState(false);
   useAtras(abierto, () => setAbierto(false));
@@ -20,22 +20,25 @@ export function BotonOrbe({ seccion }) {
   }, [abierto]);
   // Al elegir algo, primero se cierra el panel y luego se abre lo elegido (así la animación no se corta).
   const hacer = fn => () => { setAbierto(false); setTimeout(fn, 180); };
-  const atrasadas = S.ordenes.filter(o => ordenAtrasada(o)).length;
+  const atrasadas = T.mod('ordenes') ? S.ordenes.filter(o => ordenAtrasada(o)).length : 0;
   const crear = [
-    puede('vender') && ['venta', 'carrito', T.vender === 'Pedido' ? 'Pedido' : 'Venta', () => ir('vender')],
-    puede('ordenes') && ['orden', 'orden', 'Orden', () => abrir('nuevaOrden', {})],
+    puede('vender') && ['venta', 'carrito', T.vender === 'Pedido' ? 'Pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Venta', () => ir('vender')],
+    puede('vender') && T.mod('agenda') && ['cita', 'calendario', 'Cita', () => abrir('nuevaCita', {})],
+    puede('ordenes') && T.mod('ordenes') && ['orden', 'orden', 'Orden', () => abrir('nuevaOrden', {})],
     puede('gastos') && ['gasto', 'dinero', 'Gasto', () => abrir('gasto')],
-    (puede('productos') || puede('reponer')) && T.inv && ['escanear', 'camara', 'Escanear', () => abrir('escaner', { para: 'inventario' })],
+    (puede('productos') || puede('reponer')) && T.inv && T.mod('escaner') && ['escanear', 'camara', 'Escanear', () => abrir('escaner', { para: 'inventario' })],
     puede('clientes') && ['cliente', 'personas', 'Cliente', () => abrir('nuevoCliente', {})],
-    puede('vender') && ['caja', 'billete', 'Caja', () => abrir('caja')]
-  ].filter(Boolean);
+    puede('vender') && T.mod('caja') && ['caja', 'billete', 'Caja', () => abrir('caja')]
+  ].filter(Boolean).slice(0, 6);
   const irA = [
+    ver('agenda') && !tabs.includes('agenda') && ['agenda', 'calendario', 'Agenda', 0],
+    ver('inventario') && !tabs.includes('inventario') && ['inventario', T.inv ? 'caja' : 'lista', T.inv ? 'Inventario' : 'Servicios', 0],
     ver('clientes') && ['clientes', 'personas', 'Clientes', 0],
     ver('ordenes') && ['ordenes', 'orden', 'Órdenes', atrasadas],
     ver('reportes') && ['reportes', 'grafico', 'Reportes', 0],
     ver('equipo') && ['equipo', 'escudo', 'Equipo', 0]
   ].filter(Boolean);
-  const dentro = ['clientes', 'ordenes', 'reportes', 'equipo'].includes(seccion);
+  const dentro = irA.some(x => x[0] === seccion);
   return html`
     <div class=${'orbe-velo' + (abierto ? ' on' : '')} onClick=${() => setAbierto(false)} aria-hidden="true"></div>
     <div class=${'orbe-panel' + (abierto ? ' on' : '')} role="dialog" aria-label="Menú de Orbe" aria-hidden=${abierto ? 'false' : 'true'}>
@@ -64,11 +67,12 @@ export function BotonNuevo() {
   }, [abierto]);
   const ops = [
     puede('vender') && ['venta', 'carrito', T.vender === 'Pedido' ? 'Pedido' : 'Venta', 'F12 para cobrar', () => ir('vender')],
-    puede('ordenes') && ['orden', 'orden', 'Orden de trabajo', 'O un pedido con entrega', () => abrir('nuevaOrden', {})],
+    puede('vender') && T.mod('agenda') && ['cita', 'calendario', 'Cita', 'Día, hora y con quién', () => abrir('nuevaCita', {})],
+    puede('ordenes') && T.mod('ordenes') && ['orden', 'orden', 'Orden de trabajo', 'O un pedido con entrega', () => abrir('nuevaOrden', {})],
     puede('gastos') && ['gasto', 'dinero', 'Gasto', 'Lo que pagas o debes', () => abrir('gasto')],
     puede('clientes') && ['cliente', 'personas', 'Cliente', 'Con su teléfono', () => abrir('nuevoCliente', {})],
     puede('productos') && ['escanear', 'etiqueta', T.inv ? 'Producto' : 'Servicio', T.inv ? 'Con precio y existencia' : 'Con precio y duración', () => abrir('producto', {})],
-    puede('productos') && T.inv && ['servicio', 'orden', 'Servicio', 'Mano de obra, instalación…', () => abrir('producto', { svc: true })]
+    puede('productos') && T.inv && T.mod('servicios') && ['servicio', 'llave', 'Servicio', 'Mano de obra, instalación…', () => abrir('producto', { svc: true })]
   ].filter(Boolean);
   if (!ops.length) return null;
   return html`<div class="nuevo-menu">

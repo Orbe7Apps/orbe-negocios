@@ -796,3 +796,39 @@ html.en-recorrido .nav-tel { background: var(--oscuro); }
   .bandera { box-shadow: 0 0 0 1px var(--line); }
   .orbe-crear button span { box-shadow: 0 6px 14px rgba(0,0,0,.18); }
 }
+
+/* ---------- agenda de citas ---------- */
+.dias-agenda { gap: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 7px 7px 6px 2px; }
+.dias-agenda::-webkit-scrollbar { display: none; }
+.dia-chip { flex: none; width: 54px; min-height: 66px; border: 0; border-radius: 18px; background: var(--surface); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; box-shadow: var(--shadow); position: relative; transition: background-color .25s ease, color .25s ease, transform .25s var(--spring); }
+.dia-chip small { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: capitalize; }
+.dia-chip b { font-size: 19px; }
+.dia-chip i { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; border-radius: 8px; font-size: 10px; font-style: normal; font-weight: 700; display: grid; place-items: center; }
+.dia-chip i.con { background: var(--accent-soft); color: var(--accent-text); }
+.dia-chip.on { background: var(--oscuro, #15132a); color: #fff; }
+.dia-chip.on small { color: rgba(255,255,255,.7); }
+.dia-chip.on i.con { background: #3ddc9f; color: #0b0a14; }
+.campo .dia-chip { box-shadow: none; background: var(--fill2); min-height: 58px; }
+.campo .dia-chip.on { background: var(--accent); color: #fff; }
+.cita-fila { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px 12px 12px; border: 0; border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); color: var(--ink); text-align: left; font: inherit; border-left: 4px solid var(--c); }
+.cita-fila.cerrada { opacity: .62; }
+.tarjeta .cita-fila { box-shadow: none; background: var(--fill2); }
+.cita-hora { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 66px; flex: none; }
+.cita-hora b { font-size: 14px; }
+.cita-hora small { font-size: 11px; color: var(--muted); }
+.agenda-cols { display: grid; gap: 14px; align-items: start; }
+.horas-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.horas-grid .chip { justify-content: center; padding: 0 4px; font-size: 13px; }
+.horas-grid .chip:disabled { opacity: .35; }
+.horas-grid .chip.ocupada { text-decoration: line-through; }
+/* Elegir el rubro al registrarse */
+.rubro-op { min-height: 70px; border-radius: 20px; justify-content: flex-start; gap: 14px; color: var(--ink); padding: 12px 14px; background: var(--surface); }
+.rubro-op.on { background: var(--accent-soft); }
+/* Ajustes → Funciones */
+.grupo-funciones { display: flex; flex-direction: column; margin-top: 14px; }
+.grupo-funciones small { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding-bottom: 4px; }
+.funcion-fila { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--line); padding: 4px 0; }
+.pildora.mini { font-size: 10px; padding: 2px 7px; margin-left: 6px; vertical-align: 2px; }
+.funcion-fila .ic { transition: background-color .3s ease, color .3s ease; }
+.acento-txt { color: var(--accent-text, var(--accent)); font-weight: 600; font-size: 13px; }
+.hero-kpis b.largo { font-size: 15px; letter-spacing: -0.02em; }

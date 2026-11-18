@@ -46,6 +46,7 @@ export function lineasRecibo(v, { S, P, D }) {
   v.items.forEach(it => {
     const lista = it.pLista != null ? it.pLista : it.p;
     L.push({ t: it.n }); L.push({ a: '  ' + fmtQ(it.q) + (it.u ? ' ' + it.u : '') + ' x ' + D.m(lista), b: D.m(it.q * lista) });
+    if (it.gar || it.serial) { const g = new Date(v.t); g.setMonth(g.getMonth() + (it.gar || 0)); L.push({ t: '  ' + [it.gar ? 'Garantia hasta ' + g.toLocaleDateString('es') : '', it.serial ? 'S/N ' + it.serial : ''].filter(Boolean).join(' - ') }); }
     if (it.pLista != null && Math.abs(it.pLista - it.p) > 1e-9) L.push({ a: '  ' + (it.promo ? 'Promo ' + it.promo : it.desc ? 'Descuento ' + it.desc + '%' : 'Descuento'), b: '-' + D.m(it.q * (it.pLista - it.p)) });
   });
   L.push({ sep: '-' });
