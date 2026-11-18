@@ -1,6 +1,6 @@
 # Reel: Sobre nosotros
 
-`reel.mp4`: 1080x1920, 23 s, sin audio (agrégale una canción suave de la biblioteca de Instagram). `reel-portada.png` es la portada sugerida.
+`reel.mp4`: 1080x1920, 23 s, con música original. `reel-portada.png` es la portada sugerida.
 
 ## Escenas
 1. Hola, somos Orbe Apps (planeta de la marca).
@@ -19,5 +19,9 @@ Pago único y sin mensualidad: microapps desde $17, catálogo con pedidos $49, p
 
 #emprendimiento #negocioslatinos #appsparanegocios #ventasporwhatsapp #pymes
 
+## Música
+Base electrónica suave hecha con código (`herramientas/musica.py`), sin canciones de terceros, con un whoosh y una campanita en cada cambio de escena. Volumen de unos −15 LUFS, el habitual en Instagram. Si prefieres una canción de moda, súbelo y agrégala desde Instagram bajando el volumen del audio original.
+
 ## Cómo regenerarlo
 Desde `servicios/posts/`: `node herramientas/grabar-reel.js reel-sobre-nosotros/fuente/reel.html reel-sobre-nosotros/reel.mp4 23 2.6` (necesita Playwright y ffmpeg).
+Para la música: `python3 herramientas/musica.py musica.wav 23 3.4,7.6,11.6,15.6,19.4 --final 19.4` y luego `ffmpeg -i reel-sobre-nosotros/reel.mp4 -i musica.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest salida.mp4`.
