@@ -19,6 +19,10 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
   // Barra de estado del teléfono con el color de la marca
   document.head.append(Object.assign(document.createElement('meta'), { name: 'theme-color', content: N.color || '#c2335a' }));
   document.title = N.nombre + ' · Catálogo';
+  if (N.letraTitulo) {
+    document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(N.letraTitulo) + ':wght@600;700&display=swap' }));
+    document.documentElement.style.setProperty('--titulo', `"${N.letraTitulo}", var(--letra)`);
+  }
 
   const el = (tag, attrs = {}, ...hijos) => {
     const e = document.createElement(tag);
@@ -72,7 +76,7 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
   function aProductos(filas) {
     const cab = filas.shift().map(sinTildes);
     const col = nombre => cab.findIndex(c => c.startsWith(nombre));
-    const c = { nombre: col('producto'), precio: col('precio'), cat: col('categoria'), desc: col('descripcion'), foto: col('foto'), hay: col('hay') };
+    const c = { nombre: col('producto'), precio: col('precio'), cat: col('categoria'), desc: col('descripcion'), foto: col('foto'), hay: col('hay'), dest: col('destacado') };
     return filas.map((f, i) => ({
       id: 'p' + i + '-' + sinTildes(f[c.nombre]).replace(/\W+/g, '-'),
       nombre: (f[c.nombre] || '').trim(),
@@ -81,6 +85,7 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
       descripcion: (f[c.desc] || '').trim(),
       foto: c.foto >= 0 ? foto(f[c.foto]) : '',
       agotado: c.hay >= 0 && /^(no|agotado|0|false)$/.test(sinTildes(f[c.hay])),
+      destacado: c.dest >= 0 && /^(si|x|1|true)$/.test(sinTildes(f[c.dest])),
     })).filter(p => p.nombre);
   }
   async function cargar() {
@@ -99,14 +104,19 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
   // ---------- Vista del catálogo ----------
   function cabecera() {
     const logo = N.logo ? el('img', { src: N.logo, alt: '' }) : (N.iniciales || N.nombre.slice(0, 2).toUpperCase());
-    $('#cabecera').replaceChildren(el('div', { class: 'envoltura' },
+    $('#cabecera').replaceChildren(el('div', { class: 'envoltura cab-in' },
       el('div', { class: 'logo' }, logo),
       el('div', {},
         el('h1', { text: N.nombre }),
         el('p', { text: [N.rubro, N.ciudad].filter(Boolean).join(' · ') }),
-        N.horario ? el('span', { class: 'estado', text: N.horario }) : null)));
+        N.horario ? el('span', { class: 'estado', text: N.horario }) : null)),
+      el('div', { class: 'envoltura datos' }, ...[
+        N.entrega?.domicilio ? ['🛵', 'Domicilio' + (N.entrega.domicilio.costo ? ' ' + dinero(N.entrega.domicilio.costo) : ' gratis')] : null,
+        N.entrega?.retiro ? ['🏠', 'Retiro en tienda'] : null,
+        N.pagos?.length ? ['💳', N.pagos.join(' · ')] : null,
+      ].filter(Boolean).map(([i, t]) => el('span', { class: 'dato' }, el('i', { text: i, 'aria-hidden': 'true' }), t))));
     $('#aviso').hidden = !N.aviso; $('#aviso').textContent = N.aviso || '';
-    $('#pie').replaceChildren('Catálogo hecho por ', el('a', { href: 'https://orbe7apps.github.io/orbe-negocios/servicios/', target: '_blank', rel: 'noopener', text: 'Orbe Apps' }));
+    $('#pie').replaceChildren('Catálogo hecho por ', el('a', { href: 'https://orbe7apps.github.io/orbe-apps/', target: '_blank', rel: 'noopener', text: 'Orbe Apps' }));
   }
   function categorias() {
     const cats = ['Todos', ...new Set(productos.map(p => p.categoria))];
@@ -115,7 +125,7 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
   function botonCantidad(p) {
     const n = pedido.items[p.id] || 0;
     if (p.agotado) return el('span', { class: 'sin', text: 'Agotado' });
-    if (!n) return el('button', { class: 'agregar', text: 'Agregar', 'aria-label': 'Agregar ' + p.nombre, onclick: () => cambiar(p.id, 1) });
+    if (!n) return el('button', { class: 'agregar', 'aria-label': 'Agregar ' + p.nombre, onclick: () => cambiar(p.id, 1) }, el('i', { text: '+', 'aria-hidden': 'true' }), 'Agregar');
     return el('div', { class: 'contador' },
       el('button', { 'aria-label': 'Quitar uno de ' + p.nombre, text: '−', onclick: () => cambiar(p.id, -1) }),
       el('b', { text: n }),
@@ -143,8 +153,16 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
     const cont = $('#productos');
     if (!productos.length) cont.replaceChildren(el('p', { class: 'vacio', text: 'Cargando productos…' }));
     else if (!vis.length) cont.replaceChildren(el('p', { class: 'vacio', text: 'No encontramos productos con esa búsqueda.' }));
-    else cont.replaceChildren(...Object.entries(grupos).map(([cat, ps]) =>
-      el('section', { class: 'seccion' }, el('h2', { text: cat }), el('div', { class: 'lista' }, ps.map(tarjeta)))));
+    else {
+      const top = filtro === 'Todos' && !q ? productos.filter(p => p.destacado && !p.agotado) : [];
+      cont.replaceChildren(
+        top.length ? el('section', { class: 'seccion destacados' }, el('h2', {}, 'Lo más pedido ', el('small', { text: '★' })),
+          el('div', { class: 'carrusel' }, top.map(p => el('article', { class: 'grande' }, miniatura(p),
+            el('div', { class: 'grande-info' }, el('b', { text: p.nombre }), el('div', { class: 'precio', text: dinero(p.precio) })),
+            botonCantidad(p))))) : '',
+        ...Object.entries(grupos).map(([cat, ps]) =>
+          el('section', { class: 'seccion' }, el('h2', {}, cat + ' ', el('small', { text: ps.length })), el('div', { class: 'lista' }, ps.map(tarjeta)))));
+    }
     flotante();
   }
   function lineas() {
@@ -158,7 +176,7 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
   function flotante() {
     const t = totales();
     $('#flotante').hidden = !t.unidades;
-    $('#ver-pedido').replaceChildren(el('span', { text: `Ver mi pedido · ${t.unidades} ${t.unidades === 1 ? 'producto' : 'productos'}` }), el('span', { text: dinero(t.sub) }));
+    $('#ver-pedido').replaceChildren(el('span', { class: 'bolsa' }, el('i', { text: '🛍', 'aria-hidden': 'true' }), el('b', { text: t.unidades })), el('span', { class: 'ver', text: 'Ver mi pedido' }), el('span', { text: dinero(t.sub) }));
   }
   function cambiar(id, d) {
     const n = Math.max(0, (pedido.items[id] || 0) + d);
