@@ -5,7 +5,12 @@
 ['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 // Dentro de otra página (la vista previa en el teléfono de Orbe Apps): sin barra de desplazamiento visible
-if (window.top !== window.self) document.documentElement.classList.add('incrustado');
+// Dentro del teléfono de la página de Orbe Apps: se achica con zoom para verse como en un teléfono de 390 px
+if (window.top !== window.self) {
+  document.documentElement.classList.add('incrustado');
+  const ajustar = () => { document.documentElement.style.zoom = innerWidth < 390 ? innerWidth / 390 : ''; };
+  ajustar(); addEventListener('resize', ajustar);
+}
 (() => {
   const N = window.NEGOCIO;
   const $ = s => document.querySelector(s);
