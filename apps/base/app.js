@@ -173,7 +173,7 @@
         titulo: 'Activa tu app',
         cuerpo: `${motivo ? `<p class="texto-ayuda" style="font-size:15px">${esc(motivo)}</p>` : ''}
           <label class="campo">Código de activación<input name="codigo" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${Orbe.app.prefijo}-XXXX-XXXX"></label>
-          <div class="tarjeta p" style="display:flex;gap:12px;align-items:center"><span class="ini" style="background:var(--c);color:var(--c-ink)">${Orbe.app.icono}</span><span><b style="font-size:20px">17 USD</b><br><span class="texto-ayuda">Pago único. Es tuya para siempre, sin mensualidad.</span></span></div>`,
+          <div class="tarjeta p" style="display:flex;gap:12px;align-items:center"><img src="icono.svg" alt="" width="52" height="52" style="flex-shrink:0;border-radius:12px;box-shadow:0 10px 20px -12px rgba(20,21,28,.6)"><span><b style="font-size:20px">17 USD</b><br><span class="texto-ayuda">Pago único. Es tuya para siempre, sin mensualidad.</span></span></div>`,
         pie: `<button class="btn principal ancho" type="submit">Activar</button><a class="btn ancho" href="${IG}" target="_blank" rel="noopener">Comprar por Instagram</a>`
       });
       const f = d.querySelector('form');
@@ -283,7 +283,7 @@
 
     iniciar(app) {
       Orbe.app = app; Orbe.vista = app.tabs ? app.tabs[0].id : null;
-      document.getElementById('barra').innerHTML = `<div class="envoltura"><div class="app-ico" aria-hidden="true">${app.icono}</div><div class="titulo"><h1>${esc(app.nombre)}</h1><small id="sub"></small></div><button class="icono-btn" type="button" id="btn-menu" aria-label="Menú">${ICON.menu}</button></div>`;
+      document.getElementById('barra').innerHTML = `<div class="envoltura"><div class="app-ico" aria-hidden="true"><img src="icono.svg" alt="" width="42" height="42"></div><div class="titulo"><h1>${esc(app.nombre)}</h1><small id="sub"></small></div><button class="icono-btn" type="button" id="btn-menu" aria-label="Menú">${ICON.menu}</button></div>`;
       document.getElementById('btn-menu').onclick = Orbe.menu;
       const fab = document.getElementById('fab'); if (fab) fab.onclick = () => app.fab();
       const q = new URLSearchParams(location.search).get('codigo');
