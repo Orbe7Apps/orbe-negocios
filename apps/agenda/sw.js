@@ -1,5 +1,5 @@
 // Orbe Apps · funciona sin internet: guarda la app en el teléfono y la actualiza cuando hay conexión
-const CACHE = 'agenda-v6';
+const CACHE = 'agenda-v8';
 const ARCHIVOS = ["./", "index.html", "agenda.js", "../base/app.css", "../base/app.js", "manifest.webmanifest", "icono.svg", "icono-192.png", "reservar.html"];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('agenda-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
