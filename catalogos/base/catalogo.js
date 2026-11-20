@@ -157,9 +157,9 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
       const top = filtro === 'Todos' && !q ? productos.filter(p => p.destacado && !p.agotado) : [];
       cont.replaceChildren(
         top.length ? el('section', { class: 'seccion destacados' }, el('h2', {}, 'Lo más pedido ', el('small', { text: '★' })),
-          el('div', { class: 'carrusel' }, top.map(p => el('article', { class: 'grande' }, miniatura(p),
-            el('div', { class: 'grande-info' }, el('b', { text: p.nombre }), el('div', { class: 'precio', text: dinero(p.precio) })),
-            botonCantidad(p))))) : '',
+          el('div', { class: 'carrusel' }, top.map((p, i) => el('article', { class: 'grande' }, miniatura(p), el('span', { class: 'puesto', text: '#' + (i + 1) }),
+            el('b', { text: p.nombre }),
+            el('div', { class: 'grande-pie' }, el('div', { class: 'precio', text: dinero(p.precio) }), botonCantidad(p)))))) : '',
         ...Object.entries(grupos).map(([cat, ps]) =>
           el('section', { class: 'seccion' }, el('h2', {}, cat + ' ', el('small', { text: ps.length })), el('div', { class: 'lista' }, ps.map(tarjeta)))));
     }
