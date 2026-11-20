@@ -25,11 +25,7 @@ Tú vendes. Orbe hace lo repetitivo. App web instalable para negocios pequeños 
 - `js/lib/`: Preact y htm (sin paso de compilación).
 - `docs/`: plan y guía de estilo. `maquetas/`: las maquetas aprobadas.
 
-## Orbe Sellos (`fidelidad/`)
-Tarjeta de fidelidad de sellos sin app, pensada para vender en cualquier país. El cliente escanea el QR del cartel y el negocio sella desde su teléfono.
-- `fidelidad/index.html`: app del negocio (crear en 3 pasos, sellar, clientes, cartel, ajustes).
-- `fidelidad/t.html`: tarjeta del cliente, en español, inglés o portugués.
-- `fidelidad/supabase/esquema.sql`: la base en la nube. Mientras `fidelidad/js/config.js` esté vacío, funciona en modo demostración.
-- Investigación y plan: `docs/FIDELIDAD.md`.
+## Orbe Sellos
+Se mudó a su propio repositorio: [Orbe7Apps/orbe-sellos](https://github.com/Orbe7Apps/orbe-sellos) (demo: https://orbe7apps.github.io/orbe-sellos/). El reel sigue también en `servicios/posts/reel-orbe-sellos/`.
 
 Para probar en local: `python3 -m http.server` y abrir http://localhost:8000. Se puede forzar la vista con `?vista=telefono` o `?vista=pc`.
