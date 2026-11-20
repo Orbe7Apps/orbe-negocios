@@ -19,6 +19,10 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
   // Barra de estado del teléfono con el color de la marca
   document.head.append(Object.assign(document.createElement('meta'), { name: 'theme-color', content: N.color || '#c2335a' }));
   document.title = N.nombre + ' · Catálogo';
+  if (N.letra) {
+    document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(N.letra) + ':wght@400;500;600;700;800&display=swap' }));
+    document.documentElement.style.setProperty('--letra', `"${N.letra}", system-ui, sans-serif`);
+  }
   if (N.letraTitulo) {
     document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(N.letraTitulo) + ':wght@600;700&display=swap' }));
     document.documentElement.style.setProperty('--titulo', `"${N.letraTitulo}", var(--letra)`);
@@ -109,12 +113,7 @@ if (window.top !== window.self) document.documentElement.classList.add('incrusta
       el('div', {},
         el('h1', { text: N.nombre }),
         el('p', { text: [N.rubro, N.ciudad].filter(Boolean).join(' · ') }),
-        N.horario ? el('span', { class: 'estado', text: N.horario }) : null)),
-      el('div', { class: 'envoltura datos' }, ...[
-        N.entrega?.domicilio ? ['🛵', 'Domicilio' + (N.entrega.domicilio.costo ? ' ' + dinero(N.entrega.domicilio.costo) : ' gratis')] : null,
-        N.entrega?.retiro ? ['🏠', 'Retiro en tienda'] : null,
-        N.pagos?.length ? ['💳', N.pagos.join(' · ')] : null,
-      ].filter(Boolean).map(([i, t]) => el('span', { class: 'dato' }, el('i', { text: i, 'aria-hidden': 'true' }), t))));
+        N.horario ? el('span', { class: 'estado', text: N.horario }) : null)));
     $('#aviso').hidden = !N.aviso; $('#aviso').textContent = N.aviso || '';
     $('#pie').replaceChildren('Catálogo hecho por ', el('a', { href: 'https://orbe7apps.github.io/orbe-apps/', target: '_blank', rel: 'noopener', text: 'Orbe Apps' }));
   }
