@@ -203,6 +203,8 @@ const CATALOGO = {
   online: [['CA', 'Camiseta estampada', 15, 6, 40, 10, 0, 8], ['GO', 'Gorra', 12, 5, 16, 6, 0, 4], ['TZ', 'Taza', 9, 3.5, 5, 6, 0, 5], ['TB', 'Bolsa de tela', 10, 4, 22, 5, 0, 3], ['ST', 'Stickers x 5', 4, 1, 90, 20, 0, 6], ['SU', 'Sudadera', 28, 12, 9, 4, 0, 2], ['EN', 'Envío', 3, 3, -1, 0, 0, 7]],
   indep: [['LG', 'Diseño de logo', 120, 0, 0, 0, 600, 1], ['FT', 'Sesión de fotos', 80, 10, 0, 0, 120, 2], ['CL', 'Clase 1 hora', 15, 0, 0, 0, 60, 6], ['AS', 'Asesoría 1 hora', 30, 0, 0, 0, 60, 3], ['VT', 'Visita técnica', 25, 3, 0, 0, 90, 3], ['RS', 'Paquete redes', 60, 0, 0, 0, 240, 1]]
 };
+// Catálogo de referencia del rubro (o del tipo): sirve para el ejemplo y para sugerir productos en una cuenta nueva.
+export function catalogoDe(rid, tid) { const R = rubro(rid); return R && Array.isArray(R.cat) ? R.cat : CATALOGO[(R && R.cat) || tid] || []; }
 // Grupos de ejemplo de cada tipo de negocio (por la abreviatura del producto).
 const GRUPOS_EJ = {
   tienda: [['Víveres', ['HM', 'AR', 'CF', 'AC']], ['Bebidas', ['RF']], ['Lácteos y huevos', ['HV', 'QS']], ['Panadería', ['PN']], ['Limpieza', ['JB']]],
@@ -226,7 +228,8 @@ export function crearNegocio(cfg, conEjemplo) {
   const nSuc = Math.max(1, Math.min(5, cfg.sucN || 1)), NOM = ['Centro', 'Norte', 'Este', 'Oeste', 'Sur'];
   const sucursales = nSuc === 1 ? ['Principal'] : Array.from({ length: nSuc }, (_, i) => ((cfg.sucNombres || [])[i] || '').trim() || NOM[i]);
   // Rubro (barbería, ferretería…): su catálogo y sus grupos; si no tiene, los del tipo de negocio.
-  const R = rubro(cfg.rubro), cat = R && Array.isArray(R.cat) ? R.cat : CATALOGO[(R && R.cat) || T.id], gruposEj = (R && R.grupos) || GRUPOS_EJ[(R && R.cat) || T.id] || [];
+  const R = rubro(cfg.rubro), cat = catalogoDe(cfg.rubro, T.id);
+  let gruposEj = (R && R.grupos) || GRUPOS_EJ[(R && R.cat) || T.id] || [];
   const productos = cat.map((x, i) => {
     const ex = x[8] || {}, k = E ? 3 : 1;
     const p = { id: 'p' + i, ab: x[0], n: x[1], p: D.precio(x[2]), c: D.precio(x[3]), q: x[4] < 0 ? null : Math.round(x[4] * k), min: Math.round(x[5] * k), dur: x[6] || 0, pop: x[7], cod: x[4] < 0 ? '' : '759' + String(1234000 + i * 37) };
@@ -235,11 +238,14 @@ export function crearNegocio(cfg, conEjemplo) {
     if (ex.vars) { p.vars = ex.vars.map((n, j) => ({ id: 'v' + j, n, q: Math.round([4, 7, 5, 3, 6, 2][j % 6] * k) })); p.q = p.vars.reduce((a, v) => a + v.q, 0); }
     return p;
   });
-  const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala, cfg.rubro), rubro: R ? R.id : '', mods: {}, razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
+  const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala, cfg.rubro), rubro: R ? R.id : '', mods: Object.assign({}, cfg.mods || {}), razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
   const perfiles = [{ id: 'u0', n: (cfg.dueno || '').trim() || 'Dueño', rol: 'dueno', pin: '', sucs: [], creado: Date.now() }];
   if (conEjemplo) perfiles.push(
     { id: 'u1', n: 'Carla Méndez', rol: 'encargado', pin: '1111', sucs: [], creado: Date.now() },
     { id: 'u2', n: 'Luis Pino', rol: 'cajero', pin: '2222', sucs: sucursales.length > 1 ? [sucursales[0]] : [], creado: Date.now() });
+  // Cuenta nueva: vacía. Los productos y grupos del rubro solo se cargan con el ejemplo
+  // (sin ejemplo, se ofrecen como sugerencias para agregar con un toque).
+  if (!conEjemplo) { productos.length = 0; gruposEj = []; }
   const grupos = gruposEj.map((g, i) => ({ id: 'g' + i, n: g[0], c: i }));
   productos.forEach(p => { const i = gruposEj.findIndex(g => g[1].includes(p.ab)); if (i >= 0) p.g = 'g' + i; });
   const cT = S.tasa.valor || (P.id === 'VE' ? TASA_VE_RESPALDO : P.r), base = { grupos, negocio, productos: productos.map(({ pop, ...p }) => Object.assign(p, { cT })), clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], perfiles, roles: ROLES_BASE(), registro: [], ajustes: Object.assign({}, S.ajustes, { perfil: 'u0' }) };
@@ -577,6 +583,16 @@ export function borrarProducto(pid) {
 }
 // Reponer: si cambió lo que cuesta, se guarda como costo de reposición (el de hoy) y se anota.
 // ---------- grupos de productos ----------
+// Varios productos de una vez (sugerencias del rubro en una cuenta nueva). Los grupos se crean por nombre si no existen.
+export function agregarVarios(lista) {
+  const cT = tasaDe();
+  cambiar(s => {
+    const grupos = s.grupos.slice();
+    const gid = n => { if (!n) return ''; let g = grupos.find(x => x.n.toLowerCase() === n.toLowerCase()); if (!g) { g = { id: 'g' + id(), n, c: grupos.length % 8 }; grupos.push(g); } return g.id; };
+    const nuevos = lista.map(x => Object.assign({ id: 'p' + id(), cod: '', cT, min: 0, dur: 0 }, x, { g: gid(x.g) }));
+    return Object.assign({ grupos, productos: s.productos.concat(nuevos) }, nota(s, 'Agregó ' + nuevos.length + (nuevos.length === 1 ? ' producto sugerido' : ' productos sugeridos')));
+  });
+}
 export function guardarGrupo(g) {
   const nuevo = Object.assign({ id: 'g' + id(), c: S.grupos.length % 8 }, g);
   cambiar(s => ({ grupos: g.id && s.grupos.some(x => x.id === g.id) ? s.grupos.map(x => x.id === g.id ? Object.assign({}, x, g) : x) : s.grupos.concat([nuevo]) }));

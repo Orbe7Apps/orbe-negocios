@@ -91,7 +91,7 @@ function useTemas() {
       ${(S.registro || []).length ? (S.registro || []).slice(-5).reverse().map(x => Dato(x.que, hace(x.t))) : html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Aquí queda anotado quién anula ventas, hace devoluciones o borra algo.</p>`}
       ${Botones(html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('registro')}>Ver todo y revisar firmas</button>`, S.cierres.length > 0 && html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('cierres')}>Cierres Z</button>`)}` },
     { k: 'ayuda', g: 'La app', i: 'lista', c: 't-azu', n: 'Ayuda y recorrido', r: 'Qué hace cada parte y cómo se usa', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Un recorrido guiado por toda la app: qué hace cada parte y cómo se usa.</p>
-      ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${verRecorrido}>Ver el recorrido guiado</button>`)}` },
+      ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${verRecorrido}>Ver el recorrido guiado</button>`, n.pasosListos && html`<button type="button" class="btn2 chico toca" onClick=${() => { cambiarNegocio({ pasosListos: false }); ir('hoy'); }}>Mostrar los primeros pasos</button>`)}` },
     aj && { k: 'borrar', g: 'La app', i: 'basura', c: 't-ros', n: 'Empezar de nuevo', r: 'Borra este negocio de este aparato', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Borra este negocio de este aparato para probar otro país o tipo. Antes se guarda una copia.</p>
       ${Botones(html`<button type="button" class="btn2 chico rojo toca" onClick=${() => abrir('borrar')}>Empezar de nuevo</button>`)}` }
   ].filter(Boolean);

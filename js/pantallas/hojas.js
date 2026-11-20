@@ -22,6 +22,7 @@ import { buscar, parecidos } from '../buscar.js';
 import { descargar } from './reportes.js';
 import { Cita, NuevaCita } from './agenda.js';
 import { ElegirRubro } from './funciones.js';
+import { Sugerencias } from './empezar.js';
 
 const CATS = ['Mercancía', 'Alquiler', 'Servicios', 'Sueldos', 'Transporte', 'Otro'];
 const VENCE = [{ v: 7, n: 'En 7 días' }, { v: 15, n: 'En 15 días' }, { v: 30, n: 'En 30 días' }];
@@ -49,7 +50,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  const H = { sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
 
@@ -862,7 +863,7 @@ function Copias({ d, cerrar }) {
     cuerpo: html`<span class="sub" style="line-height:1.45;margin-top:-6px">Orbe guarda una copia cada día en este aparato (las últimas 7). También puedes subir una copia que descargaste.</span>
       <div class="lista">${lista === null ? html`<p class="vacio">Buscando copias…</p>` : lista.length ? lista.map((x, i) => html`<button type="button" key=${x.k} class="item toca entra" style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => leerCopia(x.k).then(datos => datos ? preguntar(c, datos, 'la copia del ' + cuando(x.t)) : avisar('No se pudo leer esa copia'))}>
         <span class="simb-c" style="--c:var(--c1);width:34px;height:34px"><${Icono} n="guardar" t=${16} /></span>
-        <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px;font-weight:600">${cuando(x.t)}</b><span class="sub faint">${x.nombre} · ${x.negocio || 'sin negocio'} · ${x.ventas} ventas</span></span>
+        <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px;font-weight:600">${cuando(x.t)}</b><span class="sub faint">${x.nombre} · ${x.negocio || 'sin negocio'} · ${x.ventas} ${x.ventas === 1 ? "venta" : "ventas"}</span></span>
         <${Icono} n="sig" t=${16} c="var(--faint)" /></button>`) : html`<p class="vacio">Todavía no hay copias. La primera se hace hoy.</p>`}</div>
       <input ref=${archivo} type="file" accept=".json,application/json" hidden onChange=${e => elegirArchivo(c, e)} />`,
     pie: html`<button type="button" class="btn2 acento toca" style="min-height:52px;border-radius:26px" onClick=${() => archivo.current && archivo.current.click()}><${Icono} n="subir" t=${16} />Subir un archivo de copia</button>`

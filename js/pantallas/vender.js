@@ -2,6 +2,7 @@
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { Icono, avisar, TONOS, hora, FotoProd } from '../ui.js';
+import { CatalogoVacio } from './empezar.js';
 import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto } from '../datos.js';
 import { nuevoCarrito, lineasDe, cuantos, porPeso, verQ, existencia } from '../carrito.js';
 import { FilaVenta } from './hojas.js';
@@ -103,7 +104,8 @@ export function Vender() {
   const Sugerencias = q.trim() && !visibles.length ? html`<div class="pila entra" style="gap:8px"><span class="sub">No encontré «${q}»${grupo ? ' en este grupo' : ''}. ${sugeridos.length ? '¿Quisiste decir…?' : ''}</span>
     <div class="chips">${sugeridos.map(p => html`<button type="button" class="chip toca" onClick=${() => { sumar(p); setQ(''); avisar('Agregado: ' + p.n); }}>${p.n}</button>`)}${grupo ? html`<button type="button" class="chip chico toca" onClick=${() => setGrupo('')}>Buscar en todo</button>` : null}</div></div>` : null;
   const enCarrito = p => Object.keys(cart.q).filter(k => k === p.id || k.startsWith(p.id + '~')).reduce((a, k) => a + (porPeso(p) ? 1 : cart.q[k]), 0);
-  const Grilla = html`<div class="productos">${visibles.map((p, i) => { const c = enCarrito(p); return html`
+  // Sin productos todavía: la guía para agregarlos (o cobrar un cargo suelto con «+ Servicio o cargo»).
+  const Grilla = !prods.length ? html`<${CatalogoVacio} donde="vender" />` : html`<div class="productos">${visibles.map((p, i) => { const c = enCarrito(p); return html`
     <button type="button" key=${p.id} class=${'prod toca entra' + (c ? ' on' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n}>
       ${c ? html`<span class="cant" key=${c}>${c}</span>` : null}
       ${FotoProd(p, 36) || (() => { const g = grupoDe(S, p); return g ? html`<span class="ic" style=${{ width: '36px', height: '36px', fontSize: '13px', fontWeight: 700, background: suaveGrupo(g, 18), color: colorGrupo(g) }}>${p.ab}</span>` : html`<span class=${'ic ' + TONOS[i % 5]} style="width:36px;height:36px;font-size:13px;font-weight:700">${p.ab}</span>`; })()}
@@ -137,9 +139,9 @@ export function Vender() {
   const Boton = html`<button type="button" data-tour="cobrar" class=${'btn toca' + (n ? '' : ' apagado')} onClick=${cobrar}>${n ? 'Cobrar ' + D.m(total) : 'Agrega ' + (T.inv ? 'productos' : 'servicios')}${!tel && n ? html` <span class="tecla" style="color:#fff;border-color:rgba(255,255,255,.4)">F12</span>` : null}</button>`;
 
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><span class="sub">Toca para sumar</span></div>
+    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1>${prods.length > 0 && html`<span class="sub">Toca para sumar</span>`}</div>
     <${BarraTasas} />
-    <div class="fila entra" style="gap:8px"><label class="buscador crece" style="background:var(--surface)"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + prods.length} aria-label="Buscar producto" /></label>
+    <div class="fila entra" style="gap:8px"><label class="buscador crece" style="background:var(--surface)"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${prods.length ? 'Buscar entre ' + prods.length : 'Buscar'} aria-label="Buscar producto" /></label>
       ${T.mod('escaner') && html`<button type="button" class="icono-btn toca escanear-mini" aria-label="Escanear con la cámara" onClick=${() => abrir('escaner', { para: 'vender', onAgregar: sumarEscaneado })}><${Icono} n="camara" t=${20} /></button>`}</div>
     ${Clases}${(!conServ || deClase.some(p => p.g)) && html`<${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} lista=${deClase} />`}
     ${Sugerencias}
@@ -153,7 +155,7 @@ export function Vender() {
     const ultimas = S.ventas.filter(v => v.t >= hoy0 && (!suc || v.suc === suc)).slice(-6).reverse();
     const pagos = Object.keys(r.porPago).map((k, i) => ({ n: k, v: r.porPago[k], c: k === 'Fiado' ? 'var(--c3)' : color(i) }));
     return html`<div class="mitades">
-      <section class="tarjeta entra" style="--i:3"><div class="tarjeta-tit">Hoy${suc ? ' en ' + suc : ' en la caja'}<span class="fila" style="gap:8px"><span class="sub">${r.n} ventas</span>${T.mod('caja') && html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('caja')}><${Icono} n="billete" t=${14} />Caja</button>`}</span></div>
+      <section class="tarjeta entra" style="--i:3"><div class="tarjeta-tit">Hoy${suc ? ' en ' + suc : ' en la caja'}<span class="fila" style="gap:8px"><span class="sub">${r.n} ${r.n === 1 ? "venta" : "ventas"}</span>${T.mod('caja') && html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('caja')}><${Icono} n="billete" t=${14} />Caja</button>`}</span></div>
         <div class="rejilla-3" style="margin-bottom:14px">
           <div class="cifra"><span class="sub">Vendido</span><${Monto} v=${r.total} f=${D.m} clase="v" /></div>
           <div class="cifra"><span class="sub">Ticket promedio</span><${Monto} v=${r.ticket} f=${D.m} clase="v" /></div>

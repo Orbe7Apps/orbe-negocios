@@ -1,7 +1,8 @@
 // Primer uso: país, tipo de negocio, tamaño y datos. Al final se arma el negocio.
 import { html, useState } from '../lib/preact-htm.js';
 import { PAISES, TIPOS, pais } from '../paises.js';
-import { RUBROS, MODULOS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
+import { RUBROS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
+import { ListaFunciones } from './funciones.js';
 import { crearNegocio, nombreSugerido } from '../datos.js';
 import { Icono, LogoOrbe, Interruptor, avisar, Bandera } from '../ui.js';
 
@@ -13,16 +14,18 @@ const TONO = { vio: 't-vio', amb: 't-amb', ver: 't-ver', ros: 't-ros', azu: 't-a
 export function Inicio({ tel }) {
   const [paso, setPaso] = useState(-1);
   const [busca, setBusca] = useState('');
-  const [c, setC] = useState({ pais: '', rubro: '', tipo: '', escala: 'negocio', nombre: '', razon: '', fiscal: '', sucN: 1, sucNombres: [], dueno: '', pays: null, taxOn: null, taxIncl: true });
-  const [ejemplo, setEjemplo] = useState(true);
+  const [c, setC] = useState({ mods: {}, pais: '', rubro: '', tipo: '', escala: 'negocio', nombre: '', razon: '', fiscal: '', sucN: 1, sucNombres: [], dueno: '', pays: null, taxOn: null, taxIncl: true });
+  // La cuenta nueva empieza vacía. Con «?demo» en la dirección se llena con un mes de ejemplo (para mostrar la app).
+  const demo = /[?&]demo\b/.test(location.search);
+  const [ejemplo, setEjemplo] = useState(demo);
   const P = pais(c.pais || 'VE');
   const pon = o => setC(x => Object.assign({}, x, o));
   const i = PASOS.indexOf(paso);
   const puede = paso === 'pais' ? !!c.pais : paso === 'tipo' ? !!c.rubro : true;
-  const R = rubro(c.rubro), mods = modulosDe({ rubro: c.rubro, tipo: c.tipo });
+  const R = rubro(c.rubro), mods = modulosDe({ rubro: c.rubro, tipo: c.tipo, mods: c.mods });
   const siguiente = () => {
     if (!puede) return;
-    if (paso === 'listo') { crearNegocio(Object.assign({}, c, { nombre: c.nombre || nombreSugerido(c.tipo, c.escala, c.rubro) }), ejemplo); avisar(ejemplo ? 'Listo. Cargamos un mes de ventas de ejemplo' : '¡Bienvenido a Orbe Negocios!'); return; }
+    if (paso === 'listo') { crearNegocio(Object.assign({}, c, { nombre: c.nombre || nombreSugerido(c.tipo, c.escala, c.rubro) }), ejemplo); avisar(ejemplo ? 'Listo. Cargamos un mes de ventas de ejemplo' : '¡Bienvenido! Tu cuenta está lista para empezar'); return; }
     setPaso(PASOS[i + 1]);
   };
   const atras = () => setPaso(i <= 0 ? -1 : PASOS[i - 1]);
@@ -51,7 +54,7 @@ export function Inicio({ tel }) {
     tipo: ['¿A qué se dedica tu negocio?', 'Escríbelo o elígelo. Orbe se arma para tu rubro y lo demás lo activas cuando quieras.'],
     tam: ['¿De qué tamaño es?', 'Si es una empresa, tus recibos llevan razón social y número fiscal.'],
     datos: [E ? 'Tu empresa' : 'Tu negocio', 'Ya lo llenamos según ' + P.n + '. Cambia lo que quieras.'],
-    listo: ['Tu Orbe está listo', 'Armado para ' + (R ? R.n.toLowerCase() : 'tu negocio') + ' en ' + P.n + '.']
+    listo: ['Elige tus funciones', 'Encendimos lo recomendado para ' + (R ? R.n.toLowerCase() : 'tu negocio') + '. Activa o apaga lo que quieras: también se cambia después en Ajustes.']
   }[paso];
 
   let cuerpo;
@@ -65,13 +68,13 @@ export function Inicio({ tel }) {
     // Lo que escribe la persona ordena la lista: primero lo que se parece a su negocio.
     const sug = adivinarRubro(busca), resto = RUBROS.filter(r => !sug.includes(r));
     const Tarjeta = (r, k) => { const on = c.rubro === r.id; return html`
-      <button type="button" key=${r.id} class=${'chip toca entra rubro-op' + (on ? ' on' : '')} style=${{ '--i': k }} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ rubro: r.id, tipo: r.t })}>
+      <button type="button" key=${r.id} class=${'chip toca entra rubro-op' + (on ? ' on' : '')} style=${{ '--i': k }} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ rubro: r.id, tipo: r.t, mods: {} })}>
         <span class=${'ic ' + TONO[r.c]} style="width:42px;height:42px;border-radius:13px"><${Icono} n=${r.i} t=${21} /></span>
         <span style="flex:1;display:flex;flex-direction:column;gap:2px;text-align:left;min-width:0"><b style="font-size:15px">${r.n}</b><span class="sub corta" style="font-weight:500">${r.ex}</span></span>
         ${on && html`<span style="width:24px;height:24px;border-radius:12px;background:var(--accent);display:grid;place-items:center;flex:none;animation:pop .4s var(--spring)"><${Icono} n="check" t=${14} g=${3} c="#fff" /></span>`}
       </button>`; };
     cuerpo = html`<div class="pila" style="gap:10px">
-      <label class="buscador" style="background:var(--surface);min-height:54px;border-radius:18px"><${Icono} n="buscar" t=${18} c="var(--muted)" /><input type="search" value=${busca} placeholder="Ej.: barbería, vendo neveras, ferretería…" aria-label="A qué se dedica tu negocio" autocomplete="off" onInput=${e => { setBusca(e.target.value); const g = adivinarRubro(e.target.value); if (g.length) pon({ rubro: g[0].id, tipo: g[0].t }); }} /></label>
+      <label class="buscador" style="background:var(--surface);min-height:54px;border-radius:18px"><${Icono} n="buscar" t=${18} c="var(--muted)" /><input type="search" value=${busca} placeholder="Ej.: barbería, vendo neveras, ferretería…" aria-label="A qué se dedica tu negocio" autocomplete="off" onInput=${e => { setBusca(e.target.value); const g = adivinarRubro(e.target.value); if (g.length && g[0].id !== c.rubro) pon({ rubro: g[0].id, tipo: g[0].t, mods: {} }); }} /></label>
       ${busca.trim().length >= 3 && html`<span class="sub entra" style="padding:0 4px">${sug.length ? 'Te sugerimos:' : 'No lo encontré: elige el más parecido. Todo se ajusta después.'}</span>`}
       ${sug.map(Tarjeta)}
       ${sug.length > 0 && html`<span class="sub" style="padding:6px 4px 0">Otros rubros</span>`}
@@ -103,16 +106,11 @@ export function Inicio({ tel }) {
       ${taxOn && P.tax[1] > 0 && html`<div class="segmento" style="width:100%;margin-top:4px">${[[true, 'En el precio'], [false, 'Aparte']].map(o => html`<button type="button" style="flex:1" class=${c.taxIncl === o[0] ? 'on' : ''} onClick=${() => pon({ taxIncl: o[0] })}>${o[1]}</button>`)}</div>`}
     </div>
   </div>`;
-  if (paso === 'listo') cuerpo = html`<div class="pila">
-    <span style="width:76px;height:76px;border-radius:50%;background:var(--in);display:grid;place-items:center;animation:pop .55s var(--spring) both"><${Icono} n="check" t=${36} g=${2.8} c="#0b0a14" /></span>
-    <div class="tarjeta"><div class="tarjeta-tit"><span class="sub">Encendido para ${R ? R.n.toLowerCase() : 'ti'}</span></div><div class="pila" style="gap:10px">
-      ${[['carrito', 'Vender y cobrar con ' + pays.slice(0, 2).join(', ') + (pays.length > 2 ? ' y más' : '')], ['personas', 'Clientes, gastos y cierre del día']].concat(MODULOS.filter(m => mods[m.k]).map(m => [m.i, m.n])).map((m, k) => html`
-        <div class="fila entra" style=${{ '--i': 3 + k, gap: '12px' }}><span class="ic t-ver" style="width:32px;height:32px;border-radius:10px"><${Icono} n=${m[0]} t=${16} g=${2.2} /></span><b style="font-size:14px;font-weight:600;line-height:1.35;min-width:0">${m[1]}</b></div>`)}
-    </div></div>
-    <div class="tarjeta"><div class="tarjeta-tit"><span class="sub">Apagado por ahora</span></div>
-      <div class="chips">${MODULOS.filter(m => !mods[m.k]).map(m => html`<span class="chip chico" style="cursor:default;color:var(--muted)"><${Icono} n=${m.i} t=${13} />${m.n}</span>`)}</div>
-      <span class="sub faint" style="display:block;margin-top:10px;font-size:12px;line-height:1.4">Si lo necesitas, lo activas en Ajustes → Funciones con un toque.</span></div>
-    <div class="tarjeta" style="padding:4px 16px"><${Interruptor} on=${ejemplo} onCambio=${setEjemplo} titulo="Llenar con un mes de ventas de ejemplo" sub="Para probar. Trae dos empleados de prueba: Carla (encargada, PIN 1111) y Luis (cajero, PIN 2222)." /></div>
+  if (paso === 'listo') cuerpo = html`<div class="pila" style="gap:12px">
+    <div class="tarjeta" style="padding:14px 16px"><span class="sub" style="display:block;margin-bottom:10px">Siempre incluido</span>
+      <div class="chips">${[['carrito', 'Vender y cobrar'], ['personas', 'Clientes'], ['dinero', 'Gastos'], ['candado', 'Cierre del día'], ['grafico', 'Reportes']].map(x => html`<span class="chip chico" style="cursor:default;color:var(--ink)"><${Icono} n=${x[0]} t=${14} c="var(--in)" />${x[1]}</span>`)}</div></div>
+    <${ListaFunciones} on=${mods} reco=${R ? R.mods : []} rubroN=${R ? R.n : ''} onCambio=${(m, v) => pon({ mods: Object.assign({}, c.mods, { [m.k]: v }) })} />
+    ${demo && html`<div class="tarjeta" style="padding:4px 16px"><${Interruptor} on=${ejemplo} onCambio=${setEjemplo} titulo="Llenar con un mes de ventas de ejemplo" sub="Solo para mostrar la app: trae ventas, clientes y dos empleados inventados (Carla, PIN 1111, y Luis, PIN 2222)." /></div>`}
   </div>`;
 
   return marco(html`

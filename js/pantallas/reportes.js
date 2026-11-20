@@ -4,6 +4,7 @@ import { useApp } from '../ctx.js';
 import { resumen, serieDias, gastosEntre, inicioDia, leer, gastoAlt, gastoEur, vigentes } from '../datos.js';
 import { Barras, Linea, Reparto, BarrasH, Monto, color } from '../graficos.js';
 import { Icono, Chips, avisar, fechaCorta, iniciales, TONOS } from '../ui.js';
+import { Vacio } from './empezar.js';
 import { inicioMes } from './gastos.js';
 
 const DIA = 86400000;
@@ -38,7 +39,7 @@ export function ventasCSV(desde, hasta) {
 }
 
 export function Reportes() {
-  const { S, P, D, E, T, tel, suc, abrir } = useApp();
+  const { S, P, D, E, T, tel, suc, abrir, ir } = useApp();
   const [per, setPer] = useState(30);
   // Venezuela y Argentina: ver los números en la otra moneda con la tasa del día de cada venta (si no, la inflación engaña).
   const [mon, setMon] = useState('p');
@@ -89,7 +90,7 @@ export function Reportes() {
   if (T.mod('comisiones')) vigentes().filter(v => v.t >= desde && v.t < hasta && (!suc || v.suc === suc)).forEach(v => { const k = v.pro || v.por || ''; const x = porPro[k] || (porPro[k] = { n: 0, v: 0 }); x.n++; x.v += v.total; });
   const comisiones = S.perfiles.filter(p => porPro[p.id]).map(p => ({ p, n: porPro[p.id].n, v: porPro[p.id].v, pct: p.com != null ? p.com : 40 })).sort((a, b) => b.v - a.v);
   const bloques = {
-    linea: html`<section class="tarjeta entra llena" style="--i:4"><div class="tarjeta-tit">Ventas por día<span class="sub">${r.n} ventas · ticket ${D.m(r.ticket)}</span></div>
+    linea: html`<section class="tarjeta entra llena" style="--i:4"><div class="tarjeta-tit">Ventas por día<span class="sub">${r.n} ${r.n === 1 ? 'venta' : 'ventas'} · ticket ${D.m(r.ticket)}</span></div>
       ${(alt || enEur) && html`<span class="sub" style="display:block;margin:-6px 0 8px">En ${enEur ? 'euros' : simb2}, con la tasa de cada día</span>`}
       <${Linea} key=${dias + suc + mon} datos=${serie.map(d => ({ l: fechaCorta(d.t), v: alt ? d.totalAlt : enEur ? d.totalEur : d.total, tip: fm(alt ? d.totalAlt : enEur ? d.totalEur : d.total) }))} alto=${tel ? 170 : 220} id=${'rep' + dias} etiquetas=${tel ? 4 : 7} llenar=${!tel} /></section>`,
     resultado: html`<section class="tarjeta entra llena" style="--i:5"><div class="tarjeta-tit">De lo que vendes, te queda<b class="num in" style="font-size:14px">${r.total ? Math.round(real / r.total * 100) : 0} %</b></div>
@@ -106,12 +107,14 @@ export function Reportes() {
     comisiones: comisiones.length ? html`<section class="tarjeta entra" style="--i:9;padding-bottom:6px"><div class="tarjeta-tit">Comisiones del período<span class="sub">toca para cambiar el %</span></div>
       <div class="lista">${comisiones.map((x, i) => html`<button type="button" class="item toca" key=${x.p.id} style="color:var(--ink)" onClick=${() => abrir('perfil', { pid: x.p.id })}>
         <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(x.p) % 5]} style="width:36px;height:36px;font-size:12px">${iniciales(x.p.n)}</span>
-        <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px">${x.p.n}</b><span class="sub">${x.n} ventas · ${D.m(x.v)}</span></span>
+        <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px">${x.p.n}</b><span class="sub">${x.n} ${x.n === 1 ? "venta" : "ventas"} · ${D.m(x.v)}</span></span>
         <span style="display:flex;flex-direction:column;align-items:flex-end"><b class="num in" style="font-size:15px">${D.m(x.v * x.pct / 100)}</b><span class="sub">${x.pct} %</span></span></button>`)}</div></section>` : null,
     sucursales: E && !suc ? html`<section class="tarjeta entra" style="--i:9"><div class="tarjeta-tit">Por sucursal</div>
       <${BarrasH} datos=${S.negocio.sucursales.map((s, i) => ({ n: s, v: r.porSuc[s] || 0, txt: D.m(r.porSuc[s] || 0), c: color(i) }))} /></section>` : null
   };
 
+  // Cuenta nueva: todavía no hay nada que medir.
+  if (!S.ventas.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Reportes</h1></div>` : null}<${Vacio} i="grafico" t="Aquí verás cómo te va" s="Cuando empieces a vender: cuánto vendes cada día, lo que más se vende, tu ganancia real después de gastos y tus mejores horas.">${S.productos.length ? html`<button type="button" class="btn2 lleno toca" onClick=${() => ir('vender')}>Hacer una venta</button>` : null}</${Vacio}>`;
   if (tel) return html`
     <div class="fila entra"><h1 class="titulo crece">Reportes</h1>${Acciones}</div>
     <div class="fila" style="gap:8px;flex-wrap:wrap"><${Chips} opciones=${PERIODOS} valor=${per} onCambio=${setPer} chico /><span style="flex:1"></span>${Moneda}</div>

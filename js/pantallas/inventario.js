@@ -5,6 +5,7 @@ import { bajoMinimo, bajoMeta, resumen, inicioDia, listaProductos, promosVigente
 import { verQ } from '../carrito.js';
 import { BarrasH, Reparto, color } from '../graficos.js';
 import { Chips, Icono, TONOS, avisar, FotoProd } from '../ui.js';
+import { CatalogoVacio } from './empezar.js';
 import { FiltroGrupos, filtrarGrupo, textosProducto, grupoDe, colorGrupo, suaveGrupo } from './grupos.js';
 import { buscar, parecidos } from '../buscar.js';
 
@@ -32,16 +33,20 @@ export function Inventario() {
     const Lista = html`<div class="pila" data-tour="productos">${NoHay(servicios, listaProductos())}${servicios.map((p, i) => { const x = mes.porProd[p.id] || { q: 0, v: 0 }; return html`
       <button type="button" key=${p.id} class="tarjeta fila toca entra" style=${{ '--i': i, border: 0, color: 'var(--ink)', textAlign: 'left' }} onClick=${() => editarP({ pid: p.id })}>
         ${FotoProd(p, 0, html`<span class=${'ic ' + TONOS[i % 5]} style="font-size:12px;font-weight:700">${p.ab}</span>`)}
-        <span class="crece" style="display:flex;flex-direction:column;gap:2px"><b style="font-size:14px;font-weight:600">${p.n}</b><span class="sub">${p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min'} · ${x.q} este mes</span></span>
+        <span class="crece" style="display:flex;flex-direction:column;gap:2px"><b style="font-size:14px;font-weight:600">${p.n}</b><span class="sub">${p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min'}${x.q ? ' · ' + x.q + ' este mes' : ''}</span></span>
         <b class="num">${D.m(p.p)}</b>
       </button>`; })}</div>`;
     const Graf = html`<section class="tarjeta entra"><div class="tarjeta-tit">Lo que más te dejan<span class="sub">30 días</span></div>
       <${BarrasH} datos=${top.slice(0, 6).map(t => ({ n: t.n, v: t.v, txt: D.m(t.v), sub: t.q + ' veces' }))} /></section>`;
+    const Graf2 = top.length ? Graf : null;
+    if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1></div>` : null}<${CatalogoVacio} />`;
     if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1>${pp && html`<button type="button" class="btn2 chico acento toca" onClick=${() => editarP({})}>+ Agregar</button>`}</div>
-      <span class="sub" style="margin-top:-6px">Con su precio y lo que dura. La agenda de citas llega en la Fase 2.</span>${Buscador}${Lista}${Graf}`;
-    return html`<div class="dos-uno"><div class="pila"><div class="fila"><span class="sub crece">La agenda de citas llega en la Fase 2.</span>${pp && html`<button type="button" class="btn2 lleno toca" onClick=${() => editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}>+ Servicio</button>`}</div>${Buscador}${Lista}</div>${Graf}</div>`;
+      <span class="sub" style="margin-top:-6px">Con su precio y lo que dura.</span>${Buscador}${Lista}${Graf2}`;
+    return html`<div class="dos-uno"><div class="pila"><div class="fila"><span class="sub crece">Con su precio y lo que dura.</span>${pp && html`<button type="button" class="btn2 lleno toca" onClick=${() => editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}>+ Servicio</button>`}</div>${Buscador}${Lista}</div>${Graf2}</div>`;
   }
 
+  // Cuenta nueva: sin productos todavía.
+  if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Inventario</h1></div>` : null}<${CatalogoVacio} />`;
   const conStock = listaProductos().filter(p => p.q != null);
   // Servicios dentro de una tienda (mano de obra, instalación…): no llevan existencia.
   const servicios = elegir(listaProductos().filter(p => p.q == null));

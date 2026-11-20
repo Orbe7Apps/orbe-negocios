@@ -10,6 +10,7 @@ import { FilaVenta } from './hojas.js';
 import { OfertaRecorrido } from '../recorrido.js';
 import { OrdenesHoy } from './ordenes.js';
 import { CitasHoy, citasDelDia } from './agenda.js';
+import { PrimerosPasos } from './empezar.js';
 
 const DIA = 86400000;
 
@@ -23,6 +24,8 @@ export function Hoy() {
   const r = resumen(hoy0, hoy0 + DIA, suc), ayer = resumen(hoy0 - DIA, Date.now() - DIA, suc);
   const semana = serieDias(7, suc), mes = serieDias(30, suc);
   const meta = semana.slice(0, 6).reduce((a, d) => a + d.total, 0) / 6 || 1;
+  // Sin ventas en los días anteriores no hay promedio con qué comparar: el anillo no se muestra.
+  const conHist = semana.slice(0, 6).some(d => d.total > 0);
   const vs = ayer.total ? Math.round((r.total / ayer.total - 1) * 100) : 0;
   const deben = deudores().filter(c => c.deuda > 0), debenTot = deben.reduce((a, c) => a + c.deuda, 0);
   const pp = porPagar(), ppTot = pp.reduce((a, g) => a + g.v, 0);
@@ -48,7 +51,8 @@ export function Hoy() {
     if (n) pendientes.push({ i: 'check', t: 't-azu', txt: n + (n === 1 ? ' pago por verificar' : ' pagos por verificar') + ' con el banco', sub: 'Sube el estado de cuenta y Orbe los busca', go: () => abrir('conciliar') }); }
   // Caja sin fondo: se sugiere anotar con cuánto efectivo se empieza (no obliga).
   if (T.mod('caja') && !cierre && !cajaAbierta() && puede('vender') && S.negocio.pays.some(m => /Efectivo/.test(m))) pendientes.push({ i: 'billete', t: 't-vio', txt: 'Abre la caja', sub: 'Anota con cuánto efectivo empiezas para que el cierre cuadre', go: () => abrir('movCaja', { tipo: 'fondo' }) });
-  if (puede('cierre')) pendientes.push(cierre ? { i: 'check', t: 't-ver', txt: 'Día cerrado', sub: 'Cerraste a las ' + hora(cierre.t), go: null } : { i: 'candado', t: 't-ver', txt: 'Cierre del día', sub: 'Cuenta la caja cuando cierres', go: () => abrir('cierre') });
+  // El cierre solo tiene sentido si hubo movimiento hoy (en una cuenta nueva sería ruido).
+  if (puede('cierre') && (r.n > 0 || cajaAbierta() || cierre)) pendientes.push(cierre ? { i: 'check', t: 't-ver', txt: 'Día cerrado', sub: 'Cerraste a las ' + hora(cierre.t), go: null } : { i: 'candado', t: 't-ver', txt: 'Cierre del día', sub: 'Cuenta la caja cuando cierres', go: () => abrir('cierre') });
 
   // Órdenes: las atrasadas y las que se entregan hoy van a «Para hacer hoy».
   if (puede('ordenes') && T.mod('ordenes')) {
@@ -99,7 +103,7 @@ export function Hoy() {
           ${ayer.total > 0 && html`<span class="hero-vs" style=${{ background: vs >= 0 ? 'rgba(61,220,159,.2)' : 'rgba(255,107,139,.2)', color: vs >= 0 ? '#7ff0c3' : '#ffb0bd' }}>${vs >= 0 ? '+' : ''}${vs} % vs ayer</span>`}
         </span>
       </span>
-      <span class="hero-anillo"><${Anillo} p=${r.total / meta} tam=${tel ? 72 : 64} c="#3ddc9f">${Math.round(r.total / meta * 100)}%</${Anillo}><span class="sub" style="font-size:11px">de tu promedio</span></span>
+      ${conHist && html`<span class="hero-anillo"><${Anillo} p=${r.total / meta} tam=${tel ? 72 : 64} c="#3ddc9f">${Math.round(r.total / meta * 100)}%</${Anillo}><span class="sub" style="font-size:11px">de tu promedio</span></span>`}
     </div>
     ${conBarras && html`<${Barras} datos=${horas} alto=${alto} resaltar=${ahoraH - 7} hueco=${4} colorBase="rgba(255,255,255,.26)" colorRes="#3ddc9f" />`}
     ${tel && html`<div class="hero-kpis">${kpis.map(k => html`<button type="button" class="toca" disabled=${!k[3]} onClick=${k[3] || undefined}><span class="sub" style="font-size:11px">${k[0]}</span><b class=${'num ' + k[2] + (k[1].length > 8 ? ' largo' : '')}>${k[1]}</b></button>`)}</div>`}
@@ -113,7 +117,8 @@ export function Hoy() {
       </button>
       <span class="pildora" style=${{ background: enLinea ? 'var(--in-soft)' : 'var(--amber-soft)', color: enLinea ? 'var(--in-text)' : 'var(--amber-text)' }}><span class="punto"></span>${enLinea ? 'En línea' : 'Sin internet'}</span>
     </header>
-    <${OfertaRecorrido} />
+    ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
+    <${PrimerosPasos} />
     ${E && html`<div class="chips desliza">${[''].concat(S.negocio.sucursales).map(x => html`<button type="button" class=${'chip chico toca' + (suc === x ? ' on' : '')} onClick=${() => setSuc(x)}>${x || 'Todas'}</button>`)}</div>`}
     ${Hero(true, 64)}
     ${T.mod('agenda') && html`<${CitasHoy} max=${3} />`}
@@ -122,12 +127,13 @@ export function Hoy() {
 
   // ---------- computadora ----------
   return html`
-    <${OfertaRecorrido} />
+    ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
+    <${PrimerosPasos} />
     <div class="panel-cifras">
       ${Hero(true, 48)}
       ${kpis.map((k, i) => html`<button type="button" class="tarjeta cifra entra toca" style=${{ '--i': i + 1, border: 0, textAlign: 'left', color: 'var(--ink)', cursor: k[3] ? 'pointer' : 'default' }} onClick=${k[3] || undefined}><span class="sub">${k[0]}${i === 0 ? ' de hoy' : ''}</span><b class=${'v num ' + ({ 'v-verde': 'in', 'v-ambar': 'amber', 'v-rojo': 'out' }[k[2]] || '')}>${k[1]}</b><span class="sub faint">${i === 0 ? (r.total ? Math.round(r.ganancia / r.total * 100) + ' % de lo vendido' : 'sin ventas todavía') : i === 1 ? deben.length + (deben.length === 1 ? ' cliente' : ' clientes') : puede('gastos') ? pp.length + (pp.length === 1 ? ' cuenta' : ' cuentas') + (pp[0] ? ' · ' + venceTxt(pp[0].vence).toLowerCase() : '') : 'anotado a clientes'}</span></button>`)}
     </div>
-    <div class="dos-uno">
+    ${!S.ventas.length ? html`<div class="entra" style="--i:4">${Pendientes}</div>` : html`<div class="dos-uno">
       <section class="tarjeta entra llena" style="--i:4">
         <div class="tarjeta-tit">Ventas de los últimos ${E && !suc ? '14' : '30'} días<button type="button" class="enlace-tasa toca" onClick=${() => ir('reportes')}>Reportes →</button></div>
         ${E && !suc
@@ -144,7 +150,7 @@ export function Hoy() {
           </div>`; })()}
       </section>
       <div class="entra" style="--i:5">${Pendientes}</div>
-    </div>
+    </div>`}
     ${(() => { const celdas = [T.mod('agenda') && html`<${CitasHoy} max=${5} />`, puede('ordenes') && T.mod('ordenes') && html`<${OrdenesHoy} pc />`, Recientes].filter(Boolean);
       return html`<div class=${celdas.length > 2 ? 'tres estira' : 'mitades'}>${celdas.map((x, i) => html`<div class="entra" style=${{ '--i': 6 + i }}>${x}</div>`)}</div>`; })()}`;
 }

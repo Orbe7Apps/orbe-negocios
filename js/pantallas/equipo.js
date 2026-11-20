@@ -8,7 +8,9 @@ import { Reparto, color } from '../graficos.js';
 import { Icono, Chips, iniciales, TONOS, avisar, hace } from '../ui.js';
 
 export function Equipo() {
-  const { S, D, E, tel, abrir, yo, puede } = useApp();
+  const { S, D, E, T, tel, abrir, yo, puede } = useApp();
+  // Si una función está apagada (fiado, órdenes, inventario), su permiso no se muestra.
+  const DEP = { fiado: 'fiado', ordenes: 'ordenes', reponer: 'inventario' }, visible = pm => (pm.k !== 'tasas' || D.dual) && (!DEP[pm.k] || T.mod(DEP[pm.k]));
   const roles = S.roles;
   const editables = roles.filter(r => !r.fijo);
   const [rolSel, setRolSel] = useState(editables[0] ? editables[0].id : '');
@@ -23,7 +25,7 @@ export function Equipo() {
   };
 
   const Personas = html`<section class="tarjeta entra" style="padding-bottom:6px">
-    <div class="tarjeta-tit">${S.perfiles.filter(p => !p.inactivo && !p.borrado).length} personas<button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('perfil', {})}>+ Perfil</button></div>
+    <div class="tarjeta-tit">${(n => n + (n === 1 ? ' persona' : ' personas'))(S.perfiles.filter(p => !p.inactivo && !p.borrado).length)}<button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('perfil', {})}>+ Perfil</button></div>
     <div class="lista">${S.perfiles.map((p, i) => p.borrado ? null : (() => { const rr = rolDe(S, p), puedo = p.id === yo.id || puedeEditarRol(yo, p.rol); return html`
       <button type="button" key=${p.id} class="item toca entra" style=${{ '--i': i, color: 'var(--ink)', opacity: p.inactivo ? 0.5 : 1, cursor: puedo ? 'pointer' : 'default' }} onClick=${() => puedo ? abrir('perfil', { pid: p.id }) : avisar('Solo el dueño puede cambiar este perfil')}>
         <span class=${'logo redondo ' + TONOS[i % 5]} style="width:40px;height:40px;font-size:14px">${iniciales(p.n)}</span>
@@ -42,7 +44,7 @@ export function Equipo() {
     <span class="sub" style="display:block;margin:-4px 0 10px">Toca para dar o quitar un permiso. El dueño siempre puede todo.</span>
     <div style="overflow-x:auto"><table class="matriz">
       <thead><tr><th>Permiso</th>${roles.map(rl => html`<th>${rl.n}</th>`)}</tr></thead>
-      <tbody>${PERMISOS.map(pm => html`<tr key=${pm.k}><td><span class="fila" style="gap:8px"><span class="simb-c" style="--c:var(--c1)"><${Icono} n=${pm.i} t=${14} /></span>${pm.n}</span></td>
+      <tbody>${PERMISOS.filter(visible).map(pm => html`<tr key=${pm.k}><td><span class="fila" style="gap:8px"><span class="simb-c" style="--c:var(--c1)"><${Icono} n=${pm.i} t=${14} /></span>${pm.n}</span></td>
         ${roles.map(rl => { const on = rl.fijo || !!rl.p[pm.k], bloq = rl.fijo || !puedeEditarRol(yo, rl.id) || !puedeEditarPermiso(yo, pm.k); return html`<td><button type="button" class=${'permiso-btn toca ' + (on ? 'on' : 'off')} role="switch" aria-checked=${on ? 'true' : 'false'} aria-label=${pm.n + ' · ' + rl.n} title=${bloq ? (rl.fijo ? 'El dueño siempre puede todo' : 'Solo el dueño puede cambiar esto') : ''} style=${{ opacity: bloq ? 0.55 : 1 }} onClick=${() => tocar(rl, pm.k, on)}><${Icono} n=${on ? 'check' : 'menos1'} t=${15} g=${2.8} /></button></td>`; })}
       </tr>`)}</tbody>
     </table></div>
@@ -52,7 +54,7 @@ export function Equipo() {
   const PorRol = rolActual ? html`<section class="tarjeta entra" style="--i:1">
     <div class="tarjeta-tit">Qué puede hacer cada rol<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('rol')}>+ Rol</button></div>
     <${Chips} opciones=${editables.map(x => ({ v: x.id, n: x.n }))} valor=${rolActual.id} onCambio=${setRolSel} desliza chico />
-    <div class="lista" style="margin-top:8px">${PERMISOS.map(pm => { const on = !!rolActual.p[pm.k], bloq = !puedeEditarRol(yo, rolActual.id) || !puedeEditarPermiso(yo, pm.k); return html`
+    <div class="lista" style="margin-top:8px">${PERMISOS.filter(visible).map(pm => { const on = !!rolActual.p[pm.k], bloq = !puedeEditarRol(yo, rolActual.id) || !puedeEditarPermiso(yo, pm.k); return html`
       <button type="button" key=${rolActual.id + pm.k} class="item toca" role="switch" aria-checked=${on ? 'true' : 'false'} style=${{ color: 'var(--ink)', opacity: bloq ? 0.6 : 1 }} onClick=${() => tocar(rolActual, pm.k, on)}>
         <span class="simb-c" style=${{ '--c': on ? 'var(--in)' : 'var(--faint)', width: '32px', height: '32px' }}><${Icono} n=${pm.i} t=${16} /></span>
         <span class="crece" style="font-size:14px">${pm.n}${pm.principal ? html`<span class="sub faint" style="display:block;font-size:11px">Lo tienen las cuentas principales</span>` : null}</span>

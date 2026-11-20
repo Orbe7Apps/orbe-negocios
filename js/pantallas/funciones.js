@@ -3,10 +3,24 @@ import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { cambiarNegocio } from '../datos.js';
 import { RUBROS, MODULOS, rubro, adivinarRubro } from '../rubros.js';
-import { Hoja, Icono, Interruptor, avisar } from '../ui.js';
+import { Hoja, Icono, avisar } from '../ui.js';
 
 const TONO = { vio: 't-vio', amb: 't-amb', ver: 't-ver', ros: 't-ros', azu: 't-azu' };
-const GRUPOS = ['Productos', 'Clientes y atención', 'Ventas y caja'];
+// Lista de funciones con su interruptor: primero las recomendadas para el rubro y después las demás.
+// Se usa al crear la cuenta y en Ajustes → Funciones.
+export function ListaFunciones({ on, onCambio, reco = [], rubroN = '' }) {
+  const Fila = (m, k) => { const si = !!on[m.k]; return html`
+    <button type="button" key=${m.k} role="switch" aria-checked=${si ? 'true' : 'false'} class=${'funcion-op toca entra' + (si ? ' on' : '')} style=${{ '--i': k }} onClick=${() => onCambio(m, !si)}>
+      <span class="ic funcion-ic"><${Icono} n=${m.i} t=${17} /></span>
+      <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${m.n}</b><span class="sub">${m.d}</span></span>
+      <span class=${'inter' + (si ? ' on' : '')}></span>
+    </button>`; };
+  const recos = MODULOS.filter(m => reco.includes(m.k)), otras = MODULOS.filter(m => !reco.includes(m.k));
+  return html`<div class="pila" style="gap:6px">
+    ${recos.length > 0 && html`<span class="titulo-funciones">Recomendado${rubroN ? ' para ' + rubroN.toLowerCase() : ''}</span>${recos.map(Fila)}`}
+    <span class="titulo-funciones">${recos.length ? 'Más funciones que puedes activar' : 'Funciones'}</span>${otras.map((m, k) => Fila(m, k + recos.length))}
+  </div>`;
+}
 
 export function Funciones() {
   const { S, T, abrir } = useApp();
@@ -21,14 +35,8 @@ export function Funciones() {
       <span class="crece" style="display:flex;flex-direction:column;gap:2px"><span class="sub">Rubro</span><b style="font-size:15px">${T.n}</b></span>
       <span class="btn2 chico acento">Cambiar</span>
     </button>
-    <span class="sub" style="display:block;margin:12px 0 4px;line-height:1.45">Enciende solo lo que usas: lo apagado no aparece en la app. Tus datos no se borran al apagar algo.</span>
-    ${GRUPOS.map(g => html`<div class="grupo-funciones">
-      <small>${g}</small>
-      ${MODULOS.filter(m => m.g === g).map(m => html`<div class="funcion-fila">
-        <span class=${'ic ' + (T.mod(m.k) ? 't-ver' : '')} style="width:34px;height:34px;border-radius:11px;flex:none;${T.mod(m.k) ? '' : 'background:var(--fill2);color:var(--muted)'}"><${Icono} n=${m.i} t=${17} /></span>
-        <div class="crece"><${Interruptor} on=${T.mod(m.k)} onCambio=${v => poner(m, v)} titulo=${R && R.mods.includes(m.k) ? html`${m.n}<span class="pildora t-ver mini">Recomendado</span>` : m.n} sub=${m.d} /></div>
-      </div>`)}
-    </div>`)}`;
+    <span class="sub" style="display:block;margin:12px 0 4px;line-height:1.45">Enciende solo lo que usas: lo apagado no aparece en la app y tus datos no se borran.</span>
+    <${ListaFunciones} on=${T.mods} onCambio=${poner} reco=${R ? R.mods : []} rubroN=${R ? R.n : ''} />`;
 }
 
 // Hoja para cambiar el rubro: se encienden sus funciones recomendadas; productos y ventas no cambian.
