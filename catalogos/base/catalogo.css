@@ -102,3 +102,46 @@ dialog.hoja::backdrop { background: rgba(20,12,16,.45); }
 .principal.wa { background: var(--wa); color: var(--wa-ink); display: flex; justify-content: center; gap: 10px; align-items: center; }
 .mensaje { white-space: pre-wrap; background: #dcf8c6; color: #10221a; border-radius: 14px; padding: 14px; font-size: 14px; }
 .nota-prueba { font-size: 13.5px; color: var(--muted); }
+
+/* ---------- Estilo 2 (más visual) ---------- */
+:root { --titulo: var(--letra); }
+.cabecera { position: relative; overflow: hidden; padding-block: calc(30px + env(safe-area-inset-top)) 22px; border-radius: 0 0 28px 28px; }
+.cabecera::before { content: ""; position: absolute; inset: 0; opacity: .14; background-image: radial-gradient(#fff 1.4px, transparent 1.6px); background-size: 18px 18px; -webkit-mask: linear-gradient(200deg, #000 10%, transparent 70%); mask: linear-gradient(200deg, #000 10%, transparent 70%); }
+.cabecera .envoltura { position: relative; }
+.cab-in { align-items: center; }
+.logo { width: 76px; height: 76px; font-size: 26px; background: #fff; color: var(--marca); box-shadow: 0 0 0 4px rgba(255,255,255,.28), 0 12px 24px -12px rgba(0,0,0,.4); font-family: var(--titulo); }
+.cabecera h1 { font-family: var(--titulo); font-size: 30px; letter-spacing: -.01em; }
+.cabecera .datos { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-top: 16px; }
+.datos::-webkit-scrollbar { display: none; }
+.dato { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.dato i { font-style: normal; }
+.barra { background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.cat[aria-pressed="true"] { background: var(--marca); color: var(--marca-ink); box-shadow: 0 8px 18px -10px var(--marca); }
+.seccion h2 { font-family: var(--titulo); font-size: 21px; display: flex; align-items: center; gap: 8px; }
+.seccion h2 small { font: 700 12px var(--letra); color: var(--marca); background: color-mix(in srgb, var(--marca) 12%, transparent); border-radius: 999px; padding: 2px 9px; }
+.prod { border-radius: 22px; padding: 10px; gap: 14px; }
+.foto { width: 104px; height: 104px; border-radius: 18px; }
+.precio { font-size: 16.5px; }
+.agregar { display: inline-flex; align-items: center; gap: 6px; background: color-mix(in srgb, var(--marca) 12%, var(--surface)); color: var(--marca); padding: 9px 14px 9px 10px; }
+.agregar i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: var(--marca); color: var(--marca-ink); display: grid; place-items: center; font-size: 16px; line-height: 1; }
+.contador { background: var(--marca); color: var(--marca-ink); }
+.contador button { background: rgba(255,255,255,.2); }
+/* Lo más pedido */
+.destacados h2 small { background: none; padding: 0; font-size: 16px; }
+.carrusel { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left))); padding: 4px max(16px, env(safe-area-inset-left)) 12px; }
+.carrusel::-webkit-scrollbar { display: none; }
+.grande { flex: 0 0 200px; scroll-snap-align: start; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 10px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--sombra); }
+.grande .foto { width: 100%; height: 150px; border-radius: 18px; font-size: 48px; }
+.grande-info { display: flex; flex-direction: column; gap: 2px; padding: 0 4px; }
+.grande-info b { font-size: 15px; line-height: 1.25; }
+.grande .agregar, .grande .contador { align-self: stretch; justify-content: center; }
+.grande .contador { justify-content: space-between; }
+/* Botón del pedido */
+.flotante button { padding: 12px 18px 12px 12px; }
+.flotante .bolsa { position: relative; width: 40px; height: 40px; border-radius: 13px; background: rgba(255,255,255,.18); display: grid; place-items: center; font-size: 19px; }
+.flotante .bolsa i { font-style: normal; }
+.flotante .bolsa b { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: #fff; color: var(--wa); font-size: 12px; display: grid; place-items: center; }
+.flotante .ver { flex: 1; text-align: left; }
+/* En la lista, el botón es solo un "+" para dejarle espacio al nombre */
+.prod .agregar { width: 46px; height: 46px; padding: 0; justify-content: center; font-size: 0; background: var(--marca); box-shadow: 0 10px 18px -10px var(--marca); }
+.prod .agregar i { width: auto; height: auto; background: none; font-size: 26px; font-weight: 600; }

@@ -7,6 +7,7 @@ window.NEGOCIO = {
   iniciales: 'DH',
   logo: '',                     // enlace a la imagen del logo; vacío = iniciales
   color: '#c2335a',             // color de la marca
+  letraTitulo: 'Fraunces',      // letra de Google Fonts para títulos (opcional)
   whatsapp: '',                 // número con código de país, solo dígitos (ej. 573001234567); vacío = muestra
   horario: 'Martes a domingo · 9:00 a 18:00',
   aviso: 'Las tortas se piden con 1 día de anticipación.',
