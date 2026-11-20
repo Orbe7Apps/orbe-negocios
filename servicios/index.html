@@ -466,6 +466,8 @@ footer a { color: var(--ink); }
 .portada .etiqueta-viva { color: #0b0a14; }
 /* Burbujas de los gráficos como antes */
 .chip-flota { --luz: #efeefe; --luz2: #b9b5d9; }
+/* El iframe del teléfono va a su tamaño real (sin scale): iOS dibuja mal los iframes escalados. La página de adentro se achica sola con zoom. */
+.tel-vivo iframe { width: 100% !important; height: 100% !important; transform: none !important; }
 </style>
 </head>
 <body class="no-js">
