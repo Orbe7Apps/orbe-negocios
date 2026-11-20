@@ -48,7 +48,7 @@ export function Agenda() {
 
   const Dias = html`<div class="chips desliza dias-agenda" role="tablist" aria-label="Día">${dias.map(t => { const n = citasDelDia(S, t).filter(citaActiva).length; return html`
     <button type="button" key=${t} role="tab" aria-selected=${t === dia ? 'true' : 'false'} class=${'dia-chip toca' + (t === dia ? ' on' : '')} onClick=${() => setDia(t)}>
-      <small>${nombreDia(t)}</small><b class="num">${new Date(t).getDate()}</b><i class=${n ? 'con' : ''}>${n || ''}</i>
+      <small>${nombreDia(t)}</small><b class="num">${new Date(t).getDate()}</b><i class=${n ? 'con' : ''} title=${n ? n + (n === 1 ? ' cita' : ' citas') : ''}>${n || ''}</i>
     </button>`; })}</div>`;
   const Resumen = html`<div class="fila entra" style="gap:8px;flex-wrap:wrap">
     <span class="sub crece">${fechaLarga(dia).replace(/^./, x => x.toUpperCase())}</span>
