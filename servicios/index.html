@@ -469,7 +469,7 @@ footer a { color: var(--ink); }
 /* El iframe del teléfono va a su tamaño real (sin scale): iOS dibuja mal los iframes escalados. La página de adentro se achica sola con zoom. */
 .tel-vivo iframe { width: 100% !important; height: 100% !important; transform: none !important; }
 /* iPhone no recorta los videos con border-radius/clip-path dentro de algo animado: la máscara y la capa propia lo obligan a recortar */
-.movil .pantallas { -webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black); transform: translateZ(0); }
+.movil .pantallas { -webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black); }
 .movil video, .movil img { border-radius: inherit; clip-path: inherit; }
 </style>
 </head>
