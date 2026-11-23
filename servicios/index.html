@@ -471,6 +471,15 @@ footer a { color: var(--ink); }
 /* iPhone no recorta los videos con border-radius/clip-path dentro de algo animado: la máscara y la capa propia lo obligan a recortar */
 .movil .pantallas { -webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black); }
 .movil video, .movil img { border-radius: inherit; clip-path: inherit; }
+/* Contacto por correo */
+.envios { display: flex; gap: 10px; flex-wrap: wrap; }
+.envios .btn { flex: 1 1 200px; justify-content: center; }
+.btn-correo { background: transparent; color: inherit; border: 1.5px solid currentColor; opacity: .9; }
+.btn-correo:hover { opacity: 1; }
+.otro-canal { font-size: .92rem; opacity: .8; margin: 12px 0 0; }
+.otro-canal a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
+.micro-correo { text-align: center; margin-top: 22px; color: var(--muted); opacity: 1; }
+footer .contactos { display: inline-flex; gap: 18px; flex-wrap: wrap; }
 </style>
 </head>
 <body class="no-js">
@@ -756,7 +765,8 @@ footer a { color: var(--ink); }
         </select>
       </label>
       <label for="detalle">Qué vendes y dónde estás<textarea id="detalle" placeholder="Ej. Tortas y postres en Medellín, hoy vendo por Instagram"></textarea></label>
-      <button class="btn btn-luz" type="submit" id="enviar">Enviar mensaje</button>
+      <div class="envios"><button class="btn btn-luz" type="submit" id="enviar">Enviar mensaje</button><button class="btn btn-correo" type="submit" id="enviar-correo">Enviar por correo</button></div>
+      <p class="otro-canal">O escríbenos directo a <a href="mailto:orbeappsoficial@gmail.com">orbeappsoficial@gmail.com</a></p>
       <p class="aviso" id="aviso" hidden></p>
     </form>
   </div>
@@ -765,7 +775,7 @@ footer a { color: var(--ink); }
 <footer>
   <div class="wrap">
     <span>© Orbe Apps · Páginas, catálogos y apps para negocios de Latinoamérica</span>
-    <a href="https://www.instagram.com/orbe.apps/" target="_blank" rel="noopener">@orbe.apps</a>
+    <span class="contactos"><a href="https://www.instagram.com/orbe.apps/" target="_blank" rel="noopener">@orbe.apps</a><a href="mailto:orbeappsoficial@gmail.com">orbeappsoficial@gmail.com</a></span>
   </div>
 </footer>
 <div class="fijo" id="fijo"><a class="btn btn-luz" href="#cotizar">Cotizar gratis</a></div>
@@ -773,7 +783,7 @@ footer a { color: var(--ink); }
 <script>
 const WHATSAPP = "";          // tu número con código de país, solo dígitos, ej. "584121234567"
 const INSTAGRAM = "orbe.apps"; // usuario de Instagram sin @
-const CORREO = "";             // opcional, tu correo de trabajo
+const CORREO = "orbeappsoficial@gmail.com"; // correo de Orbe Apps
 const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Sin zoom con dos dedos ni doble toque (iPhone ignora user-scalable=no)
 ['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
@@ -876,6 +886,11 @@ document.querySelectorAll('[data-micro]').forEach(b => b.addEventListener('click
   navigator.clipboard.writeText(texto).then(() => { aviso.textContent = 'Copiamos tu mensaje. Pégalo en el chat de Instagram que se abre ahora.'; setTimeout(abrir, 1400); },
     () => { aviso.textContent = 'Escríbenos por Instagram: ' + texto; setTimeout(abrir, 3500); });
 }));
+// Debajo de las microapps: la opción de pedirla por correo
+(() => { const av = document.getElementById('aviso-micro'); if (!av || !CORREO) return;
+  const p = document.createElement('p'); p.className = 'otro-canal micro-correo';
+  p.innerHTML = '¿No usas Instagram? Pide tu microapp por correo: <a href="mailto:' + CORREO + '?subject=' + encodeURIComponent('Quiero una microapp') + '">' + CORREO + '</a>';
+  av.before(p); })();
 
 // Formulario
 document.getElementById('enviar').textContent = WHATSAPP ? "Enviar por WhatsApp" : INSTAGRAM ? "Enviar por Instagram" : "Enviar mensaje";
@@ -887,6 +902,10 @@ document.getElementById('form').addEventListener('submit', e => {
   const detalle = document.getElementById('detalle').value.trim();
   const texto = `Hola, vi tu página. Mi negocio es ${negocio}. Me interesa: ${plan}.${detalle ? ' ' + detalle : ''}`;
   const aviso = document.getElementById('aviso');
+  if (e.submitter && e.submitter.id === 'enviar-correo' && CORREO) {
+    location.href = 'mailto:' + CORREO + '?subject=' + encodeURIComponent('Cotización: ' + plan + ' · ' + negocio) + '&body=' + encodeURIComponent(texto);
+    return;
+  }
   if (WHATSAPP) {
     location.href = 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(texto);
   } else if (INSTAGRAM) {
