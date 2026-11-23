@@ -2,76 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Reserva tu cita</title>
-<meta name="description" content="Elige el servicio y el horario, y pide tu cita por WhatsApp.">
-<meta name="theme-color" content="#0f9d6b">
-<link rel="icon" href="icono.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800">
-<link rel="stylesheet" href="../base/app.css">
-<style>:root { --c: #0ca678; --c2: #74c0fc; }
-body { padding-bottom: 40px; }
-.cab { background: transparent; color: var(--ink);  padding: calc(34px + env(safe-area-inset-top)) 0 30px; }
-.cab h1 { font-size: 28px; } .cab p { margin: 6px 0 0; opacity: .9; }
-h2 { font-size: 17px; margin: 26px 0 10px; }
-.servs { display: flex; flex-direction: column; gap: 8px; }
-.servs .fila[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--c); }
-.dias { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 4px; }
-.dias::-webkit-scrollbar { display: none; }
-.dia { flex: 0 0 62px; border: 1px solid var(--raya); background: var(--card); border-radius: 18px; padding: 9px 0; display: flex; flex-direction: column; align-items: center; }
-.dia small { font-size: 11.5px; font-weight: 800; color: var(--muted); } .dia b { font-size: 20px; font-weight: 700; }
-.dia[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); } .dia[aria-pressed="true"] small { color: inherit; opacity: .7; }
-.horas { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
-.horas .opcion { padding: 12px 0; font-size: 15px; }
-.listo { margin-top: 26px; display: flex; flex-direction: column; gap: 12px; }</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>la reserva · Orbe Apps</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://orbe7apps.github.io/orbe-apps/apps/agenda/reservar.html">
+<meta http-equiv="refresh" content="0; url=https://orbe7apps.github.io/orbe-apps/apps/agenda/reservar.html">
+<script>location.replace('https://orbe7apps.github.io/orbe-apps/apps/agenda/reservar.html' + location.search + location.hash);</script>
+<style>body{font-family:system-ui,sans-serif;background:#0b1020;color:#e8ecf5;display:grid;place-items:center;min-height:100vh;margin:0;text-align:center;padding:16px}a{color:#7dd3fc}</style>
 </head>
-<body>
-<header class="cab"><div class="envoltura"><h1 id="nombre">Reserva tu cita</h1><p>Elige el servicio y el horario. Te confirmamos por WhatsApp.</p></div></header>
-<main class="envoltura" id="app"></main>
-<p class="marca-pie">Agenda hecha con <a href="https://orbe7apps.github.io/orbe-negocios/servicios/" target="_blank" rel="noopener">Orbe Apps</a></p>
-<script>
-(function () {
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const app = document.getElementById('app');
-  let D;
-  try { const b = location.hash.slice(1).replace(/-/g, '+').replace(/_/g, '/'); D = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b), c => c.charCodeAt(0)))); } catch (e) {}
-  if (!D || !D.s || !D.w) { app.innerHTML = '<div class="vacio" style="margin-top:24px"><b>Este link no funciona</b>Pídele al negocio que te comparta su link de reservas otra vez.</div>'; return; }
-  document.getElementById('nombre').textContent = D.n; document.title = 'Reserva tu cita · ' + D.n;
-  const pad = n => String(n).padStart(2, '0');
-  const hoyISO = (() => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; })();
-  const hhmm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
-  const h12 = m => { const H = Math.floor(m / 60); return `${((H + 11) % 12) + 1}:${pad(m % 60)} ${H < 12 ? 'a. m.' : 'p. m.'}`; };
-  const dinero = n => n ? (D.m || '$') + ((D.m || '$').length > 1 ? ' ' : '') + Number(n).toLocaleString('es', { maximumFractionDigits: 2 }) : '';
-  const fecha = (f, o) => new Date(f + 'T12:00:00').toLocaleDateString('es', o).replace('.', '');
-  let sv = 0, dia = null, hora = null;
-  const ahora = new Date().getHours() * 60 + new Date().getMinutes();
-  // horarios donde cabe el servicio completo
-  const horasDe = f => { const l = new Set(D.d[f] || []), dur = D.s[sv][1]; return [...l].filter(t => (f > hoyISO || t > ahora) && Array.from({ length: Math.ceil(dur / D.p) }, (_, i) => t + i * D.p).every(x => l.has(x))).sort((a, b) => a - b); };
-  const diasOk = () => Object.keys(D.d).filter(f => f >= hoyISO && horasDe(f).length).sort();
-  function pintar() {
-    const ds = diasOk(); if (!ds.includes(dia)) { dia = ds[0] || null; hora = null; }
-    const hs = dia ? horasDe(dia) : []; if (!hs.includes(hora)) hora = null;
-    app.innerHTML = `<h2>1. Servicio</h2><div class="servs">${D.s.map((s, i) => `<button type="button" class="fila" data-s="${i}" aria-pressed="${i === sv}"><span class="info"><b>${esc(s[0])}</b><span>${s[1]} min</span></span><span class="monto">${dinero(s[2])}</span></button>`).join('')}</div>
-      <h2>2. Día</h2>${ds.length ? `<div class="dias">${ds.map(f => `<button type="button" class="dia" data-d="${f}" aria-pressed="${f === dia}"><small>${f === hoyISO ? 'hoy' : fecha(f, { weekday: 'short' })}</small><b>${+f.slice(8)}</b></button>`).join('')}</div>` : '<div class="vacio">No quedan horarios libres para este servicio esta semana. Escríbele al negocio directamente.</div>'}
-      ${dia ? `<h2>3. Hora</h2><div class="horas">${hs.map(t => `<button type="button" class="opcion" data-h="${t}" aria-pressed="${t === hora}">${hhmm(t)}</button>`).join('')}</div>` : ''}
-      <div class="listo"><label class="campo">Tu nombre<input id="cli" autocomplete="name" placeholder="Nombre y apellido" value="${esc(sessionStorage.getItem('cli') || '')}"></label>
-      <button type="button" class="btn wa ancho" id="pedir" style="padding:17px">Pedir cita por WhatsApp</button><p class="texto-ayuda" id="falta" hidden style="color:var(--mal);font-weight:700"></p></div>`;
-    app.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { sv = +b.dataset.s; pintar(); });
-    app.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { dia = b.dataset.d; hora = null; pintar(); });
-    app.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { hora = +b.dataset.h; pintar(); document.getElementById('cli').focus({ preventScroll: true }); });
-    document.getElementById('cli').oninput = e => { try { sessionStorage.setItem('cli', e.target.value); } catch (x) {} };
-    document.getElementById('pedir').onclick = () => {
-      const n = document.getElementById('cli').value.trim(), falta = document.getElementById('falta');
-      if (hora === null) { falta.textContent = 'Elige un horario.'; falta.hidden = false; return; }
-      if (!n) { falta.textContent = 'Escribe tu nombre.'; falta.hidden = false; return; }
-      const s = D.s[sv];
-      const t = `Hola 👋 Quiero reservar una cita:\n\n✂️ ${s[0]}${s[2] ? ' · ' + dinero(s[2]) : ''}\n📅 ${fecha(dia, { weekday: 'long', day: 'numeric', month: 'long' })} a las ${h12(hora)}\n🙋 ${n}\n\n¿Me la confirmas?`;
-      window.open('https://wa.me/' + D.w + '?text=' + encodeURIComponent(t), '_blank', 'noopener');
-    };
-  }
-  pintar();
-})();
-</script>
-</body>
+<body><p>Orbe Apps se mudó.<br><a href="https://orbe7apps.github.io/orbe-apps/apps/agenda/reservar.html">Abrir la reserva</a></p></body>
 </html>
