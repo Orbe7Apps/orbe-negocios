@@ -1,7 +1,9 @@
 // ¿Quién está usando Orbe? Cada persona entra con su perfil y su PIN.
 // El PIN se marca en un teclado en pantalla: el teclado del teléfono nunca se abre solo.
 import { html, useState, useEffect } from '../lib/preact-htm.js';
-import { useDatos, entrar } from '../datos.js';
+import { useDatos, entrar, pinValido, pedirPinNuevo } from '../datos.js';
+import { enlaceWA } from '../ordenpdf.js';
+import { pais } from '../paises.js';
 import { rolDe } from '../permisos.js';
 import { Icono, LogoOrbe, iniciales, TONOS, avisar } from '../ui.js';
 
@@ -33,9 +35,39 @@ export function Acceso({ tel }) {
   const [elegido, setElegido] = useState(null);
   // Un solo perfil sin PIN: entra directo.
   useEffect(() => { if (activos.length === 1 && !activos[0].pin) entrar(activos[0].id); }, []);
-  const tocar = p => { if (!p.pin) { entrar(p.id); avisar('Hola, ' + p.n.split(' ')[0]); } else setElegido(p); };
+  const tocar = p => { if (!p.pin) { entrar(p.id); avisar('Hola, ' + p.n.split(' ')[0]); } else { setElegido(p); setFallos(0); setOlvido(false); } };
   const caja = contenido => html`<div style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column;padding:calc(56px + var(--sa-top)) 22px calc(24px + var(--sa-bottom))' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
     <div class=${tel ? 'pila' : 'tarjeta pila'} style=${tel ? 'flex:1;gap:18px' : 'width:min(480px,100%);padding:32px;gap:18px;border-radius:28px'}>${contenido}</div></div>`;
+
+  // Intentos: a los 5 errores, espera de 30 s (y más si sigue fallando).
+  const [fallos, setFallos] = useState(0);
+  const [hasta, setHasta] = useState(0);
+  const [olvido, setOlvido] = useState(false);
+  const [, tic] = useState(0);
+  useEffect(() => { if (hasta <= Date.now()) return; const r = setInterval(() => { tic(x => x + 1); if (Date.now() >= hasta) clearInterval(r); }, 500); return () => clearInterval(r); }, [hasta]);
+  const espera = Math.max(0, Math.ceil((hasta - Date.now()) / 1000));
+  const probar = pin => {
+    if (espera) return false;
+    if (pinValido(elegido, pin)) { setFallos(0); entrar(elegido.id); avisar('Hola, ' + elegido.n.split(' ')[0]); return true; }
+    const n = fallos + 1; setFallos(n);
+    if (n >= 5) setHasta(Date.now() + 30000 * Math.pow(2, Math.min(4, Math.floor((n - 5) / 5))));
+    return false;
+  };
+  const dueno = S.perfiles.find(p => p.rol === 'dueno') || {}, neg = S.negocio;
+  const msg = 'Hola' + (dueno.n ? ' ' + dueno.n.split(' ')[0] : '') + ', soy ' + (elegido ? elegido.n : '') + '. Olvidé mi PIN de Orbe Negocios (' + neg.nombre + '). ¿Me pones uno nuevo? Lo cambias en Equipo, tocando mi nombre.';
+
+  if (elegido && olvido) return caja(html`
+    <button type="button" class="icono-btn toca" aria-label="Volver" onClick=${() => setOlvido(false)}><${Icono} n="atras" /></button>
+    <div class="pila entra" style="align-items:center;gap:10px;text-align:center">
+      <span style="width:72px;height:72px;border-radius:50%;background:var(--in);display:grid;place-items:center;animation:pop .5s var(--spring) both"><${Icono} n="check" t=${34} g=${2.8} c="#0b0a14" /></span>
+      <h1 style="font-size:23px">Listo, le avisamos al dueño</h1>
+      <span class="sub" style="line-height:1.45;max-width:320px">Le aparece en Orbe que necesitas un PIN nuevo. Cuando te lo dé, entras con él. Si quieres que se entere ya, mándale un mensaje:</span>
+    </div>
+    <div class="pila" style="gap:10px;margin-top:6px">
+      ${neg.tel && html`<a class="btn2 verde toca" style="min-height:50px;border-radius:25px;justify-content:center;text-decoration:none" href=${enlaceWA(neg.tel, msg, pais(neg.pais).id)} target="_blank" rel="noopener">Avisarle por WhatsApp</a>`}
+      ${neg.correo && html`<a class="btn2 toca" style="min-height:50px;border-radius:25px;justify-content:center;text-decoration:none" href=${'mailto:' + encodeURIComponent(neg.correo) + '?subject=' + encodeURIComponent('PIN nuevo en Orbe Negocios') + '&body=' + encodeURIComponent(msg)}>Avisarle por correo</a>`}
+      <button type="button" class="btn toca" onClick=${() => { setOlvido(false); setElegido(null); }}>Entendido</button>
+    </div>`);
 
   if (elegido) return caja(html`
     <button type="button" class="icono-btn toca" aria-label="Volver" onClick=${() => setElegido(null)}><${Icono} n="atras" /></button>
@@ -43,8 +75,9 @@ export function Acceso({ tel }) {
       <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(elegido) % 5]} style="width:72px;height:72px;font-size:24px">${iniciales(elegido.n)}</span>
       <h1 style="font-size:24px">Hola, ${elegido.n.split(' ')[0]}</h1><span class="sub">Escribe tu PIN</span>
     </div>
-    <div class="entra" style="--i:2;margin-top:8px"><${Teclado} onListo=${pin => { if (pin === elegido.pin) { entrar(elegido.id); avisar('Hola, ' + elegido.n.split(' ')[0]); return true; } return false; }} /></div>
-    <span class="sub faint" style="text-align:center;margin-top:auto">¿Olvidaste tu PIN? Pídele al dueño que te ponga uno nuevo.</span>`);
+    <div class="entra" style="--i:2;margin-top:8px"><${Teclado} onListo=${probar} error=${espera ? 'Demasiados intentos. Espera ' + espera + ' s' : fallos ? 'Ese no es tu PIN' + (fallos >= 3 && fallos < 5 ? ' · te quedan ' + (5 - fallos) + ' intentos' : '') : ''} /></div>
+    ${elegido.rol !== 'dueno' ? html`<button type="button" class="olvide-pin toca" style="align-self:center" onClick=${() => { pedirPinNuevo(elegido.id); setOlvido(true); }}>Olvidé mi PIN</button>`
+      : html`<span class="sub faint" style="text-align:center">¿Olvidaste tu PIN de dueño? Inicia sesión con tu correo para ponerte uno nuevo (Ajustes → Cuenta).</span>`}`);
 
   return caja(html`
     <div class="fila entra" style="gap:12px"><${LogoOrbe} t=${44} orbita /><span style="display:flex;flex-direction:column"><b style="font-size:17px">${S.negocio.nombre}</b><span class="sub">Orbe Negocios</span></span></div>

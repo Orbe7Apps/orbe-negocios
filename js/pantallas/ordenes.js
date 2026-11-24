@@ -2,6 +2,7 @@
 // se cobran con anticipo y saldo, y se mandan en PDF por WhatsApp o se imprimen.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
+import { BotonAyuda } from '../ayuda.js';
 import { ESTADOS_ORDEN, numeroOrden, anticipoDe, ordenAbierta, ordenAtrasada, nuevaOrden, editarOrden, estadoOrden, notaOrden, avisadoOrden, anticipoOrden, entregarOrden, cancelarOrden, listaProductos, listaClientes, nuevoCliente, vender } from '../datos.js';
 import { Hoja, Icono, Chips, avisar, iniciales, TONOS, hora, fechaCorta } from '../ui.js';
 import { buscar } from '../buscar.js';
@@ -81,7 +82,7 @@ export function Ordenes() {
     ${pp && !S.ordenes.length && html`<button type="button" class="btn2 lleno toca" onClick=${nueva}>+ Crear la primera orden</button>`}</div>`;
 
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Órdenes</h1>${pp && html`<button type="button" class="btn2 chico lleno toca" data-tour="nueva-orden" onClick=${nueva}>+ Nueva orden</button>`}</div>
+    <div class="fila entra"><h1 class="titulo crece">Órdenes</h1><${BotonAyuda} />${pp && html`<button type="button" class="btn2 chico lleno toca" data-tour="nueva-orden" onClick=${nueva}>+ Nueva orden</button>`}</div>
     ${Cifras}${Buscador}
     <${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} desliza chico />
     <div class="pila" data-tour="ordenes">${filtrada.length ? filtrada.map((o, i) => html`<${TarjetaOrden} key=${o.id} o=${o} i=${i} />`) : Vacio}</div>`;

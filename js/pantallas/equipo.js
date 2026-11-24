@@ -2,6 +2,7 @@
 // Solo lo ven las cuentas principales (permiso «equipo»). El dueño siempre puede todo.
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
+import { BotonAyuda } from '../ayuda.js';
 import { cambiarPermiso, resumen, inicioDia } from '../datos.js';
 import { PERMISOS, rolDe, puedeEditarRol, puedeEditarPermiso } from '../permisos.js';
 import { Reparto, color } from '../graficos.js';
@@ -63,6 +64,6 @@ export function Equipo() {
     <span class="sub faint" style="display:block;margin-top:8px">El dueño siempre puede todo. Un administrador no puede cambiar a otros administradores.</span>
   </section>` : null;
 
-  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Equipo</h1></div>${Personas}${Ventas}${PorRol}`;
+  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Equipo</h1><${BotonAyuda} /></div>${Personas}${Ventas}${PorRol}`;
   return html`<div class="dos-uno" style="align-items:start">${Matriz}<div class="pila">${Personas}${Ventas}</div></div>`;
 }

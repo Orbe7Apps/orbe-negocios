@@ -2,6 +2,7 @@
 // recordatorio por WhatsApp y cobro al terminar con los servicios ya puestos.
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
+import { BotonAyuda } from '../ayuda.js';
 import { inicioDia, listaProductos, guardarCita, estadoCita, citaActiva, ESTADOS_CITA } from '../datos.js';
 import { Hoja, Icono, avisar, hora, iniciales } from '../ui.js';
 import { totales } from './vender.js';
@@ -61,7 +62,7 @@ export function Agenda() {
     <button type="button" class="btn2 chico acento toca" onClick=${() => nueva()}>+ Agendar una cita</button></div>`;
 
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Agenda</h1><button type="button" class="icono-btn toca boton-agregar" aria-label="Nueva cita" onClick=${() => nueva({ pro })}><${Icono} n="mas1" t=${20} g=${2.6} /></button></div>
+    <div class="fila entra"><h1 class="titulo crece">Agenda</h1><${BotonAyuda} /><button type="button" class="icono-btn toca boton-agregar" aria-label="Nueva cita" onClick=${() => nueva({ pro })}><${Icono} n="mas1" t=${20} g=${2.6} /></button></div>
     ${Dias}
     ${pros.length > 1 && html`<div class="chips desliza">${[{ id: '', n: 'Todos' }].concat(pros).map(p => html`<button type="button" key=${p.id} class=${'chip chico toca' + (pro === p.id ? ' on' : '')} onClick=${() => setPro(p.id)}>${p.id && html`<i class="punto-grupo" style=${{ background: colorPro(S, p.id) }}></i>`}${p.id ? p.n.split(' ')[0] : 'Todos'}</button>`)}</div>`}
     ${Resumen}

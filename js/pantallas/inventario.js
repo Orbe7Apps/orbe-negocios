@@ -1,6 +1,7 @@
 // Inventario (tienda, comida, venta en línea) o Servicios (citas, independientes).
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
+import { BotonAyuda } from '../ayuda.js';
 import { bajoMinimo, bajoMeta, resumen, inicioDia, listaProductos, promosVigentes } from '../datos.js';
 import { verQ } from '../carrito.js';
 import { BarrasH, Reparto, color } from '../graficos.js';
@@ -39,14 +40,14 @@ export function Inventario() {
     const Graf = html`<section class="tarjeta entra"><div class="tarjeta-tit">Lo que más te dejan<span class="sub">30 días</span></div>
       <${BarrasH} datos=${top.slice(0, 6).map(t => ({ n: t.n, v: t.v, txt: D.m(t.v), sub: t.q + ' veces' }))} /></section>`;
     const Graf2 = top.length ? Graf : null;
-    if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1></div>` : null}<${CatalogoVacio} />`;
-    if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1>${pp && html`<button type="button" class="btn2 chico acento toca" onClick=${() => editarP({})}>+ Agregar</button>`}</div>
+    if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
+    if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonAyuda} />${pp && html`<button type="button" class="btn2 chico acento toca" onClick=${() => editarP({})}>+ Agregar</button>`}</div>
       <span class="sub" style="margin-top:-6px">Con su precio y lo que dura.</span>${Buscador}${Lista}${Graf2}`;
     return html`<div class="dos-uno"><div class="pila"><div class="fila"><span class="sub crece">Con su precio y lo que dura.</span>${pp && html`<button type="button" class="btn2 lleno toca" onClick=${() => editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}>+ Servicio</button>`}</div>${Buscador}${Lista}</div>${Graf2}</div>`;
   }
 
   // Cuenta nueva: sin productos todavía.
-  if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Inventario</h1></div>` : null}<${CatalogoVacio} />`;
+  if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Inventario</h1><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
   const conStock = listaProductos().filter(p => p.q != null);
   // Servicios dentro de una tienda (mano de obra, instalación…): no llevan existencia.
   const servicios = elegir(listaProductos().filter(p => p.q == null));
@@ -81,7 +82,7 @@ export function Inventario() {
     ${pp && html`<button type="button" class="btn2 acento toca" style="align-self:flex-start" onClick=${() => editarP({ svc: true })}>+ Servicio</button>`}</div>`;
 
   if (tel) return html`
-    <div class="fila entra" style="gap:8px"><h1 class="titulo crece">Inventario</h1>${pp && html`<button type="button" class="icono-btn toca boton-agregar" aria-label=${filtro === 'Servicios' ? 'Agregar servicio' : 'Agregar producto'} onClick=${() => filtro === 'Servicios' ? editarP({ svc: true }) : editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}><${Icono} n="mas1" t=${20} g=${2.6} /></button>`}</div>
+    <div class="fila entra" style="gap:8px"><h1 class="titulo crece">Inventario</h1><${BotonAyuda} />${pp && html`<button type="button" class="icono-btn toca boton-agregar" aria-label=${filtro === 'Servicios' ? 'Agregar servicio' : 'Agregar producto'} onClick=${() => filtro === 'Servicios' ? editarP({ svc: true }) : editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}><${Icono} n="mas1" t=${20} g=${2.6} /></button>`}</div>
     <label class="buscador buscador-oscuro entra"><${Icono} n="buscar" t=${17} /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + listaProductos().length} aria-label="Buscar en el inventario" />${(pp || puede('reponer')) && html`${T.mod('escaner') && html`<button type="button" class="buscador-cam toca" aria-label="Escanear con la cámara" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="camara" t=${17} /></button>`}`}</label>
     ${Herramientas}
     ${Pestañas}

@@ -8,6 +8,7 @@ import { inicioMes } from './gastos.js';
 import { descargar, ventasCSV } from './reportes.js';
 import { COND_ORDEN } from '../ordenpdf.js';
 import { Funciones } from './funciones.js';
+import { BotonAyuda, CentroAyuda } from '../ayuda.js';
 import { MODULOS } from '../rubros.js';
 import { ajustesImpresora, hayBluetooth, conectarBluetooth, olvidarBluetooth, conectada, nombreImpresora, imprimir } from '../impresora.js';
 
@@ -58,9 +59,9 @@ function useTemas() {
       ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('negocio')}><${Icono} n="lapiz" t=${14} />Cambiar datos y logo</button>`)}` },
     aj && { k: 'funciones', g: 'Tu negocio', i: 'ajustes', c: 't-ver', n: 'Funciones', r: T.n + ' · ' + MODULOS.filter(m => T.mod(m.k)).length + ' encendidas', cuerpo: () => html`<${Funciones} />` },
     puede('equipo') && tel && { k: 'equipo', g: 'Tu negocio', i: 'personas', c: 't-ver', n: 'Equipo y permisos', r: S.perfiles.filter(x => !x.inactivo && !x.borrado).length + ' personas', ir: () => ir('equipo'), solo: true },
-    aj && { k: 'locales', g: 'Tu negocio', i: 'edificio', c: 't-azu', n: 'Locales', r: n.sucursales.length === 1 ? '1 local' : n.sucursales.length + ' locales', cuerpo: () => html`
-      ${n.sucursales.length > 1 ? n.sucursales.map((x, k) => Dato('Local ' + (k + 1), x)) : html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Tienes un solo local, así que Orbe no te muestra sucursales. Si abres otro, agrégalo aquí.</p>`}
-      ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('locales')}>${n.sucursales.length > 1 ? 'Cambiar o agregar' : '+ Agregar otro local'}</button>`)}` },
+    aj && { k: 'locales', g: 'Tu negocio', i: 'edificio', c: 't-azu', n: n.escala === 'empresa' ? 'Sedes' : 'Local', r: n.sucursales.length === 1 ? (n.escala === 'empresa' ? '1 sede' : 'Un solo local') : n.sucursales.length + ' sedes', cuerpo: () => html`
+      ${n.sucursales.length > 1 ? n.sucursales.map((x, k) => Dato('Local ' + (k + 1), x)) : html`<p class="sub" style="margin:0 0 6px;line-height:1.45">${n.escala === 'empresa' ? 'Tu empresa tiene una sola sede por ahora. Agrega las demás aquí: cada una lleva su caja, sus ventas y su inventario.' : 'Un negocio tiene un solo local. Si tienes varias sedes, pasa a Empresa.'}</p>`}
+      ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('locales')}>${n.sucursales.length > 1 ? 'Cambiar o agregar' : n.escala === 'empresa' ? '+ Agregar una sede' : 'Tengo varias sedes'}</button>`)}` },
     aj && { k: 'pagos', g: 'Ventas y cobro', i: 'tarjeta', c: 't-vio', n: 'Formas de pago', r: n.pays.length + (n.pays.length === 1 ? ' activa' : ' activas') + (n.pedirRef ? ' · pide referencia' : ''), cuerpo: () => html`
       <span class="sub">Toca para activar o quitar.</span>
       <div class="chips" style="margin:8px 0 12px">${todasPays.map(x => { const on = n.pays.includes(x); return html`<button type="button" class=${'chip chico toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${() => { if (on && n.pays.length === 1) return; cambiarNegocio({ pays: on ? n.pays.filter(y => y !== x) : todasPays.filter(y => y === x || n.pays.includes(y)) }); }}>${x}</button>`; })}</div>
@@ -90,8 +91,9 @@ function useTemas() {
     aj && { k: 'registro', g: 'La app', i: 'escudo', c: 't-vio', n: 'Registro y cierres', r: (S.registro || []).length ? 'Último: ' + hace(S.registro[S.registro.length - 1].t) : 'Quién anula, devuelve o borra', cuerpo: () => html`
       ${(S.registro || []).length ? (S.registro || []).slice(-5).reverse().map(x => Dato(x.que, hace(x.t))) : html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Aquí queda anotado quién anula ventas, hace devoluciones o borra algo.</p>`}
       ${Botones(html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('registro')}>Ver todo y revisar firmas</button>`, S.cierres.length > 0 && html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('cierres')}>Cierres Z</button>`)}` },
-    { k: 'ayuda', g: 'La app', i: 'lista', c: 't-azu', n: 'Ayuda y recorrido', r: 'Qué hace cada parte y cómo se usa', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Un recorrido guiado por toda la app: qué hace cada parte y cómo se usa.</p>
-      ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${verRecorrido}>Ver el recorrido guiado</button>`, n.pasosListos && html`<button type="button" class="btn2 chico toca" onClick=${() => { cambiarNegocio({ pasosListos: false }); ir('hoy'); }}>Mostrar los primeros pasos</button>`)}` },
+    { k: 'ayuda', g: 'La app', i: 'lista', c: 't-azu', n: 'Ayuda y recorrido', r: 'Guías paso a paso y recorrido guiado', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Un recorrido guiado por toda la app: qué hace cada parte y cómo se usa.</p>
+      ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${verRecorrido}>Ver el recorrido guiado</button>`, n.pasosListos && html`<button type="button" class="btn2 chico toca" onClick=${() => { cambiarNegocio({ pasosListos: false }); ir('hoy'); }}>Mostrar los primeros pasos</button>`)}
+      <div style="margin-top:18px"><${CentroAyuda} /></div>` },
     aj && { k: 'borrar', g: 'La app', i: 'basura', c: 't-ros', n: 'Empezar de nuevo', r: 'Borra este negocio de este aparato', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Borra este negocio de este aparato para probar otro país o tipo. Antes se guarda una copia.</p>
       ${Botones(html`<button type="button" class="btn2 chico rojo toca" onClick=${() => abrir('borrar')}>Empezar de nuevo</button>`)}` }
   ].filter(Boolean);
@@ -128,7 +130,7 @@ export function Mas() {
     <div class="fila entra" style="gap:12px"><span class=${'ic ' + t.c}><${Icono} n=${t.i} t=${18} g=${2.2} /></span><h1 class="titulo crece">${t.n}</h1></div>
     <section class="tarjeta entra" style="--i:1">${t.cuerpo()}</section>`;
   return html`
-    <h1 class="titulo entra">Más</h1>
+    <div class="fila entra"><h1 class="titulo crece">Más</h1><${BotonAyuda} k="mas" /></div>
     ${GRUPOS.map((g, gi) => { const de = temas.filter(x => x.g === g); return de.length ? html`<div class="pila entra" style=${{ gap: '8px', '--i': gi }} data-tour=${g === 'Dinero' ? 'mas-acciones' : undefined}>${g && html`<h2 class="grupo-menu">${g}</h2>`}
       <section class="tarjeta menu-lista">${de.map(x => Fila(x, () => x.solo ? x.ir() : setK(x.k)))}</section></div>` : null; })}`;
 }

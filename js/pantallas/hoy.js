@@ -11,6 +11,7 @@ import { OfertaRecorrido } from '../recorrido.js';
 import { OrdenesHoy } from './ordenes.js';
 import { CitasHoy, citasDelDia } from './agenda.js';
 import { PrimerosPasos } from './empezar.js';
+import { BotonAyuda } from '../ayuda.js';
 
 const DIA = 86400000;
 
@@ -61,6 +62,8 @@ export function Hoy() {
     if (tarde.length) pendientes.unshift({ i: 'orden', t: 't-ros', txt: tarde.length + (tarde.length === 1 ? ' orden atrasada' : ' órdenes atrasadas'), sub: tarde.slice(0, 2).map(o => numeroOrden(o) + ' · ' + o.que).join(', '), go: () => tarde.length === 1 ? abrir('orden', { oid: tarde[0].id }) : ir('ordenes') });
     if (paraHoy.length) pendientes.push({ i: 'orden', t: 't-azu', txt: paraHoy.length + (paraHoy.length === 1 ? ' orden para entregar hoy' : ' órdenes para entregar hoy'), sub: paraHoy.slice(0, 2).map(o => numeroOrden(o) + ' · ' + o.que).join(', '), go: () => ir('ordenes') });
   }
+  // Empleados que olvidaron su PIN: el dueño (o quien maneja el equipo) les pone uno nuevo.
+  if (puede('equipo')) (S.solicitudes || []).filter(x => x.tipo === 'pin' && x.estado === 'abierta').forEach(x => { const p = S.perfiles.find(y => y.id === x.pid); if (p) pendientes.unshift({ i: 'candado', t: 't-amb', txt: p.n.split(' ')[0] + ' olvidó su PIN', sub: 'Toca para ponerle uno nuevo', go: () => abrir('pin', { pid: p.id }) }); });
   // Agenda: la próxima cita del día (y quién está esperando).
   const citasHoy = T.mod('agenda') ? citasDelDia(S, hoy0) : [];
   if (citasHoy.length) {
@@ -115,6 +118,7 @@ export function Hoy() {
         <${MarcaNegocio} n=${S.negocio} lapiz=${puede('ajustes')} />
         <span class="crece"><b class="corta">${S.negocio.nombre}</b><span class="sub corta">${new Date().toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' })} · <${Bandera} id=${P.id} t=${14} /> ${E ? (suc || 'Todos los locales') : T.n}</span></span>
       </button>
+      <${BotonAyuda} k="hoy" />
       <span class="pildora" style=${{ background: enLinea ? 'var(--in-soft)' : 'var(--amber-soft)', color: enLinea ? 'var(--in-text)' : 'var(--amber-text)' }}><span class="punto"></span>${enLinea ? 'En línea' : 'Sin internet'}</span>
     </header>
     ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}

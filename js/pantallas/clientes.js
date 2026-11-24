@@ -1,6 +1,7 @@
 // Clientes: quién te debe, recordatorios por WhatsApp, abonos e historial.
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
+import { BotonAyuda } from '../ayuda.js';
 import { deudores } from '../datos.js';
 import { BarrasH, Monto, color } from '../graficos.js';
 import { Icono, Chips, iniciales, TONOS, hace } from '../ui.js';
@@ -39,9 +40,9 @@ export function Clientes() {
   </div>`;
 
   const Ninguno = html`<${Vacio} i="personas" t="Todavía no tienes clientes" s=${'Anótalos aquí o al cobrar, con su teléfono para mandarles el recibo' + (fiado ? ', recordarles lo que deben' : '') + ' y avisarles por WhatsApp.'}>${pc && html`<button type="button" class="btn2 lleno toca" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</${Vacio}>`;
-  if (!todos.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Clientes</h1></div>` : null}${Ninguno}`;
+  if (!todos.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Clientes</h1><${BotonAyuda} /></div>` : null}${Ninguno}`;
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Clientes</h1>${pc && html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</div>
+    <div class="fila entra"><h1 class="titulo crece">Clientes</h1><${BotonAyuda} />${pc && html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</div>
     ${fiado && Resumen}
     ${opciones.length > 1 && html`<${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} chico />`}
     ${lista.length ? lista.map(Fila) : html`<p class="vacio">${filtro === 'Deben' ? 'Nadie te debe. Así da gusto.' : 'Todavía no tienes clientes.'}</p>`}`;

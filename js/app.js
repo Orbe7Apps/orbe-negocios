@@ -12,6 +12,7 @@ import { Inicio } from './pantallas/inicio.js';
 import { Hoy } from './pantallas/hoy.js';
 import { Ordenes } from './pantallas/ordenes.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
+import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -62,6 +63,8 @@ function App() {
   const [tel, setTel] = useState(esTelefono());
   const [sec, setSec] = useState((location.hash || '#hoy').slice(1));
   const [hoja, setHoja] = useState(null);
+  // Ayuda («?»): va encima de todo, también de una hoja abierta.
+  const [ayuda, setAyuda] = useState(null);
   const [suc, setSuc] = useState('');
   const [enLinea, setEnLinea] = useState(navigator.onLine);
   const [tour, setTour] = useState(false);
@@ -111,7 +114,7 @@ function App() {
   // Solo para las pruebas automáticas (con «?prueba» en la dirección): abrir una hoja directamente.
   if (/[?&]prueba\b/.test(location.search)) window.__abrir = abrir;
   const marcarTour = v => guardarPerfil({ id: yo.id, tour: v });
-  const ctx = { S, P, T, D, E, tel, ir, abrir, suc: E ? suc : '', setSuc, enLinea, yo, rol: rolDe(S, yo), puede: pd, ver: permitida,
+  const ctx = { sec: valida === 'inventario' && !T.inv ? 'servicios' : valida, ayuda: k => setAyuda({ k, n: Date.now() }), tieneAyuda: k => !!AYUDAS[k], S, P, T, D, E, tel, ir, abrir, suc: E ? suc : '', setSuc, enLinea, yo, rol: rolDe(S, yo), puede: pd, ver: permitida,
     verRecorrido: () => { setHoja(null); setTour(true); }, omitirRecorrido: () => { marcarTour('omitido'); avisar('Lo encuentras en Ajustes → Ayuda'); } };
   const Tour = tour ? html`<${Recorrido} onFin=${() => { setTour(false); if (!yo.tour) marcarTour(Date.now()); }} />` : null;
   const nombreSec = s => s === 'vender' ? (tel || T.vender === 'Cobrar' ? T.vender : 'Caja') : s === 'inventario' && !T.inv ? 'Servicios' : tel ? SECCIONES[s].n : (SECCIONES[s].npc || SECCIONES[s].n);
@@ -137,6 +140,7 @@ function App() {
         <${BotonOrbe} seccion=${valida} tabs=${tabs} />
       </div>
       ${hoja && html`<${HojaActual} key=${hoja.n} hoja=${hoja} cerrar=${() => setHoja(null)} />`}
+      ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
       ${Tour}
       <${Avisos} />
     </${Ctx.Provider}>`;
@@ -171,7 +175,7 @@ function App() {
       </aside>
       <div class="principal">
         <div class="barra-sup">
-          <div class="crece"><h1>${valida === 'hoy' ? saludo() : nombreSec(valida)}</h1><span class="sub">${subtitulo(valida, ctx)}</span></div>
+          <div class="crece"><h1 class="fila" style="gap:10px">${valida === 'hoy' ? saludo() : nombreSec(valida)}<${BotonAyuda} /></h1><span class="sub">${subtitulo(valida, ctx)}</span></div>
           <${ChipTasa} />
           <label class="buscador"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" aria-label="Buscar" placeholder="Buscar producto, cliente u orden" onKeyDown=${e => { if (e.key === 'Enter' && e.target.value.trim()) { abrir('buscar', { q: e.target.value.trim() }); } }} /><span class="tecla">/</span></label>
           ${E && (valida === 'hoy' || valida === 'vender' || valida === 'reportes') && html`<div class="segmento" role="group" aria-label="Sucursal">${[''].concat(S.negocio.sucursales).map(x => html`<button type="button" class=${suc === x ? 'on' : ''} aria-pressed=${suc === x ? 'true' : 'false'} onClick=${() => setSuc(x)}>${x || 'Todas'}</button>`)}</div>`}
@@ -181,6 +185,7 @@ function App() {
       </div>
     </div>
     ${hoja && html`<${HojaActual} key=${hoja.n} hoja=${hoja} cerrar=${() => setHoja(null)} />`}
+    ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
     ${Tour}
     <${Avisos} />
   </${Ctx.Provider}>`;

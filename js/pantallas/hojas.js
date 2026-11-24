@@ -1,10 +1,10 @@
 // Todas las hojas (teléfono) o ventanas (computadora) de la app.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo } from '../datos.js';
+import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
-import { Hoja, Icono, Interruptor, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd } from '../ui.js';
+import { ponerAyudaHoja, Hoja, Icono, Interruptor, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd } from '../ui.js';
 import { Monto, Linea } from '../graficos.js';
 import { usePagos, conSimbolo, numero, esEfectivo } from './pagos.js';
 import { infoTasas } from './tasas.js';
@@ -51,6 +51,7 @@ function Confirmar({ d, cerrar }) {
 
 export function HojaActual({ hoja, cerrar }) {
   const H = { sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
 
@@ -592,8 +593,16 @@ function Borrar({ d, cerrar }) {
 
 // ---------- locales y sucursales ----------
 function Locales({ d, cerrar }) {
-  const { S } = useApp();
+  const { S, abrir } = useApp();
   const antes = S.negocio.sucursales;
+  // Un negocio tiene un solo local; las sedes son de las empresas.
+  if (S.negocio.escala !== 'empresa' && antes.length <= 1) return html`<${Hoja} titulo="Tu local" onCerrar=${cerrar} contenido=${c => ({
+    cuerpo: html`<div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);gap:8px">
+        <b style="font-size:15px">Un negocio tiene un solo local</b>
+        <span class="sub" style="line-height:1.45">Si tienes varias sedes, cambia el tamaño a <b>Empresa</b>: cada sede tiene su caja, sus ventas y su inventario, y ves los reportes por sucursal.</span>
+      </div>`,
+    pie: html`<button type="button" class="btn toca" onClick=${() => { cambiarNegocio({ escala: 'empresa' }, 'Cambió el tamaño a empresa'); c(() => { avisar('Ahora eres empresa: agrega tus sedes'); abrir('locales'); }); }}>Cambiar a empresa y agregar sedes</button>${Pie2('Seguir con un local', () => c(), '')}`
+  })} />`;
   const NOM = ['Centro', 'Norte', 'Este', 'Oeste', 'Sur', 'Sucursal 6', 'Sucursal 7', 'Sucursal 8'];
   const [nombres, setNombres] = useState(antes.length === 1 ? [antes[0] === 'Principal' ? '' : antes[0], ''] : antes.slice());
   const pon = (k, v) => { const ns = nombres.slice(); ns[k] = v; setNombres(ns); };
@@ -673,13 +682,13 @@ function Pin({ d, cerrar }) {
   const solo4 = v => v.replace(/\D/g, '').slice(0, 4);
   const volver = () => { if (d.volver) abrir('perfil', { pid: p0.id }); };
   const guardar = c => {
-    if (pideActual && f.actual !== p0.pin) { setMal(Date.now()); avisar('El PIN actual no es ese'); return; }
+    if (pideActual && !pinValido(p0, f.actual)) { setMal(Date.now()); avisar('El PIN actual no es ese'); return; }
     if (!/^\d{4}$/.test(f.nuevo)) { avisar('El PIN nuevo son 4 números'); return; }
     if (f.nuevo !== f.otra) { setMal(Date.now()); avisar('Los dos PIN nuevos no son iguales'); return; }
     cambiarPin(p0.id, f.nuevo); c(() => { avisar('PIN ' + (p0.pin ? 'cambiado' : 'puesto') + (soyYo ? '' : ' a ' + p0.n.split(' ')[0])); volver(); });
   };
   const quitar = c => {
-    if (pideActual && f.actual !== p0.pin) { setMal(Date.now()); avisar('Escribe primero el PIN actual'); return; }
+    if (pideActual && !pinValido(p0, f.actual)) { setMal(Date.now()); avisar('Escribe primero el PIN actual'); return; }
     cambiarPin(p0.id, ''); c(() => { avisar('PIN quitado'); volver(); });
   };
   const Campo = (k, t, ph) => html`<label class="campo"><span>${t}</span><input class="num pin-campo" type="password" inputmode="numeric" maxlength="4" autocomplete=${k === 'actual' ? 'current-password' : 'new-password'} value=${f[k]} placeholder=${ph} onInput=${e => pon({ [k]: solo4(e.target.value) })} /></label>`;
@@ -707,7 +716,7 @@ function Rol({ d, cerrar }) {
 function Negocio({ d, cerrar }) {
   const { S, P, T, abrir: abrirH } = useApp();
   const n = S.negocio;
-  const [f, setF] = useState({ nombre: n.nombre, razon: n.razon || '', fiscal: n.fiscal || '', tipo: n.tipo, escala: n.escala, pais: n.pais, logo: n.logo || '', tel: n.tel || '', dir: n.dir || '' });
+  const [f, setF] = useState({ nombre: n.nombre, razon: n.razon || '', fiscal: n.fiscal || '', tipo: n.tipo, escala: n.escala, pais: n.pais, logo: n.logo || '', tel: n.tel || '', correo: n.correo || '', dir: n.dir || '' });
   const [latido, setLatido] = useState(false);
   // Logo: se elige una imagen del teléfono o la computadora y se achica para guardarla.
   const elegirLogo = async e => {
@@ -720,7 +729,7 @@ function Negocio({ d, cerrar }) {
   const P2 = pais(f.pais), T2 = tipo(f.tipo), otroPais = f.pais !== n.pais;
   const guardar = c => {
     if (!f.nombre.trim()) { avisar('Escribe el nombre'); return; }
-    const cambios = { nombre: f.nombre.trim(), razon: f.razon.trim(), fiscal: f.fiscal.trim(), tipo: f.tipo, escala: f.escala, pais: f.pais, logo: f.logo, tel: f.tel.trim(), dir: f.dir.trim() };
+    const cambios = { nombre: f.nombre.trim(), razon: f.razon.trim(), fiscal: f.fiscal.trim(), tipo: f.tipo, escala: f.escala, pais: f.pais, logo: f.logo, tel: f.tel.trim(), correo: f.correo.trim(), dir: f.dir.trim() };
     // Otro país: sus formas de pago e impuesto. La tasa se vuelve a leer.
     if (otroPais) Object.assign(cambios, { pays: P2.pays.slice(), taxOn: P2.tax[1] > 0 });
     const que = 'Cambió los datos del negocio' + (otroPais ? ' (país: ' + P.n + ' → ' + P2.n + ')' : '') + (f.tipo !== n.tipo ? ' (tipo: ' + T.n + ' → ' + T2.n + ')' : '') + (f.logo !== (n.logo || '') ? (f.logo ? ' (logo nuevo)' : ' (quitó el logo)') : '');
@@ -740,10 +749,11 @@ function Negocio({ d, cerrar }) {
       <label class="campo"><span>Nombre</span><input type="text" value=${f.nombre} autocomplete="organization" onInput=${e => pon({ nombre: e.target.value })} /></label>
       <div class="rejilla-2" style="gap:10px">
         <label class="campo"><span>Teléfono (opcional)</span><input type="tel" inputmode="tel" value=${f.tel} placeholder="0414-000-0000" autocomplete="tel" onInput=${e => pon({ tel: e.target.value })} /></label>
+        <label class="campo"><span>Correo del dueño (para avisos)</span><input type="email" inputmode="email" value=${f.correo} placeholder="tu@correo.com" autocomplete="email" onInput=${e => pon({ correo: e.target.value })} /></label>
         <label class="campo"><span>Dirección (opcional)</span><input type="text" value=${f.dir} placeholder="Av. Bolívar 12" autocomplete="street-address" onInput=${e => pon({ dir: e.target.value })} /></label>
       </div>
       <span class="sub faint" style="margin-top:-6px;font-size:12px">Salen en tus recibos y en las órdenes impresas o en PDF.</span>
-      <div class="campo"><span>Tamaño</span><div class="segmento" style="width:100%">${[['negocio', 'Negocio'], ['empresa', 'Empresa']].map(o => html`<button type="button" style="flex:1" class=${f.escala === o[0] ? 'on' : ''} onClick=${() => pon({ escala: o[0] })}>${o[1]}</button>`)}</div></div>
+      <div class="campo"><span>Tamaño</span><div class="segmento" style="width:100%">${[['negocio', 'Negocio'], ['empresa', 'Empresa']].map(o => html`<button type="button" style="flex:1" class=${f.escala === o[0] ? 'on' : ''} onClick=${() => { if (o[0] === 'negocio' && n.sucursales.length > 1) { avisar('Tienes ' + n.sucursales.length + ' locales: un negocio tiene uno solo'); return; } pon({ escala: o[0] }); }}>${o[1]}</button>`)}</div></div>
       <div class="rejilla-2" style="gap:10px">
         <label class="campo"><span>Razón social${f.escala === 'empresa' ? '' : ' (opcional)'}</span><input type="text" value=${f.razon} placeholder=${f.nombre + (P2.suf ? ' ' + P2.suf : '')} onInput=${e => pon({ razon: e.target.value })} /></label>
         <label class="campo"><span>${P2.fiscal[0]}${f.escala === 'empresa' ? '' : ' (opcional)'}</span><input type="text" value=${f.fiscal} placeholder=${P2.fiscal[1] || 'Número fiscal'} onInput=${e => pon({ fiscal: e.target.value })} /></label>

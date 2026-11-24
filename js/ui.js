@@ -1,5 +1,6 @@
 // Piezas compartidas de la interfaz.
 import { html, useState, useEffect, useRef } from './lib/preact-htm.js';
+import { useApp } from './ctx.js';
 
 export const ICONOS = {
   tijeras: 'M6 9a3 3 0 100-6 3 3 0 000 6zM6 21a3 3 0 100-6 3 3 0 000 6zM20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12',
@@ -137,7 +138,11 @@ export function useAtras(abierto, cerrar) {
     return () => { window.removeEventListener('popstate', pop); if (!porAtras && history.state && history.state.capa) history.back(); };
   }, [abierto]);
 }
+// La hoja que está abierta (para su botón «?»): la pone HojaActual antes de dibujarla.
+let ayudaHoja = '';
+export const ponerAyudaHoja = k => { ayudaHoja = k; };
 export function Hoja({ titulo, onCerrar, contenido }) {
+  const app = useApp(), kAyuda = ayudaHoja;
   const [sale, setSale] = useState(false);
   const hoja = useRef(null), arrastre = useRef(null);
   const cerrar = despues => { if (sale) return; setSale(true); setTimeout(() => { onCerrar(); if (typeof despues === 'function') despues(); }, 280); };
@@ -164,7 +169,7 @@ export function Hoja({ titulo, onCerrar, contenido }) {
     <div class=${'hoja' + (sale ? ' sale' : '')} ref=${hoja} role="dialog" aria-modal="true" aria-label=${titulo}>
       <div class="hoja-cab" onPointerDown=${baja} onPointerMove=${mueve} onPointerUp=${suelta} onPointerCancel=${suelta}>
         <span class="rayita"></span>
-        <div class="fila"><h2>${titulo}</h2><button type="button" class="icono-btn chico toca" aria-label="Cerrar" onClick=${() => cerrar()}><${Icono} n="cerrar" t=${16} g=${2.4} /></button></div>
+        <div class="fila"><h2>${titulo}</h2>${app && app.tieneAyuda(kAyuda) && html`<button type="button" class="boton-ayuda toca" aria-label="¿Cómo se usa?" onClick=${() => app.ayuda(kAyuda)}>?</button>`}<button type="button" class="icono-btn chico toca" aria-label="Cerrar" onClick=${() => cerrar()}><${Icono} n="cerrar" t=${16} g=${2.4} /></button></div>
       </div>
       <div class="hoja-cuerpo">${cuerpo}</div>
       ${pie && html`<div class="hoja-pie">${pie}</div>`}

@@ -880,3 +880,29 @@ html.en-recorrido .nav-tel { background: var(--oscuro); }
 .sugerido-datos label { width: 82px; }
 .sugerido-datos input { min-height: 40px; padding: 0 10px; }
 .dia-chip i { white-space: nowrap; }
+/* Ayuda: botón «?» y panel */
+.boton-ayuda { width: 28px; height: 28px; border-radius: 50%; flex: none; border: 1.5px solid var(--line); background: var(--surface); color: var(--accent-text, var(--accent)); font: inherit; font-size: 15px; font-weight: 800; line-height: 1; display: inline-grid; place-items: center; cursor: pointer; transition: background-color .2s ease, transform .2s var(--spring); }
+.boton-ayuda:active { transform: scale(.92); }
+.hoja-cab .boton-ayuda { margin-right: 4px; }
+h1 .boton-ayuda { vertical-align: middle; }
+.cab .boton-ayuda { background: var(--surface); }
+.velo.velo-ayuda { z-index: 70; }
+.hoja.hoja-ayuda { z-index: 71; }
+.pc .hoja.hoja-ayuda { width: min(520px, calc(100vw - 32px)); }
+.ayuda-ic { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 800; flex: none; }
+.hoja-ayuda .hoja-cab .fila { gap: 10px; }
+.ayuda-que { margin: 0; font-size: 15px; line-height: 1.5; }
+.pasos-ayuda { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pasos-ayuda li { display: flex; gap: 12px; align-items: flex-start; }
+.pasos-ayuda li span { width: 26px; height: 26px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-text, var(--accent)); font-weight: 800; font-size: 13px; }
+.pasos-ayuda li p { margin: 2px 0 0; font-size: 14px; line-height: 1.45; }
+.consejos-ayuda { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.consejos-ayuda li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.consejos-ayuda li svg { flex: none; margin-top: 3px; color: var(--amber, #e8961a); }
+.guia-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; text-align: left; }
+.guia-btn > svg:first-child { color: var(--accent); flex: none; }
+/* Teclado del PIN: se achica en pantallas bajas para que todo quepa sin desplazarse */
+@media (max-height: 760px) { .teclado { grid-template-columns: repeat(3, 66px); gap: 10px; } .teclado button { width: 66px; height: 66px; font-size: 25px; } }
+.tel .teclado { grid-template-columns: repeat(3, min(76px, 8.4vh)); gap: min(14px, 1.6vh); }
+.tel .teclado button { width: min(76px, 8.4vh); height: min(76px, 8.4vh); }
+.olvide-pin { background: none; border: 0; color: var(--accent-text, var(--accent)); font: inherit; font-size: 14px; font-weight: 600; padding: 6px 10px; }

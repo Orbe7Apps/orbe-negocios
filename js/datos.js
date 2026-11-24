@@ -4,13 +4,13 @@ import { useState, useEffect } from './lib/preact-htm.js';
 import { pais, tipo, dinero, TASA_VE_RESPALDO, esDivisa, EUR_USD } from './paises.js';
 import { ROLES_BASE } from './permisos.js';
 import { rubro, modulosDe } from './rubros.js';
-import { encadenar, revisar, firmaVenta, firmaRegistro, firmaCierre } from './hash.js';
+import { encadenar, revisar, firmaVenta, firmaRegistro, firmaCierre, sha256 } from './hash.js';
 
 const CLAVE = 'orbe-negocios';
 const subs = new Set();
 let S = vacio();
 
-function vacio() { return { v: 2, negocio: null, productos: [], clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], ordenes: [], citas: [], movCaja: [], turnos: [], promos: [], perfiles: [], roles: ROLES_BASE(), registro: [], ajustes: { tema: 'auto', perfil: '' }, tasa: { modo: 'auto', valor: 0, fuente: 'oficial', fecha: '' }, tasas: {}, historialTasas: [], grupos: [] }; }
+function vacio() { return { v: 2, negocio: null, productos: [], clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], ordenes: [], citas: [], solicitudes: [], movCaja: [], turnos: [], promos: [], perfiles: [], roles: ROLES_BASE(), registro: [], ajustes: { tema: 'auto', perfil: '' }, tasa: { modo: 'auto', valor: 0, fuente: 'oficial', fecha: '' }, tasas: {}, historialTasas: [], grupos: [] }; }
 // Datos guardados con versiones anteriores: se completan sin perder nada.
 function migrar(d) {
   if (!Array.isArray(d.roles) || !d.roles.length) d.roles = ROLES_BASE();
@@ -27,6 +27,9 @@ function migrar(d) {
   if (!Array.isArray(d.grupos)) d.grupos = [];
   if (!Array.isArray(d.ordenes)) d.ordenes = [];
   if (!Array.isArray(d.citas)) d.citas = [];
+  if (!Array.isArray(d.solicitudes)) d.solicitudes = [];
+  // PIN cifrado: los que estaban guardados tal cual se cifran (nunca se guardan los 4 números).
+  if (Array.isArray(d.perfiles) && d.perfiles.some(p => p.pin && !esPinCifrado(p.pin))) d.perfiles = d.perfiles.map(p => p.pin && !esPinCifrado(p.pin) ? Object.assign({}, p, { pin: cifrarPin(p.id, p.pin) }) : p);
   if (!Array.isArray(d.movCaja)) d.movCaja = [];
   if (!Array.isArray(d.promos)) d.promos = [];
   if (Array.isArray(d.perfiles) && d.perfiles.some(p => !p.id)) d.perfiles = d.perfiles.map(p => p.id ? p : Object.assign({}, p, { id: 'u' + Math.random().toString(36).slice(2, 10) }));
@@ -238,11 +241,11 @@ export function crearNegocio(cfg, conEjemplo) {
     if (ex.vars) { p.vars = ex.vars.map((n, j) => ({ id: 'v' + j, n, q: Math.round([4, 7, 5, 3, 6, 2][j % 6] * k) })); p.q = p.vars.reduce((a, v) => a + v.q, 0); }
     return p;
   });
-  const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala, cfg.rubro), rubro: R ? R.id : '', mods: Object.assign({}, cfg.mods || {}), razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
+  const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala, cfg.rubro), rubro: R ? R.id : '', mods: Object.assign({}, cfg.mods || {}), pasosListos: !!conEjemplo, razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
   const perfiles = [{ id: 'u0', n: (cfg.dueno || '').trim() || 'Dueño', rol: 'dueno', pin: '', sucs: [], creado: Date.now() }];
   if (conEjemplo) perfiles.push(
-    { id: 'u1', n: 'Carla Méndez', rol: 'encargado', pin: '1111', sucs: [], creado: Date.now() },
-    { id: 'u2', n: 'Luis Pino', rol: 'cajero', pin: '2222', sucs: sucursales.length > 1 ? [sucursales[0]] : [], creado: Date.now() });
+    { id: 'u1', n: 'Carla Méndez', rol: 'encargado', pin: cifrarPin('u1', '1111'), sucs: [], creado: Date.now() },
+    { id: 'u2', n: 'Luis Pino', rol: 'cajero', pin: cifrarPin('u2', '2222'), sucs: sucursales.length > 1 ? [sucursales[0]] : [], creado: Date.now() });
   // Cuenta nueva: vacía. Los productos y grupos del rubro solo se cargan con el ejemplo
   // (sin ejemplo, se ofrecen como sugerencias para agregar con un toque).
   if (!conEjemplo) { productos.length = 0; gruposEj = []; }
@@ -706,14 +709,32 @@ export function cerrarDia(contado, resumen) {
 export const perfilActual = () => (S.perfiles || []).find(p => p.id === S.ajustes.perfil && !p.inactivo) || null;
 export function entrar(pid) { cambiar(s => ({ ajustes: Object.assign({}, s.ajustes, { perfil: pid }) })); }
 export function salir() { cambiar(s => ({ ajustes: Object.assign({}, s.ajustes, { perfil: '' }) })); }
+// ---------- PIN ----------
+// El PIN se guarda cifrado (SHA-256 repetido, con el perfil como sal): ni en el aparato ni en la nube quedan los 4 números.
+const PIN_V = 'h1$';
+export const esPinCifrado = x => typeof x === 'string' && x.startsWith(PIN_V);
+export function cifrarPin(pid, pin) { let h = String(pin); for (let i = 0; i < 1500; i++) h = sha256('orbe-pin|' + pid + '|' + h); return PIN_V + h; }
+export const pinValido = (p, pin) => !!p && !!p.pin && (esPinCifrado(p.pin) ? cifrarPin(p.id, pin) === p.pin : p.pin === pin);
+// «Olvidé mi PIN»: queda el aviso para el dueño (en Hoy) hasta que le pongan uno nuevo.
+export function pedirPinNuevo(pid) {
+  const p = S.perfiles.find(x => x.id === pid); if (!p) return;
+  if ((S.solicitudes || []).some(x => x.tipo === 'pin' && x.pid === pid && x.estado === 'abierta')) return;
+  cambiar(s => Object.assign({ solicitudes: (s.solicitudes || []).concat([{ id: 'so' + id(), t: Date.now(), tipo: 'pin', pid, estado: 'abierta' }]) }, nota(s, p.n + ' pidió un PIN nuevo')));
+}
 export function guardarPerfil(p) {
-  if (!p.id) { p = Object.assign({}, p); delete p.id; }
-  cambiar(s => ({ perfiles: p.id && s.perfiles.some(x => x.id === p.id) ? s.perfiles.map(x => x.id === p.id ? Object.assign({}, x, p) : x) : s.perfiles.concat([Object.assign({ id: 'u' + id(), pin: '', sucs: [], creado: Date.now() }, p)]) }));
+  p = Object.assign({}, p); if (!p.id) delete p.id;
+  const nuevo = !(p.id && S.perfiles.some(x => x.id === p.id));
+  if (nuevo) p.id = p.id || 'u' + id();
+  if (p.pin && !esPinCifrado(p.pin)) p.pin = cifrarPin(p.id, p.pin);
+  cambiar(s => ({ perfiles: !nuevo ? s.perfiles.map(x => x.id === p.id ? Object.assign({}, x, p) : x) : s.perfiles.concat([Object.assign({ pin: '', sucs: [], creado: Date.now() }, p)]) }));
+  return p.id;
 }
 // Cambiar o quitar el PIN de un perfil (en el registro se anota quién lo cambió, nunca el PIN).
 export function cambiarPin(pid, pin) {
   const p0 = S.perfiles.find(p => p.id === pid); if (!p0) return;
-  cambiar(s => Object.assign({ perfiles: s.perfiles.map(p => p.id === pid ? Object.assign({}, p, { pin }) : p) }, nota(s, (pin ? (p0.pin ? 'Cambió' : 'Puso') : 'Quitó') + ' el PIN de ' + p0.n)));
+  const guardado = pin ? cifrarPin(pid, pin) : '';
+  // Con el PIN nuevo, el aviso de «olvidé mi PIN» queda atendido.
+  cambiar(s => Object.assign({ perfiles: s.perfiles.map(p => p.id === pid ? Object.assign({}, p, { pin: guardado }) : p), solicitudes: (s.solicitudes || []).map(x => x.tipo === 'pin' && x.pid === pid && x.estado === 'abierta' ? Object.assign({}, x, { estado: 'hecha', hecha: Date.now() }) : x) }, nota(s, (pin ? (p0.pin ? 'Cambió' : 'Puso') : 'Quitó') + ' el PIN de ' + p0.n)));
 }
 // Eliminar un perfil: ya no aparece ni puede entrar, pero sus ventas y su nombre se quedan en el historial.
 export function borrarPerfil(pid) {

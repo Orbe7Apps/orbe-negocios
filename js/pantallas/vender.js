@@ -1,6 +1,7 @@
 // Vender (teléfono) y Caja (computadora). En la computadora: lector de códigos, F12 cobra, Esc vacía.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
+import { BotonAyuda } from '../ayuda.js';
 import { Icono, avisar, TONOS, hora, FotoProd } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto } from '../datos.js';
@@ -139,7 +140,7 @@ export function Vender() {
   const Boton = html`<button type="button" data-tour="cobrar" class=${'btn toca' + (n ? '' : ' apagado')} onClick=${cobrar}>${n ? 'Cobrar ' + D.m(total) : 'Agrega ' + (T.inv ? 'productos' : 'servicios')}${!tel && n ? html` <span class="tecla" style="color:#fff;border-color:rgba(255,255,255,.4)">F12</span>` : null}</button>`;
 
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1>${prods.length > 0 && html`<span class="sub">Toca para sumar</span>`}</div>
+    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonAyuda} />${prods.length > 0 && html`<span class="sub">Toca para sumar</span>`}</div>
     <${BarraTasas} />
     <div class="fila entra" style="gap:8px"><label class="buscador crece" style="background:var(--surface)"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${prods.length ? 'Buscar entre ' + prods.length : 'Buscar'} aria-label="Buscar producto" /></label>
       ${T.mod('escaner') && html`<button type="button" class="icono-btn toca escanear-mini" aria-label="Escanear con la cámara" onClick=${() => abrir('escaner', { para: 'vender', onAgregar: sumarEscaneado })}><${Icono} n="camara" t=${20} /></button>`}</div>
