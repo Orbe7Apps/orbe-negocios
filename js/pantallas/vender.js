@@ -9,7 +9,7 @@ import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigente
 import { nuevoCarrito, lineasDe, cuantos, porPeso, verQ, existencia } from '../carrito.js';
 import { FilaVenta } from './hojas.js';
 import { BarraTasas } from './tasas.js';
-import { FiltroGrupos, filtrarGrupo, textosProducto, grupoDe, colorGrupo, suaveGrupo, iniciales2 } from './grupos.js';
+import { FiltroGrupos, filtrarGrupo, textosProducto, grupoDe, colorGrupo, suaveGrupo, iniciales2, tonoProd } from './grupos.js';
 import { buscar as buscarEn, parecidos } from '../buscar.js';
 import { Reparto, Monto, color } from '../graficos.js';
 
@@ -134,7 +134,7 @@ export function Vender() {
   const Grilla = !prods.length ? html`<${CatalogoVacio} donde="vender" />` : html`<div class="productos">${visibles.map((p, i) => { const c = enCarrito(p); return html`
     <button type="button" key=${p.id} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
       ${c ? html`<span class="cant" key=${c}>${c}</span>` : null}
-      ${FotoProd(p, 36) || (() => { const g = grupoDe(S, p); return g ? html`<span class="ic" style=${{ width: '36px', height: '36px', fontSize: '13px', fontWeight: 700, background: suaveGrupo(g, 18), color: colorGrupo(g) }}>${p.ab}</span>` : html`<span class=${'ic ' + TONOS[i % 5]} style="width:36px;height:36px;font-size:13px;font-weight:700">${p.ab}</span>`; })()}
+      ${FotoProd(p, 36) || html`<span class="ic" style=${Object.assign({ width: '36px', height: '36px', fontSize: '13px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`}
       <b>${p.n}</b><small class="num">${D.m(p.p)}${porPeso(p) ? ' / ' + p.u : ''}${p.dur ? ' · ' + (p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min') : ''}${p.vars && p.vars.length ? ' · ' + p.vars.length + ' opciones' : ''}</small>
       ${promosVigentes().some(x => promoAplica(x, p)) && html`<span class="promo-chip">Promo</span>`}
       ${T.inv && p.q == null && (!conServ || q.trim()) && html`<span class="servicio-chip">Servicio</span>`}
