@@ -10,7 +10,7 @@ export const MODULOS = [
   { k: 'medidas', g: 'Productos', i: 'regla', n: 'Venta por peso o medida', d: 'Kilo, gramo, litro, metro y metro cuadrado. Lee las etiquetas de la balanza.' },
   { k: 'variantes', g: 'Productos', i: 'capas', n: 'Tallas, colores y variantes', d: 'Un mismo producto en varias tallas, colores o sabores, cada uno con su existencia.' },
   { k: 'garantia', g: 'Productos', i: 'escudo', n: 'Garantía y número de serie', d: 'Meses de garantía por producto. El serial y la fecha de vencimiento salen en el recibo.' },
-  { k: 'escaner', g: 'Productos', i: 'camara', n: 'Escáner con la cámara', d: 'Lee códigos de barras y nombres con la cámara del teléfono para vender o contar.' },
+  { k: 'escaner', g: 'Productos', i: 'escanear', n: 'Escáner con la cámara', d: 'Lee códigos de barras y nombres con la cámara del teléfono para vender o contar.' },
   { k: 'compras', g: 'Productos', i: 'doc', n: 'Factura del proveedor con una foto', d: 'Toma una foto de la factura y Orbe suma lo que llegó al inventario.' },
   { k: 'precios', g: 'Productos', i: 'sube', n: 'Cuidar precios', d: 'Te avisa cuando un precio queda por debajo de lo que cuesta reponerlo.' },
   { k: 'agenda', g: 'Clientes y atención', i: 'calendario', n: 'Agenda de citas', d: 'Citas por día y por profesional, recordatorio por WhatsApp y cobro al terminar.' },

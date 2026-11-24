@@ -23,18 +23,38 @@ const serviciosDe = c => c.srv.map(id => listaProductos().find(p => p.id === id)
 const colorPro = (S, pid) => COLORES[Math.max(0, profesionales(S).findIndex(p => p.id === pid)) % COLORES.length];
 const nombrePro = (S, pid) => ((S.perfiles.find(p => p.id === pid) || {}).n || '').split(' ')[0];
 
-// Fila de una cita (lista del día y tarjeta de Hoy).
+// Hora partida: «3:30» grande y «p. m.» chico.
+const partes = t => { const h = hora(t), k = h.indexOf(' '); return k > 0 ? [h.slice(0, k), h.slice(k + 1)] : [h, '']; };
+const bloqueDe = t => { const h = new Date(t).getHours(); return h < 12 ? 'Mañana' : h < 18 ? 'Tarde' : 'Noche'; };
+
+// Una cita (lista del día y tarjeta de Hoy): hora, cliente, servicios, con quién y estado.
 export function CitaFila({ c, i = 0, conPro = true }) {
   const { S, D, abrir } = useApp();
-  const ss = serviciosDe(c);
-  return html`<button type="button" class=${'cita-fila toca entra' + (citaActiva(c) ? '' : ' cerrada')} style=${{ '--i': i, '--c': colorPro(S, c.pro) }} onClick=${() => abrir('cita', { cid: c.id })}>
-    <span class="cita-hora"><b class="num">${hora(c.t)}</b><small>${c.dur} min</small></span>
-    <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0">
-      <b class="corta" style="font-size:15px">${c.nom || 'Cliente'}</b>
-      <span class="sub corta">${ss.map(s => s.n).join(' + ')}${conPro && c.pro ? ' · ' + nombrePro(S, c.pro) : ''}</span>
+  const ss = serviciosDe(c), [hh, ap] = partes(c.t), ahora = Date.now(), activa = citaActiva(c);
+  const enCurso = activa && c.t <= ahora && ahora < c.t + c.dur * 60000, falta = Math.round((c.t - ahora) / 60000);
+  const aviso = enCurso ? 'Ahora' : activa && falta > 0 && falta <= 60 ? 'En ' + falta + ' min' : '';
+  return html`<button type="button" class=${'cita-fila toca entra' + (activa ? '' : ' cerrada') + (enCurso ? ' en-curso' : '')} style=${{ '--i': i, '--c': colorPro(S, c.pro) }} onClick=${() => abrir('cita', { cid: c.id })}>
+    <span class="cita-hora"><b class="num">${hh}</b><small>${ap}</small></span>
+    <span class="cita-cuerpo">
+      <span class="fila" style="gap:8px;min-width:0"><b class="corta crece">${c.nom || 'Cliente'}</b>${aviso ? html`<span class="cita-aviso">${aviso}</span>` : html`<span class=${'pildora ' + TONO_ESTADO[c.estado]}>${ESTADOS_CITA[c.estado]}</span>`}</span>
+      <span class="corta cita-srv">${ss.map(s => s.n).join(' + ')}</span>
+      <span class="cita-meta">${conPro && c.pro ? html`<span class="fila" style="gap:5px"><i style=${{ background: colorPro(S, c.pro) }}></i>${nombrePro(S, c.pro)}</span>` : null}<span>${c.dur} min</span><b class="num">${D.m(ss.reduce((a, s) => a + s.p, 0))}</b></span>
     </span>
-    <span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class=${'pildora ' + TONO_ESTADO[c.estado]}>${ESTADOS_CITA[c.estado]}</span><small class="num faint">${D.m(ss.reduce((a, s) => a + s.p, 0))}</small></span>
   </button>`;
+}
+
+// Las citas de un día, por mañana, tarde y noche; hoy, con la línea de «ahora».
+function ListaDia({ lista, conPro, hoy }) {
+  const ahora = Date.now(), out = [];
+  let bloque = '', linea = !hoy;
+  lista.forEach((c, i) => {
+    if (!linea && c.t > ahora) { linea = true; out.push(html`<div class="linea-ahora" key="ahora"><span>Ahora · ${hora(ahora)}</span></div>`); }
+    const b = bloqueDe(c.t);
+    if (b !== bloque) { bloque = b; out.push(html`<span class="cita-bloque" key=${'b' + b}>${b}</span>`); }
+    out.push(html`<${CitaFila} key=${c.id} c=${c} i=${i} conPro=${conPro} />`);
+  });
+  if (!linea && lista.length) out.push(html`<div class="linea-ahora" key="ahora"><span>Ahora · ${hora(ahora)}</span></div>`);
+  return html`<div class="pila lista-dia">${out}</div>`;
 }
 
 export function Agenda() {
@@ -66,7 +86,7 @@ export function Agenda() {
     ${Dias}
     ${pros.length > 1 && html`<div class="chips desliza">${[{ id: '', n: 'Todos' }].concat(pros).map(p => html`<button type="button" key=${p.id} class=${'chip chico toca' + (pro === p.id ? ' on' : '')} onClick=${() => setPro(p.id)}>${p.id && html`<i class="punto-grupo" style=${{ background: colorPro(S, p.id) }}></i>`}${p.id ? p.n.split(' ')[0] : 'Todos'}</button>`)}</div>`}
     ${Resumen}
-    ${vistas.length ? html`<div class="pila" style="gap:8px">${vistas.map((c, i) => html`<${CitaFila} key=${c.id} c=${c} i=${i} conPro=${!pro} />`)}</div>` : Vacio}`;
+    ${vistas.length ? html`<${ListaDia} lista=${vistas} conPro=${!pro} hoy=${dia === inicioDia(Date.now())} />` : Vacio}`;
 
   // Computadora: una columna por profesional.
   const cols = pros.length ? pros : [{ id: '', n: 'Citas' }];
@@ -78,7 +98,7 @@ export function Agenda() {
         <div class="fila" style="gap:10px;margin-bottom:10px"><span class="logo redondo" style=${{ width: '34px', height: '34px', fontSize: '12px', background: colorPro(S, p.id), color: '#fff' }}>${iniciales(p.n)}</span>
           <span class="crece" style="display:flex;flex-direction:column"><b style="font-size:14px">${p.n}</b><span class="sub">${lista.filter(citaActiva).length} por atender</span></span>
           <button type="button" class="icono-btn chico toca" aria-label=${'Nueva cita con ' + p.n} onClick=${() => nueva({ pro: p.id })}><${Icono} n="mas1" t=${15} g=${2.6} /></button></div>
-        ${lista.length ? html`<div class="pila" style="gap:8px">${lista.map((c, i) => html`<${CitaFila} key=${c.id} c=${c} i=${i} conPro=${false} />`)}</div>` : html`<p class="vacio" style="padding:18px 0">Día libre</p>`}
+        ${lista.length ? html`<${ListaDia} lista=${lista} conPro=${false} hoy=${dia === inicioDia(Date.now())} />` : html`<p class="vacio" style="padding:18px 0">Día libre</p>`}
       </section>`; })}</div>
   </div>`;
 }
@@ -113,7 +133,7 @@ export function NuevaCita({ d, cerrar }) {
     const t = f.dia + m * 60000, fin = t + dur * 60000;
     return S.citas.some(x => x.id !== (c0 && c0.id) && citaActiva(x) && (!f.pro || x.pro === f.pro) && x.t < fin && x.t + x.dur * 60000 > t);
   };
-  const ahora = Date.now(), horas = Array.from({ length: 24 }, (_, i) => 8 * 60 + i * 30);
+  const ahora = Date.now(), horas = Array.from({ length: 30 }, (_, i) => 7 * 60 + i * 30);
   const textoHora = m => { const x = new Date(f.dia + m * 60000); return hora(x.getTime()); };
   const mensaje = t => 'Hola ' + f.nom.trim().split(' ')[0] + ', tu cita en ' + S.negocio.nombre + ' quedó para el ' + fechaLarga(t) + ' a las ' + hora(t) + ' (' + elegidos.map(p => p.n).join(' + ') + '). ¡Te esperamos!';
   const guardar = (c, avisarWA) => {
@@ -128,20 +148,34 @@ export function NuevaCita({ d, cerrar }) {
   };
   return html`<${Hoja} titulo=${c0 ? 'Cambiar la cita' : 'Nueva cita'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
-      <label class="campo"><span>Cliente</span><input type="text" value=${f.nom} placeholder="Nombre" autocomplete="off" onInput=${e => pon({ nom: e.target.value, cli: '' })} /></label>
+      <div class="paso-cita"><span class="paso-n">1</span><b>¿Para quién?</b></div>
+      <label class="campo"><span class="sr">Nombre del cliente</span><input type="text" value=${f.nom} placeholder="Nombre del cliente" autocomplete="off" onInput=${e => pon({ nom: e.target.value, cli: '' })} /></label>
       ${sug.length > 0 && html`<div class="chips entra">${sug.map(x => html`<button type="button" key=${x.id} class="chip chico toca" onClick=${() => pon({ nom: x.n, tel: x.tel || f.tel, cli: x.id })}><${Icono} n="personas" t=${13} />${x.n}</button>`)}</div>`}
-      <label class="campo"><span>Teléfono (para avisarle por WhatsApp)</span><input type="tel" inputmode="tel" value=${f.tel} placeholder="Opcional" autocomplete="off" onInput=${e => pon({ tel: e.target.value })} /></label>
+      <label class="campo"><span class="sr">Teléfono</span><input type="tel" inputmode="tel" value=${f.tel} placeholder="Teléfono (para avisarle por WhatsApp)" autocomplete="off" onInput=${e => pon({ tel: e.target.value })} /></label>
+
+      <div class="paso-cita"><span class="paso-n">2</span><b>¿Qué se va a hacer?</b>${elegidos.length > 0 && html`<span class="sub">${dur} min · ${D.m(total)}</span>`}</div>
       ${!srvs.length && html`<div class="tarjeta pila" style="box-shadow:none;background:var(--amber-soft);gap:8px"><b style="font-size:14px">Primero agrega tus servicios</b><span class="sub">Así la cita sabe cuánto dura y cuánto cobrar.</span><button type="button" class="btn2 chico lleno toca" style="align-self:flex-start" onClick=${() => c(() => abrir('sugerencias'))}>Agregar lo típico</button></div>`}
-      ${srvs.length > 0 && html`<div class="campo"><span>Servicios${elegidos.length ? ' · ' + dur + ' min · ' + D.m(total) : ''}</span><div class="chips">${srvs.map(p => { const on = f.srv.includes(p.id); return html`
-        <button type="button" key=${p.id} class=${'chip chico toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ srv: on ? f.srv.filter(x => x !== p.id) : f.srv.concat([p.id]) })}>${on && html`<${Icono} n="check" t=${13} g=${3} />`}${p.n}<span class="faint num">${D.m(p.p)}</span></button>`; })}</div></div>`}
-      ${pros.length > 1 && html`<div class="campo"><span>Con quién</span><div class="chips">${pros.map(p => html`<button type="button" key=${p.id} class=${'chip chico toca' + (f.pro === p.id ? ' on' : '')} onClick=${() => pon({ pro: p.id })}><i class="punto-grupo" style=${{ background: colorPro(S, p.id) }}></i>${p.n.split(' ')[0]}</button>`)}</div></div>`}
-      <div class="campo"><span>Día</span><div class="chips desliza dias-agenda">${Array.from({ length: 14 }, (_, i) => diaMas(i)).map(t => html`
-        <button type="button" key=${t} class=${'dia-chip toca' + (t === f.dia ? ' on' : '')} onClick=${() => pon({ dia: t, min: null })}><small>${nombreDia(t)}</small><b class="num">${new Date(t).getDate()}</b></button>`)}</div></div>
-      <div class="campo"><span>Hora${f.min != null ? ' · ' + textoHora(f.min) : ''}</span><div class="horas-grid">${horas.map(m => { const pasada = f.dia + m * 60000 < ahora, oc = ocupada(m); return html`
-        <button type="button" key=${m} class=${'chip chico toca' + (f.min === m ? ' on' : '') + (oc ? ' ocupada' : '')} disabled=${pasada || oc} onClick=${() => pon({ min: m })}>${textoHora(m)}</button>`; })}</div>
-        <span class="sub faint" style="font-size:12px">Las horas tachadas ya tienen cita${f.pro && pros.length > 1 ? ' con ' + nombrePro(S, f.pro) : ''}.</span></div>
+      ${srvs.length > 0 && html`<div class="servicios-cita">${srvs.map(p => { const on = f.srv.includes(p.id); return html`
+        <button type="button" key=${p.id} class=${'srv-cita toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ srv: on ? f.srv.filter(x => x !== p.id) : f.srv.concat([p.id]) })}>
+          <span class="marca-check">${on && html`<${Icono} n="check" t=${12} g=${3.2} c="#fff" />`}</span>
+          <b>${p.n}</b><span class="sub num">${p.dur ? p.dur + ' min · ' : ''}${D.m(p.p)}</span>
+        </button>`; })}</div>`}
+
+      ${pros.length > 1 && html`<div class="paso-cita"><span class="paso-n">3</span><b>¿Con quién?</b></div>
+        <div class="pros-cita">${pros.map(p => html`<button type="button" key=${p.id} class=${'pro-cita toca' + (f.pro === p.id ? ' on' : '')} onClick=${() => pon({ pro: p.id, min: null })}>
+          <span class="logo redondo" style=${{ background: colorPro(S, p.id), color: '#fff' }}>${iniciales(p.n)}</span><span>${p.n.split(' ')[0]}</span></button>`)}</div>`}
+
+      <div class="paso-cita"><span class="paso-n">${pros.length > 1 ? 4 : 3}</span><b>¿Cuándo?</b></div>
+      <div class="chips desliza dias-agenda">${Array.from({ length: 14 }, (_, i) => diaMas(i)).map(t => html`
+        <button type="button" key=${t} class=${'dia-chip toca' + (t === f.dia ? ' on' : '')} onClick=${() => pon({ dia: t, min: null })}><small>${nombreDia(t)}</small><b class="num">${new Date(t).getDate()}</b></button>`)}</div>
+      ${['Mañana', 'Tarde', 'Noche'].map(bq => { const hs = horas.filter(m => bloqueDe(f.dia + m * 60000) === bq && f.dia + m * 60000 >= ahora - 15 * 60000); if (!hs.length) return null; const libres = hs.filter(m => !ocupada(m)).length; return html`
+        <div class="pila" style="gap:6px" key=${bq}><span class="sub" style="font-weight:600">${bq} <span class="faint">· ${libres} ${libres === 1 ? 'libre' : 'libres'}</span></span>
+          <div class="horas-grid">${hs.map(m => { const oc = ocupada(m); return html`<button type="button" key=${m} class=${'chip chico toca' + (f.min === m ? ' on' : '') + (oc ? ' ocupada' : '')} disabled=${oc} onClick=${() => pon({ min: m })}>${partes(f.dia + m * 60000)[0]}</button>`; })}</div></div>`; })}
+      ${horas.every(m => f.dia + m * 60000 < ahora - 15 * 60000) && html`<p class="vacio">Ya no quedan horas hoy. Elige otro día.</p>`}
       <label class="campo"><span>Nota (opcional)</span><input type="text" value=${f.nota} placeholder="Ej.: degradado bajo, trae foto" autocomplete="off" onInput=${e => pon({ nota: e.target.value })} /></label>`,
-    pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c, false)}>${c0 ? 'Guardar cambios' : 'Guardar cita'}</button>
+    pie: html`${(elegidos.length > 0 || f.min != null) && html`<div class="resumen-cita"><${Icono} n="calendario" t=${16} />
+        <span class="crece corta">${[elegidos.map(p => p.n).join(' + '), f.min != null ? nombreDia(f.dia) + ' ' + new Date(f.dia).getDate() + ', ' + textoHora(f.min) : 'elige la hora'].filter(Boolean).join(' · ')}</span><b class="num">${D.m(total)}</b></div>`}
+      <button type="button" class=${'btn toca' + (f.nom.trim() && elegidos.length && f.min != null ? '' : ' apagado')} onClick=${() => guardar(c, false)}>${c0 ? 'Guardar cambios' : 'Guardar cita'}</button>
       ${f.tel.trim() && html`<button type="button" class="btn2 toca verde" style="min-height:50px;border-radius:25px" onClick=${() => guardar(c, true)}>Guardar y avisar por WhatsApp</button>`}`
   })} />`;
 }

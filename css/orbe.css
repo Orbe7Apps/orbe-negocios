@@ -906,3 +906,61 @@ h1 .boton-ayuda { vertical-align: middle; }
 .tel .teclado { grid-template-columns: repeat(3, min(76px, 8.4vh)); gap: min(14px, 1.6vh); }
 .tel .teclado button { width: min(76px, 8.4vh); height: min(76px, 8.4vh); }
 .olvide-pin { background: none; border: 0; color: var(--accent-text, var(--accent)); font: inherit; font-size: 14px; font-weight: 600; padding: 6px 10px; }
+/* Tasas: la de hoy en grande y una sola lista con todas */
+.tasa-hoy { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 18px 14px; border-radius: 22px; background: var(--oscuro); color: #fff; }
+.tasa-hoy .sub { color: rgba(255,255,255,.7); }
+.tasa-hoy b { font-size: 34px; letter-spacing: -0.02em; }
+.tasa-hoy .pildora { background: rgba(255,255,255,.12); }
+.tasa-hoy .btn2 { margin-top: 6px; }
+.tasa-fila { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.tasa-fila b { font-size: 14px; }
+.tasa-fila .sub { font-size: 12px; }
+details.avanzado { border: 1.5px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+details.avanzado summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--accent-text, var(--accent)); list-style: none; display: flex; align-items: center; justify-content: space-between; }
+details.avanzado summary::-webkit-details-marker { display: none; }
+details.avanzado summary::after { content: '▾'; transition: transform .25s ease; }
+details.avanzado[open] summary::after { transform: rotate(180deg); }
+/* ---------- agenda: citas agendadas ---------- */
+.lista-dia { gap: 8px; }
+.cita-bloque { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); padding: 8px 4px 0; }
+.cita-fila { position: relative; display: flex; align-items: stretch; gap: 12px; padding: 12px 14px 12px 0; border-left: 0; overflow: hidden; }
+.cita-fila::before { content: ''; width: 4px; flex: none; border-radius: 0 4px 4px 0; background: var(--c); }
+.cita-hora { width: 52px; justify-content: center; align-items: center; text-align: center; }
+.cita-hora b { font-size: 17px; letter-spacing: -0.02em; }
+.cita-hora small { font-size: 10.5px; }
+.cita-cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-left: 12px; border-left: 1px solid var(--line); }
+.cita-cuerpo b.crece { font-size: 15px; }
+.cita-cuerpo .pildora { font-size: 11px; padding: 2px 8px; flex: none; }
+.cita-srv { font-size: 13px; color: var(--muted); }
+.cita-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cita-meta i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.cita-meta b { margin-left: auto; color: var(--ink); font-size: 13px; }
+.cita-aviso { flex: none; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: #fff; }
+.cita-fila.en-curso { box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+.cita-fila.cerrada { opacity: .55; }
+.cita-fila.cerrada .cita-cuerpo b.crece { text-decoration: none; }
+.linea-ahora { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
+.linea-ahora::before, .linea-ahora::after { content: ''; height: 2px; background: var(--out); flex: 1; border-radius: 1px; }
+.linea-ahora::before { flex: 0 0 10px; }
+.linea-ahora span { font-size: 11px; font-weight: 700; color: var(--out-text, var(--out)); }
+/* ---------- agenda: nueva cita ---------- */
+.paso-cita { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.paso-cita b { font-size: 15px; flex: 1; }
+.paso-n { width: 24px; height: 24px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; }
+.servicios-cita { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.srv-cita { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px 12px 12px 42px; border: 1.5px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; transition: border-color .2s ease, background-color .2s ease; }
+.srv-cita b { font-size: 13.5px; line-height: 1.25; }
+.srv-cita .sub { font-size: 12px; }
+.srv-cita .marca-check { position: absolute; left: 12px; top: 12px; width: 20px; height: 20px; border-radius: 7px; }
+.srv-cita.on { border-color: var(--accent); background: var(--accent-soft); }
+.srv-cita.on .marca-check { background: var(--accent); border-color: var(--accent); }
+.pros-cita { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.pro-cita { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 64px; padding: 8px 6px; border: 1.5px solid transparent; border-radius: 16px; background: none; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; }
+.pro-cita .logo { width: 44px; height: 44px; font-size: 15px; transition: transform .25s var(--spring); }
+.pro-cita.on { border-color: var(--accent); background: var(--accent-soft); }
+.pro-cita.on .logo { transform: scale(1.06); box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--accent); }
+.horas-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+.resumen-cita { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 4px 4px; color: var(--muted); }
+.resumen-cita b { color: var(--ink); }
+/* Lo de adentro de una hoja nunca se aplasta: si no cabe, se desplaza */
+.hoja-cuerpo > * { flex-shrink: 0; }

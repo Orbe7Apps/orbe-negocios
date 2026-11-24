@@ -26,7 +26,7 @@ export function BotonOrbe({ seccion, tabs = [] }) {
     puede('vender') && T.mod('agenda') && ['cita', 'calendario', 'Cita', () => abrir('nuevaCita', {})],
     puede('ordenes') && T.mod('ordenes') && ['orden', 'orden', 'Orden', () => abrir('nuevaOrden', {})],
     puede('gastos') && ['gasto', 'dinero', 'Gasto', () => abrir('gasto')],
-    (puede('productos') || puede('reponer')) && T.inv && T.mod('escaner') && ['escanear', 'camara', 'Escanear', () => abrir('escaner', { para: 'inventario' })],
+    (puede('productos') || puede('reponer')) && T.inv && T.mod('escaner') && ['escanear', 'escanear', 'Escanear', () => abrir('escaner', { para: 'inventario' })],
     puede('clientes') && ['cliente', 'personas', 'Cliente', () => abrir('nuevoCliente', {})],
     puede('vender') && T.mod('caja') && ['caja', 'billete', 'Caja', () => abrir('caja')]
   ].filter(Boolean).slice(0, 6);

@@ -71,7 +71,7 @@ export function Inventario() {
 
   // Herramientas en una fila: escanear, factura del proveedor, promociones y precios.
   // Solo las que el negocio tiene encendidas (Ajustes → Funciones).
-  const herr = [(pp || puede('reponer')) && T.mod('escaner') && ['camara', 'Escanear', () => abrir('escaner', { para: 'inventario' }), 0, '#6a5cf2'], (pp || puede('reponer')) && T.mod('compras') && ['doc', 'Factura', () => abrir('factura'), 0, '#3d9be9'],
+  const herr = [(pp || puede('reponer')) && T.mod('escaner') && ['escanear', 'Escanear', () => abrir('escaner', { para: 'inventario' }), 0, '#6a5cf2'], (pp || puede('reponer')) && T.mod('compras') && ['doc', 'Factura', () => abrir('factura'), 0, '#3d9be9'],
     pp && T.mod('promos') && ['porciento', 'Promos', () => abrir('promos'), promosVigentes().length, '#e8436a'], pp && T.mod('precios') && ['etiqueta', 'Precios', () => abrir('precios'), bajoMeta().length ? -1 : 0, '#e8961a']].filter(Boolean);
   const Herramientas = herr.length ? html`<div class="herramientas entra" data-tour="escanear">${herr.map(h => html`<button type="button" key=${h[1]} class="toca" onClick=${h[2]}><span style=${{ background: h[4] }}><${Icono} n=${h[0]} t=${18} c="#fff" /></span><b>${h[1]}</b>${h[3] > 0 ? html`<em>${h[3]}</em>` : h[3] < 0 ? html`<i class="punto-aviso" style="top:8px;right:14px"></i>` : null}</button>`)}</div>` : null;
   const servs = listaProductos().filter(p => p.q == null);
@@ -83,7 +83,7 @@ export function Inventario() {
 
   if (tel) return html`
     <div class="fila entra" style="gap:8px"><h1 class="titulo crece">Inventario</h1><${BotonAyuda} />${pp && html`<button type="button" class="icono-btn toca boton-agregar" aria-label=${filtro === 'Servicios' ? 'Agregar servicio' : 'Agregar producto'} onClick=${() => filtro === 'Servicios' ? editarP({ svc: true }) : editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}><${Icono} n="mas1" t=${20} g=${2.6} /></button>`}</div>
-    <label class="buscador buscador-oscuro entra"><${Icono} n="buscar" t=${17} /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + listaProductos().length} aria-label="Buscar en el inventario" />${(pp || puede('reponer')) && html`${T.mod('escaner') && html`<button type="button" class="buscador-cam toca" aria-label="Escanear con la cámara" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="camara" t=${17} /></button>`}`}</label>
+    <label class="buscador buscador-oscuro entra"><${Icono} n="buscar" t=${17} /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + listaProductos().length} aria-label="Buscar en el inventario" />${(pp || puede('reponer')) && html`${T.mod('escaner') && html`<button type="button" class="buscador-cam toca" aria-label="Escanear código de barras" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="escanear" t=${17} /></button>`}`}</label>
     ${Herramientas}
     ${Pestañas}
     ${filtro !== 'Servicios' && html`<${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} />`}

@@ -92,7 +92,7 @@ export function CatalogoVacio({ donde }) {
   return html`<${Vacio} i=${T.inv ? 'caja' : 'lista'} t=${'Todavía no tienes ' + cosa} s=${donde === 'vender' ? 'Agrégalos y aquí aparecen para tocar y cobrar.' : 'Empieza con lo típico de ' + (R ? R.n.toLowerCase() : 'tu negocio') + ' y cambia los precios a tu gusto.'}>
     ${pp && hay > 0 && html`<button type="button" class="btn2 lleno toca" onClick=${() => abrir('sugerencias')}><${Icono} n="rayo" t=${15} />Agregar lo típico</button>`}
     ${pp && html`<button type="button" class="btn2 toca" onClick=${() => abrir('producto', T.inv ? {} : { svc: true })}>+ ${T.inv ? 'Producto' : 'Servicio'}</button>`}
-    ${pp && T.inv && T.mod('escaner') && html`<button type="button" class="btn2 toca" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="camara" t=${15} />Escanear</button>`}
+    ${pp && T.inv && T.mod('escaner') && html`<button type="button" class="btn2 toca" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="escanear" t=${15} />Escanear</button>`}
     ${!pp && html`<span class="sub">Pídele al dueño que los agregue.</span>`}
   </${Vacio}>`;
 }
