@@ -3,7 +3,10 @@
 // La seguridad la pone el servidor: cada cuenta solo ve y cambia los negocios donde es miembro (y si la suscripción
 // venció, solo puede ver). La clave de abajo es pública a propósito: sin una sesión válida no da acceso a nada.
 import { useState, useEffect } from './lib/preact-htm.js';
-import { leer, alCambiar, aplicarRemoto, restaurar, idDispositivo, cambiarNegocio, salir } from './datos.js';
+import { leer, alCambiar, aplicarRemoto, restaurar, idDispositivo, cambiarNegocio, salir, guardarCita, citaActiva } from './datos.js';
+import { pais, dinero } from './paises.js';
+import { horarioDe } from './horario.js';
+import { avisar } from './ui.js';
 
 const URL_NUBE = 'https://cwjmstctrxrcisfbknam.supabase.co';
 const CLAVE_PUBLICA = 'sb_publishable_x95K8o7WAhVtldQrU3fnGw_nbcVSEGE';
@@ -256,6 +259,8 @@ export async function sincronizar() {
     await subir(c, nid);
     await bajar(c, nid);
     await leerPlan(c, nid);
+    await traerReservas(c, nid).catch(() => {});
+    await publicarSiCambio(c, nid).catch(() => {});
     poner({ estado: pend.size ? 'pendiente' : 'al día', ultima: Date.now(), error: '' });
   } catch (er) {
     poner({ estado: 'error', error: explicar(er) });
@@ -268,6 +273,53 @@ function arrancar() {
   window.addEventListener('online', sincronizar);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sincronizar(); });
   sincronizar();
+}
+
+// ---------- link de reservas ----------
+// Lo que ve la página pública: servicios, profesionales (solo el nombre), horarios, vacaciones y horas ocupadas.
+// Nunca nombres ni teléfonos de los clientes.
+export function datosReserva(S) {
+  const n = S.negocio, P = pais(n.pais), D = dinero(P, S.tasa.valor), ahora = Date.now();
+  const pros = S.perfiles.filter(p => !p.inactivo && !p.borrado && p.citas !== false);
+  const srv = S.productos.filter(p => !p.borrado && p.q == null && p.dur > 0 && p.web !== false).slice(0, 80).map(p => ({ id: p.id, n: p.n, p: D.m(p.p), dur: p.dur || 30, g: p.g || '' }));
+  return {
+    nombre: n.nombre, logo: n.logo && n.logo.length < 120000 ? n.logo : '', tel: n.tel || '', pais: P.id, dir: n.dir || '',
+    servicios: srv, pros: pros.map(p => ({ id: p.id, n: p.n.split(' ')[0], h: horarioDe(S, p.id), aus: (p.aus || []).filter(a => a.hasta + 86400000 > ahora).map(a => ({ desde: a.desde, hasta: a.hasta })) })),
+    horario: horarioDe(S, ''),
+    ocupado: (S.citas || []).filter(c => citaActiva(c) && c.t + (c.dur || 30) * 60000 > ahora && c.t < ahora + 62 * 86400000).map(c => ({ pro: c.pro || '', t: c.t, dur: c.dur || 30 }))
+  };
+}
+export async function publicarReservas(conf) {
+  const c = await cliente(), S = leer(), nid = S.negocio.nubeId;
+  if (!nid) throw new Error('Primero guarda tu negocio en la nube (Más → Cuenta y nube)');
+  const datos = datosReserva(S);
+  const { data, error } = await c.rpc('publicar_reservas', { n: nid, slug: conf.slug, activa: conf.activa, datos });
+  if (error) throw new Error(explicar(error));
+  try { localStorage.setItem('orbe-reservas-firma', JSON.stringify(datos)); } catch (e) { /* sin espacio */ }
+  return data;
+}
+// Si la página está activa y algo cambió (citas, servicios, horarios), se vuelve a publicar sola.
+async function publicarSiCambio(c, nid) {
+  const S = leer(), conf = S.negocio.reservas;
+  if (!conf || !conf.activa || !conf.slug) return;
+  const datos = datosReserva(S), firma = JSON.stringify(datos);
+  let antes = ''; try { antes = localStorage.getItem('orbe-reservas-firma') || ''; } catch (e) { /* sin almacenamiento */ }
+  if (firma === antes) return;
+  const { error } = await c.rpc('publicar_reservas', { n: nid, slug: conf.slug, activa: true, datos });
+  if (!error) try { localStorage.setItem('orbe-reservas-firma', firma); } catch (e) { /* sin espacio */ }
+}
+// Las reservas que llegaron por el link pasan a la agenda (con el mismo id en todos los aparatos) y se borran de la nube.
+async function traerReservas(c, nid) {
+  const S = leer(); if (!S.negocio.reservas || !S.negocio.reservas.slug) return;
+  const { data, error } = await c.from('reservas').select('id, datos, creado').eq('negocio_id', nid).order('creado').limit(50);
+  if (error || !data || !data.length) return;
+  data.forEach(r => {
+    const x = r.datos, id = 'rw' + r.id.replace(/-/g, '').slice(0, 14);
+    if (!(leer().citas || []).some(ci => ci.id === id)) guardarCita({ id, t: Number(x.t), dur: Number(x.dur) || 30, srv: Array.isArray(x.srv) ? x.srv : [], pro: x.pro || '', nom: x.nom || 'Cliente', tel: x.tel || '', nota: x.nota || '', estado: 'pendiente', web: true });
+  });
+  await c.from('reservas').delete().in('id', data.map(r => r.id));
+  const x = data[data.length - 1].datos;
+  avisar(data.length === 1 ? 'Nueva reserva por tu link: ' + String(x.nom || '').split(' ')[0] + ' · ' + new Date(Number(x.t)).toLocaleString('es', { weekday: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : data.length + ' reservas nuevas por tu link', 'ok');
 }
 
 // ---------- unir este negocio con la cuenta ----------

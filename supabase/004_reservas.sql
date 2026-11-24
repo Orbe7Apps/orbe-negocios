@@ -1,0 +1,9 @@
+-- Orbe Negocios · migración 4: link de reservas (página pública por negocio y reservas que llegan).
+-- Aplicada en Supabase como «link_de_reservas». Resumen:
+--   public.paginas_reserva (negocio_id, slug único, activa, datos jsonb): lo mínimo para reservar (servicios, profesionales,
+--     horarios, vacaciones y horas ocupadas, sin datos de clientes). Solo miembros la leen; se publica con publicar_reservas().
+--   public.reservas (negocio_id, datos jsonb): lo que reservan los clientes. Solo miembros leen y borran.
+--   pagina_reservas(slug)  → anon: la página activa (si la suscripción está al día) más las reservas por pasar a la agenda.
+--   reservar(slug, nom, tel, srv, pro, t, dur, nota) → anon: valida hora futura, datos, choque y tope de 40 por confirmar.
+--   publicar_reservas(n, slug, activa, datos) → dueño o administrador del negocio.
+-- El SQL completo está en el historial de migraciones del proyecto (supabase_migrations.schema_migrations).
