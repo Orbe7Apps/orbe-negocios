@@ -977,3 +977,10 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .clave-nueva { min-height: 100dvh; display: grid; place-items: center; padding: 20px 16px; }
 .campo > .clave-caja { font-size: inherit; color: inherit; }
 .cerrar-sesion { width: 100%; min-height: 52px; border-radius: 18px; justify-content: center; gap: 8px; margin-top: 6px; font-weight: 600; }
+
+/* Avisos: verde (listo), rojo (algo salió mal) y ámbar (falta un dato) */
+.aviso-toast > svg { flex: none; }
+.aviso-toast.error { background: #46202a; color: #ffd3da; animation: fadeUp .35s var(--spring) both, sacudir .4s .15s ease both; }
+.aviso-toast.info { background: #3d321c; color: #ffe6b8; }
+@keyframes sacudir { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+@media (prefers-reduced-motion: reduce) { .aviso-toast.error { animation: fadeUp .01ms both; } }

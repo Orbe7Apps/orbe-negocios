@@ -51,6 +51,7 @@ export const ICONOS = {
   cerrar: 'M6 6l12 12M18 6L6 18',
   atras: 'M15 18l-6-6 6-6',
   salir: 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
+  info: 'M12 22a10 10 0 100-20 10 10 0 000 20zM12 16v-5M12 8h.01',
   sig: 'M9 18l6-6-6-6',
   mas1: 'M12 5v14M5 12h14',
   menos1: 'M5 12h14',
@@ -97,17 +98,25 @@ export function LogoOrbe({ t = 42, orbita = false }) {
 }
 
 // ---------- avisos ----------
+// Tres tipos: «ok» (verde, check), «error» (rojo: algo salió mal o no se puede) e «info» (ámbar: falta un dato o un aviso).
+// Si no se dice el tipo, se adivina por el texto.
+const ERROR = /no coincid|no se pudo|no pude|no se encontr|no encontré|inválid|incorrect|venci|vencid|no puede|no puedes|no permite|no tiene|no es |no son |no está|ya existe|ya hay|ya tienes|ya lo tiene|debe ser|es más que|no alcanza|demasiados|sin permiso|sin conexión|algo salió mal|no es una copia|hay un trabajo sin|^solo (el|quien)|^ese |^esa /i;
+const INFO = /^(escribe|elige|marca|agrega |crea tu|para crear|la contraseña (debe|es muy)|pon |pídele|reparte|falta|toca|lo encuentras|los vuelves|todavía|sin internet|la cámara|espera|primero|este producto|el dueño siempre|el porcentaje va|el usuario lleva|el pin (nuevo )?son|guardando|un momento|revisa)/i;
+export const tipoAviso = t => { const x = String(t || ''); return INFO.test(x) ? 'info' : ERROR.test(x) ? 'error' : 'ok'; };
 let ponerAviso = () => {};
-export const avisar = t => ponerAviso(t);
+export const avisar = (t, tipo) => ponerAviso(t, tipo);
+const ICONO_AVISO = { ok: ['check', '#3ddc9f'], error: ['alerta', '#ff7a8f'], info: ['info', '#f5b544'] };
 export function Avisos() {
-  const [txt, setTxt] = useState('');
-  const [n, setN] = useState(0);
+  const [a, setA] = useState(null);
   useEffect(() => {
     let tm;
-    ponerAviso = t => { setTxt(t); setN(x => x + 1); clearTimeout(tm); tm = setTimeout(() => setTxt(''), 2400); };
+    // Los errores y los textos largos se quedan un poco más en pantalla.
+    ponerAviso = (t, tipo) => { const k = tipo || tipoAviso(t); setA(x => ({ t: String(t), k, n: (x ? x.n : 0) + 1 })); clearTimeout(tm); tm = setTimeout(() => setA(null), Math.min(6000, Math.max(k === 'ok' ? 2400 : 3400, String(t).length * 55))); };
     return () => clearTimeout(tm);
   }, []);
-  return txt ? html`<div class="aviso-toast" role="status" key=${n}><${Icono} n="check" t=${18} g=${2.6} c="#3ddc9f" />${txt}</div>` : null;
+  if (!a) return null;
+  const ic = ICONO_AVISO[a.k];
+  return html`<div class=${'aviso-toast ' + a.k} role=${a.k === 'error' ? 'alert' : 'status'} key=${a.n}><${Icono} n=${ic[0]} t=${18} g=${2.6} c=${ic[1]} /><span>${a.t}</span></div>`;
 }
 
 // ---------- interruptor ----------
