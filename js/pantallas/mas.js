@@ -102,9 +102,11 @@ function useTemas() {
     aj && { k: 'borrar', g: 'La app', i: 'basura', c: 't-ros', n: 'Empezar de nuevo', r: 'Borra este negocio de este aparato', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Borra este negocio de este aparato para probar otro país o tipo. Antes se guarda una copia.</p>
       ${Botones(html`<button type="button" class="btn2 chico rojo toca" onClick=${() => abrir('borrar')}>Empezar de nuevo</button>`)}` }
   ].filter(Boolean);
-  return temas;
+  // Un color por zona (el de borrar se queda rojo: avisa que es peligroso).
+  return temas.map(t => t.k === 'borrar' ? t : Object.assign({}, t, { c: COLOR_ZONA[t.g] || t.c }));
 }
 const GRUPOS = ['', 'Dinero', 'Tu negocio', 'Ventas y cobro', 'La app'];
+const COLOR_ZONA = { '': 't-vio', Dinero: 't-ver', 'Tu negocio': 't-azu', 'Ventas y cobro': 't-amb', 'La app': 't-gris' };
 const TOUR = { perfil: 'perfil', copias: 'copias' };
 const Fila = (t, onClick) => html`<button type="button" key=${t.k} class="opcion-menu toca" data-tour=${TOUR[t.k]} onClick=${onClick}>
   <span class=${'ic ' + t.c} style="width:36px;height:36px;border-radius:11px"><${Icono} n=${t.i} t=${17} g=${2.2} /></span>

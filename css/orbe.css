@@ -984,3 +984,7 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .aviso-toast.info { background: #3d321c; color: #ffe6b8; }
 @keyframes sacudir { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
 @media (prefers-reduced-motion: reduce) { .aviso-toast.error { animation: fadeUp .01ms both; } }
+
+/* Zona «La app» en Ajustes: gris neutro */
+.t-gris { background: var(--fill2); color: var(--muted); }
+.ic.t-gris { background: #7d7a96; color: #fff; }
