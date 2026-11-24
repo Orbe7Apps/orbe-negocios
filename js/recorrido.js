@@ -130,6 +130,8 @@ export function Recorrido({ onFin }) {
       for (let k = 0; k < 40 && vivo && !(el = document.querySelector(paso.sel)); k++) await cuadros(1);
       if (!vivo) return;
       if (!el) { mover(dir.current); return; }
+      // Dentro de algo fijo que tiene su propio desplazamiento (la lista de Ajustes en una pantalla baja): se lleva a la vista.
+      if (fijo(el) && contenedor(el)) { el.scrollIntoView({ block: 'nearest' }); await cuadros(2); if (!vivo) return; }
       const r = el.getBoundingClientRect(), c = fijo(el) ? null : contenedor(el);
       let dy = 0;
       if (c) {
