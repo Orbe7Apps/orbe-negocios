@@ -1,7 +1,7 @@
 // Panel de administración de Orbe (solo para administradores): pagos por revisar, negocios y datos de cobro.
 // El servidor protege todo: si la cuenta no es administradora, no recibe ningún dato aunque abra esta página.
 import { html, render, useState, useEffect } from './lib/preact-htm.js';
-import { cliente, entrarCuenta, olvideClave, explicar, estadoPlan, leerEnlace, useNube, quitarAvisoEnlace } from './nube.js';
+import { cliente, entrarCuenta, entrarUsuario, olvideClave, explicar, estadoPlan, leerEnlace, useNube, quitarAvisoEnlace } from './nube.js';
 import { ClaveNueva, CampoClave } from './pantallas/cuenta.js';
 import { Icono, Avisos, avisar, LogoOrbe } from './ui.js';
 
@@ -13,12 +13,12 @@ function Entrar({ listo }) {
   const enviar = async () => {
     try {
       if (olvido) { await olvideClave(f.correo); avisar('Listo: revisa tu correo y abre el enlace en este aparato'); setOlvido(false); return; }
-      await entrarCuenta(f.correo, f.clave); listo();
+      await entrarUsuario(f.correo, f.clave); listo();
     } catch (er) { avisar(er.message); }
   };
   return html`<div class="tarjeta pila" style="max-width:420px;margin:12vh auto 0;padding:28px;gap:16px">
     <div class="fila" style="gap:12px"><${LogoOrbe} t=${40} /><span style="display:flex;flex-direction:column"><b style="font-size:17px">Orbe · Administración</b><span class="sub">${olvido ? 'Te mandamos un enlace para cambiar la contraseña' : 'Solo para administradores'}</span></span></div>
-    <label class="campo"><span>Correo</span><input type="email" autocomplete="email" autocapitalize="off" value=${f.correo} onInput=${e => setF(Object.assign({}, f, { correo: e.target.value }))} /></label>
+    <label class="campo"><span>${olvido ? 'Correo' : 'Usuario o correo'}</span><input type="text" autocomplete="username" autocapitalize="off" value=${f.correo} onInput=${e => setF(Object.assign({}, f, { correo: e.target.value }))} /></label>
     ${!olvido && html`<${CampoClave} titulo="Contraseña" valor=${f.clave} onCambio=${v => setF(Object.assign({}, f, { clave: v }))} onEnter=${enviar} />`}
     <button type="button" class="btn toca" onClick=${enviar}>${olvido ? 'Mandar el enlace' : 'Entrar'}</button>
     <button type="button" class="olvide-pin toca" onClick=${() => setOlvido(!olvido)}>${olvido ? 'Volver' : 'Olvidé mi contraseña'}</button>

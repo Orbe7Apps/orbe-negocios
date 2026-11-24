@@ -1,13 +1,13 @@
 // ¿Quién está usando Orbe? Cada persona entra con su perfil y su PIN.
 // El PIN se marca en un teclado en pantalla: el teclado del teléfono nunca se abre solo.
 import { html, useState, useEffect } from '../lib/preact-htm.js';
-import { useDatos, entrar, pinValido, pedirPinNuevo } from '../datos.js';
+import { useDatos, entrar, pinValido, pedirPinNuevo, cambiarPin } from '../datos.js';
 import { enlaceWA } from '../ordenpdf.js';
 import { pais } from '../paises.js';
 import { rolDe } from '../permisos.js';
 import { Icono, LogoOrbe, iniciales, TONOS, avisar } from '../ui.js';
-import { useNube, entrarCuenta } from '../nube.js';
-import { CampoClave } from './cuenta.js';
+import { useNube, entrarCuenta, entrarUsuario } from '../nube.js';
+import { CampoClave, CampoUsuario } from './cuenta.js';
 
 export function Teclado({ largo = 4, onListo, error }) {
   const [v, setV] = useState('');
@@ -35,20 +35,32 @@ export function Acceso({ tel }) {
   const S = useDatos();
   const activos = S.perfiles.filter(p => !p.inactivo);
   const [elegido, setElegido] = useState(null);
-  // Un solo perfil sin PIN: entra directo.
-  useEffect(() => { if (activos.length === 1 && !activos[0].pin) entrar(activos[0].id); }, []);
-  // Dueño sin PIN y con más personas en el equipo: para que nadie entre como dueño, se pide la contraseña de la cuenta Orbe.
+  // Solo en la demostración: un único perfil sin PIN entra directo. En un negocio de verdad siempre se pide el PIN.
+  useEffect(() => { if ((S.negocio.demo || /[?&]demo\b/.test(location.search)) && activos.length === 1 && !activos[0].pin) entrar(activos[0].id); }, []);
+  // Dueño sin PIN: para que nadie entre como dueño se pide la contraseña de la cuenta y luego crea su PIN.
+  // Empleado sin PIN: no entra; se le avisa al dueño para que le ponga uno.
   const N = useNube();
   const demo = S.negocio.demo || /[?&]demo\b/.test(location.search);
-  const [conClave, setConClave] = useState(null), [cl, setCl] = useState({ correo: '', clave: '' }), [ocupado, setOcupado] = useState(false);
+  const [conClave, setConClave] = useState(null), [cl, setCl] = useState({ usuario: '', clave: '' }), [ocupado, setOcupado] = useState(false);
+  const [nuevoPin, setNuevoPin] = useState(null); // { p, primero }
   const tocar = p => {
-    if (!p.pin && p.rol === 'dueno' && activos.length > 1 && !demo) { setConClave(p); setCl({ correo: N.correo || '', clave: '' }); return; }
+    if (!p.pin && !demo) {
+      if (p.rol === 'dueno') { setConClave(p); setCl({ usuario: '', clave: '' }); return; }
+      pedirPinNuevo(p.id); avisar('Todavía no tienes PIN: le avisamos al dueño para que te ponga uno'); return;
+    }
     if (!p.pin) { entrar(p.id); avisar('Hola, ' + p.n.split(' ')[0]); } else { setElegido(p); setFallos(0); setOlvido(false); }
   };
   const entrarConClave = async () => {
     setOcupado(true);
-    try { await entrarCuenta(cl.correo, cl.clave); entrar(conClave.id); avisar('Hola, ' + conClave.n.split(' ')[0] + '. Ponte un PIN para entrar más rápido'); }
-    catch (er) { avisar(er.message); } finally { setOcupado(false); }
+    try {
+      if (N.correo) await entrarCuenta(N.correo, cl.clave); else await entrarUsuario(cl.usuario, cl.clave);
+      setNuevoPin({ p: conClave, primero: '' }); setConClave(null);
+    } catch (er) { avisar(er.message); } finally { setOcupado(false); }
+  };
+  const marcarNuevo = pin => {
+    if (!nuevoPin.primero) { setNuevoPin({ p: nuevoPin.p, primero: pin }); return true; }
+    if (pin !== nuevoPin.primero) { avisar('No coinciden: márcalo otra vez'); setNuevoPin({ p: nuevoPin.p, primero: '' }); return false; }
+    cambiarPin(nuevoPin.p.id, pin); entrar(nuevoPin.p.id); avisar('Listo: desde ahora entras con tu PIN'); return true;
   };
   const caja = contenido => html`<div style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column;padding:calc(56px + var(--sa-top)) 22px calc(24px + var(--sa-bottom))' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
     <div class=${tel ? 'pila' : 'tarjeta pila'} style=${tel ? 'flex:1;gap:18px' : 'width:min(480px,100%);padding:32px;gap:18px;border-radius:28px'}>${contenido}</div></div>`;
@@ -83,15 +95,23 @@ export function Acceso({ tel }) {
       <button type="button" class="btn toca" onClick=${() => { setOlvido(false); setElegido(null); }}>Entendido</button>
     </div>`);
 
+  if (nuevoPin) return caja(html`
+    <div class="pila entra" style="align-items:center;gap:8px;text-align:center">
+      <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(nuevoPin.p) % 5]} style="width:72px;height:72px;font-size:24px">${iniciales(nuevoPin.p.n)}</span>
+      <h1 style="font-size:24px">${nuevoPin.primero ? 'Repite tu PIN' : 'Crea tu PIN de dueño'}</h1>
+      <span class="sub" style="line-height:1.45;max-width:320px">${nuevoPin.primero ? 'Márcalo otra vez para confirmar.' : '4 números que solo sepas tú. Con él entras cada vez que abras Orbe.'}</span>
+    </div>
+    <div class="entra" style="--i:2;margin-top:8px" key=${nuevoPin.primero ? 'b' : 'a'}><${Teclado} onListo=${marcarNuevo} /></div>`);
+
   if (conClave) return caja(html`
     <button type="button" class="icono-btn toca" aria-label="Volver" onClick=${() => setConClave(null)}><${Icono} n="atras" /></button>
     <div class="pila entra" style="align-items:center;gap:8px;text-align:center">
       <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(conClave) % 5]} style="width:72px;height:72px;font-size:24px">${iniciales(conClave.n)}</span>
       <h1 style="font-size:24px">Hola, ${conClave.n.split(' ')[0]}</h1>
-      <span class="sub" style="line-height:1.45;max-width:340px">Todavía no tienes PIN. Para entrar como dueño, escribe la contraseña de tu cuenta Orbe.</span>
+      <span class="sub" style="line-height:1.45;max-width:340px">Todavía no tienes PIN. Para entrar como dueño, escribe la contraseña de la cuenta Orbe y después creas tu PIN.</span>
     </div>
-    ${!N.correo && html`<label class="campo"><span>Correo</span><input type="email" inputmode="email" autocomplete="email" autocapitalize="off" value=${cl.correo} onInput=${e => setCl(Object.assign({}, cl, { correo: e.target.value }))} /></label>`}
-    ${N.correo && html`<span class="sub" style="text-align:center">${N.correo}</span>`}
+    ${!N.correo && html`<${CampoUsuario} valor=${cl.usuario} onCambio=${v => setCl(Object.assign({}, cl, { usuario: v }))} />`}
+    ${N.correo && N.usuario && html`<span class="sub" style="text-align:center">Usuario: ${N.usuario}</span>`}
     <${CampoClave} titulo="Contraseña" valor=${cl.clave} onCambio=${v => setCl(Object.assign({}, cl, { clave: v }))} onEnter=${entrarConClave} />
     <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${entrarConClave}>${ocupado ? 'Un momento…' : 'Entrar'}</button>`);
 

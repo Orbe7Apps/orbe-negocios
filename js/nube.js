@@ -18,7 +18,7 @@ const SIN_BORRAR = ['registro', 'historialTasas'];
 const idDe = (col, x) => col === 'registro' ? String(x.h || x.t) : col === 'historialTasas' ? x.dia + '|' + x.f : x && x.id != null ? String(x.id) : '';
 
 // ---------- estado de la nube (para la pantalla) ----------
-let E = { sesion: null, correo: '', negocioId: '', estado: 'apagada', pendientes: 0, ultima: 0, error: '', plan: null, admin: false, recuperar: false, avisoEnlace: '' };
+let E = { sesion: null, correo: '', usuario: '', negocioId: '', estado: 'apagada', pendientes: 0, ultima: 0, error: '', plan: null, admin: false, recuperar: false, avisoEnlace: '' };
 const subs = new Set();
 const poner = o => { E = Object.assign({}, E, o); subs.forEach(f => f(E)); };
 export const estadoNube = () => E;
@@ -36,7 +36,7 @@ export async function cliente() {
   if (!window.supabase) await cargar(LIB);
   sb = window.supabase.createClient(URL_NUBE, CLAVE_PUBLICA, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'orbe-negocios-sesion' } });
   sb.auth.onAuthStateChange((ev, s) => {
-    poner({ sesion: s ? s.user : null, correo: s && s.user ? s.user.email : '' });
+    poner({ sesion: s ? s.user : null, correo: s && s.user ? s.user.email : '', usuario: s && s.user ? ((s.user.user_metadata || {}).usuario || '') : '' });
     if (ev === 'PASSWORD_RECOVERY') poner({ recuperar: true });
   });
   return sb;
@@ -48,6 +48,7 @@ export function explicar(er) {
   if (/Email not confirmed/i.test(m)) return 'Primero confirma tu correo: te mandamos un enlace';
   if (/already registered|already been registered/i.test(m)) return 'Ese correo ya tiene cuenta: inicia sesión';
   if (/Password should be at least|weak/i.test(m)) return 'La contraseña es muy corta: usa al menos 8 caracteres';
+  if (/Database error saving new user|Ese usuario ya existe/i.test(m)) return 'Ese usuario ya existe: elige otro';
   if (/rate limit|too many/i.test(m)) return 'Demasiados intentos. Espera unos minutos';
   if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Sin conexión con la nube. Revisa tu internet';
   if (/row-level security|permission denied/i.test(m)) return 'Tu suscripción no permite guardar cambios ahora';
@@ -78,12 +79,38 @@ export const yaHayEnlace = () => { try { return !!sessionStorage.getItem('orbe-e
 export const haySesionGuardada = () => { try { return !!localStorage.getItem('orbe-negocios-sesion'); } catch (e) { return false; } };
 export const terminarRecuperar = () => poner({ recuperar: false });
 export const quitarAvisoEnlace = () => poner({ avisoEnlace: '' });
-export async function crearCuenta(correo, clave) {
-  const c = await cliente();
-  const { data, error } = await c.auth.signUp({ email: correo.trim(), password: clave, options: { emailRedirectTo: vuelta() } });
+// El usuario: de 3 a 30 letras, números, punto, guion o guion bajo (sin espacios ni acentos).
+export const usuarioOk = u => /^[a-z0-9._-]{3,30}$/.test(String(u || '').trim().toLowerCase());
+export async function crearCuenta(correo, clave, usuario) {
+  const c = await cliente(), u = String(usuario || '').trim().toLowerCase();
+  if (u) {
+    const { data: libre, error: e1 } = await c.rpc('usuario_libre', { u });
+    if (e1) throw new Error(explicar(e1));
+    if (!libre) throw new Error('Ese usuario ya existe: elige otro');
+  }
+  const { data, error } = await c.auth.signUp({ email: correo.trim(), password: clave, options: { emailRedirectTo: vuelta(), data: u ? { usuario: u } : {} } });
   if (error) throw new Error(explicar(error));
   // Si el proyecto pide confirmar el correo, no hay sesión todavía.
   return { confirmar: !data.session };
+}
+// Entrar con el usuario (o con el correo, si lo escribe el dueño): el servidor revisa la contraseña y no muestra el correo.
+export async function entrarUsuario(usuario, clave) {
+  const x = String(usuario || '').trim();
+  if (!x) throw new Error('Escribe tu usuario');
+  if (x.includes('@')) return entrarCuenta(x, clave);
+  const c = await cliente();
+  const { data, error } = await c.rpc('correo_para_entrar', { u: x, clave });
+  if (error) throw new Error(explicar(error));
+  return entrarCuenta(data, clave);
+}
+// Ponerle usuario a la cuenta (las cuentas creadas antes de que existiera).
+export async function ponerUsuario(u) {
+  const c = await cliente();
+  const { data, error } = await c.rpc('poner_usuario', { u });
+  if (error) throw new Error(explicar(error));
+  await c.auth.refreshSession();
+  poner({ usuario: data });
+  return data;
 }
 export async function entrarCuenta(correo, clave) {
   const c = await cliente();
@@ -316,7 +343,7 @@ export async function iniciarNube() {
   try {
     const c = await cliente();
     const { data: { session } } = await c.auth.getSession();
-    poner({ sesion: session ? session.user : null, correo: session ? session.user.email : '', negocioId: (S.negocio && S.negocio.nubeId) || '' });
+    poner({ sesion: session ? session.user : null, correo: session ? session.user.email : '', usuario: session ? ((session.user.user_metadata || {}).usuario || '') : '', negocioId: (S.negocio && S.negocio.nubeId) || '' });
     if (session) { c.rpc('soy_admin_orbe').then(({ data }) => poner({ admin: !!data })); if (S.negocio && S.negocio.nubeId) arrancar(); }
   } catch (e) { poner({ estado: 'sin internet' }); }
 }

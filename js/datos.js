@@ -252,7 +252,7 @@ export function crearNegocio(cfg, conEjemplo) {
     return p;
   });
   const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala, cfg.rubro), rubro: R ? R.id : '', mods: Object.assign({}, cfg.mods || {}), pasosListos: !!conEjemplo, pedirNube: !conEjemplo, demo: !!conEjemplo, razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
-  const perfiles = [{ id: 'u0', n: (cfg.dueno || '').trim() || 'Dueño', rol: 'dueno', pin: '', sucs: [], creado: Date.now() }];
+  const perfiles = [{ id: 'u0', n: (cfg.dueno || '').trim() || 'Dueño', rol: 'dueno', pin: /^\d{4}$/.test(cfg.pin || '') ? cifrarPin('u0', cfg.pin) : '', sucs: [], creado: Date.now() }];
   if (conEjemplo) perfiles.push(
     { id: 'u1', n: 'Carla Méndez', rol: 'encargado', pin: cifrarPin('u1', '1111'), sucs: [], creado: Date.now() },
     { id: 'u2', n: 'Luis Pino', rol: 'cajero', pin: cifrarPin('u2', '2222'), sucs: sucursales.length > 1 ? [sucursales[0]] : [], creado: Date.now() });

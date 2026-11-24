@@ -16,7 +16,7 @@ const TONO = { vio: 't-vio', amb: 't-amb', ver: 't-ver', ros: 't-ros', azu: 't-a
 export function Inicio({ tel }) {
   const [paso, setPaso] = useState(-1);
   const [busca, setBusca] = useState('');
-  const [c, setC] = useState({ mods: {}, pais: '', rubro: '', tipo: '', escala: 'negocio', nombre: '', razon: '', fiscal: '', sucN: 1, sucNombres: [], dueno: '', pays: null, taxOn: null, taxIncl: true });
+  const [c, setC] = useState({ mods: {}, pais: '', rubro: '', tipo: '', escala: 'negocio', nombre: '', razon: '', fiscal: '', sucN: 1, sucNombres: [], dueno: '', pin: '', pin2: '', pays: null, taxOn: null, taxIncl: true });
   // La cuenta nueva empieza vacía. Con «?demo» en la dirección se llena con un mes de ejemplo (para mostrar la app).
   const demo = /[?&]demo\b/.test(location.search);
   const [ejemplo, setEjemplo] = useState(demo);
@@ -27,7 +27,9 @@ export function Inicio({ tel }) {
   const P = pais(c.pais || 'VE');
   const pon = o => setC(x => Object.assign({}, x, o));
   const i = PASOS.indexOf(paso);
-  const puede = paso === 'pais' ? !!c.pais : paso === 'tipo' ? !!c.rubro : true;
+  // El dueño crea su PIN al armar el negocio (en la demostración no hace falta).
+  const pinOk = demo || (/^\d{4}$/.test(c.pin) && c.pin === c.pin2);
+  const puede = paso === 'pais' ? !!c.pais : paso === 'tipo' ? !!c.rubro : paso === 'datos' ? pinOk : true;
   const R = rubro(c.rubro), mods = modulosDe({ rubro: c.rubro, tipo: c.tipo, mods: c.mods });
   const siguiente = () => {
     if (!puede) return;
@@ -103,6 +105,13 @@ export function Inicio({ tel }) {
     </button>`; })}</div>`;
   if (paso === 'datos') cuerpo = html`<div class="pila" style="gap:18px">
     <label class="campo"><span>Tu nombre (serás el dueño)</span><input type="text" value=${c.dueno} placeholder="Ej.: Ana Ruiz" onInput=${e => pon({ dueno: e.target.value })} autocomplete="name" /></label>
+    ${!demo && html`<div class="campo"><span>Tu PIN de dueño (4 números): lo marcas cada vez que abres Orbe</span>
+      <div class="rejilla-2" style="gap:8px">
+        <input class="num" type="password" inputmode="numeric" autocomplete="new-password" maxlength="4" value=${c.pin} placeholder="PIN" aria-label="PIN de dueño" onInput=${e => pon({ pin: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
+        <input class="num" type="password" inputmode="numeric" autocomplete="new-password" maxlength="4" value=${c.pin2} placeholder="Repítelo" aria-label="Repite el PIN" onInput=${e => pon({ pin2: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
+      </div>
+      ${c.pin2.length === 4 && c.pin !== c.pin2 ? html`<span class="sub" style="color:var(--out-text)">Los PIN no coinciden</span>` : html`<span class="sub faint">Tu equipo tendrá su propio PIN; este es solo tuyo.</span>`}
+    </div>`}
     <label class="campo"><span>${E ? 'Nombre comercial' : 'Nombre del negocio'}</span><input type="text" value=${c.nombre} placeholder=${nombreSugerido(c.tipo, c.escala, c.rubro)} onInput=${e => pon({ nombre: e.target.value })} autocomplete="organization" /></label>
     ${E && html`<div class="pila entra" style="gap:18px">
       <label class="campo"><span>Razón social</span><input type="text" value=${c.razon} placeholder=${(c.nombre || nombreSugerido(c.tipo, c.escala, c.rubro)) + ' ' + (P.suf || 'S.A.')} onInput=${e => pon({ razon: e.target.value })} /></label>
@@ -138,6 +147,6 @@ export function Inicio({ tel }) {
       <div style="flex:1;overflow-y:auto;padding:6px 18px 130px">${cuerpo}</div>
     </div>
     <div style=${{ position: tel ? 'fixed' : 'relative', left: 0, right: 0, bottom: 0, marginTop: tel ? 0 : '-110px', padding: '16px 18px calc(24px + var(--sa-bottom))', background: 'linear-gradient(to top, var(' + (tel ? '--bg' : '--surface') + ') 70%, transparent)' }}>
-      <button type="button" class=${'btn toca' + (puede ? '' : ' apagado')} aria-disabled=${puede ? 'false' : 'true'} onClick=${siguiente}>${paso === 'listo' ? (E ? 'Abrir mi empresa' : 'Abrir mi negocio') : 'Continuar'}</button>
+      <button type="button" class=${'btn toca' + (puede ? '' : ' apagado')} aria-disabled=${puede ? 'false' : 'true'} onClick=${() => { if (!puede && paso === 'datos') avisar('Crea tu PIN de dueño: 4 números, dos veces igual'); siguiente(); }}>${paso === 'listo' ? (E ? 'Abrir mi empresa' : 'Abrir mi negocio') : 'Continuar'}</button>
     </div>`);
 }

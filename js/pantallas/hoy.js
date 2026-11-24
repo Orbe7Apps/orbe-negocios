@@ -64,7 +64,7 @@ export function Hoy() {
     if (paraHoy.length) pendientes.push({ i: 'orden', t: 't-azu', txt: paraHoy.length + (paraHoy.length === 1 ? ' orden para entregar hoy' : ' órdenes para entregar hoy'), sub: paraHoy.slice(0, 2).map(o => numeroOrden(o) + ' · ' + o.que).join(', '), go: () => ir('ordenes') });
   }
   // Dueño sin PIN con más personas en el equipo: que se ponga uno (sin PIN, para entrar como dueño se pide la contraseña de la cuenta).
-  { const yo0 = S.perfiles.find(p => p.id === S.ajustes.perfil); if (yo0 && yo0.rol === 'dueno' && !yo0.pin && S.perfiles.filter(p => !p.inactivo).length > 1 && !S.negocio.demo) pendientes.unshift({ i: 'candado', t: 't-amb', txt: 'Ponte un PIN de dueño', sub: 'Así entras rápido y nadie más entra como tú', go: () => abrir('pin', { pid: yo0.id }) }); }
+  { const yo0 = S.perfiles.find(p => p.id === S.ajustes.perfil); if (yo0 && yo0.rol === 'dueno' && !yo0.pin && !S.negocio.demo) pendientes.unshift({ i: 'candado', t: 't-amb', txt: 'Ponte un PIN de dueño', sub: 'Así entras rápido y nadie más entra como tú', go: () => abrir('pin', { pid: yo0.id }) }); }
   // Empleados que olvidaron su PIN: el dueño (o quien maneja el equipo) les pone uno nuevo.
   if (puede('equipo')) (S.solicitudes || []).filter(x => x.tipo === 'pin' && x.estado === 'abierta').forEach(x => { const p = S.perfiles.find(y => y.id === x.pid); if (p) pendientes.unshift({ i: 'candado', t: 't-amb', txt: p.n.split(' ')[0] + ' olvidó su PIN', sub: 'Toca para ponerle uno nuevo', go: () => abrir('pin', { pid: p.id }) }); });
   // Agenda: la próxima cita del día (y quién está esperando).
