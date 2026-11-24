@@ -224,6 +224,9 @@ function subtitulo(s, { S, E, suc, T }) {
 
 // Primero se leen los datos guardados; después se dibuja y se va la pantalla de carga.
 iniciarDatos().then(() => {
+  // Cada vez que se abre o se recarga la página, cada persona elige su perfil y pone su PIN (la demostración no).
+  const S0 = leer();
+  if (S0.negocio && S0.ajustes.perfil && !S0.negocio.demo && !/[?&]demo\b/.test(location.search)) salir();
   render(html`<${App} />`, document.getElementById('app'));
   iniciarNube();
   requestAnimationFrame(() => { if (window.__listo) window.__listo(); });
