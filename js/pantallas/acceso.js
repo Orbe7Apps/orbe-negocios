@@ -6,7 +6,7 @@ import { enlaceWA } from '../ordenpdf.js';
 import { pais } from '../paises.js';
 import { rolDe } from '../permisos.js';
 import { Icono, LogoOrbe, iniciales, TONOS, avisar } from '../ui.js';
-import { useNube, entrarCuenta, entrarUsuario } from '../nube.js';
+import { useNube, entrarCuenta, entrarUsuario, cerrarSesion } from '../nube.js';
 import { CampoClave, CampoUsuario } from './cuenta.js';
 
 export function Teclado({ largo = 4, onListo, error }) {
@@ -133,5 +133,6 @@ export function Acceso({ tel }) {
         <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(p) % 5]} style="width:56px;height:56px;font-size:18px">${iniciales(p.n)}</span>
         <b>${p.n}</b><span class="sub">${r ? r.n : ''}${p.pin ? '' : ' · sin PIN'}</span>
       </button>`; })}</div>
-    <span class="sub faint" style="margin-top:auto;text-align:center">Cada persona ve solo lo que el dueño le permite.</span>`);
+    <span class="sub faint" style="margin-top:auto;text-align:center">Cada persona ve solo lo que el dueño le permite.</span>
+    ${N.sesion && !demo && html`<button type="button" class="olvide-pin toca fila" style="align-self:center;gap:6px;color:var(--out-text)" onClick=${() => { if (confirm('¿Cerrar sesión? Para volver a abrir Orbe en este aparato vas a necesitar el usuario y la contraseña.')) cerrarSesion().then(() => avisar('Sesión cerrada')); }}><${Icono} n="salir" t=${15} />Cerrar sesión</button>`}`);
 }

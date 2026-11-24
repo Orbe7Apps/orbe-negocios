@@ -122,6 +122,9 @@ function PonerUsuario() {
   </div>`;
 }
 
+// Cerrar sesión (con confirmación): después, en este aparato se pide el usuario y la contraseña.
+export const pedirCerrarSesion = abrir => abrir('confirmar', { titulo: '¿Cerrar sesión?', texto: 'Para volver a abrir Orbe en este aparato vas a necesitar el usuario y la contraseña. Lo que hay aquí no se borra.', boton: 'Cerrar sesión', si: () => cerrarSesion().then(() => avisar('Sesión cerrada')) });
+
 // ---------- Ajustes → Cuenta y nube ----------
 export function CuentaTema() {
   const { S, abrir } = useApp();
@@ -138,7 +141,7 @@ export function CuentaTema() {
     <div class="fila" style="justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span class="muted">Última vez</span><b style="font-weight:600">${N.ultima ? hace(N.ultima) + ' · ' + new Date(N.ultima).toLocaleTimeString('es', { hour: 'numeric', minute: '2-digit' }) : '—'}</b></div>
     <div class="fila" style="justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span class="muted">Cambios por subir</span><b style="font-weight:600">${N.pendientes}</b></div>
     <div class="chips" style="margin-top:10px"><button type="button" class="btn2 chico acento toca" onClick=${() => { sincronizar(); avisar('Guardando en la nube…'); }}>Guardar ahora</button>
-      <button type="button" class="btn2 chico toca" onClick=${() => abrir('confirmar', { titulo: '¿Cerrar sesión?', texto: 'Para volver a abrir Orbe en este aparato vas a necesitar el usuario y la contraseña. Lo que hay aquí no se borra.', boton: 'Cerrar sesión', si: () => cerrarSesion().then(() => avisar('Sesión cerrada')) })}>Cerrar sesión</button></div>`;
+      <button type="button" class="btn2 chico toca" onClick=${() => pedirCerrarSesion(abrir)}><${Icono} n="salir" t=${14} />Cerrar sesión</button></div>`;
 }
 
 // ---------- Ajustes → Mi suscripción ----------

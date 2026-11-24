@@ -976,3 +976,4 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .clave-ver { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: var(--surface); color: var(--accent-text, var(--accent)); font: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 12px; min-height: 36px; }
 .clave-nueva { min-height: 100dvh; display: grid; place-items: center; padding: 20px 16px; }
 .campo > .clave-caja { font-size: inherit; color: inherit; }
+.cerrar-sesion { width: 100%; min-height: 52px; border-radius: 18px; justify-content: center; gap: 8px; margin-top: 6px; font-weight: 600; }

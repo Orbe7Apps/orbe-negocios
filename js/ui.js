@@ -50,6 +50,7 @@ export const ICONOS = {
   check: 'M5 12l5 5L20 7',
   cerrar: 'M6 6l12 12M18 6L6 18',
   atras: 'M15 18l-6-6 6-6',
+  salir: 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
   sig: 'M9 18l6-6-6-6',
   mas1: 'M12 5v14M5 12h14',
   menos1: 'M5 12h14',

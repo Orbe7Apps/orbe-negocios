@@ -9,7 +9,7 @@ import { descargar, ventasCSV } from './reportes.js';
 import { COND_ORDEN } from '../ordenpdf.js';
 import { Funciones } from './funciones.js';
 import { BotonAyuda, CentroAyuda } from '../ayuda.js';
-import { CuentaTema, Suscripcion } from './cuenta.js';
+import { CuentaTema, Suscripcion, pedirCerrarSesion } from './cuenta.js';
 import { useNube, estadoPlan } from '../nube.js';
 import { MODULOS } from '../rubros.js';
 import { ajustesImpresora, hayBluetooth, conectarBluetooth, olvidarBluetooth, conectada, nombreImpresora, imprimir } from '../impresora.js';
@@ -51,7 +51,7 @@ function useTemas() {
     { k: 'perfil', g: '', i: 'personas', c: 't-vio', n: 'Tu perfil', r: [yo.n, rol ? rol.n : ''].filter((x, i, a) => x && a.indexOf(x) === i).join(' · ') + ' · ' + (yo.pin ? 'con PIN' : 'sin PIN'), cuerpo: () => html`
       <div class="fila" style="gap:12px;padding:4px 0 12px"><span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(yo) % 5]} style="width:48px;height:48px;font-size:16px">${iniciales(yo.n)}</span>
         <span class="crece" style="display:flex;flex-direction:column"><b style="font-size:16px">${yo.n}</b><span class="sub">${rol ? rol.n : ''} · ${yo.pin ? 'con PIN' : 'sin PIN'}</span></span></div>
-      ${Botones(html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('perfil', { pid: yo.id })}><${Icono} n="lapiz" t=${14} />Editar perfil</button>`, html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('pin', { pid: yo.id })}><${Icono} n="candado" t=${14} />${yo.pin ? 'Cambiar PIN' : 'Poner PIN'}</button>`, html`<button type="button" class="btn2 chico acento toca" onClick=${() => salir()}>Cambiar de perfil</button>`)}` },
+      ${Botones(html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('perfil', { pid: yo.id })}><${Icono} n="lapiz" t=${14} />Editar perfil</button>`, html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('pin', { pid: yo.id })}><${Icono} n="candado" t=${14} />${yo.pin ? 'Cambiar PIN' : 'Poner PIN'}</button>`, html`<button type="button" class="btn2 chico acento toca" onClick=${() => salir()}>Cambiar de perfil</button>`, N.sesion && html`<button type="button" class="btn2 chico rojo toca" onClick=${() => pedirCerrarSesion(abrir)}><${Icono} n="salir" t=${14} />Cerrar sesión</button>`)}` },
     { k: 'cuenta', g: '', i: 'wifi', c: 't-ver', n: 'Cuenta y nube', r: N.sesion && n.nubeId ? (N.usuario ? 'Usuario ' + N.usuario : 'Falta crear el usuario') + ' · ' + (N.estado === 'al día' ? 'todo guardado' : N.estado) : 'Solo en este aparato · crea tu cuenta', cuerpo: () => html`<${CuentaTema} />` },
     aj && { k: 'suscripcion', g: '', i: 'tarjeta', c: 't-vio', n: 'Mi suscripción', r: (ep => ep ? ep.txt + (ep.dias ? ' · ' + ep.dias + (ep.dias === 1 ? ' día' : ' días') : '') : 'Plan, pagos y precios')(estadoPlan(N.plan)), cuerpo: () => html`<${Suscripcion} />` },
     puede('gastos') && { k: 'gastos', g: 'Dinero', i: 'dinero', c: 't-ros', n: 'Gastos y por pagar', r: pp.length ? D.m(ppTot) + ' por pagar · ' + pp.length + (pp.length === 1 ? ' cuenta' : ' cuentas') : 'Gastado este mes: ' + D.m(gastosMes), ir: () => ir('gastos'), solo: true },
@@ -137,5 +137,12 @@ export function Mas() {
   return html`
     <div class="fila entra"><h1 class="titulo crece">Más</h1><${BotonAyuda} k="mas" /></div>
     ${GRUPOS.map((g, gi) => { const de = temas.filter(x => x.g === g); return de.length ? html`<div class="pila entra" style=${{ gap: '8px', '--i': gi }} data-tour=${g === 'Dinero' ? 'mas-acciones' : undefined}>${g && html`<h2 class="grupo-menu">${g}</h2>`}
-      <section class="tarjeta menu-lista">${de.map(x => Fila(x, () => x.solo ? x.ir() : setK(x.k)))}</section></div>` : null; })}`;
+      <section class="tarjeta menu-lista">${de.map(x => Fila(x, () => x.solo ? x.ir() : setK(x.k)))}</section></div>` : null; })}
+    <${BotonCerrarSesion} />`;
+}
+// Cerrar sesión, al final de Más (solo con sesión iniciada).
+function BotonCerrarSesion() {
+  const { abrir } = useApp(), N = useNube();
+  if (!N.sesion) return null;
+  return html`<button type="button" class="btn2 rojo toca entra cerrar-sesion" onClick=${() => pedirCerrarSesion(abrir)}><${Icono} n="salir" t=${18} />Cerrar sesión${N.usuario ? html`<span class="sub" style="font-weight:500;color:inherit;opacity:.75"> · ${N.usuario}</span>` : ''}</button>`;
 }

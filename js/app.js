@@ -14,7 +14,7 @@ import { Ordenes } from './pantallas/ordenes.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
 import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada } from './nube.js';
-import { ClaveNueva, EntrarDeNuevo } from './pantallas/cuenta.js';
+import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion } from './pantallas/cuenta.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -183,6 +183,7 @@ function App() {
             <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(yo) % 5]} style="width:34px;height:34px;font-size:12px">${iniciales(yo.n)}</span>
             <span class="crece" style="display:flex;flex-direction:column"><b class="corta" style="font-size:13px">${yo.n}</b><span class="sub corta" style="font-size:12px">${(rolDe(S, yo) || {}).n || ''}</span></span>
             <button type="button" class="icono-btn chico toca" aria-label="Cambiar de perfil" title="Cambiar de perfil" onClick=${() => salir()}><${Icono} n="personas" t=${16} /></button>
+            ${N.sesion && html`<button type="button" class="icono-btn chico toca" aria-label="Cerrar sesión" title="Cerrar sesión" onClick=${() => pedirCerrarSesion(abrir)}><${Icono} n="salir" t=${16} /></button>`}
           </div>
           <span class="pildora toca" role="button" title="Cuenta y nube" onClick=${() => ir('mas')} style=${{ cursor: 'pointer', background: enLinea ? 'var(--in-soft)' : 'var(--amber-soft)', color: enLinea ? 'var(--in-text)' : 'var(--amber-text)', padding: '9px 12px', borderRadius: '12px', justifyContent: 'flex-start' }}><span class="punto"></span>${!enLinea ? 'Sin internet · se guarda aquí' : N.sesion && S.negocio.nubeId ? (N.estado === 'al día' ? 'En la nube · todo guardado' : N.estado === 'error' ? 'No se pudo guardar en la nube' : N.pendientes ? 'Subiendo ' + N.pendientes + ' cambios…' : 'En la nube') : 'Solo en este aparato'}</span>
         </div>
