@@ -388,6 +388,8 @@ export async function reportarPago(p) {
   const { error } = await c.rpc('reportar_pago', { n: nid, plan: p.plan, meses: p.meses, monto: p.monto, moneda: p.moneda, metodo: p.metodo, referencia: p.referencia || '', nota: p.nota || '', factura: p.factura || {} });
   if (error) throw new Error(explicar(error));
 }
+// Solo el plan Empresa puede tener varias sedes. Con el plan Negocio pagado: un solo local (en la prueba se puede probar todo).
+export const soloUnLocal = plan => !!plan && plan.plan === 'negocio';
 // Estado de la suscripción en palabras: prueba, activa, en gracia (7 días) o vencida (solo lectura).
 export function estadoPlan(plan) {
   if (!plan) return null;

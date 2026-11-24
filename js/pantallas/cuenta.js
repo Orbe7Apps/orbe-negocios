@@ -209,8 +209,9 @@ export function Suscripcion() {
 export function Pagar({ d, cerrar }) {
   const { S, D, P } = useApp();
   const cfg = d.cfg, pm = cfg.pago_movil || {};
+  const conSedes = !!S.negocio && (S.negocio.escala === 'empresa' || (S.negocio.sucursales || []).length > 1);
   const fac0 = (S.negocio && S.negocio.facturaOrbe) || {};
-  const [f, setF] = useState({ plan: d.plan || 'negocio', meses: 1, metodo: pm.telefono ? 'Pago Móvil' : cfg.binance ? 'Binance' : 'Efectivo', referencia: '', nota: '', fac: !!fac0.rif, rif: fac0.rif || '', razon: fac0.razon || (S.negocio && S.negocio.nombre) || '', dir: fac0.dir || '' });
+  const [f, setF] = useState({ plan: conSedes ? 'empresa' : d.plan || 'negocio', meses: 1, metodo: pm.telefono ? 'Pago Móvil' : cfg.binance ? 'Binance' : 'Efectivo', referencia: '', nota: '', fac: !!fac0.rif, rif: fac0.rif || '', razon: fac0.razon || (S.negocio && S.negocio.nombre) || '', dir: fac0.dir || '' });
   const pon = o => setF(x => Object.assign({}, x, o));
   const usd = (cfg.precios[f.plan] || {})[f.meses === 12 ? 'anio' : 'mes'] || 0;
   const enBs = P.id === 'VE' && pm.telefono ? D.redondo(usd * D.tasa) : 0;
@@ -231,7 +232,8 @@ export function Pagar({ d, cerrar }) {
   };
   return html`<${Hoja} titulo="Pagar mi suscripción" onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
-      <div class="segmento" style="width:100%">${[['negocio', 'Negocio'], ['empresa', 'Empresa']].map(o => html`<button type="button" style="flex:1" class=${f.plan === o[0] ? 'on' : ''} onClick=${() => pon({ plan: o[0] })}>${o[1]}</button>`)}</div>
+      <div class="segmento" style="width:100%">${[['negocio', 'Negocio · un local'], ['empresa', 'Empresa · varias sedes']].map(o => html`<button type="button" style=${{ flex: 1, opacity: o[0] === 'negocio' && conSedes ? 0.45 : 1 }} class=${f.plan === o[0] ? 'on' : ''} onClick=${() => { if (o[0] === 'negocio' && conSedes) { avisar('Tienes varias sedes: te corresponde el plan Empresa'); return; } pon({ plan: o[0] }); }}>${o[1]}</button>`)}</div>
+      ${conSedes && html`<span class="sub" style="line-height:1.45;margin-top:-4px">Las sedes van con el plan Empresa. El plan Negocio es para un solo local.</span>`}
       <div class="segmento" style="width:100%">${[[1, 'Un mes'], [12, 'Un año (2 meses gratis)']].map(o => html`<button type="button" style="flex:1" class=${f.meses === o[0] ? 'on' : ''} onClick=${() => pon({ meses: o[0] })}>${o[1]}</button>`)}</div>
       <div class="tasa-hoy" style="padding:14px"><span class="sub">A pagar</span><b class="num">US$ ${usd}</b>${enBs ? html`<span class="sub num">o Bs ${new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2 }).format(enBs)} por Pago Móvil (tasa BCV de hoy)</span>` : null}</div>
       <div class="campo"><span>¿Cómo pagas?</span><div class="chips">${['Pago Móvil', 'Binance', 'Efectivo'].filter(m => m !== 'Pago Móvil' || pm.telefono).filter(m => m !== 'Binance' || cfg.binance).map(m => html`<button type="button" class=${'chip chico toca' + (f.metodo === m ? ' on' : '')} onClick=${() => pon({ metodo: m })}>${m}</button>`)}</div></div>

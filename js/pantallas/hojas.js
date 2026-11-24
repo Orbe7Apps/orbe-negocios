@@ -24,6 +24,7 @@ import { Cita, NuevaCita } from './agenda.js';
 import { ElegirRubro } from './funciones.js';
 import { Sugerencias } from './empezar.js';
 import { Cuenta, Pagar, BorrarCuenta } from './cuenta.js';
+import { useNube, soloUnLocal, configCobro } from '../nube.js';
 import { Cotizar, Cotizacion } from './cotizaciones.js';
 import { horarioDe, textoHorario, EditorHorario, EditorAusencias } from '../horario.js';
 import { Recordatorios, AjustesRecHoja } from '../recordatorios.js';
@@ -601,12 +602,15 @@ function Locales({ d, cerrar }) {
   const { S, abrir } = useApp();
   const antes = S.negocio.sucursales;
   // Un negocio tiene un solo local; las sedes son de las empresas.
-  if (S.negocio.escala !== 'empresa' && antes.length <= 1) return html`<${Hoja} titulo="Tu local" onCerrar=${cerrar} contenido=${c => ({
+  const N = useNube(), bloqueado = soloUnLocal(N.plan);
+  const mejorar = c => configCobro().then(cfg => c(() => abrir('pagar', { cfg, plan: 'empresa', solo: true }))).catch(er => avisar(er.message));
+  if ((S.negocio.escala !== 'empresa' || bloqueado) && antes.length <= 1) return html`<${Hoja} titulo="Tu local" onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`<div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);gap:8px">
-        <b style="font-size:15px">Un negocio tiene un solo local</b>
-        <span class="sub" style="line-height:1.45">Si tienes varias sedes, cambia el tamaño a <b>Empresa</b>: cada sede tiene su caja, sus ventas y su inventario, y ves los reportes por sucursal.</span>
+        <b style="font-size:15px">${bloqueado ? 'Tu plan Negocio es para un solo local' : 'Un negocio tiene un solo local'}</b>
+        <span class="sub" style="line-height:1.45">${bloqueado ? html`Las sedes son del plan <b>Empresa</b>: cada sede tiene su caja, sus ventas y su inventario, y ves los reportes por sucursal. Cámbiate al plan Empresa para agregarlas.` : html`Si tienes varias sedes, cambia el tamaño a <b>Empresa</b>: cada sede tiene su caja, sus ventas y su inventario, y ves los reportes por sucursal. Las sedes van con el plan Empresa.`}</span>
       </div>`,
-    pie: html`<button type="button" class="btn toca" onClick=${() => { cambiarNegocio({ escala: 'empresa' }, 'Cambió el tamaño a empresa'); c(() => { avisar('Ahora eres empresa: agrega tus sedes'); abrir('locales'); }); }}>Cambiar a empresa y agregar sedes</button>${Pie2('Seguir con un local', () => c(), '')}`
+    pie: bloqueado ? html`<button type="button" class="btn toca" onClick=${() => mejorar(c)}>Pasar al plan Empresa</button>${Pie2('Seguir con un local', () => c(), '')}`
+      : html`<button type="button" class="btn toca" onClick=${() => { cambiarNegocio({ escala: 'empresa' }, 'Cambió el tamaño a empresa'); c(() => { avisar('Ahora eres empresa: agrega tus sedes'); abrir('locales'); }); }}>Cambiar a empresa y agregar sedes</button>${Pie2('Seguir con un local', () => c(), '')}`
   })} />`;
   const NOM = ['Centro', 'Norte', 'Este', 'Oeste', 'Sur', 'Sucursal 6', 'Sucursal 7', 'Sucursal 8'];
   const [nombres, setNombres] = useState(antes.length === 1 ? [antes[0] === 'Principal' ? '' : antes[0], ''] : antes.slice());
@@ -729,7 +733,7 @@ function Rol({ d, cerrar }) {
 // ---------- datos del negocio ----------
 function Negocio({ d, cerrar }) {
   const { S, P, T, abrir: abrirH } = useApp();
-  const n = S.negocio;
+  const n = S.negocio, N = useNube();
   const [f, setF] = useState({ nombre: n.nombre, razon: n.razon || '', fiscal: n.fiscal || '', tipo: n.tipo, escala: n.escala, pais: n.pais, logo: n.logo || '', tel: n.tel || '', correo: n.correo || '', dir: n.dir || '' });
   const [latido, setLatido] = useState(false);
   // Logo: se elige una imagen del teléfono o la computadora y se achica para guardarla.
@@ -767,7 +771,7 @@ function Negocio({ d, cerrar }) {
         <label class="campo"><span>Dirección (opcional)</span><input type="text" value=${f.dir} placeholder="Av. Bolívar 12" autocomplete="street-address" onInput=${e => pon({ dir: e.target.value })} /></label>
       </div>
       <span class="sub faint" style="margin-top:-6px;font-size:12px">Salen en tus recibos y en las órdenes impresas o en PDF.</span>
-      <div class="campo"><span>Tamaño</span><div class="segmento" style="width:100%">${[['negocio', 'Negocio'], ['empresa', 'Empresa']].map(o => html`<button type="button" style="flex:1" class=${f.escala === o[0] ? 'on' : ''} onClick=${() => { if (o[0] === 'negocio' && n.sucursales.length > 1) { avisar('Tienes ' + n.sucursales.length + ' locales: un negocio tiene uno solo'); return; } pon({ escala: o[0] }); }}>${o[1]}</button>`)}</div></div>
+      <div class="campo"><span>Tamaño</span><div class="segmento" style="width:100%">${[['negocio', 'Negocio'], ['empresa', 'Empresa']].map(o => html`<button type="button" style="flex:1" class=${f.escala === o[0] ? 'on' : ''} onClick=${() => { if (o[0] === 'negocio' && n.sucursales.length > 1) { avisar('Tienes ' + n.sucursales.length + ' locales: un negocio tiene uno solo'); return; } if (o[0] === 'empresa' && soloUnLocal(N.plan)) { avisar('Para ser empresa con varias sedes, cámbiate al plan Empresa en Más → Mi suscripción'); return; } pon({ escala: o[0] }); }}>${o[1]}</button>`)}</div></div>
       <div class="rejilla-2" style="gap:10px">
         <label class="campo"><span>Razón social${f.escala === 'empresa' ? '' : ' (opcional)'}</span><input type="text" value=${f.razon} placeholder=${f.nombre + (P2.suf ? ' ' + P2.suf : '')} onInput=${e => pon({ razon: e.target.value })} /></label>
         <label class="campo"><span>${P2.fiscal[0]}${f.escala === 'empresa' ? '' : ' (opcional)'}</span><input type="text" value=${f.fiscal} placeholder=${P2.fiscal[1] || 'Número fiscal'} onInput=${e => pon({ fiscal: e.target.value })} /></label>

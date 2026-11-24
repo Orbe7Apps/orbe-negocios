@@ -116,7 +116,7 @@ create table public.config_orbe (
   soporte text check (soporte is null or char_length(soporte) <= 30),
   actualizado timestamptz not null default now()
 );
-insert into public.config_orbe (precios) values ('{"negocio": {"mes": 15, "anio": 150}, "empresa": {"mes": 25, "anio": 250}, "moneda": "USD"}');
+insert into public.config_orbe (precios) values ('{"negocio": {"mes": 20, "anio": 200}, "empresa": {"mes": 35, "anio": 350}, "moneda": "USD"}');
 alter table public.config_orbe enable row level security;
 create policy "leer la configuración de cobro" on public.config_orbe for select to authenticated using (true);
 revoke all on public.config_orbe from anon, authenticated;
