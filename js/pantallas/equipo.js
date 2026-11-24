@@ -4,12 +4,14 @@ import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
 import { cambiarPermiso, resumen, inicioDia } from '../datos.js';
+import { useNube, limitePerfiles, perfilesActivos } from '../nube.js';
 import { PERMISOS, rolDe, puedeEditarRol, puedeEditarPermiso } from '../permisos.js';
 import { Reparto, color } from '../graficos.js';
 import { Icono, Chips, iniciales, TONOS, avisar, hace } from '../ui.js';
 
 export function Equipo() {
   const { S, D, E, T, tel, abrir, yo, puede } = useApp();
+  const N = useNube();
   // Si una función está apagada (fiado, órdenes, inventario), su permiso no se muestra.
   const DEP = { fiado: 'fiado', ordenes: 'ordenes', reponer: 'inventario' }, visible = pm => (pm.k !== 'tasas' || D.dual) && (!DEP[pm.k] || T.mod(DEP[pm.k]));
   const roles = S.roles;
@@ -26,7 +28,7 @@ export function Equipo() {
   };
 
   const Personas = html`<section class="tarjeta entra" style="padding-bottom:6px">
-    <div class="tarjeta-tit">${(n => n + (n === 1 ? ' persona' : ' personas'))(S.perfiles.filter(p => !p.inactivo && !p.borrado).length)}<button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('perfil', {})}>+ Perfil</button></div>
+    <div class="tarjeta-tit">${(n => n + ' de ' + limitePerfiles(S.negocio, N.plan) + ' perfiles')(perfilesActivos(S))}<button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('perfil', {})}>+ Perfil</button></div>
     <div class="lista">${S.perfiles.map((p, i) => p.borrado ? null : (() => { const rr = rolDe(S, p), puedo = p.id === yo.id || puedeEditarRol(yo, p.rol); return html`
       <button type="button" key=${p.id} class="item toca entra" style=${{ '--i': i, color: 'var(--ink)', opacity: p.inactivo ? 0.5 : 1, cursor: puedo ? 'pointer' : 'default' }} onClick=${() => puedo ? abrir('perfil', { pid: p.id }) : avisar('Solo el dueño puede cambiar este perfil')}>
         <span class=${'logo redondo ' + TONOS[i % 5]} style="width:40px;height:40px;font-size:14px">${iniciales(p.n)}</span>

@@ -390,6 +390,13 @@ export async function reportarPago(p) {
 }
 // Solo el plan Empresa puede tener varias sedes. Con el plan Negocio pagado: un solo local (en la prueba se puede probar todo).
 export const soloUnLocal = plan => !!plan && plan.plan === 'negocio';
+// Perfiles activos que se pueden tener: Negocio 4, Empresa 10 (dueño incluido). En la prueba manda el tamaño elegido.
+export const LIMITE_PERFILES = { negocio: 4, empresa: 10 };
+export function limitePerfiles(negocio, plan) {
+  const k = plan && (plan.plan === 'negocio' || plan.plan === 'empresa') ? plan.plan : negocio && negocio.escala === 'empresa' ? 'empresa' : 'negocio';
+  return LIMITE_PERFILES[k];
+}
+export const perfilesActivos = S => S.perfiles.filter(p => !p.inactivo && !p.borrado).length;
 // Estado de la suscripción en palabras: prueba, activa, en gracia (7 días) o vencida (solo lectura).
 export function estadoPlan(plan) {
   if (!plan) return null;

@@ -24,7 +24,7 @@ import { Cita, NuevaCita } from './agenda.js';
 import { ElegirRubro } from './funciones.js';
 import { Sugerencias } from './empezar.js';
 import { Cuenta, Pagar, BorrarCuenta } from './cuenta.js';
-import { useNube, soloUnLocal, configCobro } from '../nube.js';
+import { useNube, soloUnLocal, configCobro, limitePerfiles, perfilesActivos } from '../nube.js';
 import { Cotizar, Cotizacion } from './cotizaciones.js';
 import { horarioDe, textoHorario, EditorHorario, EditorAusencias } from '../horario.js';
 import { Recordatorios, AjustesRecHoja } from '../recordatorios.js';
@@ -639,7 +639,11 @@ function Perfil({ d, cerrar }) {
   const rolesPosibles = S.roles.filter(r => !r.fijo && puedeEditarRol(yo, r.id));
   const [f, setF] = useState(p0 ? { n: p0.n, rol: p0.rol, pin: '', pin2: '', sucs: p0.sucs || [], inactivo: !!p0.inactivo, com: p0.com != null ? p0.com : 40, propio: !!p0.horario, horario: Object.assign({}, horarioDe(S, p0.id)), aus: (p0.aus || []).slice() } : { com: 40, propio: false, horario: horarioDe(S, ''), aus: [], n: '', rol: (rolesPosibles.find(r => r.id === 'cajero') || rolesPosibles[0] || {}).id, pin: '', pin2: '', sucs: [], inactivo: false });
   const pon = o => setF(x => Object.assign({}, x, o));
+  const N = useNube(), lim = limitePerfiles(S.negocio, N.plan), activos = perfilesActivos(S);
+  const sumaUno = !p0 || (p0.inactivo && !f.inactivo), lleno = sumaUno && activos >= lim;
+  const avisoLimite = () => avisar(lim < 10 ? 'Tu plan Negocio llega a ' + lim + ' perfiles. Con el plan Empresa tienes hasta 10' : 'Llegaste al máximo de ' + lim + ' perfiles: desactiva uno para sumar otro');
   const guardar = c => {
+    if (lleno) { avisoLimite(); return; }
     if (!f.n.trim()) { avisar('Escribe el nombre'); return; }
     if (!p0 && f.pin && !/^\d{4}$/.test(f.pin)) { avisar('El PIN son 4 números'); return; }
     if (!p0 && f.pin !== f.pin2) { avisar('Los dos PIN no son iguales'); return; }
@@ -653,6 +657,13 @@ function Perfil({ d, cerrar }) {
   const borrar = c => c(() => abrir('confirmar', { titulo: '¿Eliminar el perfil de ' + p0.n + '?', texto: 'Ya no podrá entrar. Sus ventas y lo que hizo se quedan en el historial con su nombre.', boton: 'Sí, eliminar perfil', si: () => { borrarPerfil(p0.id); avisar('Perfil eliminado'); } }));
   const rolActual = S.roles.find(r => r.id === f.rol);
   const i = Math.max(0, S.perfiles.indexOf(p0));
+  if (!p0 && lleno) return html`<${Hoja} titulo="Nuevo perfil" onCerrar=${cerrar} contenido=${c => ({
+    cuerpo: html`<div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);gap:8px">
+        <b style="font-size:15px">Ya tienes ${activos} de ${lim} perfiles</b>
+        <span class="sub" style="line-height:1.45">${lim < 10 ? html`El plan <b>Negocio</b> llega a ${lim} perfiles, contando el tuyo. Con el plan <b>Empresa</b> tienes hasta 10 y varias sedes.` : html`El plan Empresa llega a ${lim} perfiles. Desactiva o elimina uno que ya no uses para sumar otro.`}</span>
+      </div>`,
+    pie: lim < 10 ? html`<button type="button" class="btn toca" onClick=${() => configCobro().then(cfg => c(() => abrir('pagar', { cfg, plan: 'empresa' }))).catch(er => avisar(er.message))}>Pasar al plan Empresa</button>${Pie2('Ahora no', () => c(), '')}` : html`<button type="button" class="btn toca" onClick=${() => c()}>Entendido</button>`
+  })} />`;
   return html`<${Hoja} titulo=${p0 ? (soyYo ? 'Tu perfil' : 'Editar perfil') : 'Nuevo perfil'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       ${p0 && html`<div class="fila" style="gap:12px"><span class=${'logo redondo ' + TONOS[i % 5]} style="width:52px;height:52px;font-size:18px">${iniciales(f.n || p0.n)}</span>
