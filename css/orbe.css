@@ -988,3 +988,8 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 /* Zona «La app» en Ajustes: gris neutro */
 .t-gris { background: var(--fill2); color: var(--muted); }
 .ic.t-gris { background: #7d7a96; color: #fff; }
+
+/* Hoja de tasas: cada tasa en su tarjeta */
+.tasa-tarjeta { display: flex; flex-direction: column; gap: 8px; background: var(--fill2); border-radius: 18px; padding: 14px; }
+.tasa-tarjeta b { font-size: 15px; }
+.tasa-tarjeta .sub { font-size: 13px; line-height: 1.4; }

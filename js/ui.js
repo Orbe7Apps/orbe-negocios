@@ -138,15 +138,18 @@ export function Chips({ opciones, valor, onCambio, desliza, calido, chico }) {
 // contenido(cerrar) devuelve { cuerpo, pie }. Nunca enfoca un campo al abrir.
 // Botón «atrás» del teléfono (Android) o gesto de volver: con una capa abierta (hoja, menú) la cierra en vez de
 // cambiar de pantalla o salir de la app. Mientras la capa está abierta se deja una entrada en el historial.
+// Al cerrar una capa con su botón se hace «atrás» en el historial; ese «atrás» llega después y no debe cerrar
+// la capa siguiente que se abra enseguida (por ejemplo, volver de Tasas a Cobrar).
+let ignorarAtrasHasta = 0;
 export function useAtras(abierto, cerrar) {
   const ref = useRef(cerrar); ref.current = cerrar;
   useEffect(() => {
     if (!abierto) return;
     try { history.pushState({ capa: true }, ''); } catch (e) { return; }
     let porAtras = false;
-    const pop = () => { porAtras = true; ref.current(); };
+    const pop = () => { if (Date.now() < ignorarAtrasHasta) { ignorarAtrasHasta = 0; return; } porAtras = true; ref.current(); };
     window.addEventListener('popstate', pop);
-    return () => { window.removeEventListener('popstate', pop); if (!porAtras && history.state && history.state.capa) history.back(); };
+    return () => { window.removeEventListener('popstate', pop); if (!porAtras && history.state && history.state.capa) { ignorarAtrasHasta = Date.now() + 600; history.back(); } };
   }, [abierto]);
 }
 // La hoja que está abierta (para su botón «?»): la pone HojaActual antes de dibujarla.
