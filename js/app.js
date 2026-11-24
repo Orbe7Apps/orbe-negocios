@@ -1,7 +1,7 @@
 // Orbe Negocios · arranque. Decide si es teléfono o computadora, y arma la navegación.
 import { html, render, useState, useEffect } from './lib/preact-htm.js';
 import { Ctx } from './ctx.js';
-import { iniciarDatos, useDatos, leer, guardarTasa, guardarTasaExtra, tasaEuro, diaClave, bajoMinimo, deudores, porPagar, perfilActual, salir, guardarPerfil, ordenAtrasada } from './datos.js';
+import { iniciarDatos, useDatos, leer, cambiarNegocio, guardarTasa, guardarTasaExtra, tasaEuro, diaClave, bajoMinimo, deudores, porPagar, perfilActual, salir, guardarPerfil, ordenAtrasada } from './datos.js';
 import { Recorrido } from './recorrido.js';
 import { ChipTasa } from './pantallas/tasas.js';
 import { puede, rolDe } from './permisos.js';
@@ -13,6 +13,7 @@ import { Hoy } from './pantallas/hoy.js';
 import { Ordenes } from './pantallas/ordenes.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
+import { iniciarNube, useNube } from './nube.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -81,6 +82,12 @@ function App() {
   useAtras(!!hoja, () => window.dispatchEvent(new Event('orbe-atras')));
   useEffect(() => { document.documentElement.classList.toggle('pc', !tel); document.documentElement.classList.toggle('tel', tel); }, [tel]);
   useEffect(() => { aplicarTema(S.ajustes.tema); }, [S.ajustes.tema]);
+  const N = useNube();
+  // Volver del enlace «olvidé mi contraseña»: se pide la nueva.
+  useEffect(() => { const f = () => setHoja({ t: 'nuevaClave', datos: {}, n: Date.now() }); window.addEventListener('orbe-nueva-clave', f); return () => window.removeEventListener('orbe-nueva-clave', f); }, []);
+  // Negocio recién creado (sin ejemplo): se ofrece guardarlo en la nube una vez.
+  const pide = S.negocio && S.negocio.pedirNube && !S.negocio.nubeId && S.ajustes.perfil;
+  useEffect(() => { if (!pide) return; const r = setTimeout(() => { setHoja({ t: 'cuenta', datos: { inicio: true }, n: Date.now() }); cambiarNegocio({ pedirNube: false }); }, 900); return () => clearTimeout(r); }, [pide]);
   // Computadora: «/» lleva al buscador de arriba (si no se está escribiendo en otro lado).
   useEffect(() => {
     const tecla = e => { if (e.key !== '/' || /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '') || document.querySelector('.hoja')) return; const b = document.querySelector('.barra-sup input[type=search]'); if (b) { e.preventDefault(); b.focus(); } };
@@ -170,7 +177,7 @@ function App() {
             <span class="crece" style="display:flex;flex-direction:column"><b class="corta" style="font-size:13px">${yo.n}</b><span class="sub corta" style="font-size:12px">${(rolDe(S, yo) || {}).n || ''}</span></span>
             <button type="button" class="icono-btn chico toca" aria-label="Cambiar de perfil" title="Cambiar de perfil" onClick=${() => salir()}><${Icono} n="personas" t=${16} /></button>
           </div>
-          <span class="pildora" style=${{ background: enLinea ? 'var(--in-soft)' : 'var(--amber-soft)', color: enLinea ? 'var(--in-text)' : 'var(--amber-text)', padding: '9px 12px', borderRadius: '12px', justifyContent: 'flex-start' }}><span class="punto"></span>${enLinea ? 'En línea · todo guardado' : 'Sin internet · se guarda aquí'}</span>
+          <span class="pildora toca" role="button" title="Cuenta y nube" onClick=${() => ir('mas')} style=${{ cursor: 'pointer', background: enLinea ? 'var(--in-soft)' : 'var(--amber-soft)', color: enLinea ? 'var(--in-text)' : 'var(--amber-text)', padding: '9px 12px', borderRadius: '12px', justifyContent: 'flex-start' }}><span class="punto"></span>${!enLinea ? 'Sin internet · se guarda aquí' : N.sesion && S.negocio.nubeId ? (N.estado === 'al día' ? 'En la nube · todo guardado' : N.estado === 'error' ? 'No se pudo guardar en la nube' : N.pendientes ? 'Subiendo ' + N.pendientes + ' cambios…' : 'En la nube') : 'Solo en este aparato'}</span>
         </div>
       </aside>
       <div class="principal">
@@ -211,6 +218,7 @@ function subtitulo(s, { S, E, suc, T }) {
 // Primero se leen los datos guardados; después se dibuja y se va la pantalla de carga.
 iniciarDatos().then(() => {
   render(html`<${App} />`, document.getElementById('app'));
+  iniciarNube();
   requestAnimationFrame(() => { if (window.__listo) window.__listo(); });
 });
 // Teclado del teléfono: en iPhone (y Android reciente) el teclado tapa la pantalla sin achicarla.

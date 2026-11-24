@@ -177,12 +177,22 @@ export async function restaurar(d) {
 }
 
 export const leer = () => S;
-export function cambiar(fn) { const antes = S; S = Object.assign({}, S, fn(S)); firmarNuevos(antes); memo.clear(); guardar(); subs.forEach(f => f()); }
+// Quien escucha los cambios (la nube): recibe el estado de antes y el de ahora para subir solo lo que cambió.
+const oyentes = new Set();
+export const alCambiar = f => { oyentes.add(f); return () => oyentes.delete(f); };
+let remoto = false;
+export function cambiar(fn) { const antes = S; S = Object.assign({}, S, fn(S)); firmarNuevos(antes); memo.clear(); guardar(); if (!remoto) oyentes.forEach(f => { try { f(antes, S); } catch (e) { /* la nube no debe romper la app */ } }); subs.forEach(f => f()); }
+// Cambios que llegan de la nube: se aplican sin volver a subirlos.
+export function aplicarRemoto(fn) { remoto = true; try { cambiar(fn); } finally { remoto = false; } }
+// Este aparato: un id propio (para la cadena de firmas y para saber de dónde vino cada cambio).
+export function idDispositivo() {
+  try { let d = localStorage.getItem('orbe-dispositivo'); if (!d) { d = 'd' + Math.random().toString(36).slice(2, 12); localStorage.setItem('orbe-dispositivo', d); } return d; } catch (e) { return 'd-sin-id'; }
+}
 // Cadena de integridad: cada venta, cierre y cambio nuevo se firma con el hash del anterior.
 function firmarNuevos(antes) {
-  if (S.ventas !== (antes && antes.ventas) && S.ventas.some(v => !v.h)) encadenar(S.ventas, firmaVenta);
-  if (S.registro !== (antes && antes.registro) && S.registro.some(v => !v.h)) encadenar(S.registro, firmaRegistro);
-  if (S.cierres !== (antes && antes.cierres) && S.cierres.some(v => !v.h)) encadenar(S.cierres, firmaCierre);
+  if (S.ventas !== (antes && antes.ventas) && S.ventas.some(v => !v.h)) encadenar(S.ventas, firmaVenta, idDispositivo());
+  if (S.registro !== (antes && antes.registro) && S.registro.some(v => !v.h)) encadenar(S.registro, firmaRegistro, idDispositivo());
+  if (S.cierres !== (antes && antes.cierres) && S.cierres.some(v => !v.h)) encadenar(S.cierres, firmaCierre, idDispositivo());
 }
 export function revisarIntegridad() { return { ventas: revisar(S.ventas, firmaVenta), cierres: revisar(S.cierres, firmaCierre), registro: revisar(S.registro, firmaRegistro), n: S.ventas.length + S.cierres.length + S.registro.length }; }
 export function useDatos() {
@@ -241,7 +251,7 @@ export function crearNegocio(cfg, conEjemplo) {
     if (ex.vars) { p.vars = ex.vars.map((n, j) => ({ id: 'v' + j, n, q: Math.round([4, 7, 5, 3, 6, 2][j % 6] * k) })); p.q = p.vars.reduce((a, v) => a + v.q, 0); }
     return p;
   });
-  const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala, cfg.rubro), rubro: R ? R.id : '', mods: Object.assign({}, cfg.mods || {}), pasosListos: !!conEjemplo, razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
+  const negocio = { nombre: cfg.nombre || nombreSugerido(T.id, cfg.escala, cfg.rubro), rubro: R ? R.id : '', mods: Object.assign({}, cfg.mods || {}), pasosListos: !!conEjemplo, pedirNube: !conEjemplo, razon: cfg.razon || '', fiscal: cfg.fiscal || '', pais: P.id, tipo: T.id, escala: E ? 'empresa' : 'negocio', pays: cfg.pays && cfg.pays.length ? cfg.pays : P.pays.slice(), taxOn: cfg.taxOn ?? P.tax[1] > 0, taxIncl: cfg.taxIncl ?? true, sucursales, creado: Date.now(), pedirRef: P.id === 'VE', igtf: false, fiadoUsd: false, tasaPago: {} };
   const perfiles = [{ id: 'u0', n: (cfg.dueno || '').trim() || 'Dueño', rol: 'dueno', pin: '', sucs: [], creado: Date.now() }];
   if (conEjemplo) perfiles.push(
     { id: 'u1', n: 'Carla Méndez', rol: 'encargado', pin: cifrarPin('u1', '1111'), sucs: [], creado: Date.now() },

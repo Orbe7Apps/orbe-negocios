@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a14">
+<meta name="robots" content="noindex, nofollow">
+<title>Orbe · Administración</title>
+<link rel="icon" href="icons/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/orbe.css">
+<style>
+  body { overflow: auto; }
+  .admin { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+  .admin .cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .admin .cifra { display: flex; flex-direction: column; gap: 6px; padding: 16px; }
+  .admin .segmento { overflow-x: auto; }
+  .admin .tabla-caja { overflow-x: auto; }
+  .admin .rejilla-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .admin .dos-uno { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

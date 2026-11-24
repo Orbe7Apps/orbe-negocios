@@ -964,3 +964,8 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .resumen-cita b { color: var(--ink); }
 /* Lo de adentro de una hoja nunca se aplasta: si no cabe, se desplaza */
 .hoja-cuerpo > * { flex-shrink: 0; }
+/* Aviso de la suscripción en Hoy */
+.aviso-plan { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border: 0; border-radius: 16px; font: inherit; font-size: 14px; text-align: left; flex: none; }
+.aviso-plan.ambar { background: var(--amber-soft); color: var(--amber-text); }
+.aviso-plan.rojo { background: var(--out-soft); color: var(--out-text); }
+.aviso-plan b { flex: none; }

@@ -4,6 +4,7 @@ import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
 import { Icono, avisar, TONOS, hora, FotoProd } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
+import { estadoNube, estadoPlan } from '../nube.js';
 import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto } from '../datos.js';
 import { nuevoCarrito, lineasDe, cuantos, porPeso, verQ, existencia } from '../carrito.js';
 import { FilaVenta } from './hojas.js';
@@ -29,7 +30,7 @@ export function totales(items, neg, P) {
 let carritoGuardado = nuevoCarrito();
 
 export function Vender() {
-  const { S, P, T, D, tel, abrir, suc, puede } = useApp();
+  const { S, P, T, D, tel, abrir, ir, suc, puede } = useApp();
   const [cart, setCartRaw] = useState(carritoGuardado);
   const setCart = c => { carritoGuardado = c; setCartRaw(c); };
   const vaciar = () => setCart(nuevoCarrito());
@@ -72,7 +73,13 @@ export function Vender() {
       setCart(Object.assign({}, c0, { q: Object.assign({}, c0.q, { [k]: 1 }), libres: Object.assign({}, c0.libres || {}, { [k]: { n: nombre, p: precio } }) }));
     }
   });
-  const cobrar = () => { if (!n) return; abrir('cobrar', { items, tt, onListo: () => vaciar() }); };
+  const cobrar = () => {
+    if (!n) return;
+    // Suscripción vencida: la venta no se guardaría en la nube. Se manda a pagar.
+    const ep = S.negocio.nubeId ? estadoPlan(estadoNube().plan) : null;
+    if (ep && ep.k === 'vencida') { avisar('Tu suscripción venció: renuévala en Más → Mi suscripción'); ir('mas'); return; }
+    abrir('cobrar', { items, tt, onListo: () => vaciar() });
+  };
   useEffect(() => {
     if (tel) return;
     const tecla = e => {

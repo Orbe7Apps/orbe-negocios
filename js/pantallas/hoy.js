@@ -11,6 +11,7 @@ import { OfertaRecorrido } from '../recorrido.js';
 import { OrdenesHoy } from './ordenes.js';
 import { CitasHoy, citasDelDia } from './agenda.js';
 import { PrimerosPasos } from './empezar.js';
+import { AvisoPlan } from './cuenta.js';
 import { BotonAyuda } from '../ayuda.js';
 
 const DIA = 86400000;
@@ -122,6 +123,7 @@ export function Hoy() {
       <span class="pildora" style=${{ background: enLinea ? 'var(--in-soft)' : 'var(--amber-soft)', color: enLinea ? 'var(--in-text)' : 'var(--amber-text)' }}><span class="punto"></span>${enLinea ? 'En línea' : 'Sin internet'}</span>
     </header>
     ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
+    <${AvisoPlan} />
     <${PrimerosPasos} />
     ${E && html`<div class="chips desliza">${[''].concat(S.negocio.sucursales).map(x => html`<button type="button" class=${'chip chico toca' + (suc === x ? ' on' : '')} onClick=${() => setSuc(x)}>${x || 'Todas'}</button>`)}</div>`}
     ${Hero(true, 64)}
@@ -132,6 +134,7 @@ export function Hoy() {
   // ---------- computadora ----------
   return html`
     ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
+    <${AvisoPlan} />
     <${PrimerosPasos} />
     <div class="panel-cifras">
       ${Hero(true, 48)}

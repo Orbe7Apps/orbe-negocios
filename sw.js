@@ -1,10 +1,10 @@
 // Orbe Negocios · funciona sin internet. Guarda la app y responde desde la copia si no hay conexión.
-const VERSION = 'orbe-negocios-v39';
+const VERSION = 'orbe-negocios-v40';
 const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'css/orbe.css', 'icons/icono.svg', 'icons/icono-192.png',
   'js/lib/preact-htm.js', 'js/app.js', 'js/ctx.js', 'js/paises.js', 'js/datos.js', 'js/graficos.js', 'js/ui.js',
   'js/pantallas/inicio.js', 'js/pantallas/hoy.js', 'js/pantallas/vender.js', 'js/pantallas/clientes.js', 'js/pantallas/inventario.js',
   'js/pantallas/gastos.js', 'js/pantallas/reportes.js', 'js/pantallas/mas.js', 'js/pantallas/hojas.js',
-  'js/permisos.js', 'js/pantallas/acceso.js', 'js/pantallas/equipo.js', 'js/pantallas/pagos.js', 'js/recorrido.js', 'js/hash.js', 'js/pantallas/tasas.js', 'js/buscar.js', 'js/pantallas/grupos.js', 'js/pantallas/escaner.js', 'js/lib/zxing.min.js', 'js/pantallas/ordenes.js', 'js/ordenpdf.js', 'js/pantallas/precios.js', 'js/pantallas/caja.js', 'js/impresora.js', 'js/carrito.js', 'js/pantallas/lineas.js', 'js/pantallas/promos.js', 'js/pantallas/factura.js', 'js/pantallas/menuorbe.js', 'js/rubros.js', 'js/pantallas/agenda.js', 'js/pantallas/funciones.js', 'js/pantallas/empezar.js', 'js/ayuda.js', 'js/lib/jspdf.umd.min.js', 'icons/icono-512.png', 'icons/icono-maskable-512.png'];
+  'js/permisos.js', 'js/pantallas/acceso.js', 'js/pantallas/equipo.js', 'js/pantallas/pagos.js', 'js/recorrido.js', 'js/hash.js', 'js/pantallas/tasas.js', 'js/buscar.js', 'js/pantallas/grupos.js', 'js/pantallas/escaner.js', 'js/lib/zxing.min.js', 'js/pantallas/ordenes.js', 'js/ordenpdf.js', 'js/pantallas/precios.js', 'js/pantallas/caja.js', 'js/impresora.js', 'js/carrito.js', 'js/pantallas/lineas.js', 'js/pantallas/promos.js', 'js/pantallas/factura.js', 'js/pantallas/menuorbe.js', 'js/rubros.js', 'js/pantallas/agenda.js', 'js/pantallas/funciones.js', 'js/pantallas/empezar.js', 'js/ayuda.js', 'js/nube.js', 'js/pantallas/cuenta.js', 'js/lib/supabase.min.js', 'js/lib/jspdf.umd.min.js', 'icons/icono-512.png', 'icons/icono-maskable-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
@@ -13,6 +13,8 @@ self.addEventListener('fetch', e => {
   const url = new URL(r.url);
   // Tasas: siempre de internet (la app guarda la última por su cuenta).
   if (/dolarapi|pydolarve/.test(url.host)) return;
+  // La nube (Supabase) y el panel de administración: siempre directo, nunca de la copia.
+  if (/supabase\.co$/.test(url.host) || /admin(\.html)?$|admin\.js$/.test(url.pathname)) return;
   // La app: primero internet para tener lo último; si no hay, la copia guardada.
   // Con internet lento (o que no responde) no se espera más de 3 segundos: se abre la copia y lo nuevo queda para la próxima.
   const red = fetch(r).then(res => {

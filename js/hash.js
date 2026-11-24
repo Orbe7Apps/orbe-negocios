@@ -33,19 +33,20 @@ export const firmaRegistro = r => [r.t, r.por, r.que].join('|');
 export const firmaCierre = c => [c.n, c.t, c.dia, JSON.stringify(c.contado), c.resumen ? c.resumen.total : 0].join('|');
 
 // Encadena una lista: firma (en el mismo objeto) los elementos que todavía no tienen hash.
-export function encadenar(lista, firma) {
-  let prev = '';
-  lista.forEach(x => { if (!x.h) x.h = sha256(prev + '|' + firma(x)); prev = x.h; });
+// Con varios aparatos, cada uno lleva su propia cadena (dv = aparato): así las ventas de dos cajas no se mezclan.
+export function encadenar(lista, firma, dv) {
+  const prev = {};
+  lista.forEach(x => { if (!x.h) { if (dv && !x.dv) x.dv = dv; x.h = sha256((prev[x.dv || ''] || '') + '|' + firma(x)); } prev[x.dv || ''] = x.h; });
   return lista;
 }
 // Revisa la cadena: devuelve el primer elemento cuyo hash no coincide, o null si todo está bien.
 export function revisar(lista, firma) {
-  let prev = '';
+  const prev = {};
   for (let i = 0; i < lista.length; i++) {
-    const x = lista[i];
+    const x = lista[i], k = x.dv || '';
     if (!x.h) return { i, x, motivo: 'sin firma' };
-    if (sha256(prev + '|' + firma(x)) !== x.h) return { i, x, motivo: 'cambiado' };
-    prev = x.h;
+    if (sha256((prev[k] || '') + '|' + firma(x)) !== x.h) return { i, x, motivo: 'cambiado' };
+    prev[k] = x.h;
   }
   return null;
 }

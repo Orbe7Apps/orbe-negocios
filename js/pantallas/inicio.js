@@ -3,6 +3,7 @@ import { html, useState } from '../lib/preact-htm.js';
 import { PAISES, TIPOS, pais } from '../paises.js';
 import { RUBROS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
 import { ListaFunciones } from './funciones.js';
+import { EntrarInicio } from './cuenta.js';
 import { crearNegocio, nombreSugerido } from '../datos.js';
 import { Icono, LogoOrbe, Interruptor, avisar, Bandera } from '../ui.js';
 
@@ -36,6 +37,7 @@ export function Inicio({ tel }) {
   const marco = contenido => html`<div style=${tel ? '' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
     <div class=${tel ? '' : 'tarjeta'} style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column' : 'width:min(520px,100%);height:min(820px,calc(100vh - 64px));padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:28px'}>${contenido}</div></div>`;
 
+  if (paso === 'entrar') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${EntrarInicio} volver=${() => setPaso(-1)} /></div>`);
   if (paso === -1) return marco(html`<div class="entra" style="flex:1;display:flex;flex-direction:column;gap:16px;padding:calc(72px + var(--sa-top)) 26px calc(28px + var(--sa-bottom))">
     <span class="entra"><${LogoOrbe} t=${88} orbita /></span>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px"><h1 style="font-size:34px">Orbe Negocios</h1><span style="font-size:18px;color:var(--muted)">Tú vendes. Orbe hace lo repetitivo.</span></div>
@@ -45,6 +47,7 @@ export function Inicio({ tel }) {
     </div>
     <div style="margin-top:auto;display:flex;flex-direction:column;gap:10px">
       <button type="button" class="btn toca" onClick=${() => setPaso('pais')}>Empezar</button>
+      <button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => setPaso('entrar')}>Ya tengo cuenta</button>
       <span class="sub" style="text-align:center">14 días gratis, sin tarjeta. Nunca se borra nada.</span>
     </div>
   </div>`);
