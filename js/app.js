@@ -13,8 +13,8 @@ import { Hoy } from './pantallas/hoy.js';
 import { Ordenes } from './pantallas/ordenes.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
-import { iniciarNube, useNube, quitarAvisoEnlace } from './nube.js';
-import { ClaveNueva } from './pantallas/cuenta.js';
+import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada } from './nube.js';
+import { ClaveNueva, EntrarDeNuevo } from './pantallas/cuenta.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -87,7 +87,9 @@ function App() {
   // Aviso al volver del enlace del correo (cuenta confirmada, enlace vencido…).
   useEffect(() => { if (N.avisoEnlace) { avisar(N.avisoEnlace); quitarAvisoEnlace(); } }, [N.avisoEnlace]);
   // Negocio recién creado (sin ejemplo): se ofrece guardarlo en la nube una vez.
-  const pide = S.negocio && S.negocio.pedirNube && !S.negocio.nubeId && S.ajustes.perfil;
+  // También si ya hay sesión y el negocio no está en la nube (un negocio recién creado espera un minuto: se está subiendo solo).
+  const ng = S.negocio || {};
+  const pide = S.negocio && !ng.nubeId && !ng.demo && S.ajustes.perfil && (ng.pedirNube || (N.sesion && Date.now() - (ng.creado || 0) > 60000 && !((ng.nubeOmitida || 0) > Date.now() - 86400000)));
   useEffect(() => { if (!pide) return; const r = setTimeout(() => { setHoja({ t: 'cuenta', datos: { inicio: true }, n: Date.now() }); cambiarNegocio({ pedirNube: false }); }, 900); return () => clearTimeout(r); }, [pide]);
   // Computadora: «/» lleva al buscador de arriba (si no se está escribiendo en otro lado).
   useEffect(() => {
@@ -108,6 +110,8 @@ function App() {
   // Volver del enlace «Olvidé mi contraseña»: se pide la nueva antes que nada.
   if (N.recuperar) return html`<${ClaveNueva} /><${Avisos} />`;
   if (!S.negocio) return html`<${Inicio} tel=${tel} /><${Avisos} />`;
+  // Sin cuenta no se entra: si este navegador no tiene sesión, se piden correo y contraseña (la demostración no).
+  if (!S.negocio.demo && !/[?&]demo\b/.test(location.search) && !N.sesion && !haySesionGuardada()) return html`<${EntrarDeNuevo} tel=${tel} /><${Avisos} />`;
   const yo = perfilActual();
   if (!yo) return html`<${Acceso} tel=${tel} /><${Avisos} />`;
   const pd = k => puede(S, yo, k);

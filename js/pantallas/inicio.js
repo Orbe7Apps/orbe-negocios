@@ -1,10 +1,11 @@
 // Primer uso: país, tipo de negocio, tamaño y datos. Al final se arma el negocio.
-import { html, useState } from '../lib/preact-htm.js';
+import { html, useState, useEffect } from '../lib/preact-htm.js';
 import { PAISES, TIPOS, pais } from '../paises.js';
 import { RUBROS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
 import { ListaFunciones } from './funciones.js';
-import { EntrarInicio } from './cuenta.js';
-import { crearNegocio, nombreSugerido } from '../datos.js';
+import { EntrarInicio, CrearCuentaInicio } from './cuenta.js';
+import { useNube, subirNegocio } from '../nube.js';
+import { crearNegocio, nombreSugerido, cambiarNegocio } from '../datos.js';
 import { Icono, LogoOrbe, Interruptor, avisar, Bandera } from '../ui.js';
 
 const PASOS = ['pais', 'tipo', 'tam', 'datos', 'listo'];
@@ -19,6 +20,10 @@ export function Inicio({ tel }) {
   // La cuenta nueva empieza vacía. Con «?demo» en la dirección se llena con un mes de ejemplo (para mostrar la app).
   const demo = /[?&]demo\b/.test(location.search);
   const [ejemplo, setEjemplo] = useState(demo);
+  // Sin cuenta no se arma el negocio (salvo la demostración con «?demo»).
+  const N = useNube();
+  // Volvió del enlace de confirmación con la sesión abierta: se muestran sus negocios (o se arma uno).
+  useEffect(() => { if (N.sesion && !demo && paso === -1) setPaso('entrar'); }, [N.sesion]);
   const P = pais(c.pais || 'VE');
   const pon = o => setC(x => Object.assign({}, x, o));
   const i = PASOS.indexOf(paso);
@@ -26,10 +31,16 @@ export function Inicio({ tel }) {
   const R = rubro(c.rubro), mods = modulosDe({ rubro: c.rubro, tipo: c.tipo, mods: c.mods });
   const siguiente = () => {
     if (!puede) return;
-    if (paso === 'listo') { crearNegocio(Object.assign({}, c, { nombre: c.nombre || nombreSugerido(c.tipo, c.escala, c.rubro) }), ejemplo); avisar(ejemplo ? 'Listo. Cargamos un mes de ventas de ejemplo' : '¡Bienvenido! Tu cuenta está lista para empezar'); return; }
+    if (paso === 'listo') {
+      crearNegocio(Object.assign({}, c, { nombre: c.nombre || nombreSugerido(c.tipo, c.escala, c.rubro) }), ejemplo);
+      avisar(ejemplo ? 'Listo. Cargamos un mes de ventas de ejemplo' : '¡Bienvenido! Tu negocio está listo');
+      // Con sesión: el negocio nuevo se guarda en la cuenta de una vez.
+      if (!ejemplo && N.sesion) { cambiarNegocio({ pedirNube: false }); subirNegocio().catch(er => avisar(er.message)); }
+      return;
+    }
     setPaso(PASOS[i + 1]);
   };
-  const atras = () => setPaso(i <= 0 ? -1 : PASOS[i - 1]);
+  const atras = () => setPaso(i <= 0 ? (N.sesion && !demo ? 'entrar' : -1) : PASOS[i - 1]);
   const pays = c.pays || P.pays;
   const taxOn = c.taxOn ?? P.tax[1] > 0;
   const E = c.escala === 'empresa';
@@ -37,7 +48,8 @@ export function Inicio({ tel }) {
   const marco = contenido => html`<div style=${tel ? '' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
     <div class=${tel ? '' : 'tarjeta'} style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column' : 'width:min(520px,100%);height:min(820px,calc(100vh - 64px));padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:28px'}>${contenido}</div></div>`;
 
-  if (paso === 'entrar') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${EntrarInicio} volver=${() => setPaso(-1)} /></div>`);
+  if (paso === 'entrar') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${EntrarInicio} volver=${() => setPaso(-1)} crear=${() => setPaso('pais')} /></div>`);
+  if (paso === 'cuenta') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${CrearCuentaInicio} volver=${() => setPaso(-1)} entrar=${() => setPaso('entrar')} listo=${() => setPaso('pais')} /></div>`);
   if (paso === -1) return marco(html`<div class="entra" style="flex:1;display:flex;flex-direction:column;gap:16px;padding:calc(72px + var(--sa-top)) 26px calc(28px + var(--sa-bottom))">
     <span class="entra"><${LogoOrbe} t=${88} orbita /></span>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px"><h1 style="font-size:34px">Orbe Negocios</h1><span style="font-size:18px;color:var(--muted)">Tú vendes. Orbe hace lo repetitivo.</span></div>
@@ -46,7 +58,7 @@ export function Inicio({ tel }) {
         <div class="fila entra" style=${{ '--i': 4 + k * 3 }}><span class=${'ic ' + x[2]}><${Icono} n=${x[0]} t=${19} /></span><span style="font-size:15px;line-height:1.35">${x[1]}</span></div>`)}
     </div>
     <div style="margin-top:auto;display:flex;flex-direction:column;gap:10px">
-      <button type="button" class="btn toca" onClick=${() => setPaso('pais')}>Empezar</button>
+      <button type="button" class="btn toca" onClick=${() => setPaso(demo || N.sesion ? 'pais' : 'cuenta')}>Empezar</button>
       <button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => setPaso('entrar')}>Ya tengo cuenta</button>
       <span class="sub" style="text-align:center">14 días gratis, sin tarjeta. Nunca se borra nada.</span>
     </div>

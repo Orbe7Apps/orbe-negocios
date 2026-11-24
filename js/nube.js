@@ -74,6 +74,8 @@ export async function leerEnlace() {
   return 'confirmado';
 }
 export const yaHayEnlace = () => { try { return !!sessionStorage.getItem('orbe-enlace'); } catch (e) { return false; } };
+// ¿Hay una sesión guardada en este navegador? (sirve sin internet: no pregunta al servidor)
+export const haySesionGuardada = () => { try { return !!localStorage.getItem('orbe-negocios-sesion'); } catch (e) { return false; } };
 export const terminarRecuperar = () => poner({ recuperar: false });
 export const quitarAvisoEnlace = () => poner({ avisoEnlace: '' });
 export async function crearCuenta(correo, clave) {
