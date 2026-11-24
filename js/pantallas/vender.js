@@ -5,7 +5,7 @@ import { BotonAyuda } from '../ayuda.js';
 import { Icono, avisar, TONOS, hora, FotoProd } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { estadoNube, estadoPlan } from '../nube.js';
-import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto } from '../datos.js';
+import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto, marcarCotizacion, numeroCot } from '../datos.js';
 import { nuevoCarrito, lineasDe, cuantos, porPeso, verQ, existencia } from '../carrito.js';
 import { FilaVenta } from './hojas.js';
 import { BarraTasas } from './tasas.js';
@@ -28,12 +28,26 @@ export function totales(items, neg, P) {
 }
 
 let carritoGuardado = nuevoCarrito();
+// Cotización que se está convirtiendo en venta: al cobrar queda «aceptada».
+let cotEnVenta = null;
+export function cargarCotizacion(c) { carritoGuardado = JSON.parse(JSON.stringify(c.cart || nuevoCarrito())); cotEnVenta = c.id; }
+// Precios de hoy fijos en la lista (así la cotización respeta lo que se le dijo al cliente aunque el precio cambie).
+function carritoConPrecios(cart, prods) {
+  const meta = Object.assign({}, cart.meta);
+  Object.keys(cart.q).forEach(k => {
+    if ((cart.libres || {})[k] || (meta[k] && meta[k].pm != null)) return;
+    const [pid, vid] = k.split('~'), p = prods.find(x => x.id === pid); if (!p) return;
+    const v = vid && Array.isArray(p.vars) ? p.vars.find(x => x.id === vid) : null;
+    meta[k] = Object.assign({}, meta[k], { pm: v && v.p > 0 ? v.p : p.p });
+  });
+  return JSON.parse(JSON.stringify(Object.assign({}, cart, { meta })));
+}
 
 export function Vender() {
   const { S, P, T, D, tel, abrir, ir, suc, puede } = useApp();
   const [cart, setCartRaw] = useState(carritoGuardado);
   const setCart = c => { carritoGuardado = c; setCartRaw(c); };
-  const vaciar = () => setCart(nuevoCarrito());
+  const vaciar = () => { cotEnVenta = null; setCart(nuevoCarrito()); };
   const [q, setQ] = useState('');
   const [grupo, setGrupo] = useState('');
   const [clase, setClase] = useState('prod');
@@ -78,8 +92,11 @@ export function Vender() {
     // Suscripción vencida: la venta no se guardaría en la nube. Se manda a pagar.
     const ep = S.negocio.nubeId ? estadoPlan(estadoNube().plan) : null;
     if (ep && ep.k === 'vencida') { avisar('Tu suscripción venció: renuévala en Más → Mi suscripción'); ir('mas'); return; }
-    abrir('cobrar', { items, tt, onListo: () => vaciar() });
+    const cot = cotEnVenta;
+    abrir('cobrar', { items, tt, onListo: () => { if (cot) { marcarCotizacion(cot, 'aceptada'); avisar('Cotización vendida'); } vaciar(); } });
   };
+  const cotizar = () => { if (n) abrir('cotizar', { items, tt, cart: carritoConPrecios(cart, prods), onListo: () => vaciar() }); };
+  const cotActual = cotEnVenta && (S.cotizaciones || []).find(c => c.id === cotEnVenta);
   useEffect(() => {
     if (tel) return;
     const tecla = e => {
@@ -144,7 +161,10 @@ export function Vender() {
     ${n ? html`<span class="fila" style="gap:6px">${puede('descuentos') && html`<button type="button" class=${'btn2 chico toca' + (cart.desc ? ' acento' : '')} onClick=${() => abrir('descuento', { desc: cart.desc, sub: items.reduce((a, it) => a + it.q * it.p, 0) + descGlobal, onListo: dd => setCart(Object.assign({}, carritoGuardado, { desc: dd })) })}><${Icono} n="porciento" t=${13} />Descuento</button>`}<button type="button" class="btn2 chico toca" onClick=${vaciar}>Vaciar${tel ? '' : html` <span class="tecla">Esc</span>`}</button></span>` : null}
   </div>`;
 
-  const Boton = html`<button type="button" data-tour="cobrar" class=${'btn toca' + (n ? '' : ' apagado')} onClick=${cobrar}>${n ? 'Cobrar ' + D.m(total) : 'Agrega ' + (T.inv ? 'productos' : 'servicios')}${!tel && n ? html` <span class="tecla" style="color:#fff;border-color:rgba(255,255,255,.4)">F12</span>` : null}</button>`;
+  const BotonCobrar = html`<button type="button" data-tour="cobrar" class=${'btn toca crece' + (n ? '' : ' apagado')} onClick=${cobrar}>${n ? 'Cobrar ' + D.m(total) : 'Agrega ' + (T.inv ? 'productos' : 'servicios')}${!tel && n ? html` <span class="tecla" style="color:#fff;border-color:rgba(255,255,255,.4)">F12</span>` : null}</button>`;
+  // Con cotizaciones: «Cotizar» al lado de cobrar (guarda la lista con precios para mandarla al cliente).
+  const Boton = html`${cotActual && html`<div class="aviso-plan ambar entra"><${Icono} n="doc" t=${16} /><span class="crece">Vendiendo la cotización ${numeroCot(cotActual)}</span><button type="button" class="btn2 chico toca" onClick=${vaciar}>Quitar</button></div>`}
+    ${T.mod('cotizaciones') && n > 0 && !cotActual ? html`<div class="fila" style="gap:8px"><button type="button" class="btn2 toca" style="min-height:56px;border-radius:28px;padding:0 18px;flex:none" onClick=${cotizar}><${Icono} n="doc" t=${16} />Cotizar</button>${BotonCobrar}</div>` : BotonCobrar}`;
 
   if (tel) return html`
     <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonAyuda} />${prods.length > 0 && html`<span class="sub">Toca para sumar</span>`}</div>

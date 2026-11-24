@@ -10,7 +10,7 @@ const CLAVE = 'orbe-negocios';
 const subs = new Set();
 let S = vacio();
 
-function vacio() { return { v: 2, negocio: null, productos: [], clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], ordenes: [], citas: [], solicitudes: [], movCaja: [], turnos: [], promos: [], perfiles: [], roles: ROLES_BASE(), registro: [], ajustes: { tema: 'auto', perfil: '' }, tasa: { modo: 'auto', valor: 0, fuente: 'oficial', fecha: '' }, tasas: {}, historialTasas: [], grupos: [] }; }
+function vacio() { return { v: 2, negocio: null, productos: [], clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], ordenes: [], cotizaciones: [], citas: [], solicitudes: [], movCaja: [], turnos: [], promos: [], perfiles: [], roles: ROLES_BASE(), registro: [], ajustes: { tema: 'auto', perfil: '' }, tasa: { modo: 'auto', valor: 0, fuente: 'oficial', fecha: '' }, tasas: {}, historialTasas: [], grupos: [] }; }
 // Datos guardados con versiones anteriores: se completan sin perder nada.
 function migrar(d) {
   if (!Array.isArray(d.roles) || !d.roles.length) d.roles = ROLES_BASE();
@@ -26,6 +26,7 @@ function migrar(d) {
   if (!Array.isArray(d.historialTasas)) d.historialTasas = [];
   if (!Array.isArray(d.grupos)) d.grupos = [];
   if (!Array.isArray(d.ordenes)) d.ordenes = [];
+  if (!Array.isArray(d.cotizaciones)) d.cotizaciones = [];
   if (!Array.isArray(d.citas)) d.citas = [];
   if (!Array.isArray(d.solicitudes)) d.solicitudes = [];
   // PIN cifrado: los que estaban guardados tal cual se cifran (nunca se guardan los 4 números).
@@ -522,6 +523,28 @@ export function editarOrden(oid, cambios) {
 export function estadoOrden(oid, estado, txt) {
   const o0 = S.ordenes.find(o => o.id === oid); if (!o0 || o0.estado === estado) return;
   cambiarOrden(oid, o => Object.assign({}, o, { estado }, estado === 'lista' ? { lista: Date.now() } : {}, { hist: o.hist.concat([histOrden(txt, estado)]) }));
+}
+// ---------- cotizaciones y presupuestos ----------
+// Una lista con precios que se le manda al cliente (PDF por WhatsApp). Si la acepta, se convierte en venta con esos precios.
+// Estados: pendiente, aceptada (ya se vendió), rechazada. Vencida = pendiente cuya fecha de validez pasó.
+export const numeroCot = c => 'COT-' + String(c.n).padStart(4, '0');
+export const cotVencida = (c, ahora = Date.now()) => c.estado === 'pendiente' && c.vence > 0 && c.vence < ahora;
+export const estadoCot = c => cotVencida(c) ? 'vencida' : c.estado;
+export const ESTADOS_COT = { pendiente: ['Esperando respuesta', 't-amb'], aceptada: ['Aceptada · vendida', 't-ver'], rechazada: ['No la aceptó', 't-gris'], vencida: ['Venció', 't-ros'] };
+export function nuevaCotizacion(c) {
+  const n = (S.cotizaciones || []).reduce((a, x) => Math.max(a, x.n || 0), 0) + 1;
+  const cot = Object.assign({ id: 'ct' + id(), items: [], cart: null, cli: '', cliN: '', tel: '', nota: '', dias: 7, suc: S.negocio.sucursales[0] }, c, { n, t: Date.now(), por: S.ajustes.perfil || '', estado: 'pendiente' });
+  cot.vence = cot.t + cot.dias * 86400000;
+  cambiar(s => Object.assign({ cotizaciones: (s.cotizaciones || []).concat([cot]) }, nota(s, 'Creó la cotización ' + numeroCot(cot))));
+  return cot;
+}
+export function marcarCotizacion(cid, estado, extra) {
+  const c0 = (S.cotizaciones || []).find(c => c.id === cid); if (!c0) return;
+  cambiar(s => Object.assign({ cotizaciones: s.cotizaciones.map(c => c.id === cid ? Object.assign({}, c, { estado, cuando: Date.now() }, extra || {}) : c) }, nota(s, (estado === 'aceptada' ? 'Vendió' : estado === 'rechazada' ? 'Marcó como no aceptada' : 'Reabrió') + ' la cotización ' + numeroCot(c0))));
+}
+export function borrarCotizacion(cid) {
+  const c0 = (S.cotizaciones || []).find(c => c.id === cid); if (!c0) return;
+  cambiar(s => Object.assign({ cotizaciones: s.cotizaciones.filter(c => c.id !== cid) }, nota(s, 'Borró la cotización ' + numeroCot(c0))));
 }
 // Quién atendió la venta (comisiones). No entra en la firma de la venta: se puede corregir después.
 export function guardarAtendio(vid, pro) { cambiar(s => ({ ventas: s.ventas.map(v => v.id === vid ? Object.assign({}, v, { pro }) : v) })); }

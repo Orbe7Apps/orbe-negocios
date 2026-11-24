@@ -11,6 +11,7 @@ import { Icono, LogoOrbe, Avisos, iniciales, avisar, TONOS, Bandera, MarcaNegoci
 import { Inicio } from './pantallas/inicio.js';
 import { Hoy } from './pantallas/hoy.js';
 import { Ordenes } from './pantallas/ordenes.js';
+import { Cotizaciones } from './pantallas/cotizaciones.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
 import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada } from './nube.js';
@@ -39,6 +40,7 @@ const SECCIONES = {
   vender: { n: 'Vender', npc: 'Caja', i: 'carrito', C: Vender },
   agenda: { n: 'Agenda', i: 'calendario', C: Agenda },
   ordenes: { n: 'Órdenes', i: 'orden', C: Ordenes },
+  cotizaciones: { n: 'Cotizaciones', i: 'doc', C: Cotizaciones },
   clientes: { n: 'Clientes', i: 'personas', C: Clientes },
   inventario: { n: 'Inventario', i: 'caja', C: Inventario },
   gastos: { n: 'Gastos y por pagar', i: 'dinero', C: Gastos },
@@ -47,9 +49,9 @@ const SECCIONES = {
   mas: { n: 'Más', npc: 'Ajustes', i: 'mas', ipc: 'ajustes', C: Mas }
 };
 // Secciones que necesitan un permiso para verse.
-const PERMISO_SEC = { vender: 'vender', gastos: 'gastos', reportes: 'ganancias', equipo: 'equipo', ordenes: 'ordenes', agenda: 'vender' };
+const PERMISO_SEC = { vender: 'vender', gastos: 'gastos', reportes: 'ganancias', equipo: 'equipo', ordenes: 'ordenes', agenda: 'vender', cotizaciones: 'vender' };
 // Secciones que dependen de una función que se puede apagar.
-const MODULO_SEC = { ordenes: 'ordenes', agenda: 'agenda' };
+const MODULO_SEC = { ordenes: 'ordenes', agenda: 'agenda', cotizaciones: 'cotizaciones' };
 
 function aplicarTema(tema) {
   const r = document.documentElement;
@@ -160,8 +162,8 @@ function App() {
     </${Ctx.Provider}>`;
   }
 
-  const grupos = [['Día a día', ['hoy', 'vender', 'agenda', 'ordenes', 'clientes']], ['Operación', ['inventario', 'gastos']], ['Gestión', ['reportes', 'equipo']]].map(g => [g[0], g[1].filter(permitida)]).filter(g => g[1].length);
-  const colores = { agenda: 'var(--c2)', clientes: 'var(--c3)', inventario: 'var(--c3)', gastos: 'var(--c5)', ordenes: 'var(--c5)' };
+  const grupos = [['Día a día', ['hoy', 'vender', 'agenda', 'ordenes', 'cotizaciones', 'clientes']], ['Operación', ['inventario', 'gastos']], ['Gestión', ['reportes', 'equipo']]].map(g => [g[0], g[1].filter(permitida)]).filter(g => g[1].length);
+  const colores = { agenda: 'var(--c2)', clientes: 'var(--c3)', inventario: 'var(--c3)', gastos: 'var(--c5)', ordenes: 'var(--c5)', cotizaciones: 'var(--c4)' };
   return html`<${Ctx.Provider} value=${ctx}>
     <div class="marco-pc">
       <aside class="lateral" aria-label="Menú">
@@ -214,6 +216,7 @@ function subtitulo(s, { S, E, suc, T }) {
     hoy: f.charAt(0).toUpperCase() + f.slice(1) + ' · ' + donde,
     vender: 'Escanea o toca los productos · F12 para cobrar',
     ordenes: 'Recibe, sigue y entrega trabajos y pedidos · arrastra las tarjetas para cambiar el estado',
+    cotizaciones: 'Listas con precios para tus clientes · se convierten en venta cuando aceptan',
     clientes: 'Quién te debe y su historial',
     inventario: T.inv ? 'Lo que tienes y lo que falta' : 'Precios y duración',
     gastos: 'Lo que gastas y lo que debes',

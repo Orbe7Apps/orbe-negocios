@@ -15,6 +15,7 @@ export const MODULOS = [
   { k: 'precios', g: 'Productos', i: 'sube', n: 'Cuidar precios', d: 'Te avisa cuando un precio queda por debajo de lo que cuesta reponerlo.' },
   { k: 'agenda', g: 'Clientes y atención', i: 'calendario', n: 'Agenda de citas', d: 'Citas por día y por profesional, recordatorio por WhatsApp y cobro al terminar.' },
   { k: 'comisiones', g: 'Clientes y atención', i: 'personas', n: 'Quién atendió y comisiones', d: 'Cada venta guarda quién atendió y el reporte calcula la comisión de cada uno.' },
+  { k: 'cotizaciones', g: 'Clientes y atención', i: 'doc', n: 'Cotizaciones y presupuestos', d: 'Arma una lista con precios, mándala en PDF por WhatsApp y conviértela en venta cuando el cliente acepte.' },
   { k: 'ordenes', g: 'Clientes y atención', i: 'orden', n: 'Órdenes de trabajo y pedidos', d: 'Recibe equipos o encargos con anticipo, sigue cada uno y mándalo en PDF por WhatsApp.' },
   { k: 'fiado', g: 'Clientes y atención', i: 'tarjeta', n: 'Fiado y cuentas por cobrar', d: 'Vende a crédito y lleva lo que te debe cada cliente, con sus abonos.' },
   { k: 'promos', g: 'Ventas y caja', i: 'porciento', n: 'Promociones', d: '2x1, descuentos por porcentaje y precios especiales por cantidad.' },
@@ -36,14 +37,14 @@ export const RUBROS = [
     mods: ['inventario', 'medidas', 'escaner', 'compras', 'precios', 'promos', 'fiado', 'ordenes', 'caja'], cat: 'tienda', nombre: 'Bodega La Esquina' },
   { id: 'ferreteria', t: 'tienda', n: 'Ferretería', i: 'llave', c: 'amb', ex: 'Materiales, herramientas, electricidad, pinturas',
     kw: ['ferreter', 'construcc', 'material', 'herramient', 'tornill', 'pintura', 'electricidad', 'plomer', 'cemento', 'cerami'],
-    mods: ['inventario', 'servicios', 'medidas', 'variantes', 'escaner', 'compras', 'precios', 'fiado', 'ordenes', 'caja'], nombre: 'Ferretería El Tornillo', ventas: 18,
+    mods: ['cotizaciones', 'inventario', 'servicios', 'medidas', 'variantes', 'escaner', 'compras', 'precios', 'fiado', 'ordenes', 'caja'], nombre: 'Ferretería El Tornillo', ventas: 18,
     cat: [['TO', 'Tornillos 1/4" x 100', 4.5, 2.6, 30, 10, 0, 7], ['CE', 'Cemento gris 42,5 kg', 9.8, 7.6, 25, 10, 0, 8], ['CA', 'Cable 12 AWG', 0.65, 0.38, 180, 50, 0, 6, { u: 'm' }],
       ['TU', 'Tubo PVC 1/2"', 3.2, 2.1, 40, 12, 0, 5], ['PI', 'Pintura de caucho (galón)', 22, 15, 12, 4, 0, 4, { vars: ['Blanco', 'Gris', 'Beige'] }], ['MA', 'Martillo 16 oz', 8.5, 5.2, 9, 3, 0, 3],
       ['CL', 'Clavos 2"', 2.4, 1.5, 35, 8, 0, 6, { u: 'kg' }], ['CR', 'Cerámica 60x60', 12.5, 8.4, 120, 30, 0, 4, { u: 'm²' }], ['LL', 'Copia de llave', 1.5, 0.3, -1, 0, 10, 5], ['MZ', 'Mezcla de pintura', 2, 0, -1, 0, 15, 2]],
     grupos: [['Construcción', ['CE', 'CR', 'TU']], ['Electricidad', ['CA']], ['Herramientas', ['MA']], ['Tornillería', ['TO', 'CL']], ['Pinturas', ['PI', 'MZ']], ['Servicios', ['LL']]] },
   { id: 'electro', t: 'tienda', n: 'Electrodomésticos', i: 'tele', c: 'azu', ex: 'Línea blanca, TV, aires, celulares',
     kw: ['electrodom', 'linea blanca', 'nevera', 'lavadora', 'televis', 'tv', 'electronic', 'celular', 'telefono', 'aire acond', 'computad', 'laptop'],
-    mods: ['inventario', 'servicios', 'variantes', 'garantia', 'escaner', 'compras', 'precios', 'promos', 'fiado', 'ordenes', 'caja'], nombre: 'Electro Hogar', ventas: 6,
+    mods: ['cotizaciones', 'inventario', 'servicios', 'variantes', 'garantia', 'escaner', 'compras', 'precios', 'promos', 'fiado', 'ordenes', 'caja'], nombre: 'Electro Hogar', ventas: 6,
     cat: [['NV', 'Nevera 14 pies', 520, 410, 4, 2, 0, 3, { gar: 12 }], ['LV', 'Lavadora 12 kg', 380, 295, 5, 2, 0, 4, { gar: 12 }], ['TV', 'TV 50" 4K', 420, 330, 6, 2, 0, 5, { gar: 12 }],
       ['AA', 'Aire acondicionado 12.000 BTU', 350, 270, 3, 2, 0, 4, { gar: 12 }], ['MI', 'Microondas', 95, 68, 10, 3, 0, 6, { gar: 6 }], ['LI', 'Licuadora', 38, 25, 14, 4, 0, 7, { gar: 6, vars: ['Negra', 'Roja'] }],
       ['CF', 'Cafetera', 29, 19, 9, 3, 0, 5, { gar: 6 }], ['IN', 'Instalación de aire', 45, 10, -1, 0, 120, 3], ['EN', 'Entrega a domicilio', 8, 3, -1, 0, 0, 6]],
@@ -83,7 +84,7 @@ export const RUBROS = [
     grupos: [['Cabello', ['CP', 'TI', 'MB', 'AK']], ['Uñas', ['MA', 'PE', 'UA']], ['Rostro', ['CJ']], ['Productos', ['SH']]] },
   { id: 'taller', t: 'citas', n: 'Taller o servicio técnico', i: 'auto', c: 'vio', ex: 'Mecánica, motos, celulares, computadoras',
     kw: ['taller', 'repuesto', 'autoparte', 'mecanic', 'moto', 'carro', 'vehicul', 'reparac', 'servicio tecnico', 'tecnico', 'latoner', 'cauchera', 'lubricentro'],
-    mods: ['inventario', 'servicios', 'medidas', 'garantia', 'compras', 'precios', 'comisiones', 'fiado', 'ordenes', 'caja'], nombre: 'Taller El Pistón', ventas: 7,
+    mods: ['cotizaciones', 'inventario', 'servicios', 'medidas', 'garantia', 'compras', 'precios', 'comisiones', 'fiado', 'ordenes', 'caja'], nombre: 'Taller El Pistón', ventas: 7,
     cat: [['CA', 'Cambio de aceite (mano de obra)', 10, 0, -1, 0, 40, 8], ['AF', 'Aceite 15W40', 6, 4, 40, 12, 0, 8, { u: 'l' }], ['FI', 'Filtro de aceite', 7, 4.5, 15, 5, 0, 7], ['PF', 'Pastillas de freno', 28, 18, 8, 4, 0, 4],
       ['AB', 'Alineación y balanceo', 20, 2, -1, 0, 60, 5], ['DI', 'Diagnóstico con escáner', 15, 0, -1, 0, 30, 4], ['BT', 'Batería 12 V', 95, 72, 4, 2, 0, 2, { gar: 12 }]],
     grupos: [['Mano de obra', ['CA', 'AB', 'DI']], ['Lubricantes', ['AF', 'FI']], ['Repuestos', ['PF', 'BT']]] },
@@ -92,7 +93,7 @@ export const RUBROS = [
     mods: ['inventario', 'servicios', 'variantes', 'promos', 'ordenes'], cat: 'online', nombre: 'Estampa Store' },
   { id: 'indep', t: 'indep', n: 'Independiente', i: 'indep', c: 'azu', ex: 'Diseño, fotos, clases, consultoría',
     kw: ['disen', 'fotograf', 'clase', 'profesor', 'consult', 'asesor', 'freelance', 'abogad', 'contador', 'psicolog', 'entrenador', 'nutricion'],
-    mods: ['servicios', 'agenda', 'fiado', 'ordenes'], cat: 'indep', nombre: 'Ana Ruiz Estudio' }
+    mods: ['cotizaciones', 'servicios', 'agenda', 'fiado', 'ordenes'], cat: 'indep', nombre: 'Ana Ruiz Estudio' }
 ];
 export const rubro = id => RUBROS.find(r => r.id === id) || null;
 

@@ -24,6 +24,7 @@ import { Cita, NuevaCita } from './agenda.js';
 import { ElegirRubro } from './funciones.js';
 import { Sugerencias } from './empezar.js';
 import { Cuenta, Pagar } from './cuenta.js';
+import { Cotizar, Cotizacion } from './cotizaciones.js';
 
 const CATS = ['Mercancía', 'Alquiler', 'Servicios', 'Sueldos', 'Transporte', 'Otro'];
 const VENCE = [{ v: 7, n: 'En 7 días' }, { v: 15, n: 'En 15 días' }, { v: 30, n: 'En 30 días' }];
@@ -51,7 +52,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { cuenta: Cuenta, pagar: Pagar, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  const H = { cuenta: Cuenta, pagar: Pagar, cotizar: Cotizar, cotizacion: Cotizacion, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
@@ -824,7 +825,7 @@ function Tasa({ d, cerrar }) {
           ${resumenTasas[0] && html`<span class="pildora" style=${{ color: ESTADO[resumenTasas[0].estado][1] }}>${modo === 'manual' && conFuente ? 'A mano' : ESTADO[resumenTasas[0].estado][0]}</span>`}
           ${Math.abs(cambio) >= 0.05 && html`<span class="pildora" style=${{ background: cambio > 0 ? 'var(--amber-soft)' : 'var(--in-soft)', color: cambio > 0 ? 'var(--amber-text)' : 'var(--in-text)' }}>${cambio > 0 ? '▲ ' : '▼ '}${Math.abs(cambio).toFixed(1).replace('.', ',')} % desde ayer</span>`}
         </span>
-        ${editar && conFuente && html`<button type="button" class=${'btn2 lleno toca' + (leyendo ? ' apagado' : '')} onClick=${() => { setModo('auto'); leerTodas(); }}><${Icono} n="deshacer" t=${15} />${leyendo === 'todas' ? 'Leyendo…' : 'Actualizar de internet'}</button>`}
+        ${editar && conFuente && html`<button type="button" class=${'btn2 lleno toca' + (leyendo ? ' apagado' : '')} onClick=${() => { setModo('auto'); leerTodas(); }}><${Icono} n="refrescar" t=${15} />${leyendo === 'todas' ? 'Leyendo…' : 'Actualizar de internet'}</button>`}
       </div>
       ${!editar && html`<div class="tarjeta fila" style="background:var(--fill2);box-shadow:none;gap:10px"><${Icono} n="candado" t=${16} c="var(--muted)" /><span class="sub" style="line-height:1.45">Puedes verlas, pero cambiarlas solo lo hacen las cuentas habilitadas.</span></div>`}
       ${P.id === 'AR' && editar && html`<div class="campo"><span>¿Qué dólar muestras?</span><${Chips} opciones=${FUENTES_AR} valor=${fuente} onCambio=${v => { setFuente(v); setModo('auto'); leerYa('principal', v); }} chico /></div>`}
@@ -840,7 +841,7 @@ function Tasa({ d, cerrar }) {
           <span class="sub">${x.para}</span>
           ${editar ? html`<div class="fila" style="gap:8px">
               <div class="pago-monto crece" style="min-height:46px"><span class="pago-moneda" style="display:grid;place-items:center">${mon.trim()}</span><input class="num" type="text" inputmode="decimal" autocomplete="off" placeholder=${x.ph} value=${x.val} aria-label=${'Tasa ' + x.n} onInput=${e => x.set(e.target.value)} /></div>
-              ${x.auto && x.k !== 'principal' && html`<button type="button" class=${'btn2 chico toca' + (leyendo === x.k ? ' apagado' : '')} style="min-height:46px" aria-label=${'Leer de internet la tasa ' + x.n} onClick=${() => { if (x.k === 'principal') setModo('auto'); leerYa(x.k); }}><${Icono} n="deshacer" t=${14} />${leyendo === x.k ? 'Leyendo…' : 'Leer'}</button>`}
+              ${x.auto && x.k !== 'principal' && html`<button type="button" class=${'btn2 chico toca' + (leyendo === x.k ? ' apagado' : '')} style="min-height:46px" aria-label=${'Leer de internet la tasa ' + x.n} onClick=${() => { if (x.k === 'principal') setModo('auto'); leerYa(x.k); }}><${Icono} n="refrescar" t=${14} />${leyendo === x.k ? 'Leyendo…' : 'Leer'}</button>`}
             </div>`
             : html`<b class="num" style="font-size:18px">${numero(x.val) ? mon + nf.format(numero(x.val)) : x.k === 'principal' ? mon + nf.format(D.tasa) : 'Sin usar'}</b>`}
         </div>`;

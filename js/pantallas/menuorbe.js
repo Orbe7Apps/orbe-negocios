@@ -35,6 +35,7 @@ export function BotonOrbe({ seccion, tabs = [] }) {
     ver('inventario') && !tabs.includes('inventario') && ['inventario', T.inv ? 'caja' : 'lista', T.inv ? 'Inventario' : 'Servicios', 0],
     ver('clientes') && ['clientes', 'personas', 'Clientes', 0],
     ver('ordenes') && ['ordenes', 'orden', 'Órdenes', atrasadas],
+    ver('cotizaciones') && ['cotizaciones', 'doc', 'Cotizaciones', (S.cotizaciones || []).filter(c => c.estado === 'pendiente' && !(c.vence < Date.now())).length],
     ver('reportes') && ['reportes', 'grafico', 'Reportes', 0],
     ver('equipo') && ['equipo', 'escudo', 'Equipo', 0]
   ].filter(Boolean);

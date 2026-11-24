@@ -11,7 +11,7 @@ const LIB = new URL('./lib/supabase.min.js', import.meta.url).href;
 
 // Lo que se sincroniza: colecciones (un registro por elemento) y datos sueltos del negocio.
 // «ajustes» no se sube: el perfil que está usando el aparato y el tema son de cada aparato.
-const COLS = ['productos', 'clientes', 'ventas', 'abonos', 'gastos', 'cierres', 'ordenes', 'citas', 'solicitudes', 'movCaja', 'turnos', 'promos', 'perfiles', 'roles', 'grupos', 'registro', 'historialTasas'];
+const COLS = ['productos', 'clientes', 'ventas', 'abonos', 'gastos', 'cierres', 'ordenes', 'cotizaciones', 'citas', 'solicitudes', 'movCaja', 'turnos', 'promos', 'perfiles', 'roles', 'grupos', 'registro', 'historialTasas'];
 const OBJS = ['negocio', 'tasa', 'tasas'];
 // En estas se recortan los viejos (no es que se borren): no se avisa borrado.
 const SIN_BORRAR = ['registro', 'historialTasas'];
