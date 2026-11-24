@@ -969,3 +969,10 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .aviso-plan.ambar { background: var(--amber-soft); color: var(--amber-text); }
 .aviso-plan.rojo { background: var(--out-soft); color: var(--out-text); }
 .aviso-plan b { flex: none; }
+
+/* Contraseña con «Ver» y pantalla de contraseña nueva */
+.clave-caja { position: relative; display: block; }
+.clave-caja input { padding-right: 84px; }
+.clave-ver { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: var(--surface); color: var(--accent-text, var(--accent)); font: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 12px; min-height: 36px; }
+.clave-nueva { min-height: 100dvh; display: grid; place-items: center; padding: 20px 16px; }
+.campo > .clave-caja { font-size: inherit; color: inherit; }

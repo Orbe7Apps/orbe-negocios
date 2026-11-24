@@ -18,7 +18,7 @@ const SIN_BORRAR = ['registro', 'historialTasas'];
 const idDe = (col, x) => col === 'registro' ? String(x.h || x.t) : col === 'historialTasas' ? x.dia + '|' + x.f : x && x.id != null ? String(x.id) : '';
 
 // ---------- estado de la nube (para la pantalla) ----------
-let E = { sesion: null, correo: '', negocioId: '', estado: 'apagada', pendientes: 0, ultima: 0, error: '', plan: null, admin: false };
+let E = { sesion: null, correo: '', negocioId: '', estado: 'apagada', pendientes: 0, ultima: 0, error: '', plan: null, admin: false, recuperar: false, avisoEnlace: '' };
 const subs = new Set();
 const poner = o => { E = Object.assign({}, E, o); subs.forEach(f => f(E)); };
 export const estadoNube = () => E;
@@ -34,10 +34,10 @@ const cargar = src => new Promise((ok, mal) => { const s = document.createElemen
 export async function cliente() {
   if (sb) return sb;
   if (!window.supabase) await cargar(LIB);
-  sb = window.supabase.createClient(URL_NUBE, CLAVE_PUBLICA, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'orbe-negocios-sesion' } });
+  sb = window.supabase.createClient(URL_NUBE, CLAVE_PUBLICA, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'orbe-negocios-sesion' } });
   sb.auth.onAuthStateChange((ev, s) => {
     poner({ sesion: s ? s.user : null, correo: s && s.user ? s.user.email : '' });
-    if (ev === 'PASSWORD_RECOVERY') window.dispatchEvent(new CustomEvent('orbe-nueva-clave'));
+    if (ev === 'PASSWORD_RECOVERY') poner({ recuperar: true });
   });
   return sb;
 }
@@ -56,6 +56,26 @@ export function explicar(er) {
 
 // ---------- cuenta ----------
 const vuelta = () => location.origin + location.pathname;
+// Al volver del enlace del correo: se abre la sesión que trae y, si es para cambiar la contraseña, se pide la nueva.
+export async function leerEnlace() {
+  let h = ''; try { h = sessionStorage.getItem('orbe-enlace') || ''; sessionStorage.removeItem('orbe-enlace'); } catch (e) { /* sin almacenamiento */ }
+  if (!h) return null;
+  const q = new URLSearchParams(h);
+  if (q.get('error_description') || q.get('error')) {
+    const venc = /expired|invalid/i.test(q.get('error_code') + ' ' + q.get('error_description'));
+    const txt = venc ? 'Ese enlace ya venció o ya se usó. Pide uno nuevo con «Olvidé mi contraseña».' : 'No se pudo abrir el enlace: ' + q.get('error_description');
+    poner({ avisoEnlace: txt }); return 'error';
+  }
+  const c = await cliente();
+  const { error } = await c.auth.setSession({ access_token: q.get('access_token'), refresh_token: q.get('refresh_token') });
+  if (error) { poner({ avisoEnlace: explicar(error) }); return 'error'; }
+  if (q.get('type') === 'recovery') { poner({ recuperar: true }); return 'recuperar'; }
+  poner({ avisoEnlace: 'Listo: tu correo quedó confirmado' });
+  return 'confirmado';
+}
+export const yaHayEnlace = () => { try { return !!sessionStorage.getItem('orbe-enlace'); } catch (e) { return false; } };
+export const terminarRecuperar = () => poner({ recuperar: false });
+export const quitarAvisoEnlace = () => poner({ avisoEnlace: '' });
 export async function crearCuenta(correo, clave) {
   const c = await cliente();
   const { data, error } = await c.auth.signUp({ email: correo.trim(), password: clave, options: { emailRedirectTo: vuelta() } });
@@ -284,7 +304,8 @@ export async function iniciarNube() {
   poner({ pendientes: pend.size });
   const S = leer();
   // Volver de «olvidé mi contraseña» o de confirmar el correo trae la sesión en la dirección: hay que cargar la nube.
-  const conToken = /access_token|type=recovery|code=/.test(location.hash + location.search);
+  const conToken = yaHayEnlace();
+  if (conToken) { try { await leerEnlace(); } catch (e) { poner({ avisoEnlace: 'No se pudo abrir el enlace: revisa tu internet' }); } }
   if (!(S.negocio && S.negocio.nubeId) && !conToken && !localStorage.getItem('orbe-negocios-sesion')) return;
   try {
     const c = await cliente();

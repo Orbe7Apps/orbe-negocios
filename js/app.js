@@ -13,7 +13,8 @@ import { Hoy } from './pantallas/hoy.js';
 import { Ordenes } from './pantallas/ordenes.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
-import { iniciarNube, useNube } from './nube.js';
+import { iniciarNube, useNube, quitarAvisoEnlace } from './nube.js';
+import { ClaveNueva } from './pantallas/cuenta.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -83,8 +84,8 @@ function App() {
   useEffect(() => { document.documentElement.classList.toggle('pc', !tel); document.documentElement.classList.toggle('tel', tel); }, [tel]);
   useEffect(() => { aplicarTema(S.ajustes.tema); }, [S.ajustes.tema]);
   const N = useNube();
-  // Volver del enlace «olvidé mi contraseña»: se pide la nueva.
-  useEffect(() => { const f = () => setHoja({ t: 'nuevaClave', datos: {}, n: Date.now() }); window.addEventListener('orbe-nueva-clave', f); return () => window.removeEventListener('orbe-nueva-clave', f); }, []);
+  // Aviso al volver del enlace del correo (cuenta confirmada, enlace vencido…).
+  useEffect(() => { if (N.avisoEnlace) { avisar(N.avisoEnlace); quitarAvisoEnlace(); } }, [N.avisoEnlace]);
   // Negocio recién creado (sin ejemplo): se ofrece guardarlo en la nube una vez.
   const pide = S.negocio && S.negocio.pedirNube && !S.negocio.nubeId && S.ajustes.perfil;
   useEffect(() => { if (!pide) return; const r = setTimeout(() => { setHoja({ t: 'cuenta', datos: { inicio: true }, n: Date.now() }); cambiarNegocio({ pedirNube: false }); }, 900); return () => clearTimeout(r); }, [pide]);
@@ -104,6 +105,8 @@ function App() {
     if ((pid === 'VE' || pid === 'AR') && S.negocio.euro && enLinea && !(te && te.modo === 'manual') && !(te && te.fecha === diaClave(Date.now()))) leerTasa(pid, 'euro').then(v => { if (v) guardarTasaExtra('euro', { valor: v, modo: 'auto' }); });
   }, [pid, S.negocio && S.negocio.euro, enLinea, te && te.modo]);
 
+  // Volver del enlace «Olvidé mi contraseña»: se pide la nueva antes que nada.
+  if (N.recuperar) return html`<${ClaveNueva} /><${Avisos} />`;
   if (!S.negocio) return html`<${Inicio} tel=${tel} /><${Avisos} />`;
   const yo = perfilActual();
   if (!yo) return html`<${Acceso} tel=${tel} /><${Avisos} />`;

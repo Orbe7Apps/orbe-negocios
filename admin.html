@@ -19,6 +19,10 @@
   .admin .rejilla-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .admin .dos-uno { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 </style>
+<script>
+// Enlace del correo (confirmar cuenta o cambiar contraseña): se guarda antes de que la app use la dirección.
+(function () { var h = location.hash || ''; if (/access_token=|error_description=|type=recovery/.test(h)) { try { sessionStorage.setItem('orbe-enlace', h.slice(1)); } catch (e) {} history.replaceState(null, '', location.pathname + location.search); } })();
+</script>
 </head>
 <body>
 <div id="app"></div>

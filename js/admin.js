@@ -1,20 +1,27 @@
 // Panel de administración de Orbe (solo para administradores): pagos por revisar, negocios y datos de cobro.
 // El servidor protege todo: si la cuenta no es administradora, no recibe ningún dato aunque abra esta página.
 import { html, render, useState, useEffect } from './lib/preact-htm.js';
-import { cliente, entrarCuenta, explicar, estadoPlan } from './nube.js';
+import { cliente, entrarCuenta, olvideClave, explicar, estadoPlan, leerEnlace, useNube, quitarAvisoEnlace } from './nube.js';
+import { ClaveNueva, CampoClave } from './pantallas/cuenta.js';
 import { Icono, Avisos, avisar, LogoOrbe } from './ui.js';
 
 const fecha = t => t ? new Date(t).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 const ESTADO = { activa: ['Activa', 't-ver'], prueba: ['En prueba', 't-azu'], gracia: ['En gracia', 't-amb'], vencida: ['Vencida', 't-ros'] };
 
 function Entrar({ listo }) {
-  const [f, setF] = useState({ correo: '', clave: '' });
-  const enviar = async () => { try { await entrarCuenta(f.correo, f.clave); listo(); } catch (er) { avisar(er.message); } };
+  const [f, setF] = useState({ correo: '', clave: '' }), [olvido, setOlvido] = useState(false);
+  const enviar = async () => {
+    try {
+      if (olvido) { await olvideClave(f.correo); avisar('Listo: revisa tu correo y abre el enlace en este aparato'); setOlvido(false); return; }
+      await entrarCuenta(f.correo, f.clave); listo();
+    } catch (er) { avisar(er.message); }
+  };
   return html`<div class="tarjeta pila" style="max-width:420px;margin:12vh auto 0;padding:28px;gap:16px">
-    <div class="fila" style="gap:12px"><${LogoOrbe} t=${40} /><span style="display:flex;flex-direction:column"><b style="font-size:17px">Orbe · Administración</b><span class="sub">Solo para administradores</span></span></div>
-    <label class="campo"><span>Correo</span><input type="email" autocomplete="email" value=${f.correo} onInput=${e => setF(Object.assign({}, f, { correo: e.target.value }))} /></label>
-    <label class="campo"><span>Contraseña</span><input type="password" autocomplete="current-password" value=${f.clave} onInput=${e => setF(Object.assign({}, f, { clave: e.target.value }))} onKeyDown=${e => e.key === 'Enter' && enviar()} /></label>
-    <button type="button" class="btn toca" onClick=${enviar}>Entrar</button>
+    <div class="fila" style="gap:12px"><${LogoOrbe} t=${40} /><span style="display:flex;flex-direction:column"><b style="font-size:17px">Orbe · Administración</b><span class="sub">${olvido ? 'Te mandamos un enlace para cambiar la contraseña' : 'Solo para administradores'}</span></span></div>
+    <label class="campo"><span>Correo</span><input type="email" autocomplete="email" autocapitalize="off" value=${f.correo} onInput=${e => setF(Object.assign({}, f, { correo: e.target.value }))} /></label>
+    ${!olvido && html`<${CampoClave} titulo="Contraseña" valor=${f.clave} onCambio=${v => setF(Object.assign({}, f, { clave: v }))} onEnter=${enviar} />`}
+    <button type="button" class="btn toca" onClick=${enviar}>${olvido ? 'Mandar el enlace' : 'Entrar'}</button>
+    <button type="button" class="olvide-pin toca" onClick=${() => setOlvido(!olvido)}>${olvido ? 'Volver' : 'Olvidé mi contraseña'}</button>
   </div>`;
 }
 
@@ -96,8 +103,11 @@ function Cobro({ c, cfg, listo }) {
 
 function App() {
   const [c, setC] = useState(null), [estado, setEstado] = useState('cargando'), [correo, setCorreo] = useState('');
+  const N = useNube();
+  useEffect(() => { if (N.avisoEnlace) { avisar(N.avisoEnlace); quitarAvisoEnlace(); } }, [N.avisoEnlace]);
   const revisar = async () => {
     const cl = await cliente(); setC(cl);
+    await leerEnlace().catch(er => avisar(explicar(er)));
     const { data: { session } } = await cl.auth.getSession();
     if (!session) { setEstado('entrar'); return; }
     setCorreo(session.user.email);
@@ -105,6 +115,9 @@ function App() {
     setEstado(data ? 'admin' : 'no');
   };
   useEffect(() => { revisar().catch(er => { avisar(explicar(er)); setEstado('entrar'); }); }, []);
+  // Al volver del enlace «Olvidé mi contraseña»: primero la contraseña nueva; luego se revisa de nuevo la cuenta.
+  useEffect(() => { if (!N.recuperar && estado !== 'cargando') revisar(); }, [N.recuperar]);
+  if (N.recuperar) return html`<${ClaveNueva} /><${Avisos} />`;
   return html`${estado === 'cargando' ? html`<p class="vacio" style="margin-top:20vh">Cargando…</p>`
     : estado === 'entrar' ? html`<${Entrar} listo=${revisar} />`
     : estado === 'no' ? html`<div class="tarjeta pila" style="max-width:420px;margin:12vh auto 0;padding:28px;gap:12px;text-align:center"><b>Esta cuenta no es administradora</b><span class="sub">${correo}</span><button type="button" class="btn2 toca" onClick=${async () => { await c.auth.signOut(); location.reload(); }}>Salir</button></div>`
