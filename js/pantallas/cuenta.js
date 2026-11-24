@@ -40,6 +40,8 @@ function FormCuenta({ modo, setModo, f, pon }) {
     ${modo === 'olvido' && html`<span class="sub" style="line-height:1.45">Le mandamos al correo del dueño un enlace para poner una contraseña nueva.</span>`}
   </div>`;
 }
+// Para distinguir negocios con el mismo nombre: cuándo se creó y su plan.
+const datoNegocio = g => { const ep = estadoPlan(g); return 'Creado el ' + new Date(g.creado).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) + (ep ? ' · ' + ep.txt.toLowerCase() : ''); };
 const correoOk = x => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x.trim());
 
 // ---------- hoja: guardar el negocio en la nube (crear cuenta o iniciar sesión) ----------
@@ -73,7 +75,7 @@ export function Cuenta({ d, cerrar }) {
       : yaUnido ? html`<p class="vacio">Este negocio ya está en tu cuenta.</p>`
       : html`<span class="sub" style="line-height:1.45">Sesión iniciada${N.usuario ? html` como <b>${N.usuario}</b>` : ''}.</span>
         <button type="button" class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => subir(c)}><${Icono} n="subir" t=${18} /><span class="crece"><b>Guardar «${S.negocio.nombre}» en mi cuenta</b><br /><span class="sub" style="font-weight:500">Sube lo que tienes en este aparato</span></span></button>
-        ${cuenta.length > 0 && html`<span class="titulo-funciones">O usar uno que ya está en tu cuenta</span>${cuenta.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => bajar(c, g)}><${Icono} n="descarga" t=${18} /><span class="crece"><b>${g.nombre}</b><br /><span class="sub" style="font-weight:500">Reemplaza lo de este aparato (se guarda una copia antes)</span></span></button>`)}`}`}`
+        ${cuenta.length > 0 && html`<span class="titulo-funciones">O usar uno que ya está en tu cuenta</span>${cuenta.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => bajar(c, g)}><${Icono} n="descarga" t=${18} /><span class="crece"><b>${g.nombre}</b><br /><span class="sub" style="font-weight:500">${datoNegocio(g)} · reemplaza lo de este aparato (se guarda una copia)</span></span></button>`)}`}`}`
     : html`
       ${d.inicio && html`<div class="pila" style="gap:8px">${[['escudo', 'Si pierdes o cambias el teléfono, no pierdes nada'], ['movil', 'Úsalo en varios aparatos con los mismos datos'], ['wifi', 'Sigue funcionando sin internet: se guarda al volver la conexión']].map(x => html`<span class="fila" style="gap:10px;font-size:14px"><span class="ic t-ver" style="width:30px;height:30px;border-radius:10px"><${Icono} n=${x[0]} t=${15} /></span>${x[1]}</span>`)}</div>`}
       <${FormCuenta} modo=${modo} setModo=${setModo} f=${f} pon=${pon} />`,
@@ -262,7 +264,7 @@ export function EntrarInicio({ volver, crear }) {
     <button type="button" class="icono-btn toca" aria-label="Atrás" onClick=${lista ? salir : volver}><${Icono} n="atras" /></button>
     <h1 style="font-size:26px">${lista ? (lista.length ? 'Elige tu negocio' : 'Arma tu negocio') : 'Entra a tu cuenta'}</h1>
     ${lista ? html`<span class="sub">Sesión iniciada${N.usuario ? html` como <b>${N.usuario}</b>` : ''}</span>
-      ${lista.length ? lista.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => abrirNeg(g)}><${Icono} n="tienda" t=${18} /><span class="crece"><b>${g.nombre}</b></span><${Icono} n="sig" t=${15} c="var(--faint)" /></button>`)
+      ${lista.length ? lista.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => abrirNeg(g)}><${Icono} n="tienda" t=${18} /><span class="crece"><b>${g.nombre}</b><br /><span class="sub" style="font-weight:500">${datoNegocio(g)}</span></span><${Icono} n="sig" t=${15} c="var(--faint)" /></button>`)
         : html`<span class="sub" style="line-height:1.45;font-size:15px">Tu cuenta está lista. Ahora contesta unas preguntas y Orbe se arma para tu negocio.</span>`}
       ${ocupado && html`<p class="sub">Bajando tus datos…</p>`}
       <button type="button" class=${lista.length ? 'btn2 toca' : 'btn toca'} style=${lista.length ? 'min-height:50px;border-radius:25px' : ''} onClick=${crear}>${lista.length ? 'Crear otro negocio' : 'Crear mi negocio'}</button>
