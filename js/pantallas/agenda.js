@@ -7,6 +7,7 @@ import { inicioDia, listaProductos, guardarCita, estadoCita, citaActiva, ESTADOS
 import { Hoja, Icono, avisar, hora, iniciales } from '../ui.js';
 import { totales } from './vender.js';
 import { enlaceWA } from '../ordenpdf.js';
+import { horasDelDia, fueraDeHorario } from '../horario.js';
 import { normal } from '../buscar.js';
 
 const COLORES = ['#7b6cff', '#12a37a', '#e8961a', '#3d9be9', '#e8436a', '#a35bf0'];
@@ -133,7 +134,9 @@ export function NuevaCita({ d, cerrar }) {
     const t = f.dia + m * 60000, fin = t + dur * 60000;
     return S.citas.some(x => x.id !== (c0 && c0.id) && citaActiva(x) && (!f.pro || x.pro === f.pro) && x.t < fin && x.t + x.dur * 60000 > t);
   };
-  const ahora = Date.now(), horas = Array.from({ length: 30 }, (_, i) => 7 * 60 + i * 30);
+  // Horas que se ofrecen: las del horario de esa persona (o del negocio), sin almuerzo, días libres ni vacaciones.
+  const ahora = Date.now(), horas = horasDelDia(S, f.pro, f.dia, dur);
+  const porQueNo = horas.length ? '' : fueraDeHorario(S, f.pro, f.dia + 12 * 3600000, 30);
   const textoHora = m => { const x = new Date(f.dia + m * 60000); return hora(x.getTime()); };
   const mensaje = t => 'Hola ' + f.nom.trim().split(' ')[0] + ', tu cita en ' + S.negocio.nombre + ' quedó para el ' + fechaLarga(t) + ' a las ' + hora(t) + ' (' + elegidos.map(p => p.n).join(' + ') + '). ¡Te esperamos!';
   const guardar = (c, avisarWA) => {
@@ -171,7 +174,8 @@ export function NuevaCita({ d, cerrar }) {
       ${['Mañana', 'Tarde', 'Noche'].map(bq => { const hs = horas.filter(m => bloqueDe(f.dia + m * 60000) === bq && f.dia + m * 60000 >= ahora - 15 * 60000); if (!hs.length) return null; const libres = hs.filter(m => !ocupada(m)).length; return html`
         <div class="pila" style="gap:6px" key=${bq}><span class="sub" style="font-weight:600">${bq} <span class="faint">· ${libres} ${libres === 1 ? 'libre' : 'libres'}</span></span>
           <div class="horas-grid">${hs.map(m => { const oc = ocupada(m); return html`<button type="button" key=${m} class=${'chip chico toca' + (f.min === m ? ' on' : '') + (oc ? ' ocupada' : '')} disabled=${oc} onClick=${() => pon({ min: m })}>${partes(f.dia + m * 60000)[0]}</button>`; })}</div></div>`; })}
-      ${horas.every(m => f.dia + m * 60000 < ahora - 15 * 60000) && html`<p class="vacio">Ya no quedan horas hoy. Elige otro día.</p>`}
+      ${porQueNo ? html`<p class="vacio">${(pros.find(p => p.id === f.pro) || { n: 'El negocio' }).n.split(' ')[0]}: ${porQueNo.toLowerCase()}. Elige otro día${pros.length > 1 ? ' u otra persona' : ''}.</p>`
+        : horas.every(m => f.dia + m * 60000 < ahora - 15 * 60000) && html`<p class="vacio">Ya no quedan horas ${f.dia === inicioDia(ahora) ? 'hoy' : 'este día'}. Elige otro día.</p>`}
       <label class="campo"><span>Nota (opcional)</span><input type="text" value=${f.nota} placeholder="Ej.: degradado bajo, trae foto" autocomplete="off" onInput=${e => pon({ nota: e.target.value })} /></label>`,
     pie: html`${(elegidos.length > 0 || f.min != null) && html`<div class="resumen-cita"><${Icono} n="calendario" t=${16} />
         <span class="crece corta">${[elegidos.map(p => p.n).join(' + '), f.min != null ? nombreDia(f.dia) + ' ' + new Date(f.dia).getDate() + ', ' + textoHora(f.min) : 'elige la hora'].filter(Boolean).join(' · ')}</span><b class="num">${D.m(total)}</b></div>`}

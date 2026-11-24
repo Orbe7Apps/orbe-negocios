@@ -25,6 +25,7 @@ import { ElegirRubro } from './funciones.js';
 import { Sugerencias } from './empezar.js';
 import { Cuenta, Pagar } from './cuenta.js';
 import { Cotizar, Cotizacion } from './cotizaciones.js';
+import { horarioDe, textoHorario, EditorHorario, EditorAusencias } from '../horario.js';
 import { Recordatorios, AjustesRecHoja } from '../recordatorios.js';
 
 const CATS = ['Mercancía', 'Alquiler', 'Servicios', 'Sueldos', 'Transporte', 'Otro'];
@@ -631,14 +632,15 @@ function Perfil({ d, cerrar }) {
   const admin = puede('equipo');
   const esDueno = p0 && p0.rol === 'dueno', soloDatos = esDueno || !admin, soyYo = p0 && p0.id === yo.id;
   const rolesPosibles = S.roles.filter(r => !r.fijo && puedeEditarRol(yo, r.id));
-  const [f, setF] = useState(p0 ? { n: p0.n, rol: p0.rol, pin: '', pin2: '', sucs: p0.sucs || [], inactivo: !!p0.inactivo, com: p0.com != null ? p0.com : 40 } : { com: 40, n: '', rol: (rolesPosibles.find(r => r.id === 'cajero') || rolesPosibles[0] || {}).id, pin: '', pin2: '', sucs: [], inactivo: false });
+  const [f, setF] = useState(p0 ? { n: p0.n, rol: p0.rol, pin: '', pin2: '', sucs: p0.sucs || [], inactivo: !!p0.inactivo, com: p0.com != null ? p0.com : 40, propio: !!p0.horario, horario: Object.assign({}, horarioDe(S, p0.id)), aus: (p0.aus || []).slice() } : { com: 40, propio: false, horario: horarioDe(S, ''), aus: [], n: '', rol: (rolesPosibles.find(r => r.id === 'cajero') || rolesPosibles[0] || {}).id, pin: '', pin2: '', sucs: [], inactivo: false });
   const pon = o => setF(x => Object.assign({}, x, o));
   const guardar = c => {
     if (!f.n.trim()) { avisar('Escribe el nombre'); return; }
     if (!p0 && f.pin && !/^\d{4}$/.test(f.pin)) { avisar('El PIN son 4 números'); return; }
     if (!p0 && f.pin !== f.pin2) { avisar('Los dos PIN no son iguales'); return; }
     if (soyYo && f.inactivo) { avisar('No puedes desactivar tu propio perfil'); return; }
-    guardarPerfil(Object.assign({ id: p0 ? p0.id : undefined }, { n: f.n.trim() }, T.mod('comisiones') && admin ? { com: f.com } : {}, p0 ? {} : { pin: f.pin }, soloDatos ? {} : { rol: f.rol, sucs: f.sucs, inactivo: f.inactivo }));
+    if (T.mod('agenda') && f.propio && (f.horario.fin <= f.horario.ini || !f.horario.dias.length)) { avisar('Revisa el horario: días y horas'); return; }
+    guardarPerfil(Object.assign({ id: p0 ? p0.id : undefined }, { n: f.n.trim() }, T.mod('comisiones') && admin ? { com: f.com } : {}, T.mod('agenda') && (admin || soyYo) ? { horario: f.propio ? f.horario : null, aus: f.aus.filter(a => a.hasta >= a.desde) } : {}, p0 ? {} : { pin: f.pin }, soloDatos ? {} : { rol: f.rol, sucs: f.sucs, inactivo: f.inactivo }));
     c(() => avisar(p0 ? 'Perfil guardado' : 'Perfil creado: ' + f.n.trim().split(' ')[0] + (f.pin ? ' entra con su PIN' : '')));
   };
   // Eliminar: solo quien maneja el equipo, nunca al dueño ni a uno mismo.
@@ -668,6 +670,14 @@ function Perfil({ d, cerrar }) {
         <button type="button" class=${'chip toca' + (!f.sucs.length ? ' on' : '')} onClick=${() => pon({ sucs: [] })}>Todos los locales</button>
         ${S.negocio.sucursales.map(s => { const on = f.sucs.includes(s); return html`<button type="button" class=${'chip toca' + (on ? ' on' : '')} onClick=${() => pon({ sucs: on ? f.sucs.filter(x => x !== s) : f.sucs.concat([s]) })}>${s}</button>`; })}
       </div></div>`}
+      ${T.mod('agenda') && (admin || soyYo) && html`<details class="avanzado" open=${!!(f.propio || f.aus.length)}>
+        <summary>Horario y vacaciones</summary>
+        <div class="pila" style="gap:12px;padding-top:10px">
+          <${Interruptor} on=${f.propio} onCambio=${v => pon({ propio: v })} titulo="Horario propio" sub=${f.propio ? 'Solo para esta persona' : 'Usa el del negocio: ' + textoHorario(horarioDe(S, ''))} />
+          ${f.propio && html`<${EditorHorario} h=${f.horario} onCambio=${h => pon({ horario: h })} />`}
+          <span class="titulo-funciones" style="padding-top:4px">Vacaciones y días libres</span>
+          <${EditorAusencias} lista=${f.aus} onCambio=${aus => pon({ aus })} />
+        </div></details>`}
       ${p0 && !soloDatos && !soyYo && html`<${Interruptor} on=${!f.inactivo} onCambio=${v => pon({ inactivo: !v })} titulo="Perfil activo" sub="Si lo apagas, ya no puede entrar. Lo puedes volver a encender." />`}`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>${p0 ? 'Guardar' : 'Crear perfil'}</button>${puedeBorrar && html`<button type="button" class="btn2 rojo toca" style="min-height:50px;border-radius:25px" onClick=${() => borrar(c)}><${Icono} n="basura" t=${16} />Eliminar perfil</button>`}`
   })} />`;

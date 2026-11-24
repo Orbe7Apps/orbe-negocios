@@ -11,6 +11,7 @@ import { Funciones } from './funciones.js';
 import { BotonAyuda, CentroAyuda } from '../ayuda.js';
 import { CuentaTema, Suscripcion, pedirCerrarSesion } from './cuenta.js';
 import { AjustesRecordatorios } from '../recordatorios.js';
+import { horarioDe, textoHorario, EditorHorario } from '../horario.js';
 import { useNube, estadoPlan } from '../nube.js';
 import { MODULOS } from '../rubros.js';
 import { ajustesImpresora, hayBluetooth, conectarBluetooth, olvidarBluetooth, conectada, nombreImpresora, imprimir } from '../impresora.js';
@@ -88,6 +89,7 @@ function useTemas() {
           <div class="pago-monto" style="width:110px;min-height:44px"><input class="num" type="text" inputmode="decimal" aria-label="Tasa general" placeholder=${String(P.tax[1])} value=${n.taxGen != null ? String(n.taxGen).replace('.', ',') : ''} onChange=${e => { const v = parseFloat(e.target.value.replace(',', '.')); cambiarNegocio({ taxGen: isFinite(v) && v >= 0 && v < 100 ? v : undefined }); }} /><span class="sub">%</span></div></div>`}` },
     aj && { k: 'impresora', g: 'Ventas y cobro', i: 'doc', c: 't-ver', n: 'Impresora de tickets', r: imp.ancho + ' mm · ' + (imp.modo === 'bluetooth' ? 'Bluetooth' : 'del sistema') + (imp.auto ? ' · imprime al cobrar' : ''), cuerpo: () => html`<${Impresora} />` },
     (puede('vender') || puede('clientes')) && { k: 'recordatorios', g: 'Ventas y cobro', i: 'movil', c: 't-ver', n: 'Recordatorios por WhatsApp', r: 'Citas, fiado, órdenes y cotizaciones', cuerpo: () => html`<${AjustesRecordatorios} />` },
+    aj && T.mod('agenda') && { k: 'horario', g: 'Tu negocio', i: 'reloj', c: 't-azu', n: 'Horario de atención', r: textoHorario(horarioDe(S, '')), cuerpo: () => html`<p class="sub" style="margin:0 0 10px;line-height:1.45">La agenda solo ofrece estas horas. Cada profesional puede tener el suyo y sus vacaciones (Equipo → su perfil).</p><${EditorHorario} h=${horarioDe(S, '')} onCambio=${h => cambiarNegocio({ horario: h })} />` },
     aj && T.mod('ordenes') && { k: 'ordenes', g: 'Ventas y cobro', i: 'orden', c: 't-azu', n: 'Órdenes de trabajo', r: 'Condiciones del PDF', cuerpo: () => html`
       <p class="sub" style="margin:0 0 8px;line-height:1.45">Siempre activas: las creas desde el botón Orbe o desde Órdenes.</p>
       <label class="campo"><span>Condiciones que salen en la orden impresa y en el PDF</span><textarea rows="4" value=${n.condOrden != null ? n.condOrden : COND_ORDEN} onChange=${e => cambiarNegocio({ condOrden: e.target.value.trim() })}></textarea></label>
