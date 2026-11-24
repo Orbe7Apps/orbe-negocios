@@ -246,7 +246,9 @@ export function crearNegocio(cfg, conEjemplo) {
   let gruposEj = (R && R.grupos) || GRUPOS_EJ[(R && R.cat) || T.id] || [];
   const productos = cat.map((x, i) => {
     const ex = x[8] || {}, k = E ? 3 : 1;
-    const p = { id: 'p' + i, ab: x[0], n: x[1], p: D.precio(x[2]), c: D.precio(x[3]), q: x[4] < 0 ? null : Math.round(x[4] * k), min: Math.round(x[5] * k), dur: x[6] || 0, pop: x[7], cod: x[4] < 0 ? '' : '759' + String(1234000 + i * 37) };
+    // Servicio (con minutos y sin existencia ni mínimo): no lleva existencia, así nunca sale como agotado.
+    const esSrv = x[4] < 0 || (x[4] === 0 && !x[5] && x[6] > 0);
+    const p = { id: 'p' + i, ab: x[0], n: x[1], p: D.precio(x[2]), c: D.precio(x[3]), q: esSrv ? null : Math.round(x[4] * k), min: Math.round(x[5] * k), dur: x[6] || 0, pop: x[7], cod: esSrv ? '' : '759' + String(1234000 + i * 37) };
     if (ex.u) p.u = ex.u;
     if (ex.gar) p.gar = ex.gar;
     if (ex.vars) { p.vars = ex.vars.map((n, j) => ({ id: 'v' + j, n, q: Math.round([4, 7, 5, 3, 6, 2][j % 6] * k) })); p.q = p.vars.reduce((a, v) => a + v.q, 0); }

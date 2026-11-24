@@ -71,7 +71,8 @@ export function Vender() {
     if (d > 0 && Array.isArray(p.vars) && p.vars.length && !vid) { abrir('variante', { pid: p.id, onElegir: v => sumar(p, 1, v) }); return false; }
     const k = vid ? p.id + '~' + vid : p.id, ya = cantEn(carritoGuardado, k);
     if (d > 0 && porPeso(p) && cant == null) { abrir('cantidad', { pid: p.id, vid, q: ya, onListo: x => ponCant(k, x) }); return false; }
-    const suma = cant != null ? cant : d, hay = existencia(p, vid);
+    // Sin inventario (servicios, independientes): la existencia no frena la venta.
+    const suma = cant != null ? cant : d, hay = T.inv && T.mod('inventario') ? existencia(p, vid) : null;
     if (suma > 0 && hay != null && ya + suma > hay + 1e-9) { avisar(hay <= 0 ? p.n + ': agotado' : 'Solo quedan ' + verQ(hay, p.u) + ' de ' + p.n); return false; }
     ponCant(k, ya + suma);
     return true;
