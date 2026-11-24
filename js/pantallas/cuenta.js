@@ -2,10 +2,10 @@
 // ver si todo está guardado y la suscripción (pagar y avisar «Ya pagué»).
 import { html, useState, useEffect } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { cambiarNegocio, leer, empezarDeNuevo } from '../datos.js';
-import { Hoja, Icono, avisar, hace, LogoOrbe } from '../ui.js';
+import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal } from '../datos.js';
+import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor } from '../ui.js';
 import { numero } from './pagos.js';
-import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan } from '../nube.js';
+import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta } from '../nube.js';
 
 // Campo de contraseña con «Ver» para revisar lo que se escribió.
 export function CampoClave({ titulo, valor, onCambio, nueva, onEnter }) {
@@ -22,7 +22,11 @@ export function CampoUsuario({ valor, onCambio, crear, onEnter }) {
 }
 export const CampoCorreoDueno = ({ valor, onCambio, crear }) => html`<label class="campo"><span>${crear ? 'Correo del dueño (solo para recuperar la contraseña)' : 'Correo del dueño'}</span><input type="email" inputmode="email" autocomplete="email" autocapitalize="off" value=${valor} placeholder="tu@correo.com" onInput=${e => onCambio(e.target.value)} /></label>`;
 // Revisa los datos de una cuenta nueva.
-const cuentaMala = f => !correoOk(f.correo) ? 'Escribe un correo válido' : !usuarioOk(f.usuario) ? 'El usuario lleva de 3 a 30 letras o números, sin espacios' : claveMala(f.clave, f.clave2);
+const cuentaMala = f => !correoOk(f.correo) ? 'Escribe un correo válido' : !usuarioOk(f.usuario) ? 'El usuario lleva de 3 a 30 letras o números, sin espacios' : claveMala(f.clave, f.clave2) || (!f.acepto ? 'Para crear la cuenta acepta los Términos de uso y la Política de privacidad' : '');
+// Casilla para aceptar los términos (con enlaces que abren aparte).
+export const AceptoLegal = ({ on, onCambio }) => html`<label class="fila acepto-legal" style="gap:10px;align-items:flex-start;cursor:pointer">
+  <input type="checkbox" checked=${on} onChange=${e => onCambio(e.target.checked)} style="width:22px;height:22px;margin:1px 0 0;accent-color:var(--accent);flex:none" />
+  <span class="sub" style="line-height:1.45;color:var(--ink)">Acepto los <a href="terminos.html" target="_blank" rel="noopener">Términos de uso</a> y la <a href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>. Orbe no emite facturas fiscales.</span></label>`;
 // Revisa la contraseña nueva: largo y que las dos coincidan.
 export const claveMala = (a, b) => a.length < 8 ? 'La contraseña debe tener al menos 8 caracteres' : a !== b ? 'Las contraseñas no coinciden: escríbelas igual' : '';
 
@@ -36,6 +40,7 @@ function FormCuenta({ modo, setModo, f, pon }) {
     ${modo !== 'olvido' && html`<${CampoClave} titulo=${'Contraseña' + (modo === 'crear' ? ' (al menos 8 caracteres)' : '')} valor=${f.clave} nueva=${modo === 'crear'} onCambio=${v => pon({ clave: v })} />`}
     ${modo === 'crear' && html`<${CampoClave} titulo="Repite la contraseña" valor=${f.clave2} nueva onCambio=${v => pon({ clave2: v })} />`}
     ${modo === 'crear' && f.clave2 && f.clave !== f.clave2 && html`<span class="sub" style="color:var(--out-text);margin-top:-4px">Las contraseñas no coinciden</span>`}
+    ${modo === 'crear' && html`<${AceptoLegal} on=${!!f.acepto} onCambio=${v => pon({ acepto: v })} />`}
     ${modo === 'entrar' && html`<button type="button" class="olvide-pin toca" style="align-self:flex-start;padding-left:0" onClick=${() => setModo('olvido')}>Olvidé mi contraseña</button>`}
     ${modo === 'olvido' && html`<span class="sub" style="line-height:1.45">Le mandamos al correo del dueño un enlace para poner una contraseña nueva.</span>`}
   </div>`;
@@ -129,7 +134,7 @@ export const pedirCerrarSesion = abrir => abrir('confirmar', { titulo: '¿Cerrar
 
 // ---------- Ajustes → Cuenta y nube ----------
 export function CuentaTema() {
-  const { S, abrir } = useApp();
+  const { S, abrir, yo } = useApp();
   const N = useNube(), unido = S.negocio && S.negocio.nubeId;
   const ESTADO = { 'al día': ['Todo guardado en la nube', 'var(--in-text)'], sincronizando: ['Guardando…', 'var(--accent-text)'], pendiente: ['Faltan cambios por subir', 'var(--amber-text)'], 'sin internet': ['Sin internet: se sube al volver', 'var(--amber-text)'], error: [N.error || 'No se pudo guardar', 'var(--out-text)'], 'sin sesión': ['Inicia sesión para seguir guardando', 'var(--amber-text)'], apagada: ['Solo en este aparato', 'var(--muted)'] };
   const e = ESTADO[N.estado] || ESTADO.apagada;
@@ -143,7 +148,34 @@ export function CuentaTema() {
     <div class="fila" style="justify-content:space-between;padding:10px 0;font-size:14px"><span class="muted">Última vez</span><b style="font-weight:600">${N.ultima ? hace(N.ultima) + ' · ' + new Date(N.ultima).toLocaleTimeString('es', { hour: 'numeric', minute: '2-digit' }) : '—'}</b></div>
     <div class="fila" style="justify-content:space-between;padding:10px 0;font-size:14px"><span class="muted">Cambios por subir</span><b style="font-weight:600">${N.pendientes}</b></div>
     <div class="chips" style="margin-top:10px"><button type="button" class="btn2 chico acento toca" onClick=${() => { sincronizar(); avisar('Guardando en la nube…'); }}>Guardar ahora</button>
-      <button type="button" class="btn2 chico toca" onClick=${() => pedirCerrarSesion(abrir)}><${Icono} n="salir" t=${14} />Cerrar sesión</button></div>`;
+      <button type="button" class="btn2 chico toca" onClick=${() => pedirCerrarSesion(abrir)}><${Icono} n="salir" t=${14} />Cerrar sesión</button></div>
+    ${yo && yo.rol === 'dueno' && html`<span class="titulo-funciones" style="margin-top:18px">Zona delicada</span>
+      <p class="sub" style="margin:0 0 8px;line-height:1.5">Antes de borrar, descarga tu copia en Excel (Más → Copias y Excel) si quieres guardar tu historial.</p>
+      <div class="chips"><button type="button" class="btn2 chico rojo toca" onClick=${() => abrir('borrarCuenta', {})}>Borrar mi cuenta y mis datos</button></div>`}`;
+}
+
+// ---------- hoja: borrar la cuenta y todos los datos ----------
+export function BorrarCuenta({ cerrar }) {
+  const { S } = useApp();
+  const [f, setF] = useState({ clave: '', palabra: '' }), [ocupado, setOcupado] = useState(false);
+  const listo = f.clave.length >= 6 && f.palabra.trim().toUpperCase() === 'BORRAR';
+  const borrar = async c => {
+    if (!listo || ocupado) { avisar(f.palabra.trim().toUpperCase() !== 'BORRAR' ? 'Escribe BORRAR para confirmar' : 'Escribe tu contraseña'); return; }
+    setOcupado(true);
+    try { await borrarMiCuenta(f.clave); await borrarTodoLocal(); c(() => { location.hash = ''; avisar('Tu cuenta y tus datos se borraron'); }); }
+    catch (er) { avisar(er.message); setOcupado(false); }
+  };
+  return html`<${Hoja} titulo="Borrar mi cuenta" onCerrar=${cerrar} contenido=${c => ({
+    cuerpo: html`
+      <div class="tarjeta pila" style="box-shadow:none;background:var(--out-soft);gap:6px">
+        <b style="color:var(--out-text)">Esto no se puede deshacer</b>
+        <span class="sub" style="line-height:1.5;color:var(--ink)">Se borran tu cuenta, tu usuario y ${S.negocio ? html`<b>${S.negocio.nombre}</b>` : 'tus negocios'} con todo lo que tiene: productos, ventas, clientes, gastos, equipo, citas y reservas, en la nube y en este aparato. Tus empleados ya no podrán entrar.</span>
+        <span class="sub" style="line-height:1.5;color:var(--ink)">Lo que pagaste por la suscripción no se devuelve.</span>
+      </div>
+      <${CampoClave} titulo="Tu contraseña" valor=${f.clave} onCambio=${v => setF(Object.assign({}, f, { clave: v }))} />
+      <label class="campo"><span>Escribe BORRAR para confirmar</span><input type="text" value=${f.palabra} autocomplete="off" autocapitalize="characters" onInput=${e => setF(Object.assign({}, f, { palabra: e.target.value }))} /></label>`,
+    pie: html`<button type="button" class=${'btn toca' + (listo && !ocupado ? '' : ' apagado')} style="background:var(--out)" onClick=${() => borrar(c)}>${ocupado ? 'Borrando…' : 'Borrar todo para siempre'}</button>`
+  })} />`;
 }
 
 // ---------- Ajustes → Mi suscripción ----------
@@ -166,7 +198,7 @@ export function Suscripcion() {
       ${ep.k === 'vencida' && html`<span class="sub" style="line-height:1.45;margin-top:4px">Puedes ver todo, pero no se guardan ventas nuevas en la nube hasta que pagues. Nunca se borra nada.</span>`}
     </div>`}
     ${pend.length > 0 && html`<div class="tarjeta fila" style="box-shadow:none;background:var(--amber-soft);gap:10px"><${Icono} n="reloj" t=${18} /><span class="sub" style="line-height:1.4;color:var(--ink)">Tienes ${pend.length === 1 ? 'un pago' : pend.length + ' pagos'} por confirmar. Te avisamos al aprobarlo.</span></div>`}
-    ${cfg && html`<div class="chips" style="margin-top:10px"><button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('pagar', { cfg, plan: planSug })}>Pagar mi suscripción</button></div>`}
+    ${cfg && html`<div class="chips" style="margin-top:10px"><button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('pagar', { cfg, plan: planSug, listo: () => misPagos().then(setPagos).catch(() => {}) })}>Pagar mi suscripción</button></div>`}
     ${cfg && html`<span class="titulo-funciones" style="margin-top:14px">Precios</span>
       ${['negocio', 'empresa'].map(k => cfg.precios[k] && html`<div class="fila" style="justify-content:space-between;padding:10px 0;font-size:14px"><span><b>${PLANES[k]}</b><span class="sub"> · ${k === 'negocio' ? 'un local' : 'varias sedes'}</span></span><span class="num"><b>US$ ${cfg.precios[k].mes}</b>/mes · US$ ${cfg.precios[k].anio}/año</span></div>`)}`}
     ${pagos && pagos.length > 0 && html`<span class="titulo-funciones" style="margin-top:14px">Tus pagos</span>
@@ -175,9 +207,10 @@ export function Suscripcion() {
 
 // ---------- hoja: pagar y avisar «Ya pagué» ----------
 export function Pagar({ d, cerrar }) {
-  const { D, P } = useApp();
+  const { S, D, P } = useApp();
   const cfg = d.cfg, pm = cfg.pago_movil || {};
-  const [f, setF] = useState({ plan: d.plan || 'negocio', meses: 1, metodo: pm.telefono ? 'Pago Móvil' : cfg.binance ? 'Binance' : 'Efectivo', referencia: '', nota: '' });
+  const fac0 = (S.negocio && S.negocio.facturaOrbe) || {};
+  const [f, setF] = useState({ plan: d.plan || 'negocio', meses: 1, metodo: pm.telefono ? 'Pago Móvil' : cfg.binance ? 'Binance' : 'Efectivo', referencia: '', nota: '', fac: !!fac0.rif, rif: fac0.rif || '', razon: fac0.razon || (S.negocio && S.negocio.nombre) || '', dir: fac0.dir || '' });
   const pon = o => setF(x => Object.assign({}, x, o));
   const usd = (cfg.precios[f.plan] || {})[f.meses === 12 ? 'anio' : 'mes'] || 0;
   const enBs = P.id === 'VE' && pm.telefono ? D.redondo(usd * D.tasa) : 0;
@@ -186,7 +219,14 @@ export function Pagar({ d, cerrar }) {
   const Dato = (k, v) => v ? html`<div class="fila" style="justify-content:space-between;gap:10px;padding:8px 0;"><span class="sub">${k}</span><button type="button" class="fila toca" style="gap:6px;border:0;background:none;color:var(--ink);font:inherit;font-weight:600" onClick=${() => copiar(v)}>${v}<${Icono} n="doc" t=${14} c="var(--accent-text)" /></button></div>` : null;
   const enviar = async c => {
     if (f.metodo !== 'Efectivo' && !f.referencia.trim()) { avisar('Escribe la referencia del pago'); return; }
-    try { await reportarPago({ plan: f.plan, meses: f.meses, monto, moneda, metodo: f.metodo, referencia: f.referencia, nota: f.nota }); c(() => avisar('Listo: te avisamos cuando lo confirmemos')); }
+    if (f.fac && (f.rif.trim().length < 5 || f.razon.trim().length < 2)) { avisar('Para la factura escribe el RIF o cédula y el nombre o razón social'); return; }
+    const factura = f.fac ? { rif: f.rif.trim().toUpperCase(), razon: f.razon.trim(), dir: f.dir.trim() } : {};
+    try {
+      await reportarPago({ plan: f.plan, meses: f.meses, monto, moneda, metodo: f.metodo, referencia: f.referencia, nota: f.nota, factura });
+      if (f.fac) cambiarNegocio({ facturaOrbe: factura }, 'Guardó sus datos de facturación');
+      if (d.listo) d.listo();
+      c(() => avisar('Listo: te avisamos cuando lo confirmemos'));
+    }
     catch (er) { avisar(er.message); }
   };
   return html`<${Hoja} titulo="Pagar mi suscripción" onCerrar=${cerrar} contenido=${c => ({
@@ -199,7 +239,12 @@ export function Pagar({ d, cerrar }) {
       ${f.metodo === 'Binance' && html`<div class="pila" style="gap:0">${Dato('Binance Pay ID', cfg.binance)}${Dato('Monto', usd + ' USDT')}</div>`}
       ${f.metodo === 'Efectivo' && html`<span class="sub" style="line-height:1.45">Págalo en persona y avisa aquí para que lo registremos.</span>`}
       ${f.metodo !== 'Efectivo' && html`<label class="campo"><span>Referencia del pago</span><input type="text" value=${f.referencia} placeholder=${f.metodo === 'Binance' ? 'ID de la orden' : 'Últimos 4 a 6 números'} autocomplete="off" onInput=${e => pon({ referencia: e.target.value })} /></label>`}
-      <label class="campo"><span>Nota (opcional)</span><input type="text" value=${f.nota} autocomplete="off" onInput=${e => pon({ nota: e.target.value })} /></label>`,
+      <label class="campo"><span>Nota (opcional)</span><input type="text" value=${f.nota} autocomplete="off" onInput=${e => pon({ nota: e.target.value })} /></label>
+      <${Interruptor} on=${f.fac} onCambio=${v => pon({ fac: v })} titulo="Necesito factura a nombre de mi negocio" sub="Guardamos tus datos para emitirla" />
+      ${f.fac && html`<div class="pila" style="gap:12px">
+        <label class="campo"><span>RIF o cédula</span><input type="text" value=${f.rif} placeholder="J-12345678-9" autocomplete="off" autocapitalize="characters" onInput=${e => pon({ rif: e.target.value })} /></label>
+        <label class="campo"><span>Nombre o razón social</span><input type="text" value=${f.razon} autocomplete="organization" onInput=${e => pon({ razon: e.target.value })} /></label>
+        <label class="campo"><span>Dirección fiscal (opcional)</span><input type="text" value=${f.dir} autocomplete="street-address" onInput=${e => pon({ dir: e.target.value })} /></label></div>`}`,
     pie: html`<button type="button" class="btn toca" onClick=${() => enviar(c)}>Ya pagué</button>`
   })} />`;
 }
@@ -237,6 +282,7 @@ export function CrearCuentaInicio({ volver, entrar, listo }) {
     <${CampoClave} titulo="Contraseña (al menos 8 caracteres)" valor=${f.clave} nueva onCambio=${v => pon({ clave: v })} />
     <${CampoClave} titulo="Repite la contraseña" valor=${f.clave2} nueva onCambio=${v => pon({ clave2: v })} onEnter=${crear} />
     ${f.clave2 && f.clave !== f.clave2 && html`<span class="sub" style="color:var(--out-text);margin-top:-6px">Las contraseñas no coinciden</span>`}
+    <${AceptoLegal} on=${!!f.acepto} onCambio=${v => pon({ acepto: v })} />
     <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${crear}>${ocupado ? 'Un momento…' : 'Crear cuenta'}</button>
     <button type="button" class="olvide-pin toca" onClick=${entrar}>Ya tengo cuenta: iniciar sesión</button>
   </div>`;

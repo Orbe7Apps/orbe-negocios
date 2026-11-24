@@ -29,14 +29,17 @@ function Panel({ c, correo }) {
   const [tab, setTab] = useState('pagos');
   const [negocios, setNegocios] = useState(null), [pagos, setPagos] = useState(null), [cfg, setCfg] = useState(null);
   const cargar = async () => {
-    const [n, p, k] = await Promise.all([c.rpc('admin_negocios'), c.from('pagos').select('id, negocio_id, plan, meses, monto, moneda, metodo, referencia, nota, estado, creado, revisado').order('creado', { ascending: false }).limit(200), c.from('config_orbe').select('*').eq('id', 1).maybeSingle()]);
+    const [n, p, k] = await Promise.all([c.rpc('admin_negocios'), c.from('pagos').select('id, negocio_id, negocio_nombre, cliente_correo, factura, plan, meses, monto, moneda, metodo, referencia, nota, estado, creado, revisado').order('creado', { ascending: false }).limit(1000), c.from('config_orbe').select('*').eq('id', 1).maybeSingle()]);
     if (n.error) { avisar(explicar(n.error)); return; }
     setNegocios(n.data || []); setPagos(p.data || []); setCfg(k.data);
   };
   useEffect(() => { cargar(); const r = setInterval(cargar, 30000); return () => clearInterval(r); }, []);
   const nombre = id => ((negocios || []).find(g => g.id === id) || {});
+  // Nombre del negocio del pago (si el cliente borró su cuenta, queda el nombre que tenía al pagar).
+  const quien = p => nombre(p.negocio_id).nombre || p.negocio_nombre || 'Cuenta borrada';
+  const fac = p => p.factura && p.factura.rif ? p.factura : null;
   const revisar = async (p, ok) => {
-    if (!confirm((ok ? '¿Aprobar' : '¿Rechazar') + ' el pago de ' + (nombre(p.negocio_id).nombre || '') + ' por ' + p.moneda + ' ' + p.monto + '?')) return;
+    if (!confirm((ok ? '¿Aprobar' : '¿Rechazar') + ' el pago de ' + quien(p) + ' por ' + p.moneda + ' ' + p.monto + '?')) return;
     const { error } = await c.rpc('revisar_pago', { pago: p.id, aprobar: ok });
     if (error) avisar(explicar(error)); else { avisar(ok ? 'Pago aprobado: su suscripción se extendió' : 'Pago rechazado'); cargar(); }
   };
@@ -59,7 +62,8 @@ function Panel({ c, correo }) {
     <div class="segmento" style="margin-bottom:14px">${[['pagos', 'Pagos por revisar' + (pend.length ? ' (' + pend.length + ')' : '')], ['negocios', 'Negocios'], ['historial', 'Historial de pagos'], ['cobro', 'Datos de cobro']].map(o => html`<button type="button" class=${tab === o[0] ? 'on' : ''} onClick=${() => setTab(o[0])}>${o[1]}</button>`)}</div>
 
     ${tab === 'pagos' && (pend.length ? html`<div class="pila" style="gap:10px">${pend.map(p => html`<div class="tarjeta fila" key=${p.id} style="gap:14px;flex-wrap:wrap">
-        <span class="crece" style="display:flex;flex-direction:column;gap:3px;min-width:220px"><b style="font-size:16px">${nombre(p.negocio_id).nombre || 'Negocio'}</b><span class="sub">${nombre(p.negocio_id).correo || ''}</span>
+        <span class="crece" style="display:flex;flex-direction:column;gap:3px;min-width:220px"><b style="font-size:16px">${quien(p)}</b><span class="sub">${nombre(p.negocio_id).correo || p.cliente_correo || ''}</span>
+          ${fac(p) && html`<span class="sub"><span class="pildora t-azu">Pide factura</span> ${fac(p).razon} · ${fac(p).rif}</span>`}
           <span class="sub">${fecha(p.creado)} · plan ${p.plan} · ${p.meses === 12 ? '1 año' : '1 mes'}${p.nota ? ' · «' + p.nota + '»' : ''}</span></span>
         <span style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><b class="num" style="font-size:20px">${p.moneda} ${Number(p.monto).toFixed(2)}</b><span class="sub">${p.metodo}${p.referencia ? ' · ref. ' + p.referencia : ''}</span></span>
         <span class="fila" style="gap:8px"><button type="button" class="btn2 chico rojo toca" onClick=${() => revisar(p, false)}>Rechazar</button><button type="button" class="btn2 chico lleno toca" onClick=${() => revisar(p, true)}><${Icono} n="check" t=${14} g=${3} />Aprobar</button></span>
@@ -70,23 +74,52 @@ function Panel({ c, correo }) {
         <td class="der"><span class="fila" style="gap:6px;justify-content:flex-end">${[['negocio', 1, 'Negocio 1 mes'], ['empresa', 1, 'Empresa 1 mes'], ['negocio', 12, 'Negocio 1 año']].map(o => html`<button type="button" class="btn2 chico toca" onClick=${() => activar(g, o[0], o[1])}>${o[2]}</button>`)}</span></td></tr>`; })}</tbody></table>
       ${negocios && !negocios.length && html`<p class="vacio">Todavía no hay negocios con cuenta.</p>`}</div>`}
 
-    ${tab === 'historial' && html`<div class="tabla-caja"><table class="tabla"><thead><tr><th>Fecha</th><th>Negocio</th><th>Plan</th><th>Método</th><th class="der">Monto</th><th>Estado</th></tr></thead>
-      <tbody>${(pagos || []).map(p => html`<tr key=${p.id}><td class="num">${fecha(p.creado)}</td><td>${nombre(p.negocio_id).nombre || ''}</td><td>${p.plan} · ${p.meses === 12 ? 'año' : 'mes'}</td><td>${p.metodo}${p.referencia ? ' · ' + p.referencia : ''}</td><td class="der num">${p.moneda} ${Number(p.monto).toFixed(2)}</td><td><span class=${'pildora ' + (p.estado === 'aprobado' ? 't-ver' : p.estado === 'rechazado' ? 't-ros' : 't-amb')}>${p.estado}</span></td></tr>`)}</tbody></table></div>`}
+    ${tab === 'historial' && html`<${Historial} pagos=${pagos || []} quien=${quien} fac=${fac} />`}
 
     ${tab === 'cobro' && cfg && html`<${Cobro} c=${c} cfg=${cfg} listo=${cargar} />`}
+  </div>`;
+}
+
+// Historial por mes, con el total cobrado y el archivo para el contador.
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const claveMes = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+const nombreMes = k => MESES[Number(k.slice(5)) - 1] + ' ' + k.slice(0, 4);
+function Historial({ pagos, quien, fac }) {
+  const meses = Array.from(new Set(pagos.map(p => claveMes(p.revisado || p.creado)).concat([claveMes(Date.now())]))).sort().reverse();
+  const [mes, setMes] = useState(meses[0]);
+  const delMes = pagos.filter(p => claveMes(p.revisado || p.creado) === mes);
+  const aprobados = delMes.filter(p => p.estado === 'aprobado');
+  const total = aprobados.reduce((a, p) => { a[p.moneda] = (a[p.moneda] || 0) + Number(p.monto); return a; }, {});
+  const csv = () => {
+    const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const filas = [['Fecha de pago', 'Fecha aprobado', 'Negocio', 'Correo', 'Plan', 'Período', 'Método', 'Referencia', 'Moneda', 'Monto', 'Estado', 'Pide factura', 'RIF o cédula', 'Razón social', 'Dirección fiscal']]
+      .concat(delMes.map(p => { const f = fac(p) || {}; return [new Date(p.creado).toLocaleDateString('es-VE'), p.revisado ? new Date(p.revisado).toLocaleDateString('es-VE') : '', quien(p), p.cliente_correo || '', p.plan, p.meses === 12 ? '1 año' : '1 mes', p.metodo, p.referencia || '', p.moneda, Number(p.monto).toFixed(2).replace('.', ','), p.estado, f.rif ? 'Sí' : 'No', f.rif || '', f.razon || '', f.dir || '']; }));
+    const blob = new Blob(['\ufeff' + filas.map(r => r.map(q).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'orbe-cobros-' + mes + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    avisar('Listo: se descargó el archivo de ' + nombreMes(mes));
+  };
+  return html`<div class="pila" style="gap:14px">
+    <div class="fila" style="gap:10px;flex-wrap:wrap">
+      <select value=${mes} onChange=${e => setMes(e.target.value)} style="min-height:42px;border-radius:12px;border:1.5px solid var(--line);background:var(--fill2);padding:0 12px;font:inherit;color:var(--ink)">${meses.map(k => html`<option value=${k}>${nombreMes(k)}</option>`)}</select>
+      <span class="crece sub">Cobrado en ${nombreMes(mes)}: <b style="color:var(--ink)">${Object.keys(total).length ? Object.keys(total).map(m => m + ' ' + total[m].toFixed(2)).join(' · ') : 'nada'}</b> · ${aprobados.length} ${aprobados.length === 1 ? 'pago' : 'pagos'}${aprobados.filter(fac).length ? ' · ' + aprobados.filter(fac).length + ' piden factura' : ''}</span>
+      <button type="button" class="btn2 chico lleno toca" onClick=${csv}><${Icono} n="doc" t=${14} />Descargar para el contador</button></div>
+    <div class="tabla-caja"><table class="tabla"><thead><tr><th>Fecha</th><th>Negocio</th><th>Plan</th><th>Método</th><th class="der">Monto</th><th>Estado</th><th>Factura</th></tr></thead>
+      <tbody>${delMes.map(p => html`<tr key=${p.id}><td class="num">${fecha(p.creado)}</td><td>${quien(p)}</td><td>${p.plan} · ${p.meses === 12 ? 'año' : 'mes'}</td><td>${p.metodo}${p.referencia ? ' · ' + p.referencia : ''}</td><td class="der num">${p.moneda} ${Number(p.monto).toFixed(2)}</td><td><span class=${'pildora ' + (p.estado === 'aprobado' ? 't-ver' : p.estado === 'rechazado' ? 't-ros' : 't-amb')}>${p.estado}</span></td><td class="muted">${fac(p) ? fac(p).razon + ' · ' + fac(p).rif : '—'}</td></tr>`)}</tbody></table>
+      ${!delMes.length && html`<p class="vacio">No hubo pagos en ${nombreMes(mes)}.</p>`}</div>
   </div>`;
 }
 
 // Precios y datos que ven los clientes al pagar.
 function Cobro({ c, cfg, listo }) {
   const pm = cfg.pago_movil || {};
-  const [f, setF] = useState({ banco: pm.banco || '', telefono: pm.telefono || '', documento: pm.documento || '', binance: cfg.binance || '', soporte: cfg.soporte || '',
+  const em = cfg.emisor || {};
+  const [f, setF] = useState({ erazon: em.razon || '', erif: em.rif || '', edir: em.dir || '', eimp: em.imprenta || '', banco: pm.banco || '', telefono: pm.telefono || '', documento: pm.documento || '', binance: cfg.binance || '', soporte: cfg.soporte || '',
     nm: String(cfg.precios.negocio.mes), na: String(cfg.precios.negocio.anio), em: String(cfg.precios.empresa.mes), ea: String(cfg.precios.empresa.anio) });
   const pon = o => setF(x => Object.assign({}, x, o));
   const guardar = async () => {
     const n = x => Number(String(x).replace(',', '.')) || 0;
     const precios = { negocio: { mes: n(f.nm), anio: n(f.na) }, empresa: { mes: n(f.em), anio: n(f.ea) }, moneda: 'USD' };
-    const { error } = await c.rpc('guardar_config', { precios, pago_movil: { banco: f.banco.trim(), telefono: f.telefono.trim(), documento: f.documento.trim() }, binance: f.binance, soporte: f.soporte });
+    const { error } = await c.rpc('guardar_config', { precios, pago_movil: { banco: f.banco.trim(), telefono: f.telefono.trim(), documento: f.documento.trim() }, binance: f.binance, soporte: f.soporte, emisor: { razon: f.erazon.trim(), rif: f.erif.trim().toUpperCase(), dir: f.edir.trim(), imprenta: f.eimp.trim() } });
     if (error) avisar(explicar(error)); else { avisar('Guardado: así lo ven tus clientes al pagar'); listo(); }
   };
   const Campo = (k, n, ph) => html`<label class="campo"><span>${n}</span><input type="text" value=${f[k]} placeholder=${ph || ''} onInput=${e => pon({ [k]: e.target.value })} /></label>`;
@@ -97,6 +130,9 @@ function Cobro({ c, cfg, listo }) {
     <section class="tarjeta pila" style="gap:14px"><b>Precios (US$)</b>
       <div class="rejilla-2" style="gap:10px">${Campo('nm', 'Negocio · mes')}${Campo('na', 'Negocio · año')}${Campo('em', 'Empresa · mes')}${Campo('ea', 'Empresa · año')}</div>
       <span class="sub">Los clientes pagan en bolívares a la tasa BCV del día o en USDT por Binance.</span>
+      <b style="margin-top:6px">Tus datos para facturar</b>
+      <span class="sub" style="line-height:1.45">Los clientes no los ven. Sirven para cuando te formalices: con qué nombre y RIF facturas, y tu imprenta digital.</span>
+      ${Campo('erazon', 'Nombre o razón social', 'Ej.: Orbe Apps, C.A.')}${Campo('erif', 'RIF', 'J-12345678-9')}${Campo('edir', 'Dirección fiscal')}${Campo('eimp', 'Imprenta digital o máquina fiscal', 'Cuando la tengas')}
       <button type="button" class="btn toca" onClick=${guardar}>Guardar</button></section>
   </div>`;
 }

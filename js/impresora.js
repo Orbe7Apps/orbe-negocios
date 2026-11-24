@@ -59,7 +59,7 @@ export function lineasRecibo(v, { S, P, D }) {
   v.pagos.forEach(p => L.push({ a: p.m + (p.ref ? ' Ref ' + p.ref : ''), b: D.m(p.v) }));
   if (v.recibido > 0 && !v.vueltoSaldo) L.push({ a: 'Recibido', b: D.m(v.recibido) }, { a: 'Vuelto', b: D.m(v.recibido - v.total - (v.igtf || 0)) });
   if (v.vueltoSaldo > 0) L.push({ a: 'Vuelto a favor', b: D.m(v.vueltoSaldo) });
-  L.push({ sep: '-' }, { t: '¡Gracias por tu compra!', c: 1 });
+  L.push({ sep: '-' }, { t: '¡Gracias por tu compra!', c: 1 }, { t: 'COMPROBANTE NO FISCAL', c: 1 });
   if (v.h) L.push({ t: 'Firma ' + v.h.slice(0, 16), c: 1 });
   return L;
 }

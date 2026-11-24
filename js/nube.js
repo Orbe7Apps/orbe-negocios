@@ -95,7 +95,7 @@ export async function crearCuenta(correo, clave, usuario) {
     if (e1) throw new Error(explicar(e1));
     if (!libre) throw new Error('Ese usuario ya existe: elige otro');
   }
-  const { data, error } = await c.auth.signUp({ email: correo.trim(), password: clave, options: { emailRedirectTo: vuelta(), data: u ? { usuario: u } : {} } });
+  const { data, error } = await c.auth.signUp({ email: correo.trim(), password: clave, options: { emailRedirectTo: vuelta(), data: Object.assign({ acepto_terminos: new Date().toISOString() }, u ? { usuario: u } : {}) } });
   if (error) throw new Error(explicar(error));
   // Si el proyecto pide confirmar el correo, no hay sesión todavía.
   return { confirmar: !data.session };
@@ -141,6 +141,19 @@ export async function cerrarSesion() {
   const c = await cliente(); await c.auth.signOut();
   if (leer().negocio) salir();
   parar(); poner({ sesion: null, correo: '', negocioId: '', estado: 'apagada', plan: null, admin: false });
+}
+// Borrar la cuenta y todos sus datos en la nube (los negocios de los que es dueño, con todo lo que tienen).
+// Antes se confirma la contraseña, para que nadie lo haga con un teléfono prestado.
+export async function borrarMiCuenta(clave) {
+  const c = await cliente(), { data: { session } } = await c.auth.getSession();
+  if (!session) throw new Error('Inicia sesión primero');
+  const { error: e1 } = await c.auth.signInWithPassword({ email: session.user.email, password: clave });
+  if (e1) throw new Error('La contraseña no es correcta');
+  const { error } = await c.rpc('borrar_mi_cuenta');
+  if (error) throw new Error(explicar(error));
+  parar(); pend.clear(); guardarPend();
+  try { await c.auth.signOut({ scope: 'local' }); } catch (e) { /* la cuenta ya no existe */ }
+  poner({ sesion: null, correo: '', usuario: '', negocioId: '', estado: 'apagada', plan: null, admin: false, pendientes: 0 });
 }
 // Los negocios de esta cuenta (para elegir cuál bajar en un aparato nuevo).
 export async function misNegocios() {
@@ -372,7 +385,7 @@ export async function misPagos() {
 }
 export async function reportarPago(p) {
   const c = await cliente(), nid = leer().negocio.nubeId;
-  const { error } = await c.rpc('reportar_pago', { n: nid, plan: p.plan, meses: p.meses, monto: p.monto, moneda: p.moneda, metodo: p.metodo, referencia: p.referencia || '', nota: p.nota || '' });
+  const { error } = await c.rpc('reportar_pago', { n: nid, plan: p.plan, meses: p.meses, monto: p.monto, moneda: p.moneda, metodo: p.metodo, referencia: p.referencia || '', nota: p.nota || '', factura: p.factura || {} });
   if (error) throw new Error(explicar(error));
 }
 // Estado de la suscripción en palabras: prueba, activa, en gracia (7 días) o vencida (solo lectura).

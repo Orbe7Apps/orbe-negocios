@@ -106,6 +106,8 @@ function useTemas() {
     { k: 'ayuda', g: 'La app', i: 'lista', c: 't-azu', n: 'Ayuda y recorrido', r: 'Guías paso a paso y recorrido guiado', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Un recorrido guiado por toda la app: qué hace cada parte y cómo se usa.</p>
       ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${verRecorrido}>Ver el recorrido guiado</button>`, n.pasosListos && html`<button type="button" class="btn2 chico toca" onClick=${() => { cambiarNegocio({ pasosListos: false }); ir('hoy'); }}>Mostrar los primeros pasos</button>`)}
       <div style="margin-top:18px"><${CentroAyuda} /></div>` },
+    { k: 'legal', g: 'La app', i: 'escudo', c: 't-gris', n: 'Términos y privacidad', r: 'Qué guardamos y tus derechos', cuerpo: () => html`<p class="sub" style="margin:0 0 10px;line-height:1.5">Tus datos son tuyos: Orbe no los vende ni los usa para publicidad. Los recibos de Orbe son comprobantes no fiscales.</p>
+      ${Botones(html`<a class="btn2 chico toca" style="text-decoration:none" href="terminos.html" target="_blank" rel="noopener">Términos de uso</a>`, html`<a class="btn2 chico toca" style="text-decoration:none" href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>`)}` },
     aj && { k: 'borrar', g: 'La app', i: 'basura', c: 't-ros', n: 'Empezar de nuevo', r: 'Borra este negocio de este aparato', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Borra este negocio de este aparato para probar otro país o tipo. Antes se guarda una copia.</p>
       ${Botones(html`<button type="button" class="btn2 chico rojo toca" onClick=${() => abrir('borrar')}>Empezar de nuevo</button>`)}` }
   ].filter(Boolean);

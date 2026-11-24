@@ -23,7 +23,7 @@ import { descargar } from './reportes.js';
 import { Cita, NuevaCita } from './agenda.js';
 import { ElegirRubro } from './funciones.js';
 import { Sugerencias } from './empezar.js';
-import { Cuenta, Pagar } from './cuenta.js';
+import { Cuenta, Pagar, BorrarCuenta } from './cuenta.js';
 import { Cotizar, Cotizacion } from './cotizaciones.js';
 import { horarioDe, textoHorario, EditorHorario, EditorAusencias } from '../horario.js';
 import { Recordatorios, AjustesRecHoja } from '../recordatorios.js';
@@ -54,7 +54,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { cuenta: Cuenta, pagar: Pagar, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  const H = { cuenta: Cuenta, pagar: Pagar, borrarCuenta: BorrarCuenta, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
@@ -153,7 +153,7 @@ export function garantiaTxt(v, it) {
 }
 export function textoRecibo(v, S, D, P) {
   const cli = S.clientes.find(c => c.id === v.cli);
-  return [S.negocio.nombre + (S.negocio.razon ? ' · ' + S.negocio.razon : ''), S.negocio.fiscal ? P.fiscal[0] + ' ' + S.negocio.fiscal : '', 'Recibo #' + v.n + ' · ' + new Date(v.t).toLocaleString('es'), (S.perfiles || []).find(p => p.id === (v.pro || v.por)) ? 'Te atendió ' + S.perfiles.find(p => p.id === (v.pro || v.por)).n.split(' ')[0] : '', '',
+  return [S.negocio.nombre + (S.negocio.razon ? ' · ' + S.negocio.razon : ''), S.negocio.fiscal ? P.fiscal[0] + ' ' + S.negocio.fiscal : '', 'Recibo #' + v.n + ' · ' + new Date(v.t).toLocaleString('es'), 'COMPROBANTE NO FISCAL', (S.perfiles || []).find(p => p.id === (v.pro || v.por)) ? 'Te atendió ' + S.perfiles.find(p => p.id === (v.pro || v.por)).n.split(' ')[0] : '', '',
     ...v.items.map(it => it.q + ' x ' + it.n + ': ' + D.m(it.q * it.p) + (garantiaTxt(v, it) ? '\n   ' + garantiaTxt(v, it) : '')), '', 'Total: ' + D.m(v.total) + (D.dual ? ' (' + D.s(v.total) + ')' : ''),
     v.igtf > 0 ? 'IGTF 3 %: ' + D.m(v.igtf) : '',
     ...v.pagos.map(p => p.m + (p.ref ? ' (ref ' + p.ref + ')' : '') + ': ' + D.m(p.v)), cli ? 'Cliente: ' + cli.n : '', '', '¡Gracias por tu compra!'].filter((x, i, a) => x !== '' || a[i - 1] !== '').join('\n');
@@ -181,6 +181,7 @@ function Recibo({ d, cerrar }) {
         <b style="text-align:center;font-size:14px">${S.negocio.nombre}</b>
         ${S.negocio.razon && html`<span style="text-align:center;color:#625f7d">${S.negocio.razon}${S.negocio.fiscal ? ' · ' + P.fiscal[0] + ' ' + S.negocio.fiscal : ''}</span>`}
         <span style="text-align:center;color:#625f7d">${v.dev ? 'Devolución' : 'Recibo'} #${v.n} · ${fechaCorta(v.t)} ${hora(v.t)}${cli ? ' · ' + cli.n : ''}</span>
+        <span style="text-align:center;color:#625f7d;font-size:11px;letter-spacing:.06em">COMPROBANTE NO FISCAL</span>
         ${atendio && html`<span style="text-align:center;color:#625f7d">Te atendió ${atendio.n.split(' ')[0]}${S.negocio.sucursales.length > 1 ? ' · ' + v.suc : ''}</span>`}
         <span style="height:4px"></span>
         ${v.items.map(it => html`<span class="fila" style="justify-content:space-between;gap:8px"><span>${verQ(Math.abs(it.q), it.u)} x ${it.n}</span><span>${D.m(it.q * (it.pLista != null ? it.pLista : it.p))}</span></span>${garantiaTxt(v, it) && html`<span style="font-size:11px;color:#625f7d;margin-top:-2px">${garantiaTxt(v, it)}</span>`}

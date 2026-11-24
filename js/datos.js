@@ -838,6 +838,13 @@ export async function empezarDeNuevo() {
   await apartar('antes-de-borrar');
   cambiar(() => Object.assign(vacio(), { ajustes: Object.assign({}, S.ajustes, { perfil: '' }) }));
 }
+// Borrar mi cuenta: también se borra todo lo de este aparato (datos y copias), sin dejar nada apartado.
+export async function borrarTodoLocal() {
+  try { if (db) await idb('readwrite', st => { st.clear(); }); } catch (e) { /* sin base local */ }
+  try { Object.keys(localStorage).filter(k => k.startsWith(CLAVE) || k.startsWith('orbe-')).forEach(k => localStorage.removeItem(k)); } catch (e) { /* sin almacenamiento */ }
+  try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }
+  cambiar(() => vacio());
+}
 export function exportar() { return JSON.stringify(S, null, 1); }
 
 // ---------- cálculos (se recalculan solo cuando cambian los datos) ----------

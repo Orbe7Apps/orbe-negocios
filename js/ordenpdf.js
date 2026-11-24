@@ -145,7 +145,7 @@ export async function pdfOrden(o, ctx) {
   y = H - 30; doc.setDrawColor(...tinta); doc.setLineWidth(0.3);
   doc.line(M, y, M + mitad - 10, y); doc.line(M + mitad + 16, y, W - M, y);
   doc.setFontSize(8.5); doc.setTextColor(...tinta); T('Firma del cliente', M + (mitad - 10) / 2, y + 5, { align: 'center' }); T(x.firmaDer, M + mitad + 16 + (W - M - (M + mitad + 16)) / 2, y + 5, { align: 'center' });
-  doc.setFontSize(7); doc.setTextColor(...suave); T(x.numero + ' · ' + x.negocio, M, H - 10); T('Hecho con Orbe Negocios', W - M, H - 10, { align: 'right' });
+  doc.setFontSize(7); doc.setTextColor(...suave); T(x.numero + ' · ' + x.negocio + ' · Documento no fiscal', M, H - 10); T('Hecho con Orbe Negocios', W - M, H - 10, { align: 'right' });
   return doc.output('blob');
 }
 
@@ -182,7 +182,8 @@ export function imprimirOrden(o, ctx) {
       ${x.items.map(it => `<tr><td>${esc(it.n)}</td><td>${it.q}</td><td>${esc(it.p)}</td><td>${esc(it.t)}</td></tr>`).join('') || '<tr><td colspan="4">Sin trabajos anotados todavía</td></tr>'}</tbody></table>
     <div class="imp-tot"><div><span>Total</span><span>${esc(x.total)}</span></div>${x.impTxt ? `<div style="font-size:8.5pt;justify-content:flex-end">${esc(x.impTxt)}</div>` : ''}${x.totalOtra ? `<div><span>En ${esc(x.tasa)}</span><span>${esc(x.totalOtra)}</span></div>` : ''}${x.anticipo ? `<div><span>Anticipo</span><span>-${esc(x.anticipo)}</span></div>` : ''}<div class="imp-saldo"><span>${x.anticipo ? 'Saldo' : 'A pagar'}</span><span>${esc(x.saldo)}</span></div></div>
     ${x.cond ? `<p class="imp-cond">${esc(x.cond)}</p>` : ''}
-    <div class="imp-firmas"><span>Firma del cliente</span><span>${esc(x.firmaDer)}</span></div>`;
+    <div class="imp-firmas"><span>Firma del cliente</span><span>${esc(x.firmaDer)}</span></div>
+    <p class="imp-cond" style="text-align:center;margin-top:14px">Documento no fiscal</p>`;
   // La hoja solo se ve al imprimir; si el aparato no avisa que terminó, se quita en la próxima impresión.
   document.querySelectorAll('.zona-imprimir').forEach(v => v.remove());
   document.body.appendChild(z); document.documentElement.classList.add('imprimiendo');
