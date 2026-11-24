@@ -77,6 +77,10 @@ export async function leerEnlace() {
 export const yaHayEnlace = () => { try { return !!sessionStorage.getItem('orbe-enlace'); } catch (e) { return false; } };
 // ¿Hay una sesión guardada en este navegador? (sirve sin internet: no pregunta al servidor)
 export const haySesionGuardada = () => { try { return !!localStorage.getItem('orbe-negocios-sesion'); } catch (e) { return false; } };
+// Este aparato deja de usar el negocio que tenía (para entrar con otra cuenta o crear una nueva): se olvida lo pendiente de subir.
+export function olvidarNegocioLocal() { pend.clear(); guardarPend(); parar(); poner({ negocioId: '', pendientes: 0, plan: null }); try { localStorage.removeItem('orbe-nube-plan'); } catch (e) { /* sin almacenamiento */ } }
+// Mientras se revisa que la cuenta sea de este negocio, la app sigue en «Entra a tu cuenta».
+export const verificandoCuenta = v => poner({ verificando: !!v });
 export const terminarRecuperar = () => poner({ recuperar: false });
 export const quitarAvisoEnlace = () => poner({ avisoEnlace: '' });
 // El usuario: de 3 a 30 letras, números, punto, guion o guion bajo (sin espacios ni acentos).

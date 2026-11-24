@@ -14,7 +14,8 @@ export const NOMBRES_SUC = ['Centro', 'Norte', 'Este', 'Oeste', 'Sur'];
 const TONO = { vio: 't-vio', amb: 't-amb', ver: 't-ver', ros: 't-ros', azu: 't-azu' };
 
 export function Inicio({ tel }) {
-  const [paso, setPaso] = useState(-1);
+  // Al dejar otro negocio desde «Entra a tu cuenta» se llega directo a crear la cuenta o a armar el negocio.
+  const [paso, setPaso] = useState(() => { try { const x = sessionStorage.getItem('orbe-inicio-paso'); sessionStorage.removeItem('orbe-inicio-paso'); return x || -1; } catch (e) { return -1; } });
   const [busca, setBusca] = useState('');
   const [c, setC] = useState({ mods: {}, pais: '', rubro: '', tipo: '', escala: 'negocio', nombre: '', razon: '', fiscal: '', sucN: 1, sucNombres: [], dueno: '', pin: '', pin2: '', pays: null, taxOn: null, taxIncl: true });
   // La cuenta nueva empieza vacía. Con «?demo» en la dirección se llena con un mes de ejemplo (para mostrar la app).

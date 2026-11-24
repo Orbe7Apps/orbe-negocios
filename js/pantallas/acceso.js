@@ -134,5 +134,8 @@ export function Acceso({ tel }) {
         <b>${p.n}</b><span class="sub">${r ? r.n : ''}${p.pin ? '' : ' · sin PIN'}</span>
       </button>`; })}</div>
     <span class="sub faint" style="margin-top:auto;text-align:center">Cada persona ve solo lo que el dueño le permite.</span>
-    ${N.sesion && !demo && html`<button type="button" class="olvide-pin toca fila" style="align-self:center;gap:6px;color:var(--out-text)" onClick=${() => { if (confirm('¿Cerrar sesión? Para volver a abrir Orbe en este aparato vas a necesitar el usuario y la contraseña.')) cerrarSesion().then(() => avisar('Sesión cerrada')); }}><${Icono} n="salir" t=${15} />Cerrar sesión</button>`}`);
+    ${!demo && html`<div class="pila" style="gap:6px;align-items:center;padding-top:6px">
+      <span class="sub">¿No es tu negocio?</span>
+      <button type="button" class="btn2 chico toca" style="gap:6px" onClick=${() => { if (confirm('¿Cambiar de cuenta? Se cierra la sesión de «' + S.negocio.nombre + '» en este aparato. Después puedes entrar con otra cuenta o crear una nueva.')) cerrarSesion().then(() => avisar('Sesión cerrada')); }}><${Icono} n="salir" t=${15} />Cambiar de cuenta</button>
+    </div>`}`);
 }

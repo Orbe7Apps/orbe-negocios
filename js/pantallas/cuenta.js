@@ -2,10 +2,10 @@
 // ver si todo está guardado y la suscripción (pagar y avisar «Ya pagué»).
 import { html, useState, useEffect } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { cambiarNegocio, leer } from '../datos.js';
+import { cambiarNegocio, leer, empezarDeNuevo } from '../datos.js';
 import { Hoja, Icono, avisar, hace, LogoOrbe } from '../ui.js';
 import { numero } from './pagos.js';
-import { useNube, iniciarNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan } from '../nube.js';
+import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan } from '../nube.js';
 
 // Campo de contraseña con «Ver» para revisar lo que se escribió.
 export function CampoClave({ titulo, valor, onCambio, nueva, onEnter }) {
@@ -282,14 +282,32 @@ export function EntrarInicio({ volver, crear }) {
 export function EntrarDeNuevo({ tel }) {
   const { S } = { S: leer() };
   const [f, setF] = useState({ correo: '', usuario: '', clave: '' }), [olvido, setOlvido] = useState(false), [ocupado, setOcupado] = useState(false);
+  const [modo, setModo] = useState('entrar'); // entrar · otra (entrar con otra cuenta) · nueva (crear una cuenta)
   const pon = o => setF(x => Object.assign({}, x, o));
+  // Dejar este negocio en el aparato (queda en la nube y con una copia aquí) y empezar con otra cuenta o una nueva.
+  const dejar = async destino => { olvidarNegocioLocal(); try { sessionStorage.setItem('orbe-inicio-paso', destino); } catch (e) { /* sin almacenamiento */ } await empezarDeNuevo(); };
+  const pendientes = estadoNube().pendientes || 0;
+  if (modo !== 'entrar') return html`<div class="clave-nueva entra">
+    <div class="tarjeta pila" style="gap:14px;padding:26px;max-width:420px;width:100%">
+      <span class="ic t-vio" style="width:52px;height:52px;border-radius:16px"><${Icono} n="personas" t=${24} /></span>
+      <b style="font-size:20px">${modo === 'otra' ? '¿Entrar con otra cuenta?' : '¿Crear una cuenta nueva?'}</b>
+      <span class="sub" style="line-height:1.5">Este aparato deja de mostrar <b>${S.negocio ? S.negocio.nombre : 'este negocio'}</b> y ${modo === 'otra' ? 'entras con el usuario y la contraseña de tu negocio' : 'empiezas un negocio nuevo con tu propia cuenta'}. ${S.negocio && S.negocio.nubeId ? 'Ese negocio sigue guardado en la nube: vuelve a aparecer entrando con su usuario.' : ''} Además queda una copia en este aparato (Más → Copias y Excel).</span>
+      ${pendientes > 0 && html`<span class="aviso-plan ambar" style="cursor:default"><${Icono} n="alerta" t=${16} /><span class="crece">Hay ${pendientes} ${pendientes === 1 ? 'cambio' : 'cambios'} sin subir a la nube: solo quedarán en la copia de este aparato.</span></span>`}
+      <button type="button" class="btn toca" onClick=${() => dejar(modo === 'otra' ? 'entrar' : 'cuenta')}>${modo === 'otra' ? 'Sí, entrar con otra cuenta' : 'Sí, crear una cuenta nueva'}</button>
+      <button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => setModo('entrar')}>Volver</button>
+    </div></div>`;
   const enviar = async () => {
     if (olvido && !correoOk(f.correo)) { avisar('Escribe un correo válido'); return; }
     setOcupado(true);
     try {
       if (olvido) { await olvideClave(f.correo); avisar('Listo: revisa el correo del dueño'); setOlvido(false); return; }
-      await entrarUsuario(f.usuario, f.clave); iniciarNube();
-    } catch (er) { avisar(er.message); } finally { setOcupado(false); }
+      verificandoCuenta(true);
+      await entrarUsuario(f.usuario, f.clave);
+      // Solo entra una cuenta de este negocio: otra cuenta no ve lo que hay en el aparato.
+      const nid = S.negocio && S.negocio.nubeId;
+      if (nid) { const lista = await misNegocios(); if (!lista.some(g => g.id === nid)) { await cerrarSesion(); throw new Error('Esa cuenta no es de ' + S.negocio.nombre + '. Toca «Entrar con otra cuenta»'); } }
+      iniciarNube();
+    } catch (er) { avisar(er.message); } finally { verificandoCuenta(false); setOcupado(false); }
   };
   return html`<div class="clave-nueva entra">
     <div class="tarjeta pila" style="gap:16px;padding:26px;max-width:420px;width:100%">
@@ -300,6 +318,12 @@ export function EntrarDeNuevo({ tel }) {
       ${olvido && html`<span class="sub" style="line-height:1.45">Le mandamos al correo del dueño un enlace para poner una contraseña nueva.</span>`}
       <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${enviar}>${ocupado ? 'Un momento…' : olvido ? 'Mandar el enlace' : 'Entrar'}</button>
       <button type="button" class="olvide-pin toca" onClick=${() => setOlvido(!olvido)}>${olvido ? 'Volver' : 'Olvidé mi contraseña'}</button>
+      ${!olvido && html`<div class="pila" style="gap:8px;padding-top:14px;margin-top:2px;align-items:stretch">
+        <span class="sub" style="text-align:center">¿No es tu negocio?</span>
+        <div class="pila" style="gap:8px">
+          <button type="button" class="btn2 toca" style="min-height:46px;border-radius:23px" onClick=${() => setModo('otra')}>Entrar con otra cuenta</button>
+          <button type="button" class="btn2 toca" style="min-height:46px;border-radius:23px" onClick=${() => setModo('nueva')}>Crear cuenta nueva</button>
+        </div></div>`}
     </div></div>`;
 }
 

@@ -113,7 +113,7 @@ function App() {
   if (N.recuperar) return html`<${ClaveNueva} /><${Avisos} />`;
   if (!S.negocio) return html`<${Inicio} tel=${tel} /><${Avisos} />`;
   // Sin cuenta no se entra: si este navegador no tiene sesión, se piden correo y contraseña (la demostración no).
-  if (!S.negocio.demo && !/[?&]demo\b/.test(location.search) && !N.sesion && !haySesionGuardada()) return html`<${EntrarDeNuevo} tel=${tel} /><${Avisos} />`;
+  if (!S.negocio.demo && !/[?&]demo\b/.test(location.search) && (N.verificando || (!N.sesion && !haySesionGuardada()))) return html`<${EntrarDeNuevo} tel=${tel} /><${Avisos} />`;
   const yo = perfilActual();
   if (!yo) return html`<${Acceso} tel=${tel} /><${Avisos} />`;
   const pd = k => puede(S, yo, k);
