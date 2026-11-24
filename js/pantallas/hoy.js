@@ -12,6 +12,7 @@ import { OrdenesHoy } from './ordenes.js';
 import { CitasHoy, citasDelDia } from './agenda.js';
 import { PrimerosPasos } from './empezar.js';
 import { AvisoPlan } from './cuenta.js';
+import { RecordatoriosHoy } from '../recordatorios.js';
 import { BotonAyuda } from '../ayuda.js';
 
 const DIA = 86400000;
@@ -126,6 +127,7 @@ export function Hoy() {
     </header>
     ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
     <${AvisoPlan} />
+    <${RecordatoriosHoy} />
     <${PrimerosPasos} />
     ${E && html`<div class="chips desliza">${[''].concat(S.negocio.sucursales).map(x => html`<button type="button" class=${'chip chico toca' + (suc === x ? ' on' : '')} onClick=${() => setSuc(x)}>${x || 'Todas'}</button>`)}</div>`}
     ${Hero(true, 64)}
@@ -137,6 +139,7 @@ export function Hoy() {
   return html`
     ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
     <${AvisoPlan} />
+    <${RecordatoriosHoy} />
     <${PrimerosPasos} />
     <div class="panel-cifras">
       ${Hero(true, 48)}
