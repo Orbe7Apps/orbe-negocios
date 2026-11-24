@@ -1,5 +1,5 @@
 // Orbe Negocios · funciona sin internet. Guarda la app y responde desde la copia si no hay conexión.
-const VERSION = 'orbe-negocios-v47';
+const VERSION = 'orbe-negocios-v48';
 const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'css/orbe.css', 'icons/icono.svg', 'icons/icono-192.png',
   'js/lib/preact-htm.js', 'js/app.js', 'js/ctx.js', 'js/paises.js', 'js/datos.js', 'js/graficos.js', 'js/ui.js',
   'js/pantallas/inicio.js', 'js/pantallas/hoy.js', 'js/pantallas/vender.js', 'js/pantallas/clientes.js', 'js/pantallas/inventario.js',
@@ -15,14 +15,20 @@ self.addEventListener('fetch', e => {
   if (/dolarapi|pydolarve/.test(url.host)) return;
   // La nube (Supabase) y el panel de administración: siempre directo, nunca de la copia.
   if (/supabase\.co$/.test(url.host) || /admin(\.html)?$|admin\.js$/.test(url.pathname)) return;
-  // La app: primero internet para tener lo último; si no hay, la copia guardada.
-  // Con internet lento (o que no responde) no se espera más de 3 segundos: se abre la copia y lo nuevo queda para la próxima.
+  // La app: cada versión se guarda completa al instalarse y se abre siempre desde esa copia (rápido y sin mezclar
+  // archivos nuevos con viejos). Cuando hay versión nueva, se instala aparte y la página se recarga una vez.
+  if (url.origin === location.origin) {
+    e.respondWith(caches.open(VERSION).then(c => c.match(r, { ignoreSearch: r.mode === 'navigate' }).then(guardada => guardada || fetch(r).then(res => {
+      if (res.ok) { const copia = res.clone(); c.put(r, copia); }
+      return res;
+    }).catch(() => r.mode === 'navigate' ? c.match('index.html') : Response.error()))));
+    return;
+  }
+  // Fuentes de Google: de la copia si ya están; si no, de internet (y se guardan).
   const red = fetch(r).then(res => {
-    if (res.ok && (url.origin === location.origin || /fonts\.(googleapis|gstatic)\.com/.test(url.host))) { const copia = res.clone(); caches.open(VERSION).then(c => c.put(r, copia)); }
+    if (res.ok && /fonts\.(googleapis|gstatic)\.com/.test(url.host)) { const copia = res.clone(); caches.open(VERSION).then(c => c.put(r, copia)); }
     return res;
   });
-  e.respondWith(caches.match(r).then(guardada => guardada
-    ? Promise.race([red.catch(() => guardada), new Promise(ok => setTimeout(() => ok(guardada), 3000))])
-    : red.catch(() => caches.match('index.html'))));
+  e.respondWith(caches.match(r).then(guardada => guardada || red));
   e.waitUntil(red.then(() => {}, () => {}));
 });

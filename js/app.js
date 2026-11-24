@@ -247,4 +247,9 @@ if (window.visualViewport) {
 ['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 // Que el navegador no borre los datos por falta de espacio (sobre todo Safari en iPhone).
 if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(ya => ya || navigator.storage.persist()).catch(() => {});
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  // Versión nueva instalada: se recarga una sola vez para abrir la app completa de la versión nueva.
+  const habia = !!navigator.serviceWorker.controller; let recargada = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (habia && !recargada) { recargada = true; location.reload(); } });
+  navigator.serviceWorker.register('sw.js').then(reg => { reg.update().catch(() => {}); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); }); }).catch(() => {});
+}

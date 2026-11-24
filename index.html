@@ -37,7 +37,7 @@
   <div class="sp-frase">Tú vendes. Orbe hace lo repetitivo.</div>
   <div class="sp-negocio" id="sp-negocio" hidden></div>
   <div class="sp-barra"><i></i></div>
-  <p class="sp-error" id="sp-error" hidden>No se pudo abrir Orbe Negocios. Revisa tu conexión y vuelve a intentarlo.</p>
+  <p class="sp-error" id="sp-error" hidden>No se pudo abrir Orbe Negocios. Revisa tu conexión y toca «Reparar y abrir».<br><button type="button" id="sp-reparar" style="margin-top:14px;min-height:46px;padding:0 22px;border-radius:23px;border:0;background:#6a5cf5;color:#fff;font:inherit;font-weight:600">Reparar y abrir</button></p>
 </div>
 <script>
 // Pantalla de carga: tema y nombre del negocio desde el primer instante; se va cuando la app está lista.
@@ -55,6 +55,16 @@
   };
   // Si la app no arranca (sin internet la primera vez, o un error), se avisa en vez de quedarse cargando para siempre.
   setTimeout(function () { if (!listo) { document.getElementById('sp-error').hidden = false; el.classList.add('con-error'); } }, 9000);
+  // «Reparar y abrir»: borra la copia guardada de la app (no los datos del negocio) y la baja de nuevo.
+  document.getElementById('sp-reparar').onclick = function () {
+    var fin = function () { location.reload(); };
+    var p1 = navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }) : Promise.resolve();
+    var p2 = window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : Promise.resolve();
+    Promise.all([p1, p2]).then(fin, fin);
+  };
+  // Un módulo de la app que no carga (por ejemplo, archivos de dos versiones mezclados) también muestra el aviso.
+  window.addEventListener('error', function () { if (!listo) setTimeout(function () { if (!listo) { document.getElementById('sp-error').hidden = false; el.classList.add('con-error'); } }, 1500); });
+  window.addEventListener('unhandledrejection', function () { if (!listo) setTimeout(function () { if (!listo) { document.getElementById('sp-error').hidden = false; el.classList.add('con-error'); } }, 1500); });
   window.addEventListener('error', function (e) { if (!listo && e.target && e.target.tagName === 'SCRIPT') { document.getElementById('sp-error').hidden = false; el.classList.add('con-error'); } }, true);
 })();
 </script>
