@@ -179,11 +179,11 @@ function Recibo({ d, cerrar }) {
         ${S.negocio.razon && html`<span style="text-align:center;color:#625f7d">${S.negocio.razon}${S.negocio.fiscal ? ' · ' + P.fiscal[0] + ' ' + S.negocio.fiscal : ''}</span>`}
         <span style="text-align:center;color:#625f7d">${v.dev ? 'Devolución' : 'Recibo'} #${v.n} · ${fechaCorta(v.t)} ${hora(v.t)}${cli ? ' · ' + cli.n : ''}</span>
         ${atendio && html`<span style="text-align:center;color:#625f7d">Te atendió ${atendio.n.split(' ')[0]}${S.negocio.sucursales.length > 1 ? ' · ' + v.suc : ''}</span>`}
-        <span style="border-top:1px dashed #c9c6e0"></span>
+        <span style="height:4px"></span>
         ${v.items.map(it => html`<span class="fila" style="justify-content:space-between;gap:8px"><span>${verQ(Math.abs(it.q), it.u)} x ${it.n}</span><span>${D.m(it.q * (it.pLista != null ? it.pLista : it.p))}</span></span>${garantiaTxt(v, it) && html`<span style="font-size:11px;color:#625f7d;margin-top:-2px">${garantiaTxt(v, it)}</span>`}
           ${it.pLista != null && Math.abs(it.pLista - it.p) > 1e-9 && html`<span class="fila" style="justify-content:space-between;gap:8px;color:#0d7f5f;font-size:12px"><span>  ${it.promo ? 'Promo ' + it.promo : it.desc ? 'Descuento ' + it.desc + ' %' : 'Descuento'}</span><span>−${D.m(it.q * (it.pLista - it.p))}</span></span>`}`)}
         ${v.descuento > 0 && html`<span class="fila" style="justify-content:space-between;color:#0d7f5f;font-weight:600"><span>Ahorraste</span><span>${D.m(v.descuento)}</span></span>`}
-        <span style="border-top:1px dashed #c9c6e0"></span>
+        <span style="height:4px"></span>
         ${v.imp > 0 && !v.impDesglose && html`<span class="fila" style="justify-content:space-between;color:#625f7d"><span>${v.impTxt}</span><span>${D.m(v.imp)}</span></span>`}
         ${v.impDesglose && v.impDesglose.map(x => html`<span class="fila" style="justify-content:space-between;color:#625f7d"><span>${x.r ? P.tax[0] + ' ' + x.r + ' % sobre ' + D.m(x.base) : 'Exento: ' + D.m(x.base)}</span><span>${x.r ? D.m(x.imp) : ''}</span></span>`)}
         <span class="fila" style="justify-content:space-between;font-weight:700;font-size:15px"><span>TOTAL</span><span>${D.m(v.total)}</span></span>
@@ -1005,20 +1005,20 @@ function CierreZ({ d, cerrar }) {
       <b style="text-align:center;font-size:14px">${S.negocio.nombre}</b>
       ${S.negocio.fiscal && html`<span style="text-align:center;color:#625f7d">${S.negocio.razon || ''} · ${P.fiscal[0]} ${S.negocio.fiscal}</span>`}
       <span style="text-align:center;color:#625f7d">CIERRE Z #${z.n || S.cierres.indexOf(z) + 1} · ${fechaCorta(z.t)} ${hora(z.t)}${quien ? ' · ' + quien : ''}</span>
-      <span style="border-top:1px dashed #c9c6e0"></span>
+      <span style="height:4px"></span>
       ${z.desde ? linea('Ventas', '#' + z.desde + ' a #' + z.hasta) : null}
       ${z.anuladas ? linea('Anuladas', String(z.anuladas)) : null}
       ${Object.keys(pp).map(k => linea(k, D.m(pp[k])))}
-      <span style="border-top:1px dashed #c9c6e0"></span>
+      <span style="height:4px"></span>
       ${z.impuestos ? linea(P.tax[0] + ' cobrado', D.m(z.impuestos)) : null}
       ${z.igtf ? linea('IGTF', D.m(z.igtf)) : null}
       ${linea('TOTAL', D.m(z.resumen ? z.resumen.total : 0), true)}
       ${z.resumen && z.resumen.dif ? linea(z.resumen.dif < 0 ? 'Faltante en caja' : 'Sobrante en caja', D.m(Math.abs(z.resumen.dif))) : linea('Caja', 'cuadra')}
       ${(() => { const cj = (z.resumen && z.resumen.caja) || {}, suma = k => Object.keys(cj).reduce((a, m) => a + (cj[m][k] || 0), 0);
         const filas = [['Fondo inicial', suma('fondo')], ['Ingresos de efectivo', suma('ingresos')], ['Retiros de efectivo', -suma('retiros')], ['Gastos pagados en efectivo', -suma('gastos')]].filter(x => Math.abs(x[1]) > 0.004);
-        return filas.length ? html`<span style="border-top:1px dashed #c9c6e0"></span>${filas.map(x => linea(x[0], D.m(x[1])))}` : null; })()}
+        return filas.length ? html`<span style="height:4px"></span>${filas.map(x => linea(x[0], D.m(x[1])))}` : null; })()}
       ${((z.resumen && z.resumen.turnos) || []).map(t => linea('Turno ' + t.n + ' · ' + ((S.perfiles.find(p => p.id === t.por) || {}).n || '').split(' ')[0] + ' ' + hora(t.desde) + '–' + hora(t.hasta), Math.abs(t.dif) < 0.005 ? 'cuadró' : (t.dif < 0 ? 'faltó ' : 'sobró ') + D.m(Math.abs(t.dif))))}
-      <span style="border-top:1px dashed #c9c6e0"></span>
+      <span style="height:4px"></span>
       <span style="color:#8a87a6;font-size:11px;word-break:break-all">Firma ${(z.h || '').slice(0, 32)}</span>
     </div>`,
     pie: html`<button type="button" class="btn toca" onClick=${() => imprimir(lineasZ(z, { S, P, D }), { logo: S.negocio.logo }).catch(() => avisar('No se pudo imprimir: revisa la impresora'))}><${Icono} n="doc" t=${16} />Imprimir</button>${Pie2('Listo', () => c())}`

@@ -178,7 +178,7 @@ export function Orden({ d, cerrar }) {
       <div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);padding:12px 14px;gap:6px">
         ${o.items.map(it => html`<div class="fila sub num" style="gap:8px"><span class="crece corta" style="color:var(--ink)">${it.q > 1 ? it.q + ' × ' : ''}${it.n}</span><span>${D.m(it.q * it.p)}</span></div>`)}
         ${!o.items.length && html`<span class="sub">Sin trabajos ni productos todavía.</span>`}
-        <div class="fila" style="border-top:1px solid var(--line);padding-top:8px;margin-top:2px"><span class="crece sub">Total</span><b class="num">${D.m(tot)}</b></div>
+        <div class="fila" style="padding-top:8px;margin-top:2px"><span class="crece sub">Total</span><b class="num">${D.m(tot)}</b></div>
         ${ant > 0 && html`<div class="fila sub num"><span class="crece">Anticipos y abonos</span><span>−${D.m(ant)}</span></div>`}
         ${o.estado !== 'cancelada' && html`<div class="fila"><b class="crece">${o.estado === 'entregada' ? 'Cobrada' : 'Debe'}</b><b class="num" style="font-size:18px">${D.m(o.estado === 'entregada' ? tot : deb)}</b></div>`}
         ${D.dual && o.estado !== 'entregada' && deb > 0 && html`<span class="sub num" style="text-align:right">${D.s(deb)}</span>`}
@@ -264,7 +264,7 @@ export function NuevaOrden({ d, cerrar }) {
               <div class="chips">${qp.trim() ? html`<button type="button" class="chip chico toca on" onClick=${() => libre(qp.trim())}>+ Agregar «${qp.trim()}»</button>` : ['Diagnóstico', 'Mano de obra', 'Revisión'].map(n => html`<button type="button" class="chip chico toca" onClick=${() => libre(n)}>+ ${n}</button>`)}<button type="button" class="chip chico toca" onClick=${() => { setAgregando(false); setQp(''); }}>Listo</button></div>
             </div>`
           : html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start;padding:10px 0" onClick=${() => setAgregando(true)}>+ Agregar trabajo o producto</button>`}
-          ${f.items.length > 0 && html`<div class="fila" style="border-top:1px solid var(--line);padding:9px 0 3px"><span class="crece sub">Total</span><b class="num">${D.m(total)}</b></div>`}
+          ${f.items.length > 0 && html`<div class="fila" style="padding:9px 0 3px"><span class="crece sub">Total</span><b class="num">${D.m(total)}</b></div>`}
         </div>
         <span class="sub faint" style="font-size:12px">Puedes dejarlo vacío y agregarlo después del diagnóstico.${T.inv ? ' Los productos se descuentan del inventario al entregar.' : ''}</span>
       </div>

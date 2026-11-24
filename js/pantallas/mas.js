@@ -40,7 +40,7 @@ function useTemas() {
   const N = useNube();
   const n = S.negocio, aj = puede('ajustes');
   const todasPays = P.pays.concat(n.euro && !P.eur ? ['Efectivo €', 'Transferencia en €'] : []);
-  const Dato = (a, b) => html`<div class="fila" style="justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span class="muted">${a}</span><b style="font-weight:600;text-align:right">${b}</b></div>`;
+  const Dato = (a, b) => html`<div class="fila" style="justify-content:space-between;padding:10px 0;font-size:14px"><span class="muted">${a}</span><b style="font-weight:600;text-align:right">${b}</b></div>`;
   const Botones = (...bs) => html`<div class="chips" style="margin-top:10px">${bs}</div>`;
   const fmt2 = x => new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
   const mes0 = inicioMes(), rm = puede('ganancias') ? resumen(mes0, Date.now() + 1, '') : null;

@@ -194,7 +194,7 @@ export function Vender() {
       <div class="tarjeta-tit" style="margin:0">Venta #${sigNumero()}<span class="sub">${S.negocio.escala === 'empresa' ? 'Caja 1' : ''}</span></div>
       ${Lineas}
       ${BotonCargo}
-      <div style="border-top:1px solid var(--line);padding-top:12px">${Total}</div>
+      <div style="padding-top:12px">${Total}</div>
       ${Boton}
     </div>
   </div>`;

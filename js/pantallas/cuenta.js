@@ -138,8 +138,8 @@ export function CuentaTema() {
     <div class="fila" style="gap:12px;padding:4px 0 10px"><span class="ic t-ver" style="width:42px;height:42px;border-radius:13px"><${Icono} n=${N.estado === 'al día' ? 'check' : 'wifi'} t=${19} /></span>
       <span class="crece" style="display:flex;flex-direction:column;gap:2px"><b style="font-size:15px">${N.usuario ? 'Usuario: ' + N.usuario : 'Cuenta del negocio'}</b><span class="sub" style=${{ color: e[1], fontWeight: 600 }}>${e[0]}</span></span></div>
     ${!N.usuario && html`<${PonerUsuario} />`}
-    <div class="fila" style="justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span class="muted">Última vez</span><b style="font-weight:600">${N.ultima ? hace(N.ultima) + ' · ' + new Date(N.ultima).toLocaleTimeString('es', { hour: 'numeric', minute: '2-digit' }) : '—'}</b></div>
-    <div class="fila" style="justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span class="muted">Cambios por subir</span><b style="font-weight:600">${N.pendientes}</b></div>
+    <div class="fila" style="justify-content:space-between;padding:10px 0;font-size:14px"><span class="muted">Última vez</span><b style="font-weight:600">${N.ultima ? hace(N.ultima) + ' · ' + new Date(N.ultima).toLocaleTimeString('es', { hour: 'numeric', minute: '2-digit' }) : '—'}</b></div>
+    <div class="fila" style="justify-content:space-between;padding:10px 0;font-size:14px"><span class="muted">Cambios por subir</span><b style="font-weight:600">${N.pendientes}</b></div>
     <div class="chips" style="margin-top:10px"><button type="button" class="btn2 chico acento toca" onClick=${() => { sincronizar(); avisar('Guardando en la nube…'); }}>Guardar ahora</button>
       <button type="button" class="btn2 chico toca" onClick=${() => pedirCerrarSesion(abrir)}><${Icono} n="salir" t=${14} />Cerrar sesión</button></div>`;
 }
@@ -166,9 +166,9 @@ export function Suscripcion() {
     ${pend.length > 0 && html`<div class="tarjeta fila" style="box-shadow:none;background:var(--amber-soft);gap:10px"><${Icono} n="reloj" t=${18} /><span class="sub" style="line-height:1.4;color:var(--ink)">Tienes ${pend.length === 1 ? 'un pago' : pend.length + ' pagos'} por confirmar. Te avisamos al aprobarlo.</span></div>`}
     ${cfg && html`<div class="chips" style="margin-top:10px"><button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('pagar', { cfg, plan: planSug })}>Pagar mi suscripción</button></div>`}
     ${cfg && html`<span class="titulo-funciones" style="margin-top:14px">Precios</span>
-      ${['negocio', 'empresa'].map(k => cfg.precios[k] && html`<div class="fila" style="justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span><b>${PLANES[k]}</b><span class="sub"> · ${k === 'negocio' ? 'un local' : 'varias sedes'}</span></span><span class="num"><b>US$ ${cfg.precios[k].mes}</b>/mes · US$ ${cfg.precios[k].anio}/año</span></div>`)}`}
+      ${['negocio', 'empresa'].map(k => cfg.precios[k] && html`<div class="fila" style="justify-content:space-between;padding:10px 0;font-size:14px"><span><b>${PLANES[k]}</b><span class="sub"> · ${k === 'negocio' ? 'un local' : 'varias sedes'}</span></span><span class="num"><b>US$ ${cfg.precios[k].mes}</b>/mes · US$ ${cfg.precios[k].anio}/año</span></div>`)}`}
     ${pagos && pagos.length > 0 && html`<span class="titulo-funciones" style="margin-top:14px">Tus pagos</span>
-      ${pagos.map(p => html`<div class="fila" key=${p.id} style="justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:13px"><span>${new Date(p.creado).toLocaleDateString('es')} · ${p.metodo} · ${p.moneda} ${p.monto}</span><span class=${'pildora ' + (p.estado === 'aprobado' ? 't-ver' : p.estado === 'rechazado' ? 't-ros' : 't-amb')}>${p.estado === 'pendiente' ? 'Por confirmar' : p.estado === 'aprobado' ? 'Aprobado' : 'Rechazado'}</span></div>`)}`}`;
+      ${pagos.map(p => html`<div class="fila" key=${p.id} style="justify-content:space-between;padding:10px 0;font-size:13px"><span>${new Date(p.creado).toLocaleDateString('es')} · ${p.metodo} · ${p.moneda} ${p.monto}</span><span class=${'pildora ' + (p.estado === 'aprobado' ? 't-ver' : p.estado === 'rechazado' ? 't-ros' : 't-amb')}>${p.estado === 'pendiente' ? 'Por confirmar' : p.estado === 'aprobado' ? 'Aprobado' : 'Rechazado'}</span></div>`)}`}`;
 }
 
 // ---------- hoja: pagar y avisar «Ya pagué» ----------
@@ -181,7 +181,7 @@ export function Pagar({ d, cerrar }) {
   const enBs = P.id === 'VE' && pm.telefono ? D.redondo(usd * D.tasa) : 0;
   const monto = f.metodo === 'Pago Móvil' && enBs ? enBs : usd, moneda = f.metodo === 'Pago Móvil' && enBs ? 'VES' : f.metodo === 'Binance' ? 'USDT' : 'USD';
   const copiar = x => { try { navigator.clipboard.writeText(x); avisar('Copiado'); } catch (e) { avisar(x); } };
-  const Dato = (k, v) => v ? html`<div class="fila" style="justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line)"><span class="sub">${k}</span><button type="button" class="fila toca" style="gap:6px;border:0;background:none;color:var(--ink);font:inherit;font-weight:600" onClick=${() => copiar(v)}>${v}<${Icono} n="doc" t=${14} c="var(--accent-text)" /></button></div>` : null;
+  const Dato = (k, v) => v ? html`<div class="fila" style="justify-content:space-between;gap:10px;padding:8px 0;"><span class="sub">${k}</span><button type="button" class="fila toca" style="gap:6px;border:0;background:none;color:var(--ink);font:inherit;font-weight:600" onClick=${() => copiar(v)}>${v}<${Icono} n="doc" t=${14} c="var(--accent-text)" /></button></div>` : null;
   const enviar = async c => {
     if (f.metodo !== 'Efectivo' && !f.referencia.trim()) { avisar('Escribe la referencia del pago'); return; }
     try { await reportarPago({ plan: f.plan, meses: f.meses, monto, moneda, metodo: f.metodo, referencia: f.referencia, nota: f.nota }); c(() => avisar('Listo: te avisamos cuando lo confirmemos')); }
