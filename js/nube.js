@@ -3,7 +3,7 @@
 // La seguridad la pone el servidor: cada cuenta solo ve y cambia los negocios donde es miembro (y si la suscripción
 // venció, solo puede ver). La clave de abajo es pública a propósito: sin una sesión válida no da acceso a nada.
 import { useState, useEffect } from './lib/preact-htm.js';
-import { leer, alCambiar, aplicarRemoto, restaurar, idDispositivo, cambiarNegocio } from './datos.js';
+import { leer, alCambiar, aplicarRemoto, restaurar, idDispositivo, cambiarNegocio, salir } from './datos.js';
 
 const URL_NUBE = 'https://cwjmstctrxrcisfbknam.supabase.co';
 const CLAVE_PUBLICA = 'sb_publishable_x95K8o7WAhVtldQrU3fnGw_nbcVSEGE';
@@ -89,6 +89,8 @@ export async function entrarCuenta(correo, clave) {
   const c = await cliente();
   const { error } = await c.auth.signInWithPassword({ email: correo.trim(), password: clave });
   if (error) throw new Error(explicar(error));
+  // Después de la cuenta, cada persona elige su perfil y pone su PIN (nunca se entra directo con el último perfil).
+  if (leer().negocio) salir();
   return true;
 }
 export async function olvideClave(correo) {
@@ -103,6 +105,7 @@ export async function nuevaClave(clave) {
 }
 export async function cerrarSesion() {
   const c = await cliente(); await c.auth.signOut();
+  if (leer().negocio) salir();
   parar(); poner({ sesion: null, correo: '', negocioId: '', estado: 'apagada', plan: null, admin: false });
 }
 // Los negocios de esta cuenta (para elegir cuál bajar en un aparato nuevo).
@@ -267,6 +270,7 @@ export async function bajarNegocio(nid) {
   if (!ok) throw new Error('No se pudo abrir ese negocio');
   try { localStorage.setItem(cursorClave(nid), new Date().toISOString()); } catch (e) { /* sin cursor */ }
   poner({ negocioId: nid });
+  salir();
   arrancar();
 }
 

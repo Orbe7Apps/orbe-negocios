@@ -6,6 +6,8 @@ import { enlaceWA } from '../ordenpdf.js';
 import { pais } from '../paises.js';
 import { rolDe } from '../permisos.js';
 import { Icono, LogoOrbe, iniciales, TONOS, avisar } from '../ui.js';
+import { useNube, entrarCuenta } from '../nube.js';
+import { CampoClave } from './cuenta.js';
 
 export function Teclado({ largo = 4, onListo, error }) {
   const [v, setV] = useState('');
@@ -35,7 +37,19 @@ export function Acceso({ tel }) {
   const [elegido, setElegido] = useState(null);
   // Un solo perfil sin PIN: entra directo.
   useEffect(() => { if (activos.length === 1 && !activos[0].pin) entrar(activos[0].id); }, []);
-  const tocar = p => { if (!p.pin) { entrar(p.id); avisar('Hola, ' + p.n.split(' ')[0]); } else { setElegido(p); setFallos(0); setOlvido(false); } };
+  // Dueño sin PIN y con más personas en el equipo: para que nadie entre como dueño, se pide la contraseña de la cuenta Orbe.
+  const N = useNube();
+  const demo = S.negocio.demo || /[?&]demo\b/.test(location.search);
+  const [conClave, setConClave] = useState(null), [cl, setCl] = useState({ correo: '', clave: '' }), [ocupado, setOcupado] = useState(false);
+  const tocar = p => {
+    if (!p.pin && p.rol === 'dueno' && activos.length > 1 && !demo) { setConClave(p); setCl({ correo: N.correo || '', clave: '' }); return; }
+    if (!p.pin) { entrar(p.id); avisar('Hola, ' + p.n.split(' ')[0]); } else { setElegido(p); setFallos(0); setOlvido(false); }
+  };
+  const entrarConClave = async () => {
+    setOcupado(true);
+    try { await entrarCuenta(cl.correo, cl.clave); entrar(conClave.id); avisar('Hola, ' + conClave.n.split(' ')[0] + '. Ponte un PIN para entrar más rápido'); }
+    catch (er) { avisar(er.message); } finally { setOcupado(false); }
+  };
   const caja = contenido => html`<div style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column;padding:calc(56px + var(--sa-top)) 22px calc(24px + var(--sa-bottom))' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
     <div class=${tel ? 'pila' : 'tarjeta pila'} style=${tel ? 'flex:1;gap:18px' : 'width:min(480px,100%);padding:32px;gap:18px;border-radius:28px'}>${contenido}</div></div>`;
 
@@ -68,6 +82,18 @@ export function Acceso({ tel }) {
       ${neg.correo && html`<a class="btn2 toca" style="min-height:50px;border-radius:25px;justify-content:center;text-decoration:none" href=${'mailto:' + encodeURIComponent(neg.correo) + '?subject=' + encodeURIComponent('PIN nuevo en Orbe Negocios') + '&body=' + encodeURIComponent(msg)}>Avisarle por correo</a>`}
       <button type="button" class="btn toca" onClick=${() => { setOlvido(false); setElegido(null); }}>Entendido</button>
     </div>`);
+
+  if (conClave) return caja(html`
+    <button type="button" class="icono-btn toca" aria-label="Volver" onClick=${() => setConClave(null)}><${Icono} n="atras" /></button>
+    <div class="pila entra" style="align-items:center;gap:8px;text-align:center">
+      <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(conClave) % 5]} style="width:72px;height:72px;font-size:24px">${iniciales(conClave.n)}</span>
+      <h1 style="font-size:24px">Hola, ${conClave.n.split(' ')[0]}</h1>
+      <span class="sub" style="line-height:1.45;max-width:340px">Todavía no tienes PIN. Para entrar como dueño, escribe la contraseña de tu cuenta Orbe.</span>
+    </div>
+    ${!N.correo && html`<label class="campo"><span>Correo</span><input type="email" inputmode="email" autocomplete="email" autocapitalize="off" value=${cl.correo} onInput=${e => setCl(Object.assign({}, cl, { correo: e.target.value }))} /></label>`}
+    ${N.correo && html`<span class="sub" style="text-align:center">${N.correo}</span>`}
+    <${CampoClave} titulo="Contraseña" valor=${cl.clave} onCambio=${v => setCl(Object.assign({}, cl, { clave: v }))} onEnter=${entrarConClave} />
+    <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${entrarConClave}>${ocupado ? 'Un momento…' : 'Entrar'}</button>`);
 
   if (elegido) return caja(html`
     <button type="button" class="icono-btn toca" aria-label="Volver" onClick=${() => setElegido(null)}><${Icono} n="atras" /></button>
