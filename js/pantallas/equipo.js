@@ -23,9 +23,14 @@ export function Equipo() {
   const tocar = (rol, k, on) => {
     if (rol.fijo) { avisar('El dueño siempre puede todo'); return; }
     if (!puedeEditarRol(yo, rol.id) || !puedeEditarPermiso(yo, k)) { avisar('Solo el dueño puede cambiar esto'); return; }
-    cambiarPermiso(rol.id, k, !on);
-    avisar((on ? 'Quitado: ' : 'Permitido: ') + PERMISOS.find(p => p.k === k).n.toLowerCase() + ' · ' + rol.n);
+    const pm = PERMISOS.find(p => p.k === k);
+    const hacer = () => { cambiarPermiso(rol.id, k, !on); avisar((on ? 'Quitado: ' : 'Permitido: ') + pm.n.toLowerCase() + ' · ' + rol.n); };
+    // Dar un permiso delicado se confirma (quitarlo no). Todo queda en el registro de cambios.
+    if (!on && pm.delicado) { const quienes = S.perfiles.filter(p => !p.borrado && p.rol === rol.id).map(p => p.n.split(' ')[0]);
+      abrir('confirmar', { titulo: '¿Dar «' + pm.n.toLowerCase() + '» a ' + rol.n + '?', texto: 'Quien tenga el rol ' + rol.n + (quienes.length ? ' (' + quienes.join(', ') + ')' : '') + ' ' + pm.delicado + '. Queda anotado en el registro de cambios.', boton: 'Sí, dar el permiso', si: hacer }); return; }
+    hacer();
   };
+  const puedeBorrar = rl => rl && !rl.fijo && rl.id !== 'dueno' && puedeEditarRol(yo, rl.id) && puede('equipo');
 
   const Personas = html`<section class="tarjeta entra" style="padding-bottom:6px">
     <div class="tarjeta-tit">${(n => n + ' de ' + limitePerfiles(S.negocio, N.plan) + ' perfiles')(perfilesActivos(S))}<button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('perfil', {})}>+ Perfil</button></div>
@@ -46,7 +51,7 @@ export function Equipo() {
     <div class="tarjeta-tit">Qué puede hacer cada rol<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('rol')}>+ Rol</button></div>
     <span class="sub" style="display:block;margin:-4px 0 10px">Toca para dar o quitar un permiso. El dueño siempre puede todo.</span>
     <div style="overflow-x:auto"><table class="matriz">
-      <thead><tr><th>Permiso</th>${roles.map(rl => html`<th>${rl.n}</th>`)}</tr></thead>
+      <thead><tr><th>Permiso</th>${roles.map(rl => html`<th>${rl.n}${puedeBorrar(rl) ? html`<br /><button type="button" class="enlace-tasa toca" style="font-size:11px;color:var(--out-text)" onClick=${() => abrir('rolBorrar', { rid: rl.id })}>Borrar</button>` : null}</th>`)}</tr></thead>
       <tbody>${PERMISOS.filter(visible).map(pm => html`<tr key=${pm.k}><td><span class="fila" style="gap:8px"><span class="simb-c" style="--c:var(--c1)"><${Icono} n=${pm.i} t=${14} /></span>${pm.n}</span></td>
         ${roles.map(rl => { const on = rl.fijo || !!rl.p[pm.k], bloq = rl.fijo || !puedeEditarRol(yo, rl.id) || !puedeEditarPermiso(yo, pm.k); return html`<td><button type="button" class=${'permiso-btn toca ' + (on ? 'on' : 'off')} role="switch" aria-checked=${on ? 'true' : 'false'} aria-label=${pm.n + ' · ' + rl.n} title=${bloq ? (rl.fijo ? 'El dueño siempre puede todo' : 'Solo el dueño puede cambiar esto') : ''} style=${{ opacity: bloq ? 0.55 : 1 }} onClick=${() => tocar(rl, pm.k, on)}><${Icono} n=${on ? 'check' : 'menos1'} t=${15} g=${2.8} /></button></td>`; })}
       </tr>`)}</tbody>
@@ -64,6 +69,7 @@ export function Equipo() {
         <span class=${'inter' + (on ? ' on' : '')}></span>
       </button>`; })}</div>
     <span class="sub faint" style="display:block;margin-top:8px">El dueño siempre puede todo. Un administrador no puede cambiar a otros administradores.</span>
+    ${puedeBorrar(rolActual) && html`<button type="button" class="btn2 chico rojo toca" style="margin-top:10px" onClick=${() => abrir('rolBorrar', { rid: rolActual.id })}>Borrar el rol ${rolActual.n}</button>`}
   </section>` : null;
 
   if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Equipo</h1><${BotonAyuda} /></div>${Personas}${Ventas}${PorRol}`;

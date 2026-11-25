@@ -1,7 +1,7 @@
 // Todas las hojas (teléfono) o ventanas (computadora) de la app.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer } from '../datos.js';
+import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer, borrarRol, perfilesConRol } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { paisActivo, telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
 import { ponerAyudaHoja, Hoja, Icono, Interruptor, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd, avisarDeshacer } from '../ui.js';
@@ -57,7 +57,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { cuenta: Cuenta, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  const H = { rolBorrar: RolBorrar, cuenta: Cuenta, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
@@ -760,6 +760,29 @@ function Rol({ d, cerrar }) {
     cuerpo: html`<label class="campo"><span>Nombre del rol</span><input type="text" value=${n} placeholder="Ej.: Repartidor, Contador" onInput=${e => setN(e.target.value)} /></label>
       <span class="sub">Empieza solo con «Vender y cobrar». Después le das los permisos que quieras.</span>`,
     pie: html`<button type="button" class="btn toca" onClick=${() => { if (!n.trim()) { avisar('Escribe el nombre'); return; } nuevoRol(n.trim()); c(() => avisar('Rol creado: ' + n.trim())); }}>Crear rol</button>`
+  })} />`;
+}
+
+// ---------- borrar un rol (con «Deshacer») ----------
+function RolBorrar({ d, cerrar }) {
+  const { S } = useApp();
+  const r0 = S.roles.find(r => r.id === d.rid);
+  const otros = S.roles.filter(r => r.id !== d.rid && r.id !== 'dueno' && !r.fijo);
+  const quienes = r0 ? perfilesConRol(r0.id) : [];
+  const [dest, setDest] = useState((otros.find(r => r.id === 'cajero') || otros[0] || {}).id || '');
+  if (!r0) return null;
+  const listo = c => {
+    if (quienes.length && !dest) { avisar('Elige a qué rol pasan'); return; }
+    const u = conDeshacer(() => borrarRol(r0.id, dest), 'Rol ' + r0.n + ' borrado');
+    c(() => avisarDeshacer('Rol ' + r0.n + ' borrado', u && (() => { u(); avisar('Listo: lo recuperaste'); })));
+  };
+  return html`<${Hoja} titulo=${'Borrar el rol ' + r0.n} onCerrar=${cerrar} contenido=${c => ({
+    cuerpo: html`${quienes.length ? html`<span class="sub" style="line-height:1.5">${quienes.length === 1 ? 'Una persona tiene' : quienes.length + ' personas tienen'} este rol: <b style="color:var(--ink)">${quienes.map(p => p.n.split(' ')[0]).join(', ')}</b>. ¿A qué rol pasan?</span>
+        <div class="chips">${otros.map(r => html`<button type="button" key=${r.id} class=${'chip toca' + (dest === r.id ? ' on' : '')} onClick=${() => setDest(r.id)}>${r.n}</button>`)}</div>
+        <span class="sub faint">Tendrán los permisos de ese rol desde ya.</span>`
+      : html`<span class="sub" style="line-height:1.5">Nadie tiene este rol. Se borra y ya no aparece al crear perfiles.</span>`}
+      <span class="sub faint">Queda anotado en el registro de cambios.</span>`,
+    pie: html`<button type="button" class="btn toca" style="background:var(--out)" onClick=${() => listo(c)}>Borrar el rol</button>${Pie2('Cancelar', () => c())}`
   })} />`;
 }
 

@@ -3,19 +3,19 @@
 
 export const PERMISOS = [
   { k: 'vender', n: 'Vender y cobrar', g: 'Ventas', i: 'carrito' },
-  { k: 'anular', n: 'Anular ventas y hacer devoluciones', g: 'Ventas', i: 'deshacer' },
+  { k: 'anular', n: 'Anular ventas y hacer devoluciones', g: 'Ventas', i: 'deshacer', delicado: 'puede anular ventas ya cobradas y hacer devoluciones' },
   { k: 'fiado', n: 'Fiar o vender a crédito', g: 'Ventas', i: 'reloj' },
-  { k: 'descuentos', n: 'Dar descuentos y cambiar precios al vender', g: 'Ventas', i: 'porciento' },
+  { k: 'descuentos', n: 'Dar descuentos y cambiar precios al vender', g: 'Ventas', i: 'porciento', delicado: 'puede bajar precios y dar descuentos al vender' },
   { k: 'ordenes', n: 'Órdenes de trabajo y pedidos', g: 'Ventas', i: 'lista' },
   { k: 'clientes', n: 'Agregar clientes y anotar abonos', g: 'Clientes', i: 'personas' },
-  { k: 'ganancias', n: 'Ver ganancias, costos y reportes', g: 'Dinero', i: 'grafico' },
+  { k: 'ganancias', n: 'Ver ganancias, costos y reportes', g: 'Dinero', i: 'grafico', delicado: 've cuánto ganas, tus costos y todos los reportes' },
   { k: 'gastos', n: 'Anotar gastos y pagar cuentas', g: 'Dinero', i: 'dinero' },
   { k: 'cierre', n: 'Hacer el cierre del día', g: 'Dinero', i: 'candado' },
   { k: 'tasas', n: 'Cambiar las tasas del dólar y del euro', g: 'Dinero', i: 'sube' },
   { k: 'productos', n: 'Agregar productos y cambiar precios', g: 'Inventario', i: 'etiqueta' },
   { k: 'reponer', n: 'Reponer inventario', g: 'Inventario', i: 'caja' },
-  { k: 'ajustes', n: 'Cambiar los ajustes del negocio', g: 'Administración', i: 'ajustes' },
-  { k: 'equipo', n: 'Crear perfiles y dar permisos', g: 'Administración', i: 'escudo', principal: true }
+  { k: 'ajustes', n: 'Cambiar los ajustes del negocio', g: 'Administración', i: 'ajustes', delicado: 'puede cambiar formas de pago, impuestos y los datos del negocio' },
+  { k: 'equipo', n: 'Crear perfiles y dar permisos', g: 'Administración', i: 'escudo', principal: true, delicado: 'puede crear perfiles y dar permisos (incluso a sí mismo)' }
 ];
 
 const todo = v => PERMISOS.reduce((o, p) => (o[p.k] = v, o), {});

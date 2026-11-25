@@ -2,7 +2,7 @@
 // Regla de Orbe: si algo se daña al cargar, se aparta y nunca se borra.
 import { useState, useEffect } from './lib/preact-htm.js';
 import { pais, tipo, dinero, TASA_VE_RESPALDO, esDivisa, EUR_USD } from './paises.js';
-import { ROLES_BASE } from './permisos.js';
+import { ROLES_BASE, PERMISOS } from './permisos.js';
 import { rubro, modulosDe } from './rubros.js';
 import { encadenar, revisar, firmaVenta, firmaRegistro, firmaCierre, sha256 } from './hash.js';
 
@@ -909,7 +909,15 @@ export function guardarPerfil(p) {
   const nuevo = !(p.id && S.perfiles.some(x => x.id === p.id));
   if (nuevo) p.id = p.id || 'u' + id();
   if (p.pin && !esPinCifrado(p.pin)) p.pin = cifrarPin(p.id, p.pin);
-  cambiar(s => ({ perfiles: !nuevo ? s.perfiles.map(x => x.id === p.id ? Object.assign({}, x, p) : x) : s.perfiles.concat([Object.assign({ pin: '', sucs: [], creado: Date.now() }, p)]) }));
+  // Lo delicado del equipo queda en el registro: perfiles nuevos, cambios de rol y activar o desactivar.
+  const p0 = nuevo ? null : S.perfiles.find(x => x.id === p.id), rolN = rid => ((S.roles || []).find(r => r.id === rid) || {}).n || rid;
+  const notas = [];
+  if (nuevo) notas.push('Creó el perfil de ' + (p.n || '') + (p.rol ? ' (' + rolN(p.rol) + ')' : ''));
+  else {
+    if (p.rol && p0.rol !== p.rol) notas.push('Cambió el rol de ' + p0.n + ': ' + rolN(p0.rol) + ' → ' + rolN(p.rol));
+    if (p.inactivo != null && !!p.inactivo !== !!p0.inactivo) notas.push((p.inactivo ? 'Desactivó' : 'Reactivó') + ' el perfil de ' + p0.n);
+  }
+  cambiar(s => Object.assign({ perfiles: !nuevo ? s.perfiles.map(x => x.id === p.id ? Object.assign({}, x, p) : x) : s.perfiles.concat([Object.assign({ pin: '', sucs: [], creado: Date.now() }, p)]) }, notas.length ? nota(s, notas.join(' · ')) : {}));
   return p.id;
 }
 // Cambiar o quitar el PIN de un perfil (en el registro se anota quién lo cambió, nunca el PIN).
@@ -924,8 +932,24 @@ export function borrarPerfil(pid) {
   const p0 = S.perfiles.find(p => p.id === pid); if (!p0 || p0.rol === 'dueno') return;
   cambiar(s => Object.assign({ perfiles: s.perfiles.map(p => p.id === pid ? Object.assign({}, p, { borrado: Date.now(), inactivo: true, pin: '' }) : p) }, nota(s, 'Eliminó el perfil de ' + p0.n)));
 }
-export function cambiarPermiso(rolId, k, v) { cambiar(s => ({ roles: s.roles.map(r => r.id === rolId && !r.fijo ? Object.assign({}, r, { p: Object.assign({}, r.p, { [k]: v }) }) : r) })); }
-export function nuevoRol(n) { const r = { id: 'r' + id(), n, p: { vender: true } }; cambiar(s => ({ roles: s.roles.concat([r]) })); return r; }
+// Permisos y roles: cada cambio queda en el registro (quién, cuándo y desde qué aparato).
+const nombrePermiso = k => ((PERMISOS.find(p => p.k === k) || {}).n || k).toLowerCase();
+export function cambiarPermiso(rolId, k, v) {
+  const r0 = S.roles.find(r => r.id === rolId); if (!r0 || r0.fijo || !!r0.p[k] === !!v) return;
+  cambiar(s => Object.assign({ roles: s.roles.map(r => r.id === rolId ? Object.assign({}, r, { p: Object.assign({}, r.p, { [k]: v }) }) : r) }, nota(s, (v ? 'Le dio a «' : 'Le quitó a «') + r0.n + '» el permiso «' + nombrePermiso(k) + '»')));
+}
+export function nuevoRol(n) { const r = { id: 'r' + id(), n, p: { vender: true } }; cambiar(s => Object.assign({ roles: s.roles.concat([r]) }, nota(s, 'Creó el rol «' + n + '»'))); return r; }
+// Borrar un rol: quienes lo tenían pasan al rol que se elija (nadie queda sin rol).
+export const perfilesConRol = rolId => S.perfiles.filter(p => !p.borrado && p.rol === rolId);
+export function borrarRol(rolId, pasarA) {
+  const r0 = S.roles.find(r => r.id === rolId), dest = S.roles.find(r => r.id === pasarA);
+  if (!r0 || r0.fijo || r0.id === 'dueno') return false;
+  const quienes = perfilesConRol(rolId);
+  if (quienes.length && (!dest || dest.id === rolId || dest.id === 'dueno')) return false;
+  cambiar(s => Object.assign({ roles: s.roles.filter(r => r.id !== rolId), perfiles: s.perfiles.map(p => p.rol === rolId ? Object.assign({}, p, { rol: pasarA }) : p) },
+    nota(s, 'Borró el rol «' + r0.n + '»' + (quienes.length ? ' y pasó a ' + quienes.map(p => p.n.split(' ')[0]).join(', ') + ' a «' + dest.n + '»' : ''))));
+  return true;
+}
 export function cambiarAjustes(a) { cambiar(s => ({ ajustes: Object.assign({}, s.ajustes, a) })); }
 export function cambiarNegocio(n, que) { cambiar(s => Object.assign({ negocio: Object.assign({}, s.negocio, n) }, que ? nota(s, que) : {})); }
 // Agregar o renombrar locales. Al renombrar, las ventas y gastos pasan al nombre nuevo.
