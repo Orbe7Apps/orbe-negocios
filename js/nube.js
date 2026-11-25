@@ -167,10 +167,13 @@ export async function borrarMiCuenta(clave) {
 // Los negocios de esta cuenta (para elegir cuál bajar en un aparato nuevo).
 export async function misNegocios() {
   const c = await cliente();
-  const { data, error } = await c.from('negocios').select('id, nombre, plan, prueba_hasta, pagado_hasta, creado').order('creado');
+  const { data, error } = await c.from('negocios').select('id, nombre, plan, prueba_hasta, pagado_hasta, creado, dueno').order('creado');
   if (error) throw new Error(explicar(error));
   return data || [];
 }
+
+// Cada cuenta es dueña de un solo negocio: ¿esta cuenta ya tiene el suyo?
+export const negocioPropio = (lista, sesion) => (lista || []).find(g => sesion && g.dueno === sesion.id) || null;
 
 // ---------- pendientes (lo que falta subir) ----------
 // Se guarda solo qué cambió («ventas|v123»); al subir se toma el valor de ese momento.

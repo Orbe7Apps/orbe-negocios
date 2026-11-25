@@ -5,7 +5,7 @@ import { useApp } from '../ctx.js';
 import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal } from '../datos.js';
 import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor } from '../ui.js';
 import { numero } from './pagos.js';
-import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos } from '../nube.js';
+import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos, negocioPropio } from '../nube.js';
 
 // Campo de contraseña con «Ver» para revisar lo que se escribió.
 export function CampoClave({ titulo, valor, onCambio, nueva, onEnter }) {
@@ -78,6 +78,9 @@ export function Cuenta({ d, cerrar }) {
     : paso === 'unir' ? html`
       ${cuenta == null ? html`<p class="vacio">Revisando tu cuenta…</p>`
       : yaUnido ? html`<p class="vacio">Este negocio ya está en tu cuenta.</p>`
+      : negocioPropio(cuenta, N.sesion) ? html`<span class="sub" style="line-height:1.5">Tu cuenta ya tiene su negocio: <b>${negocioPropio(cuenta, N.sesion).nombre}</b>. Cada cuenta es para un solo negocio, así que no se puede guardar «${S.negocio.nombre}» en ella.</span>
+        <button type="button" class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => bajar(c, negocioPropio(cuenta, N.sesion))}><${Icono} n="descarga" t=${18} /><span class="crece"><b>Abrir «${negocioPropio(cuenta, N.sesion).nombre}» en este aparato</b><br /><span class="sub" style="font-weight:500">Lo que hay ahora en este aparato queda en una copia</span></span></button>
+        <span class="sub" style="line-height:1.45">Para guardar «${S.negocio.nombre}» crea una cuenta nueva: cierra sesión y elige «Crear cuenta».</span>`
       : html`<span class="sub" style="line-height:1.45">Sesión iniciada${N.usuario ? html` como <b>${N.usuario}</b>` : ''}.</span>
         <button type="button" class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => subir(c)}><${Icono} n="subir" t=${18} /><span class="crece"><b>Guardar «${S.negocio.nombre}» en mi cuenta</b><br /><span class="sub" style="font-weight:500">Sube lo que tienes en este aparato</span></span></button>
         ${cuenta.length > 0 && html`<span class="titulo-funciones">O usar uno que ya está en tu cuenta</span>${cuenta.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => bajar(c, g)}><${Icono} n="descarga" t=${18} /><span class="crece"><b>${g.nombre}</b><br /><span class="sub" style="font-weight:500">${datoNegocio(g)} · reemplaza lo de este aparato (se guarda una copia)</span></span></button>`)}`}`}`
@@ -319,7 +322,8 @@ export function EntrarInicio({ volver, crear }) {
       ${lista.length ? lista.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => abrirNeg(g)}><${Icono} n="tienda" t=${18} /><span class="crece"><b>${g.nombre}</b><br /><span class="sub" style="font-weight:500">${datoNegocio(g)}</span></span><${Icono} n="sig" t=${15} c="var(--faint)" /></button>`)
         : html`<span class="sub" style="line-height:1.45;font-size:15px">Tu cuenta está lista. Ahora contesta unas preguntas y Orbe se arma para tu negocio.</span>`}
       ${ocupado && html`<p class="sub">Bajando tus datos…</p>`}
-      <button type="button" class=${lista.length ? 'btn2 toca' : 'btn toca'} style=${lista.length ? 'min-height:50px;border-radius:25px' : ''} onClick=${crear}>${lista.length ? 'Crear otro negocio' : 'Crear mi negocio'}</button>
+      ${negocioPropio(lista, N.sesion) ? html`<span class="sub" style="line-height:1.45;text-align:center">Cada cuenta es para un solo negocio. Si tienes varias sedes, agrégalas dentro de tu negocio con el plan Empresa.</span>`
+        : html`<button type="button" class=${lista.length ? 'btn2 toca' : 'btn toca'} style=${lista.length ? 'min-height:50px;border-radius:25px' : ''} onClick=${crear}>Crear mi negocio</button>`}
       <button type="button" class="olvide-pin toca" onClick=${salir}>Usar otra cuenta</button>`
     : N.sesion ? html`<p class="vacio">Revisando tu cuenta…</p>`
     : html`<span class="sub" style="line-height:1.45">Con tu cuenta abres tu negocio en este aparato, con todas tus ventas, productos y clientes.</span>
