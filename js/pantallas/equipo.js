@@ -1,5 +1,5 @@
 // Equipo y permisos: perfiles dentro del negocio y lo que cada rol puede hacer.
-// Solo lo ven las cuentas principales (permiso «equipo»). El dueño siempre puede todo.
+// Solo lo ven las cuentas principales (permiso “equipo”). El dueño siempre puede todo.
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
@@ -27,7 +27,7 @@ export function Equipo() {
     const hacer = () => { cambiarPermiso(rol.id, k, !on); avisar((on ? 'Quitado: ' : 'Permitido: ') + pm.n.toLowerCase() + ' · ' + rol.n); };
     // Dar un permiso delicado se confirma (quitarlo no). Todo queda en el registro de cambios.
     if (!on && pm.delicado) { const quienes = S.perfiles.filter(p => !p.borrado && p.rol === rol.id).map(p => p.n.split(' ')[0]);
-      abrir('confirmar', { titulo: '¿Dar «' + pm.n.toLowerCase() + '» a ' + rol.n + '?', texto: 'Quien tenga el rol ' + rol.n + (quienes.length ? ' (' + quienes.join(', ') + ')' : '') + ' ' + pm.delicado + '. Queda anotado en el registro de cambios.', boton: 'Sí, dar el permiso', si: hacer }); return; }
+      abrir('confirmar', { titulo: '¿Dar “' + pm.n.toLowerCase() + '” a ' + rol.n + '?', texto: 'Quien tenga el rol ' + rol.n + (quienes.length ? ' (' + quienes.join(', ') + ')' : '') + ' ' + pm.delicado + '. Queda anotado en el registro de cambios.', boton: 'Sí, dar el permiso', si: hacer }); return; }
     hacer();
   };
   const puedeBorrar = rl => rl && !rl.fijo && rl.id !== 'dueno' && puedeEditarRol(yo, rl.id) && puede('equipo');

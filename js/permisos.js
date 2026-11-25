@@ -1,5 +1,5 @@
 // Perfiles y permisos dentro de cada negocio. El dueño siempre puede todo.
-// Solo quien tiene el permiso «equipo» (las cuentas principales) crea perfiles y cambia permisos.
+// Solo quien tiene el permiso “equipo” (las cuentas principales) crea perfiles y cambia permisos.
 
 export const PERMISOS = [
   { k: 'vender', n: 'Vender y cobrar', g: 'Ventas', i: 'carrito' },

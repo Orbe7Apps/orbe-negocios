@@ -52,7 +52,7 @@ export function Precios({ d, cerrar }) {
             <span class="num" style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span class="sub" style="text-decoration:line-through">${D.m(p.p)}</span><b>${D.m(nuevo)}</b></span>
           </button>`; })}</div></div>
         <${Interruptor} on=${redondear} onCambio=${setRedondear} titulo="Redondear" sub="A números fáciles de cobrar" />`
-      : html`<div class="tarjeta pila entra" style="align-items:center;text-align:center;box-shadow:none;background:var(--in-soft)"><span class="ic t-ver"><${Icono} n="check" t=${18} g=${2.6} /></span><b>Todos tus precios ganan al menos ${valorMeta} %</b><span class="sub">Te avisamos en «Hoy» si algo se queda atrás.</span></div>`}
+      : html`<div class="tarjeta pila entra" style="align-items:center;text-align:center;box-shadow:none;background:var(--in-soft)"><span class="ic t-ver"><${Icono} n="check" t=${18} g=${2.6} /></span><b>Todos tus precios ganan al menos ${valorMeta} %</b><span class="sub">Te avisamos en “Hoy” si algo se queda atrás.</span></div>`}
       <button type="button" class="enlace-tasa toca" style="align-self:flex-start" onClick=${() => c(() => abrir('remarcar'))}>Subir todos los precios un porcentaje</button>`,
     pie: lista.length ? html`<button type="button" class=${'btn toca' + (elegidos.length ? '' : ' apagado')} onClick=${() => aplicar(c)}>Ajustar ${elegidos.length} ${elegidos.length === 1 ? 'precio' : 'precios'}</button>` : null
   })} />`;

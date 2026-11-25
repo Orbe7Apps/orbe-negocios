@@ -51,8 +51,8 @@ function Panel({ c, correo }) {
   // Suspender: el negocio no puede usar Orbe ni guardar en la nube hasta que lo reactives. Nada se borra.
   const suspender = async (g, si) => {
     let motivo = null;
-    if (si) { motivo = prompt('¿Por qué suspendes «' + g.nombre + '»? El dueño verá este motivo (puedes dejarlo vacío).', 'Falta de pago'); if (motivo === null) return; }
-    else if (!confirm('¿Reactivar «' + g.nombre + '»? Podrá volver a usar Orbe de inmediato.')) return;
+    if (si) { motivo = prompt('¿Por qué suspendes “' + g.nombre + '”? El dueño verá este motivo (puedes dejarlo vacío).', 'Falta de pago'); if (motivo === null) return; }
+    else if (!confirm('¿Reactivar “' + g.nombre + '”? Podrá volver a usar Orbe de inmediato.')) return;
     const { error } = await c.rpc('suspender_negocio', { n: g.id, suspender: si, motivo });
     if (error) avisar(explicar(error)); else { avisar(si ? 'Cuenta suspendida' : 'Cuenta reactivada'); cargar(); }
   };
@@ -72,7 +72,7 @@ function Panel({ c, correo }) {
     ${tab === 'pagos' && (pend.length ? html`<div class="pila" style="gap:10px">${pend.map(p => html`<div class="tarjeta fila" key=${p.id} style="gap:14px;flex-wrap:wrap">
         <span class="crece" style="display:flex;flex-direction:column;gap:3px;min-width:220px"><b style="font-size:16px">${quien(p)}</b><span class="sub">${nombre(p.negocio_id).correo || p.cliente_correo || ''}</span>
           ${fac(p) && html`<span class="sub"><span class="pildora t-azu">Pide factura</span> ${fac(p).razon} · ${fac(p).rif}</span>`}
-          <span class="sub">${fecha(p.creado)} · plan ${p.plan} · ${p.meses === 12 ? '1 año' : '1 mes'}${p.nota ? ' · «' + p.nota + '»' : ''}</span></span>
+          <span class="sub">${fecha(p.creado)} · plan ${p.plan} · ${p.meses === 12 ? '1 año' : '1 mes'}${p.nota ? ' · “' + p.nota + '”' : ''}</span></span>
         <span style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><b class="num" style="font-size:20px">${p.moneda} ${Number(p.monto).toFixed(2)}</b><span class="sub">${p.metodo}${p.referencia ? ' · ref. ' + p.referencia : ''}</span></span>
         <span class="fila" style="gap:8px"><button type="button" class="btn2 chico rojo toca" onClick=${() => revisar(p, false)}>Rechazar</button><button type="button" class="btn2 chico lleno toca" onClick=${() => revisar(p, true)}><${Icono} n="check" t=${14} g=${3} />Aprobar</button></span>
       </div>`)}</div>` : html`<p class="vacio">No hay pagos por revisar. Esta página se actualiza sola cada 30 segundos.</p>`)}
@@ -159,7 +159,7 @@ function App() {
     setEstado(data ? 'admin' : 'no');
   };
   useEffect(() => { revisar().catch(er => { avisar(explicar(er)); setEstado('entrar'); }); }, []);
-  // Al volver del enlace «Olvidé mi contraseña»: primero la contraseña nueva; luego se revisa de nuevo la cuenta.
+  // Al volver del enlace “Olvidé mi contraseña”: primero la contraseña nueva; luego se revisa de nuevo la cuenta.
   useEffect(() => { if (!N.recuperar && estado !== 'cargando') revisar(); }, [N.recuperar]);
   if (N.recuperar) return html`<${ClaveNueva} /><${Avisos} />`;
   return html`${estado === 'cargando' ? html`<p class="vacio" style="margin-top:20vh">Cargando…</p>`

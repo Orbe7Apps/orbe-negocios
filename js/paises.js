@@ -104,7 +104,7 @@ export const esElectronico = m => !/Efectivo|Fiado|Por cobrar|Saldo a favor|En c
 // Billetes de cada moneda, para contar la caja.
 const BILLETES = { TRY: [5, 10, 20, 50, 100, 200], NGN: [100, 200, 500, 1000], EGP: [5, 10, 20, 50, 100, 200], LBP: [5000, 10000, 20000, 50000, 100000], ZWG: [10, 20, 50, 100, 200], PLN: [10, 20, 50, 100, 200, 500], CHF: [10, 20, 50, 100, 200, 1000], AUD: [5, 10, 20, 50, 100], INR: [10, 20, 50, 100, 200, 500], PHP: [20, 50, 100, 200, 500, 1000], ZAR: [10, 20, 50, 100, 200], MAD: [20, 50, 100, 200], KES: [50, 100, 200, 500, 1000], USD: [1, 2, 5, 10, 20, 50, 100], VES: [5, 10, 20, 50, 100, 200, 500], ARS: [100, 200, 500, 1000, 2000, 10000, 20000], COP: [2000, 5000, 10000, 20000, 50000, 100000], MXN: [20, 50, 100, 200, 500, 1000], CLP: [1000, 2000, 5000, 10000, 20000], PEN: [10, 20, 50, 100, 200], EUR: [5, 10, 20, 50, 100, 200], BRL: [2, 5, 10, 20, 50, 100, 200], GBP: [5, 10, 20, 50], CAD: [5, 10, 20, 50, 100], BOB: [10, 20, 50, 100, 200], CRC: [1000, 2000, 5000, 10000, 20000], GTQ: [1, 5, 10, 20, 50, 100, 200], HNL: [1, 2, 5, 10, 20, 50, 100, 500], NIO: [10, 20, 50, 100, 200, 500, 1000], PYG: [2000, 5000, 10000, 20000, 50000, 100000], DOP: [50, 100, 200, 500, 1000, 2000], UYU: [20, 50, 100, 200, 500, 1000, 2000] };
 const COD = { TR: 'TRY', NG: 'NGN', EG: 'EGP', LB: 'LBP', ZW: 'ZWG', PL: 'PLN', CH: 'CHF', AU: 'AUD', IN: 'INR', PH: 'PHP', ZA: 'ZAR', MA: 'MAD', KE: 'KES', AR: 'ARS', BO: 'BOB', BR: 'BRL', CA: 'CAD', CL: 'CLP', CO: 'COP', CR: 'CRC', GB: 'GBP', GT: 'GTQ', HN: 'HNL', MX: 'MXN', NI: 'NIO', PY: 'PYG', PE: 'PEN', DO: 'DOP', UY: 'UYU' };
-// Moneda de una forma de pago en efectivo: en Venezuela «Efectivo Bs» es bolívares y «Efectivo $» dólares.
+// Moneda de una forma de pago en efectivo: en Venezuela “Efectivo Bs” es bolívares y “Efectivo $” dólares.
 export function monedaEfectivo(P, m) {
   if (/€|Euro/i.test(m) && !P.eur) return { cod: 'EUR', s: '€', otra: true, eur: true };
   if (P.id === 'VE') return /Bs/.test(m) ? { cod: 'VES', s: 'Bs', otra: true } : { cod: 'USD', s: '$', otra: false };
@@ -136,7 +136,7 @@ export function dinero(P, tasa, tasaEur) {
     // Pasa un monto a la otra moneda (Bs o US$) con una tasa dada, y al revés.
     aOtra: (v, t) => ve ? v * (t || tasa || TASA_VE_RESPALDO) : ar ? v / (t || tasa || P.r) : v,
     deOtra: (v, t) => ve ? v / (t || tasa || TASA_VE_RESPALDO) : ar ? v * (t || tasa || P.r) : v,
-    // Redondea un precio en moneda local a un número «bonito».
+    // Redondea un precio en moneda local a un número “bonito”.
     bonito: v => ve || P.r === 1 ? Math.round(v * 100) / 100 : P.r >= 1000 ? Math.round(v / 50) * 50 : P.r >= 100 ? Math.round(v / 10) * 10 : P.r >= 10 ? Math.round(v * 2) / 2 : Math.round(v * 20) / 20,
     redondo: v => dec ? Math.round(v * 100) / 100 : Math.round(v),
     // Pasa un precio de referencia en dólares a un precio "bonito" en la moneda del país.
@@ -159,7 +159,7 @@ export function dinero(P, tasa, tasaEur) {
   };
 }
 
-// Código de país para WhatsApp: «0414-555-1234» en Venezuela → 584145551234.
+// Código de país para WhatsApp: “0414-555-1234” en Venezuela → 584145551234.
 export const PREFIJO_TEL = { DE: '49', AR: '54', AU: '61', AT: '43', BE: '32', BO: '591', BR: '55', CA: '1', CL: '56', CO: '57', CR: '506', EC: '593', EG: '20', SV: '503', ES: '34', US: '1', PH: '63', FR: '33', GT: '502', HN: '504', IN: '91', IE: '353', IT: '39', KE: '254', LB: '961', MA: '212', MX: '52', NI: '505', NG: '234', NL: '31', PA: '507', PY: '595', PE: '51', PL: '48', PT: '351', DO: '1', GB: '44', ZA: '27', CH: '41', TR: '90', UY: '598', VE: '58', ZW: '263' };
 export function telInternacional(t, pid) {
   const s = String(t || '').trim(); let d = s.replace(/\D/g, '');

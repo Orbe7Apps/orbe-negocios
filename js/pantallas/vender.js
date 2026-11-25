@@ -28,7 +28,7 @@ export function totales(items, neg, P) {
 }
 
 let carritoGuardado = nuevoCarrito();
-// Cotización que se está convirtiendo en venta: al cobrar queda «aceptada».
+// Cotización que se está convirtiendo en venta: al cobrar queda “aceptada”.
 let cotEnVenta = null;
 export function cargarCotizacion(c) { carritoGuardado = JSON.parse(JSON.stringify(c.cart || nuevoCarrito())); cotEnVenta = c.id; }
 // Precios de hoy fijos en la lista (así la cotización respeta lo que se le dijo al cliente aunque el precio cambie).
@@ -124,13 +124,13 @@ export function Vender() {
     const hit = porCodigo(t);
     if (hit) { if (sumar(hit.p, 1, hit.vid, hit.q != null ? hit.q : undefined) !== false) avisar('Leído: ' + hit.p.n + (hit.q != null ? ' · ' + verQ(hit.q, hit.p.u) : '')); setQ(''); return; }
     const p = visibles[0];
-    if (p) { sumar(p); avisar('Leído: ' + p.n); setQ(''); } else avisar('No encontré «' + q + '»');
+    if (p) { sumar(p); avisar('Leído: ' + p.n); setQ(''); } else avisar('No encontré “' + q + '”');
   };
 
-  const Sugerencias = q.trim() && !visibles.length ? html`<div class="pila entra" style="gap:8px"><span class="sub">No encontré «${q}»${grupo ? ' en este grupo' : ''}. ${sugeridos.length ? '¿Quisiste decir…?' : ''}</span>
+  const Sugerencias = q.trim() && !visibles.length ? html`<div class="pila entra" style="gap:8px"><span class="sub">No encontré “${q}”${grupo ? ' en este grupo' : ''}. ${sugeridos.length ? '¿Quisiste decir…?' : ''}</span>
     <div class="chips">${sugeridos.map(p => html`<button type="button" class="chip toca" onClick=${() => { sumar(p); setQ(''); avisar('Agregado: ' + p.n); }}>${p.n}</button>`)}${grupo ? html`<button type="button" class="chip chico toca" onClick=${() => setGrupo('')}>Buscar en todo</button>` : null}</div></div>` : null;
   const enCarrito = p => Object.keys(cart.q).filter(k => k === p.id || k.startsWith(p.id + '~')).reduce((a, k) => a + (porPeso(p) ? 1 : cart.q[k]), 0);
-  // Sin productos todavía: la guía para agregarlos (o cobrar un cargo suelto con «+ Servicio o cargo»).
+  // Sin productos todavía: la guía para agregarlos (o cobrar un cargo suelto con “+ Servicio o cargo”).
   const Grilla = !prods.length ? html`<${CatalogoVacio} donde="vender" />` : html`<div class="productos">${visibles.map((p, i) => { const c = enCarrito(p); return html`
     <button type="button" key=${p.id} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
       ${c ? html`<span class="cant" key=${c}>${c}</span>` : null}
@@ -163,7 +163,7 @@ export function Vender() {
   </div>`;
 
   const BotonCobrar = html`<button type="button" data-tour="cobrar" class=${'btn toca crece' + (n ? '' : ' apagado')} onClick=${cobrar}>${n ? 'Cobrar ' + D.m(total) : 'Agrega ' + (T.inv ? 'productos' : 'servicios')}${!tel && n ? html` <span class="tecla" style="color:#fff;border-color:rgba(255,255,255,.4)">F12</span>` : null}</button>`;
-  // Con cotizaciones: «Cotizar» al lado de cobrar (guarda la lista con precios para mandarla al cliente).
+  // Con cotizaciones: “Cotizar” al lado de cobrar (guarda la lista con precios para mandarla al cliente).
   const Boton = html`${cotActual && html`<div class="aviso-plan ambar entra"><${Icono} n="doc" t=${16} /><span class="crece">Vendiendo la cotización ${numeroCot(cotActual)}</span><button type="button" class="btn2 chico toca" onClick=${vaciar}>Quitar</button></div>`}
     ${T.mod('cotizaciones') && n > 0 && !cotActual ? html`<div class="fila" style="gap:8px"><button type="button" class="btn2 toca" style="min-height:56px;border-radius:28px;padding:0 18px;flex:none" onClick=${cotizar}><${Icono} n="doc" t=${16} />Cotizar</button>${BotonCobrar}</div>` : BotonCobrar}`;
 
@@ -178,7 +178,7 @@ export function Vender() {
     <div class="tarjeta pila entra">${n ? Lineas : null}${BotonCargo}${Total}</div>
     ${Boton}`;
 
-  // Panel «Hoy en esta caja»: aprovecha el espacio debajo de los productos con lo que el cajero necesita a mano.
+  // Panel “Hoy en esta caja”: aprovecha el espacio debajo de los productos con lo que el cajero necesita a mano.
   function HoyCaja() {
     const hoy0 = inicioDia(Date.now()), r = resumen(hoy0, Date.now() + 1, suc);
     const ultimas = S.ventas.filter(v => v.t >= hoy0 && (!suc || v.suc === suc)).slice(-6).reverse();

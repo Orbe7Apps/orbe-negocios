@@ -18,13 +18,13 @@ export function Inventario() {
   const [filtro, setFiltro] = useState('Todo');
   const [q, setQ] = useState('');
   const [grupo, setGrupo] = useState('');
-  // Buscar (tolerante) y filtrar por grupo; con «nuevo» el producto creado entra en el grupo que se está viendo.
+  // Buscar (tolerante) y filtrar por grupo; con “nuevo” el producto creado entra en el grupo que se está viendo.
   const elegir = lista => { const g = filtrarGrupo(lista, S, grupo); return q.trim() ? buscar(g, q, textosProducto(S)) : g; };
   const Buscador = html`<div class="pila" style="gap:10px">
     <label class="buscador entra" style=${{ width: '100%', background: 'var(--surface)', maxWidth: tel ? 'none' : '420px' }}><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + listaProductos().length} aria-label="Buscar en el inventario" /></label>
     <${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} />
   </div>`;
-  const NoHay = (lista, base) => q.trim() && !lista.length ? html`<p class="vacio">No encontré «${q}». ${(() => { const s = parecidos(base, q, textosProducto(S)); return s.length ? '¿Quisiste decir ' + s.map(p => p.n).join(', ') + '?' : ''; })()}</p>` : null;
+  const NoHay = (lista, base) => q.trim() && !lista.length ? html`<p class="vacio">No encontré “${q}”. ${(() => { const s = parecidos(base, q, textosProducto(S)); return s.length ? '¿Quisiste decir ' + s.map(p => p.n).join(', ') + '?' : ''; })()}</p>` : null;
   const PillGrupo = p => { const g = grupoDe(S, p); return g ? html`<span class="pildora" style=${{ background: suaveGrupo(g, 16), color: 'var(--ink)' }}><i class="punto-grupo" style=${{ background: colorGrupo(g) }}></i>${g.n}</span>` : html`<span class="faint">—</span>`; };
   const mes = resumen(inicioDia(Date.now()) - 29 * 86400000, Date.now() + 1, '');
   const top = Object.keys(mes.porProd).map(k => Object.assign({ id: k }, mes.porProd[k])).sort((a, b) => b.v - a.v);
@@ -78,7 +78,7 @@ export function Inventario() {
   const Pestañas = html`<div class="segmento ancho entra" role="tablist" aria-label="Qué ver">${[['Todo', 'Productos ' + conStock.length], ['Por reponer', 'Por reponer ' + bajos.length]].concat(servs.length || (pp && T.mod('servicios')) ? [['Servicios', 'Servicios' + (servs.length ? ' ' + servs.length : '')]] : []).map(o => html`<button type="button" role="tab" aria-selected=${filtro === o[0] ? 'true' : 'false'} class=${filtro === o[0] ? 'on' : ''} onClick=${() => setFiltro(o[0])}>${o[1]}</button>`)}</div>`;
   const Resumen = vg && conStock.length ? html`<div class="resumen-inv entra"><span><b class="num">${D.m(valor)}</b> en estantes</span><span><b class="num in">${Math.round(margen * 100)} %</b> de ganancia</span>${bajos.length ? html`<span><b class="num amber">${bajos.length}</b> por reponer</span>` : null}</div>` : null;
   const ListaServicios = html`<div class="pila" data-tour="productos">${servicios.length ? html`<section class="tarjeta" style="padding:4px 14px"><div class="lista">${servicios.map(p => html`<button type="button" key=${p.id} class="item toca" style="color:var(--ink)" onClick=${() => editarP({ pid: p.id })}>${FotoProd(p, 34, html`<span class="ic" style=${Object.assign({ width: '34px', height: '34px', fontSize: '11px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`)}<span class="crece corta" style="font-size:14px;font-weight:600">${p.n}</span><b class="num">${D.m(p.p)}</b></button>`)}</div></section>`
-    : html`<p class="vacio">Agrega lo que cobras sin ser un producto: instalación, revisión, envío… También al vender, con «+ Servicio o cargo».</p>`}
+    : html`<p class="vacio">Agrega lo que cobras sin ser un producto: instalación, revisión, envío… También al vender, con “+ Servicio o cargo”.</p>`}
     ${pp && html`<button type="button" class="btn2 acento toca" style="align-self:flex-start" onClick=${() => editarP({ svc: true })}>+ Servicio</button>`}</div>`;
 
   if (tel) return html`

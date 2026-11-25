@@ -12,7 +12,7 @@ export const colorGrupo = g => COLORES_GRUPO[(g ? g.c || 0 : 0) % COLORES_GRUPO.
 export const suaveGrupo = (g, pct) => colorGrupo(g) + Math.round(pct * 2.55).toString(16).padStart(2, '0');
 // Color del cuadrito de un producto: el de su grupo; sin grupo, todos del mismo tono (nada de arcoíris).
 export const tonoProd = (S, p) => { const g = grupoDe(S, p); return g ? { background: suaveGrupo(g, 18), color: colorGrupo(g) } : { background: 'var(--accent-soft)', color: 'var(--accent-text)' }; };
-// Iniciales de un nombre: «Queso blanco» → QB, «Pan» → PA (sin «de», «x» ni números).
+// Iniciales de un nombre: “Queso blanco” → QB, “Pan” → PA (sin “de”, “x” ni números).
 export const iniciales2 = n => { const ps = String(n).split(/\s+/).filter(w => w && !/^(de|del|la|el|los|las|con|en|y|x|\d.*)$/i.test(w)); return (ps.length > 1 ? ps[0][0] + ps[1][0] : (ps[0] || n).slice(0, 2)).toUpperCase(); };
 export const grupoDe = (S, p) => S.grupos.find(g => g.id === p.g) || null;
 // Textos con los que se busca un producto: nombre, código y nombre de su grupo.
@@ -90,7 +90,7 @@ export function Grupo({ d, cerrar }) {
           <span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><span class="corta" style="font-size:14px">${p.n}</span>${og && html`<span class="sub faint">Ahora en ${og.n}${on ? ' · se mueve aquí' : ''}</span>`}</span>
           <span class="sub num">${D.m(p.p)}</span></button>`; })}
           ${visibles.length > 80 ? html`<p class="sub" style="padding:8px 0">Hay ${visibles.length - 80} más: búscalos por nombre.</p>` : null}
-          ${visibles.length ? null : html`<p class="vacio">No encontré «${q}».</p>`}</div></div>`,
+          ${visibles.length ? null : html`<p class="vacio">No encontré “${q}”.</p>`}</div></div>`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar grupo</button><button type="button" class="btn2 rojo toca" style="min-height:50px;border-radius:25px" onClick=${() => borrar(c)}>Borrar grupo</button>`
   })} />`;
 }

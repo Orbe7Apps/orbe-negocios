@@ -235,7 +235,7 @@ export function Escaner({ d, cerrar }) {
         <span class="sub">¿A cuál de tus productos le pongo el código ${res.cod}?</span>
         <label class="buscador" style="width:100%;background:var(--surface)"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${qa} placeholder="Buscar el producto" aria-label="Buscar el producto para el código" onInput=${e => setQa(e.target.value)} /></label>
         <div class="lista">${elegibles.map(p => html`<button type="button" key=${p.id} class="item toca" style="color:var(--ink)" onClick=${() => ponerCodigo(p)}><span class="crece corta">${p.n}</span><span class="sub num">${p.cod ? 'tiene otro código' : 'sin código'}</span></button>`)}
-          ${elegibles.length ? null : html`<p class="vacio">${qa.trim() ? 'No encontré «' + qa + '».' : 'Todos tienen código: búscalo por nombre.'}</p>`}</div>
+          ${elegibles.length ? null : html`<p class="vacio">${qa.trim() ? 'No encontré “' + qa + '”.' : 'Todos tienen código: búscalo por nombre.'}</p>`}</div>
         <button type="button" class="enlace-tasa toca" style="align-self:center" onClick=${() => { setAsignar(false); setQa(''); }}>Mejor lo agrego como nuevo</button>
       </div>`}
   </div>`;
@@ -256,7 +256,7 @@ export function Escaner({ d, cerrar }) {
   const p0 = res && res.tipo === 'esta' ? listaProductos().find(x => x.id === res.pid) : null;
   const ayuda = camara === 'sin' ? 'No pude abrir la cámara. Dale permiso en los ajustes del teléfono o escribe el código abajo.'
     : modo === 'codigo' ? (vender ? 'Apunta a los códigos: cada lectura suma uno a la venta.' : 'Apunta al código de barras del producto.')
-    : 'Pon el nombre del producto dentro del recuadro y toca «Leer nombre».';
+    : 'Pon el nombre del producto dentro del recuadro y toca “Leer nombre”.';
 
   return html`<${Hoja} titulo=${vender ? 'Escanear para vender' : 'Escanear productos'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`

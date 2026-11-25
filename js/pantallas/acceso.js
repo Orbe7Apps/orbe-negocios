@@ -139,6 +139,6 @@ export function Acceso({ tel }) {
     <span class="sub faint" style="margin-top:auto;text-align:center">Cada persona ve solo lo que el dueño le permite.</span>
     ${!demo && html`<div class="pila" style="gap:6px;align-items:center;padding-top:6px">
       <span class="sub">¿No es tu negocio?</span>
-      <button type="button" class="btn2 chico toca" style="gap:6px" onClick=${() => { if (confirm('¿Cambiar de cuenta? Se cierra la sesión de «' + S.negocio.nombre + '» en este aparato. Después puedes entrar con otra cuenta o crear una nueva.')) cerrarSesion().then(() => avisar('Sesión cerrada')); }}><${Icono} n="salir" t=${15} />Cambiar de cuenta</button>
+      <button type="button" class="btn2 chico toca" style="gap:6px" onClick=${() => { if (confirm('¿Cambiar de cuenta? Se cierra la sesión de “' + S.negocio.nombre + '” en este aparato. Después puedes entrar con otra cuenta o crear una nueva.')) cerrarSesion().then(() => avisar('Sesión cerrada')); }}><${Icono} n="salir" t=${15} />Cambiar de cuenta</button>
     </div>`}`);
 }

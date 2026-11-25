@@ -69,7 +69,7 @@ function App() {
   const [tel, setTel] = useState(esTelefono());
   const [sec, setSec] = useState((location.hash || '#hoy').slice(1));
   const [hoja, setHoja] = useState(null);
-  // Ayuda («?»): va encima de todo, también de una hoja abierta.
+  // Ayuda (“?”): va encima de todo, también de una hoja abierta.
   const [ayuda, setAyuda] = useState(null);
   const [suc, setSuc] = useState('');
   const [enLinea, setEnLinea] = useState(navigator.onLine);
@@ -90,14 +90,14 @@ function App() {
   const N = useNube();
   // Aviso al volver del enlace del correo (cuenta confirmada, enlace vencido…).
   useEffect(() => { if (N.avisoEnlace) { avisar(N.avisoEnlace); quitarAvisoEnlace(); } }, [N.avisoEnlace]);
-  // Confirmó el correo con un negocio ya abierto en este aparato: solo se avisa (sin él, sale «¡Tu cuenta está confirmada!»).
+  // Confirmó el correo con un negocio ya abierto en este aparato: solo se avisa (sin él, sale “¡Tu cuenta está confirmada!”).
   useEffect(() => { if (N.confirmado && leer().negocio) { quitarConfirmado(); avisar('Listo: tu cuenta quedó confirmada'); } }, [N.confirmado]);
   // Negocio recién creado (sin ejemplo): se ofrece guardarlo en la nube una vez.
   // También si ya hay sesión y el negocio no está en la nube (un negocio recién creado espera un minuto: se está subiendo solo).
   const ng = S.negocio || {};
   const pide = S.negocio && !ng.nubeId && !ng.demo && S.ajustes.perfil && (ng.pedirNube || (N.sesion && Date.now() - (ng.creado || 0) > 60000 && !((ng.nubeOmitida || 0) > Date.now() - 86400000)));
   useEffect(() => { if (!pide) return; const r = setTimeout(() => { setHoja({ t: 'cuenta', datos: { inicio: true }, n: Date.now() }); cambiarNegocio({ pedirNube: false }); }, 900); return () => clearTimeout(r); }, [pide]);
-  // Computadora: «/» lleva al buscador de arriba (si no se está escribiendo en otro lado).
+  // Computadora: “/” lleva al buscador de arriba (si no se está escribiendo en otro lado).
   useEffect(() => {
     const tecla = e => { if (e.key !== '/' || /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '') || document.querySelector('.hoja')) return; const b = document.querySelector('.barra-sup input[type=search]'); if (b) { e.preventDefault(); b.focus(); } };
     window.addEventListener('keydown', tecla); return () => window.removeEventListener('keydown', tecla);
@@ -113,7 +113,7 @@ function App() {
     if ((pid === 'VE' || pid === 'AR') && S.negocio.euro && enLinea && !(te && te.modo === 'manual') && !(te && te.fecha === diaClave(Date.now()))) leerTasa(pid, 'euro').then(v => { if (v) guardarTasaExtra('euro', { valor: v, modo: 'auto' }); });
   }, [pid, S.negocio && S.negocio.euro, enLinea, te && te.modo]);
 
-  // Volver del enlace «Olvidé mi contraseña»: se pide la nueva antes que nada.
+  // Volver del enlace “Olvidé mi contraseña”: se pide la nueva antes que nada.
   if (N.recuperar) return html`<${ClaveNueva} /><${Avisos} />`;
   if (!S.negocio) return html`<${Inicio} tel=${tel} /><${Avisos} />`;
   // Sin cuenta no se entra: si este navegador no tiene sesión, se piden correo y contraseña (la demostración no).
@@ -131,7 +131,7 @@ function App() {
   const valida = permitida(sec) ? sec : 'hoy';
   const ir = s => { if (location.hash !== '#' + s) location.hash = s; else setSec(s); const p = document.querySelector('.principal') || document.querySelector('.app-fondo'); if (p) p.scrollTop = 0; };
   const abrir = (t, datos) => setHoja({ t, datos: datos || {}, n: Date.now() });
-  // Solo para las pruebas automáticas (con «?prueba» en la dirección): abrir una hoja directamente.
+  // Solo para las pruebas automáticas (con “?prueba” en la dirección): abrir una hoja directamente.
   if (/[?&]prueba\b/.test(location.search)) window.__abrir = abrir;
   const marcarTour = v => guardarPerfil({ id: yo.id, tour: v });
   const ctx = { sec: valida === 'inventario' && !T.inv ? 'servicios' : valida, ayuda: k => setAyuda({ k, n: Date.now() }), tieneAyuda: k => !!AYUDAS[k], S, P, T, D, E, tel, ir, abrir, suc: E ? suc : '', setSuc, enLinea, yo, rol: rolDe(S, yo), puede: pd, ver: permitida,
@@ -254,7 +254,7 @@ if (window.visualViewport) {
   };
   vv.addEventListener('resize', medir); vv.addEventListener('scroll', medir); medir();
 }
-// iPhone no respeta «user-scalable=no»: se frena el zoom con dos dedos para que la app se quede de un solo tamaño.
+// iPhone no respeta “user-scalable=no”: se frena el zoom con dos dedos para que la app se quede de un solo tamaño.
 ['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 // Que el navegador no borre los datos por falta de espacio (sobre todo Safari en iPhone).
 if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(ya => ya || navigator.storage.persist()).catch(() => {});

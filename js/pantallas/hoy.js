@@ -58,7 +58,7 @@ export function Hoy() {
   // El cierre solo tiene sentido si hubo movimiento hoy (en una cuenta nueva sería ruido).
   if (puede('cierre') && (r.n > 0 || cajaAbierta() || cierre)) pendientes.push(cierre ? { i: 'check', t: 't-ver', txt: 'Día cerrado', sub: 'Cerraste a las ' + hora(cierre.t), go: null } : { i: 'candado', t: 't-ver', txt: 'Cierre del día', sub: 'Cuenta la caja cuando cierres', go: () => abrir('cierre') });
 
-  // Órdenes: las atrasadas y las que se entregan hoy van a «Para hacer hoy».
+  // Órdenes: las atrasadas y las que se entregan hoy van a “Para hacer hoy”.
   if (puede('ordenes') && T.mod('ordenes')) {
     const fin = new Date(); fin.setHours(23, 59, 59, 999);
     const abiertas = S.ordenes.filter(ordenAbierta), tarde = abiertas.filter(o => ordenAtrasada(o)), paraHoy = abiertas.filter(o => !ordenAtrasada(o) && o.entrega && o.entrega <= fin.getTime() && o.estado !== 'lista');
@@ -78,7 +78,7 @@ export function Hoy() {
   }
   const recientes = leer().ventas.filter(v => !suc || v.suc === suc).slice(-6).reverse();
 
-  // Lo urgente primero; lo que no se puede tocar (como «Día cerrado») va al final.
+  // Lo urgente primero; lo que no se puede tocar (como “Día cerrado”) va al final.
   const porHacer = pendientes.filter(p => p.go).concat(pendientes.filter(p => !p.go));
   const nVer = verTodo ? porHacer.length : Math.min(porHacer.length, tel ? 4 : 5);
   const Pendientes = html`<div class="tarjeta" data-tour="pendientes" style="padding-bottom:6px">

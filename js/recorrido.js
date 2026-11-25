@@ -30,8 +30,8 @@ function pasosPara({ S, T, tel, puede, ver, E }) {
     !tel && ver('gastos') ? { sec: 'gastos', sel: '.tres', titulo: 'Gastos y por pagar', texto: 'Anota lo que gastas y las cuentas que pagas después. Orbe te avisa antes de que venzan.' } : null,
     tel && (puede('gastos') || puede('cierre')) ? { sec: 'mas', sel: '[data-tour=mas-acciones]', titulo: 'Gastos y cierre', texto: 'Anota gastos y cuentas por pagar, y al final del día cuenta la caja: Orbe te dice si cuadra.' } : null,
     ver('reportes') ? { sec: 'reportes', sel: tel ? '.pantalla > section, .pantalla > .tarjeta, .vacio-guia' : '.contenido .cifras, .vacio-guia', titulo: 'Reportes', texto: 'Cuánto vendiste, cuánto ganaste de verdad después de gastos, cómo te pagan y qué se vende más.' } : null,
-    ver('equipo') ? { sec: 'equipo', sel: tel ? '.pantalla .tarjeta' : '[data-tour=equipo]', titulo: 'Tu equipo', texto: 'Con «+ Perfil» creas a cada persona con su rol y su PIN. Con «+ Rol» y los interruptores decides qué puede hacer cada rol.' } : null,
-    { sec: 'mas', sel: '[data-tour=perfil]', titulo: 'Tu perfil', texto: 'Cambia tu nombre o PIN, o pásale el aparato a otra persona con «Cambiar de perfil».' },
+    ver('equipo') ? { sec: 'equipo', sel: tel ? '.pantalla .tarjeta' : '[data-tour=equipo]', titulo: 'Tu equipo', texto: 'Con “+ Perfil” creas a cada persona con su rol y su PIN. Con “+ Rol” y los interruptores decides qué puede hacer cada rol.' } : null,
+    { sec: 'mas', sel: '[data-tour=perfil]', titulo: 'Tu perfil', texto: 'Cambia tu nombre o PIN, o pásale el aparato a otra persona con “Cambiar de perfil”.' },
     puede('ajustes') ? { sec: 'mas', sel: '[data-tour=copias]', titulo: 'Copias', texto: 'Orbe guarda una copia cada día. Si algo sale mal, aquí la restauras. También puedes descargarla.' } : null,
     { titulo: '¡Listo!', texto: 'Eso es lo principal. Si quieres ver este recorrido otra vez, está en Ajustes → Ayuda.', icono: true, fin: true }
   ];

@@ -48,7 +48,7 @@ export function mensajeAbono(p, c, v, { S, D }) {
 export function OpcionesPlan({ tipo, monto, op, setOp, total, onInicial }) {
   const { D } = useApp();
   const pon = o => setOp(Object.assign({}, op, o));
-  // «Inicial hoy»: lo que paga ahora (se cobra con la forma de pago de siempre) y el resto va a cuotas o al apartado.
+  // “Inicial hoy”: lo que paga ahora (se cobra con la forma de pago de siempre) y el resto va a cuotas o al apartado.
   const ini = total ? D.redondo(total - monto) : 0, pctIni = total ? Math.round(ini / total * 100) : 0;
   const Inicial = onInicial ? html`<div class="campo"><span>${tipo === 'apartado' ? 'Abono inicial hoy' : 'Inicial hoy'}${ini > 0 ? ': ' + D.m(ini) : ''}</span><div class="chips">${[0, 10, 20, 30, 50].map(x => html`<button type="button" key=${x} class=${'chip chico toca' + (Math.abs(pctIni - x) < 1 ? ' on' : '')} onClick=${() => onInicial(x)}>${x ? x + ' %' : 'Sin inicial'}</button>`)}</div>${ini > 0 ? html`<span class="sub faint">Puedes cambiar el monto y la forma de pago arriba.</span>` : null}</div>` : null;
   if (tipo === 'apartado') return html`<div class="tarjeta pila entra" style="box-shadow:none;background:var(--accent-soft);gap:12px">
@@ -121,7 +121,7 @@ export function Cuotas() {
     : html`<div class="tarjeta pila" style="align-items:center;text-align:center;gap:8px;padding:26px 18px">
         <span class="ic t-vio" style="width:48px;height:48px;border-radius:16px"><${Icono} n="calendario" t=${22} /></span>
         <b>${planes.length ? 'Nada por aquí' : 'Todavía no hay cuotas ni apartados'}</b>
-        <span class="sub" style="line-height:1.5;max-width:320px">${planes.length ? 'Prueba con otro filtro.' : 'Al cobrar una venta, elige «En cuotas» para que se lleve el producto y pague en partes, o «Apartado» para guardárselo hasta que termine de pagar.'}</span></div>`}
+        <span class="sub" style="line-height:1.5;max-width:320px">${planes.length ? 'Prueba con otro filtro.' : 'Al cobrar una venta, elige “En cuotas” para que se lleve el producto y pague en partes, o “Apartado” para guardárselo hasta que termine de pagar.'}</span></div>`}
   </div>`;
 }
 
@@ -200,7 +200,7 @@ export function AbonoPlan({ d, cerrar }) {
   })} />`;
 }
 
-// ---------- hoja: apartado vencido (o «Más opciones» de un apartado) ----------
+// ---------- hoja: apartado vencido (o “Más opciones” de un apartado) ----------
 const Opcion = ({ on, i, tono, t, s, onClick }) => html`<button type="button" class=${'opcion-plan toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${onClick}>
   <span class=${'ic ' + tono} style="width:34px;height:34px;border-radius:11px;flex:none"><${Icono} n=${i} t=${16} /></span><span class="crece" style="display:flex;flex-direction:column;gap:2px;text-align:left"><b>${t}</b><span class="sub" style="line-height:1.4">${s}</span></span></button>`;
 export function ApartadoVencido({ d, cerrar }) {
@@ -241,7 +241,7 @@ export function ApartadoVencido({ d, cerrar }) {
         <span class="sub">Quedaría separado hasta el <b style="color:var(--ink)">${fLarga(Math.max(p.vence, Date.now()) + dias * DIA)}</b>.</span>`}
       ${paso === 'cuotas' && html`<${OpcionesPlan} tipo="cuotas" monto=${c.falta} op=${op} setOp=${setOp} />`}
       ${paso === 'liberar' && html`<div class="pila" style="gap:8px">
-        ${c.pagado > 0 ? html`<span class="sub">¿Qué hacemos con los <b style="color:var(--ink)">${D.m(c.pagado)}</b> que abonó?${p.acuerdo ? ' Al apartar acordaron: «' + (ACUERDOS_APARTADO.find(a => a.k === p.acuerdo) || {}).n + '».' : ''}</span>
+        ${c.pagado > 0 ? html`<span class="sub">¿Qué hacemos con los <b style="color:var(--ink)">${D.m(c.pagado)}</b> que abonó?${p.acuerdo ? ' Al apartar acordaron: “' + (ACUERDOS_APARTADO.find(a => a.k === p.acuerdo) || {}).n + '”.' : ''}</span>
           <${Opcion} on=${como === 'saldo'} i="tarjeta" tono="t-ver" t="Dejarlo como saldo a favor" s="Lo usa en su próxima compra. Queda en su ficha de cliente." onClick=${() => setComo('saldo')} />
           <${Opcion} on=${como === 'devolver'} i="billete" tono="t-amb" t="Devolverle el dinero" s="Sale de la caja de hoy como devolución." onClick=${() => setComo('devolver')} />
           <${Opcion} on=${como === 'retener'} i="doc" tono="t-ros" t="Retener el abono" s="Solo si lo acordaron al apartar. Queda como ingreso." onClick=${() => setComo('retener')} />
@@ -252,7 +252,7 @@ export function ApartadoVencido({ d, cerrar }) {
   })} />`;
 }
 
-// ---------- en «Hoy»: apartados por decidir y cuotas para cobrar ----------
+// ---------- en “Hoy”: apartados por decidir y cuotas para cobrar ----------
 export function PlanesHoy() {
   const { S, P, D, abrir, ir } = useApp();
   const ahora = Date.now(), fin = new Date(); fin.setHours(23, 59, 59, 999);

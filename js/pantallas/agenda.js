@@ -12,7 +12,7 @@ import { normal } from '../buscar.js';
 
 const COLORES = ['#7b6cff', '#12a37a', '#e8961a', '#3d9be9', '#e8436a', '#a35bf0'];
 const TONO_ESTADO = { pendiente: 't-azu', llego: 't-amb', atendida: 't-ver', cancelada: 't-ros', falto: 't-ros' };
-// Día de hoy más «i» días (con setDate: así no se corre con el cambio de horario).
+// Día de hoy más “i” días (con setDate: así no se corre con el cambio de horario).
 const diaMas = i => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i); return d.getTime(); };
 const finDe = t => { const d = new Date(t); d.setDate(d.getDate() + 1); return d.getTime(); };
 const nombreDia = t => { const h = inicioDia(Date.now()); return t === h ? 'Hoy' : t === diaMas(1) ? 'Mañana' : new Date(t).toLocaleDateString('es', { weekday: 'short' }).replace('.', ''); };
@@ -24,7 +24,7 @@ const serviciosDe = c => c.srv.map(id => listaProductos().find(p => p.id === id)
 const colorPro = (S, pid) => COLORES[Math.max(0, profesionales(S).findIndex(p => p.id === pid)) % COLORES.length];
 const nombrePro = (S, pid) => ((S.perfiles.find(p => p.id === pid) || {}).n || '').split(' ')[0];
 
-// Hora partida: «3:30» grande y «p. m.» chico.
+// Hora partida: “3:30” grande y “p. m.” chico.
 const partes = t => { const h = hora(t), k = h.indexOf(' '); return k > 0 ? [h.slice(0, k), h.slice(k + 1)] : [h, '']; };
 const bloqueDe = t => { const h = new Date(t).getHours(); return h < 12 ? 'Mañana' : h < 18 ? 'Tarde' : 'Noche'; };
 
@@ -44,7 +44,7 @@ export function CitaFila({ c, i = 0, conPro = true }) {
   </button>`;
 }
 
-// Las citas de un día, por mañana, tarde y noche; hoy, con la línea de «ahora».
+// Las citas de un día, por mañana, tarde y noche; hoy, con la línea de “ahora”.
 function ListaDia({ lista, conPro, hoy }) {
   const ahora = Date.now(), out = [];
   let bloque = '', linea = !hoy;

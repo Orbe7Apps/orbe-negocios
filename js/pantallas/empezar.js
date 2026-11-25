@@ -14,7 +14,7 @@ export function sugeridos(S, T) {
   return catalogoDe(S.negocio.rubro, T.id).filter(x => !ya.has(x[1].toLowerCase())).map(x => ({ x, g: (grupoDe(x[0]) || [])[0] || '' }));
 }
 
-// Tarjeta de Hoy: lo que falta para dejar el negocio listo. Se va sola al completarlo (o con «Ocultar»).
+// Tarjeta de Hoy: lo que falta para dejar el negocio listo. Se va sola al completarlo (o con “Ocultar”).
 export function PrimerosPasos() {
   const { S, T, ir, abrir, puede } = useApp();
   const n = S.negocio;

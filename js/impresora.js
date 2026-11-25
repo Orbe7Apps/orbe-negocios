@@ -159,7 +159,7 @@ async function enviar(bytes) {
   }
 }
 
-// Imprimir con lo que el negocio eligió. «cajon»: abrir el cajón (solo Bluetooth).
+// Imprimir con lo que el negocio eligió. “cajon”: abrir el cajón (solo Bluetooth).
 export async function imprimir(lineas, { cajon = false, logo = '' } = {}) {
   const a = ajustesImpresora();
   if (a.modo === 'bluetooth' && hayBluetooth()) { await enviar(escpos(lineas, { ancho: a.ancho, cajon: cajon && a.cajon })); return 'bluetooth'; }

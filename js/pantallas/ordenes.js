@@ -123,7 +123,7 @@ export function Orden({ d, cerrar }) {
   // El PDF se prepara apenas se abre la orden: así el teléfono deja compartirlo al tocar el botón.
   const firma = o ? JSON.stringify([o.estado, o.items, o.que, o.det, o.entrega, o.resp, anticipoDe(o.id), S.negocio.logo ? S.negocio.logo.length : 0, S.negocio.condOrden]) : '';
   useEffect(() => { if (!o || pdfDe.current === firma) return; pdfDe.current = firma; pdf.current = null; pdfOrden(o, ctx).then(b => { if (pdfDe.current === firma) pdf.current = b; }).catch(() => {}); }, [firma]);
-  useEffect(() => { if (o && d.entregar) avisar('Toca «Entregar» para cobrar y cerrar la orden'); }, []);
+  useEffect(() => { if (o && d.entregar) avisar('Toca “Entregar” para cobrar y cerrar la orden'); }, []);
   if (!o) return null;
   const e = estadoDe(o.estado), abierta = ordenAbierta(o), ant = anticipoDe(o.id), tot = total(o), deb = saldo(o);
   const cli = S.clientes.find(c => c.id === o.cli) || {};
@@ -261,7 +261,7 @@ export function NuevaOrden({ d, cerrar }) {
           ${agregando ? html`<div class="pila entra" style="gap:6px;padding:8px 0">
               <label class="buscador" style="width:100%;background:var(--surface)"><${Icono} n="buscar" t=${15} c="var(--muted)" /><input type="search" value=${qp} placeholder=${'Busca ' + (T.inv ? 'un producto' : 'un servicio') + ' o escribe el trabajo'} aria-label="Agregar trabajo o producto" onInput=${e => setQp(e.target.value)} onKeyDown=${e => { if (e.key === 'Enter' && qp.trim()) libre(qp.trim()); }} /></label>
               ${hallados.map(p => html`<button type="button" key=${p.id} class="item toca" style="color:var(--ink);padding:8px 2px;border:0;background:none;display:flex;gap:10px" onClick=${() => agregar({ pid: p.id, n: p.n, q: 1, p: p.p, c: p.c, ...(p.imp != null ? { imp: p.imp } : {}) })}><span class="crece corta" style="text-align:left">${p.n}</span>${p.q != null ? html`<span class="sub">${p.q} und</span>` : null}<b class="num">${D.m(p.p)}</b></button>`)}
-              <div class="chips">${qp.trim() ? html`<button type="button" class="chip chico toca on" onClick=${() => libre(qp.trim())}>+ Agregar «${qp.trim()}»</button>` : ['Diagnóstico', 'Mano de obra', 'Revisión'].map(n => html`<button type="button" class="chip chico toca" onClick=${() => libre(n)}>+ ${n}</button>`)}<button type="button" class="chip chico toca" onClick=${() => { setAgregando(false); setQp(''); }}>Listo</button></div>
+              <div class="chips">${qp.trim() ? html`<button type="button" class="chip chico toca on" onClick=${() => libre(qp.trim())}>+ Agregar “${qp.trim()}”</button>` : ['Diagnóstico', 'Mano de obra', 'Revisión'].map(n => html`<button type="button" class="chip chico toca" onClick=${() => libre(n)}>+ ${n}</button>`)}<button type="button" class="chip chico toca" onClick=${() => { setAgregando(false); setQp(''); }}>Listo</button></div>
             </div>`
           : html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start;padding:10px 0" onClick=${() => setAgregando(true)}>+ Agregar trabajo o producto</button>`}
           ${f.items.length > 0 && html`<div class="fila" style="padding:9px 0 3px"><span class="crece sub">Total</span><b class="num">${D.m(total)}</b></div>`}
@@ -317,7 +317,7 @@ export function CancelarOrden({ d, cerrar }) {
       <div class="campo"><span>Motivo</span><${Chips} opciones=${['El cliente desistió', 'No tiene reparación', 'Sin repuesto', 'Otro'].map(x => ({ v: x, n: x }))} valor=${motivo} onCambio=${setMotivo} chico /></div>
       ${ant > 0 && html`<div class="campo"><span>El anticipo de ${D.m(ant)}</span>
         <${Chips} opciones=${[{ v: 'devolver', n: 'Se le devuelve' }, { v: 'saldo', n: 'Queda a favor de ' + cli.n.split(' ')[0] }]} valor=${como} onCambio=${setComo} />
-        <span class="sub faint">${como === 'devolver' ? 'Sale hoy de la caja, por las mismas formas en que lo pagó.' : 'Lo puede usar en su próxima compra como «Saldo a favor».'}</span></div>`}`,
+        <span class="sub faint">${como === 'devolver' ? 'Sale hoy de la caja, por las mismas formas en que lo pagó.' : 'Lo puede usar en su próxima compra como “Saldo a favor”.'}</span></div>`}`,
     pie: html`<button type="button" class="btn toca" style="background:var(--out)" onClick=${() => listo(c)}>Sí, cancelar la orden</button><button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => c(() => abrir('orden', { oid: o.id }))}>No, volver</button>`
   })} />`;
 }

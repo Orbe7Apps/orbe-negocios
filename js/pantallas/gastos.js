@@ -1,4 +1,4 @@
-// Gastos del mes y cuentas por pagar. En el teléfono vive dentro de «Más».
+// Gastos del mes y cuentas por pagar. En el teléfono vive dentro de “Más”.
 import { html } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';

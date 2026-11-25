@@ -720,7 +720,7 @@ html.en-recorrido .nav-tel { background: var(--oscuro); }
 .lateral .logo-lapiz { background: var(--oscuro-2); color: #fff; }
 .lateral > .fila b { color: #fff; }
 .lateral .nav-btn.ajustes-abajo { margin-top: auto; }
-/* Panel de la computadora y «Para hacer hoy» */
+/* Panel de la computadora y “Para hacer hoy” */
 .panel-cifras { display: grid; grid-template-columns: minmax(0, 1.55fr) repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
 .panel-cifras .hero { padding: 16px 18px; gap: 8px; }
 .panel-cifras .hero .grande { font-size: 32px; }
@@ -764,7 +764,7 @@ html.en-recorrido .nav-tel { background: var(--oscuro); }
 .ajustes-temas button:hover { background: var(--fill2); }
 .ajustes-temas button.on { background: var(--accent-soft); color: var(--ink); }
 .ajustes-tema { padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; min-height: 320px; }
-/* Computadora: botón «Nuevo ▾» */
+/* Computadora: botón “Nuevo ▾” */
 .nuevo-menu { position: relative; }
 .nuevo-flecha { margin-left: 2px; opacity: .75; display: inline-block; transition: transform .3s var(--spring); }
 .nuevo-flecha.on { transform: rotate(180deg); }
@@ -880,7 +880,7 @@ html.en-recorrido .nav-tel { background: var(--oscuro); }
 .sugerido-datos label { width: 82px; }
 .sugerido-datos input { min-height: 40px; padding: 0 10px; }
 .dia-chip i { white-space: nowrap; }
-/* Ayuda: botón «?» y panel */
+/* Ayuda: botón “?” y panel */
 .boton-ayuda { width: 28px; height: 28px; border-radius: 50%; flex: none; border: 1.5px solid var(--line); background: var(--surface); color: var(--accent-text, var(--accent)); font: inherit; font-size: 15px; font-weight: 800; line-height: 1; display: inline-grid; place-items: center; cursor: pointer; transition: background-color .2s ease, transform .2s var(--spring); }
 .boton-ayuda:active { transform: scale(.92); }
 .hoja-cab .boton-ayuda { margin-right: 4px; }
@@ -970,7 +970,7 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .aviso-plan.rojo { background: var(--out-soft); color: var(--out-text); }
 .aviso-plan b { flex: none; }
 
-/* Contraseña con «Ver» y pantalla de contraseña nueva */
+/* Contraseña con “Ver” y pantalla de contraseña nueva */
 .clave-caja { position: relative; display: block; }
 .clave-caja input { padding-right: 84px; }
 .clave-ver { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: var(--surface); color: var(--accent-text, var(--accent)); font: inherit; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 12px; min-height: 36px; }
@@ -985,7 +985,7 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 @keyframes sacudir { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
 @media (prefers-reduced-motion: reduce) { .aviso-toast.error { animation: fadeUp .01ms both; } }
 
-/* Zona «La app» en Ajustes: gris neutro */
+/* Zona “La app” en Ajustes: gris neutro */
 .t-gris { background: var(--fill2); color: var(--muted); }
 .ic.t-gris { background: #7d7a96; color: #fff; }
 

@@ -79,7 +79,7 @@ export function Icono({ n, t = 20, g = 2, c = 'currentColor', estilo }) {
 }
 
 // Logo de Orbe Negocios: los círculos se dibujan al aparecer; al tocarlo (o pasar el ratón) da una vuelta.
-// «orbita» lo hace girar despacio todo el tiempo (para los logos grandes).
+// “orbita” lo hace girar despacio todo el tiempo (para los logos grandes).
 // Bandera del país, circular (SVG guardado en la app, funciona sin internet y en Windows también).
 export const Bandera = ({ id, t = 20 }) => html`<img class="bandera" src=${'icons/banderas/' + String(id || 'VE').toLowerCase() + '.svg'} width=${t} height=${t} alt="" aria-hidden="true" decoding="async" />`;
 
@@ -99,14 +99,14 @@ export function LogoOrbe({ t = 42, orbita = false }) {
 }
 
 // ---------- avisos ----------
-// Tres tipos: «ok» (verde, check), «error» (rojo: algo salió mal o no se puede) e «info» (ámbar: falta un dato o un aviso).
+// Tres tipos: “ok” (verde, check), “error” (rojo: algo salió mal o no se puede) e “info” (ámbar: falta un dato o un aviso).
 // Si no se dice el tipo, se adivina por el texto.
 const ERROR = /no coincid|no se pudo|no pude|no se encontr|no encontré|inválid|incorrect|venci|vencid|no puede|no puedes|no permite|no tiene|no es |no son |no está|ya existe|ya hay|ya tienes|ya lo tiene|debe ser|es más que|no alcanza|demasiados|sin permiso|sin conexión|algo salió mal|no es una copia|hay un trabajo sin|^solo (el|quien)|^ese |^esa /i;
 const INFO = /^(escribe|elige|marca|agrega |crea tu|para crear|la contraseña (debe|es muy)|pon |pídele|reparte|falta|toca|lo encuentras|los vuelves|todavía|sin internet|la cámara|espera|primero|este producto|el dueño siempre|el porcentaje va|el usuario lleva|el pin (nuevo )?son|guardando|un momento|revisa)/i;
 export const tipoAviso = t => { const x = String(t || ''); return INFO.test(x) ? 'info' : ERROR.test(x) ? 'error' : 'ok'; };
 let ponerAviso = () => {};
 export const avisar = (t, tipo, accion) => ponerAviso(t, tipo, accion);
-// Aviso con botón «Deshacer» (dura más para que dé tiempo de tocarlo).
+// Aviso con botón “Deshacer” (dura más para que dé tiempo de tocarlo).
 export const avisarDeshacer = (t, deshacer) => deshacer ? ponerAviso(t, 'ok', { n: 'Deshacer', fn: deshacer }) : ponerAviso(t);
 const ICONO_AVISO = { ok: ['check', '#3ddc9f'], error: ['alerta', '#ff7a8f'], info: ['info', '#f5b544'] };
 export function Avisos() {
@@ -139,9 +139,9 @@ export function Chips({ opciones, valor, onCambio, desliza, calido, chico }) {
 
 // ---------- hoja (teléfono) o ventana (computadora) ----------
 // contenido(cerrar) devuelve { cuerpo, pie }. Nunca enfoca un campo al abrir.
-// Botón «atrás» del teléfono (Android) o gesto de volver: con una capa abierta (hoja, menú) la cierra en vez de
+// Botón “atrás” del teléfono (Android) o gesto de volver: con una capa abierta (hoja, menú) la cierra en vez de
 // cambiar de pantalla o salir de la app. Mientras la capa está abierta se deja una entrada en el historial.
-// Al cerrar una capa con su botón se hace «atrás» en el historial; ese «atrás» llega después y no debe cerrar
+// Al cerrar una capa con su botón se hace “atrás” en el historial; ese “atrás” llega después y no debe cerrar
 // la capa siguiente que se abra enseguida (por ejemplo, volver de Tasas a Cobrar).
 let ignorarAtrasHasta = 0;
 export function useAtras(abierto, cerrar) {
@@ -155,7 +155,7 @@ export function useAtras(abierto, cerrar) {
     return () => { window.removeEventListener('popstate', pop); if (!porAtras && history.state && history.state.capa) { ignorarAtrasHasta = Date.now() + 600; history.back(); } };
   }, [abierto]);
 }
-// La hoja que está abierta (para su botón «?»): la pone HojaActual antes de dibujarla.
+// La hoja que está abierta (para su botón “?”): la pone HojaActual antes de dibujarla.
 let ayudaHoja = '';
 export const ponerAyudaHoja = k => { ayudaHoja = k; };
 export function Hoja({ titulo, onCerrar, contenido }) {
@@ -205,7 +205,7 @@ export const simbolo = n => { const s = SIMBOLOS.find(x => x[0].test(n || '')); 
 export const iniciales = n => (n || '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'ON';
 // Logo del negocio: la imagen que subió el dueño o, si no hay, sus iniciales.
 export const MarcaNegocio = ({ n, t = 42, lapiz }) => html`<span class=${'logo marca' + (n.logo ? ' con-imagen' : '')} style=${{ width: t + 'px', height: t + 'px', fontSize: Math.round(t * 0.36) + 'px', borderRadius: Math.round(t * 0.31) + 'px' }}>${n.logo ? html`<img src=${n.logo} alt="" draggable="false" />` : iniciales(n.nombre)}${lapiz && html`<i class="logo-lapiz"><${Icono} n="lapiz" t=${9} g=${2.6} /></i>`}</span>`;
-// Achica una imagen elegida (logo, foto de producto) a lo sumo «lado» píxeles y la devuelve como texto (data URL) para guardarla.
+// Achica una imagen elegida (logo, foto de producto) a lo sumo “lado” píxeles y la devuelve como texto (data URL) para guardarla.
 // cuadrada: recorta el centro (las fotos de producto se ven en cuadritos).
 export function achicarImagen(archivo, lado = 256, cuadrada = false, calidad = 0.9) {
   return new Promise((ok, mal) => {
@@ -234,7 +234,7 @@ export const hora = t => new Date(t).toLocaleTimeString('es', { hour: 'numeric',
 export const fechaCorta = t => new Date(t).toLocaleDateString('es', { day: 'numeric', month: 'short' }).replace('.', '');
 
 // ---------- bienvenida al entrar a un negocio ----------
-// Después de iniciar sesión: «Bienvenido a tu negocio» con el nombre, y luego se desvanece y quedan los perfiles para el PIN.
+// Después de iniciar sesión: “Bienvenido a tu negocio” con el nombre, y luego se desvanece y quedan los perfiles para el PIN.
 let bienvenidaPend = null;
 export const marcarBienvenida = n => { bienvenidaPend = { nombre: (n && n.nombre) || '', logo: (n && n.logo) || '', t: Date.now() }; };
 export const tomarBienvenida = () => { const b = bienvenidaPend; bienvenidaPend = null; return b && Date.now() - b.t < 60000 ? b : null; };

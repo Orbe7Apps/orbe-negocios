@@ -56,7 +56,7 @@ export function recordatorios(S, T, P, D, ahora = Date.now()) {
   });
   return out.sort((a, b) => (a.tipo === 'cita1h' ? -1 : 0) - (b.tipo === 'cita1h' ? -1 : 0) || a.cuando - b.cuando);
 }
-// Marcar como enviado (o «no hace falta»). Se guarda en el negocio para que los demás aparatos no lo repitan.
+// Marcar como enviado (o “no hace falta”). Se guarda en el negocio para que los demás aparatos no lo repitan.
 export function marcarEnviado(r) {
   const n = leer().negocio, ahora = Date.now(), env = Object.assign({}, n.recEnviados || {});
   Object.keys(env).forEach(k => { if (ahora - env[k] > 60 * DIA) delete env[k]; });
@@ -94,7 +94,7 @@ export function Recordatorios({ cerrar }) {
   const { S, T, P, D, abrir } = useApp();
   const lista = recordatorios(S, T, P, D);
   return html`<${Hoja} titulo="Recordatorios por enviar" onCerrar=${cerrar} contenido=${c => ({
-    cuerpo: lista.length ? html`<span class="sub" style="line-height:1.45">Cada mensaje ya está escrito. Toca «Enviar» y se abre WhatsApp; queda marcado en todos tus aparatos.</span>
+    cuerpo: lista.length ? html`<span class="sub" style="line-height:1.45">Cada mensaje ya está escrito. Toca “Enviar” y se abre WhatsApp; queda marcado en todos tus aparatos.</span>
       <div class="pila" style="gap:2px">${lista.map((r, i) => html`<${Fila} key=${r.k} r=${r} P=${P} i=${i} />`)}</div>`
       : html`<p class="vacio">No hay recordatorios pendientes. ¡Todo al día!</p>`,
     pie: html`<button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => c(() => abrir('ajustesRec'))}>Elegir qué recordar</button>`

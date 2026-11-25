@@ -59,7 +59,7 @@ export function Factura({ d, cerrar }) {
   const [gasto, setGasto] = useState(true);
   const [pagada, setPagada] = useState(true);
   // El producto más parecido al nombre leído (o ninguno: se crea nuevo).
-  // Se buscan las palabras que importan (sin «de», «la», medidas ni números) y tienen que estar todas.
+  // Se buscan las palabras que importan (sin “de”, “la”, medidas ni números) y tienen que estar todas.
   const clave = txt => normal(txt).replace(MEDIDA, ' ').split(' ').filter(w => w.length > 2 && !/^\d/.test(w) && !/^(del|las|los|con|para|por|und|uds)$/.test(w)).join(' ');
   const parecido = txt => { const k = clave(txt); if (!k) return ''; const r = buscar(prods, k, textosProducto(S)); return r.length ? r[0].id : ''; };
   const candidatos = txt => buscar(prods, txt, textosProducto(S), true).slice(0, 6);

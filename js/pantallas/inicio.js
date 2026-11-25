@@ -14,19 +14,19 @@ export const NOMBRES_SUC = ['Centro', 'Norte', 'Este', 'Oeste', 'Sur'];
 const TONO = { vio: 't-vio', amb: 't-amb', ver: 't-ver', ros: 't-ros', azu: 't-azu' };
 
 export function Inicio({ tel }) {
-  // Al dejar otro negocio desde «Entra a tu cuenta» se llega directo a crear la cuenta o a armar el negocio.
+  // Al dejar otro negocio desde “Entra a tu cuenta” se llega directo a crear la cuenta o a armar el negocio.
   const [paso, setPaso] = useState(() => { try { const x = sessionStorage.getItem('orbe-inicio-paso'); sessionStorage.removeItem('orbe-inicio-paso'); return x || -1; } catch (e) { return -1; } });
   const [busca, setBusca] = useState('');
   const [c, setC] = useState({ mods: {}, pais: '', rubro: '', tipo: '', escala: 'negocio', nombre: '', razon: '', fiscal: '', sucN: 1, sucNombres: [], dueno: '', pin: '', pin2: '', pays: null, taxOn: null, taxIncl: true });
-  // La cuenta nueva empieza vacía. Con «?demo» en la dirección se llena con un mes de ejemplo (para mostrar la app).
+  // La cuenta nueva empieza vacía. Con “?demo” en la dirección se llena con un mes de ejemplo (para mostrar la app).
   const demo = /[?&]demo\b/.test(location.search);
   const [ejemplo, setEjemplo] = useState(demo);
-  // Sin cuenta no se arma el negocio (salvo la demostración con «?demo»).
+  // Sin cuenta no se arma el negocio (salvo la demostración con “?demo”).
   const N = useNube();
   // Volvió del enlace de confirmación con la sesión abierta: se muestran sus negocios (o se arma uno).
   useEffect(() => { if (N.sesion && !demo && paso === -1) setPaso('entrar'); }, [N.sesion]);
-  // Demostración (el botón «Abrir la demo» de la web): entra directo a un negocio de ejemplo lleno y con todas las funciones.
-  // Con «?demo=elegir» se recorren los pasos para escoger país y rubro.
+  // Demostración (el botón “Abrir la demo” de la web): entra directo a un negocio de ejemplo lleno y con todas las funciones.
+  // Con “?demo=elegir” se recorren los pasos para escoger país y rubro.
   const directo = demo && !/[?&]demo=elegir\b/.test(location.search);
   // (Con un instante de espera: la app termina de conectarse antes de recibir el negocio nuevo.)
   useEffect(() => { if (directo) setTimeout(() => crearNegocio({ pais: 'VE', tipo: 'tienda', rubro: 'ferreteria', escala: 'negocio', mods: Object.fromEntries(MODULOS.map(m => [m.k, true])) }, true), 0); }, []);

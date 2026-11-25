@@ -13,7 +13,7 @@ const CLAVE_PUBLICA = 'sb_publishable_x95K8o7WAhVtldQrU3fnGw_nbcVSEGE';
 const LIB = new URL('./lib/supabase.min.js', import.meta.url).href;
 
 // Lo que se sincroniza: colecciones (un registro por elemento) y datos sueltos del negocio.
-// «ajustes» no se sube: el perfil que está usando el aparato y el tema son de cada aparato.
+// “ajustes” no se sube: el perfil que está usando el aparato y el tema son de cada aparato.
 const COLS = ['productos', 'clientes', 'ventas', 'abonos', 'gastos', 'cierres', 'ordenes', 'cotizaciones', 'planes', 'citas', 'solicitudes', 'movCaja', 'turnos', 'promos', 'perfiles', 'roles', 'grupos', 'registro', 'historialTasas'];
 const OBJS = ['negocio', 'tasa', 'tasas'];
 // En estas se recortan los viejos (no es que se borren): no se avisa borrado.
@@ -67,7 +67,7 @@ export async function leerEnlace() {
   const q = new URLSearchParams(h);
   if (q.get('error_description') || q.get('error')) {
     const venc = /expired|invalid/i.test(q.get('error_code') + ' ' + q.get('error_description'));
-    const txt = venc ? 'Ese enlace ya venció o ya se usó. Pide uno nuevo con «Olvidé mi contraseña».' : 'No se pudo abrir el enlace: ' + q.get('error_description');
+    const txt = venc ? 'Ese enlace ya venció o ya se usó. Pide uno nuevo con “Olvidé mi contraseña”.' : 'No se pudo abrir el enlace: ' + q.get('error_description');
     poner({ avisoEnlace: txt }); return 'error';
   }
   const c = await cliente();
@@ -83,7 +83,7 @@ export const yaHayEnlace = () => { try { return !!sessionStorage.getItem('orbe-e
 export const haySesionGuardada = () => { try { return !!localStorage.getItem('orbe-negocios-sesion'); } catch (e) { return false; } };
 // Este aparato deja de usar el negocio que tenía (para entrar con otra cuenta o crear una nueva): se olvida lo pendiente de subir.
 export function olvidarNegocioLocal() { pend.clear(); guardarPend(); parar(); poner({ negocioId: '', pendientes: 0, plan: null }); try { localStorage.removeItem('orbe-nube-plan'); } catch (e) { /* sin almacenamiento */ } }
-// Mientras se revisa que la cuenta sea de este negocio, la app sigue en «Entra a tu cuenta».
+// Mientras se revisa que la cuenta sea de este negocio, la app sigue en “Entra a tu cuenta”.
 export const verificandoCuenta = v => poner({ verificando: !!v });
 export const terminarRecuperar = () => poner({ recuperar: false });
 export const quitarAvisoEnlace = () => poner({ avisoEnlace: '' });
@@ -180,7 +180,7 @@ export async function misNegocios() {
 export const negocioPropio = (lista, sesion) => (lista || []).find(g => sesion && g.dueno === sesion.id) || null;
 
 // ---------- pendientes (lo que falta subir) ----------
-// Se guarda solo qué cambió («ventas|v123»); al subir se toma el valor de ese momento.
+// Se guarda solo qué cambió (“ventas|v123”); al subir se toma el valor de ese momento.
 const CLAVE_PEND = 'orbe-nube-pendientes';
 let pend = new Set();
 try { pend = new Set(JSON.parse(localStorage.getItem(CLAVE_PEND) || '[]')); } catch (e) { pend = new Set(); }
@@ -214,7 +214,7 @@ const pronto = () => { clearTimeout(reloj); reloj = setTimeout(sincronizar, 1500
 async function subir(c, nid) {
   if (!pend.size) return;
   const S = leer(), dv = idDispositivo(), filas = [], porClave = new Map();
-  // Un mismo registro va una sola vez por subida (si se borró y se restauró con «Deshacer», queda lo que hay ahora).
+  // Un mismo registro va una sola vez por subida (si se borró y se restauró con “Deshacer”, queda lo que hay ahora).
   const agregar = (k, clave, fila) => { const ya = porClave.get(clave); if (ya) { ya.ks.push(k); ya.fila = fila; return; } const x = { k, ks: [k], fila }; porClave.set(clave, x); filas.push(x); };
   [...pend].forEach(k => {
     const [col, id] = k.split('|');
@@ -432,7 +432,7 @@ export async function iniciarNube() {
   try { const p = JSON.parse(localStorage.getItem('orbe-nube-plan') || 'null'); if (p) poner({ plan: p }); } catch (e) { /* sin plan guardado */ }
   poner({ pendientes: pend.size });
   const S = leer();
-  // Volver de «olvidé mi contraseña» o de confirmar el correo trae la sesión en la dirección: hay que cargar la nube.
+  // Volver de “olvidé mi contraseña” o de confirmar el correo trae la sesión en la dirección: hay que cargar la nube.
   const conToken = yaHayEnlace();
   if (conToken) { try { await leerEnlace(); } catch (e) { poner({ avisoEnlace: 'No se pudo abrir el enlace: revisa tu internet' }); } }
   if (!(S.negocio && S.negocio.nubeId) && !conToken && !localStorage.getItem('orbe-negocios-sesion')) return;

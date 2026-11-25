@@ -1,5 +1,5 @@
 // Cotizaciones y presupuestos: una lista con precios para el cliente (PDF por WhatsApp) que se convierte en venta
-// cuando la acepta. Se arma en Vender con «Cotizar»; aquí se ven todas, se reenvían y se venden.
+// cuando la acepta. Se arma en Vender con “Cotizar”; aquí se ven todas, se reenvían y se venden.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
@@ -107,7 +107,7 @@ export function Cotizaciones() {
   const pendientes = todas.filter(c => estadoCot(c) === 'pendiente'), aceptadas = todas.filter(c => c.estado === 'aceptada');
   const hechas = todas.filter(c => c.estado !== 'pendiente' || estadoCot(c) === 'vencida').length;
   const opciones = [['pendiente', 'Esperando'], ['aceptada', 'Vendidas'], ['vencida', 'Vencidas'], ['rechazada', 'No aceptadas']].map(o => ({ v: o[0], n: o[1] + ' ' + cuenta(o[0]) }));
-  const Nueva = html`<button type="button" class="btn2 chico lleno toca" onClick=${() => { ir('vender'); avisar('Agrega los productos y toca «Cotizar»'); }}>+ Nueva cotización</button>`;
+  const Nueva = html`<button type="button" class="btn2 chico lleno toca" onClick=${() => { ir('vender'); avisar('Agrega los productos y toca “Cotizar”'); }}>+ Nueva cotización</button>`;
   return html`
     <div class="fila entra"><h1 class="titulo crece">Cotizaciones</h1><${BotonAyuda} />${Nueva}</div>
     <div class="rejilla-2" style="gap:10px">
@@ -125,6 +125,6 @@ export function Cotizaciones() {
       : html`<div class="tarjeta pila entra" style="align-items:center;text-align:center;padding:26px 18px">
           <span class="ic t-azu" style="width:52px;height:52px;border-radius:16px"><${Icono} n="doc" t=${24} /></span>
           <b style="font-size:16px">${todas.length ? 'No hay cotizaciones aquí' : 'Todavía no tienes cotizaciones'}</b>
-          <span class="sub" style="line-height:1.45;max-width:340px">En Vender agrega lo que el cliente quiere y toca «Cotizar». Se la mandas en PDF por WhatsApp y, si acepta, la conviertes en venta con un toque.</span>
+          <span class="sub" style="line-height:1.45;max-width:340px">En Vender agrega lo que el cliente quiere y toca “Cotizar”. Se la mandas en PDF por WhatsApp y, si acepta, la conviertes en venta con un toque.</span>
           ${!todas.length && Nueva}</div>`}</div>`;
 }

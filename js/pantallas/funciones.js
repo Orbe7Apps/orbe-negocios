@@ -26,7 +26,7 @@ export function Funciones() {
   const { S, T, abrir } = useApp();
   const n = S.negocio, R = rubro(n.rubro);
   const poner = (m, v) => {
-    cambiarNegocio({ mods: Object.assign({}, n.mods || {}, { [m.k]: v }) }, (v ? 'Activó ' : 'Apagó ') + '«' + m.n + '»');
+    cambiarNegocio({ mods: Object.assign({}, n.mods || {}, { [m.k]: v }) }, (v ? 'Activó ' : 'Apagó ') + '“' + m.n + '”');
     avisar((v ? 'Activado: ' : 'Apagado: ') + m.n);
   };
   return html`

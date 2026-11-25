@@ -98,7 +98,7 @@ export const RUBROS = [
 ];
 export const rubro = id => RUBROS.find(r => r.id === id) || null;
 
-// Busca el rubro por lo que la persona escribe («tengo una barbería», «vendo neveras»…).
+// Busca el rubro por lo que la persona escribe (“tengo una barbería”, “vendo neveras”…).
 const plano = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 export function adivinarRubro(texto) {
   const t = plano(texto).trim(); if (t.length < 3) return [];
@@ -107,7 +107,7 @@ export function adivinarRubro(texto) {
     let p = plano(r.n).includes(t) ? 6 : 0;
     r.kw.forEach(k => {
       if (t.includes(k)) p += k.length;
-      // Palabras a medio escribir o con otra terminación: «barb», «bodeguita», «peluquería».
+      // Palabras a medio escribir o con otra terminación: “barb”, “bodeguita”, “peluquería”.
       else if (palabras.some(w => k.startsWith(w) || (k.length >= 5 && w.startsWith(k.slice(0, 5))))) p += Math.min(k.length, 5) * 0.8;
     });
     return { r, p };

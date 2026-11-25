@@ -1,5 +1,5 @@
 // Cuenta y nube: crear cuenta, iniciar sesión, recuperar la contraseña, unir el negocio a la cuenta,
-// ver si todo está guardado y la suscripción (pagar y avisar «Ya pagué»).
+// ver si todo está guardado y la suscripción (pagar y avisar “Ya pagué”).
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal, exportar } from '../datos.js';
@@ -8,7 +8,7 @@ import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor, Bienvenida, marcarBie
 import { numero } from './pagos.js';
 import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos, negocioPropio, quitarConfirmado } from '../nube.js';
 
-// Campo de contraseña con «Ver» para revisar lo que se escribió.
+// Campo de contraseña con “Ver” para revisar lo que se escribió.
 export function CampoClave({ titulo, valor, onCambio, nueva, onEnter }) {
   const [ver, setVer] = useState(false);
   return html`<label class="campo"><span>${titulo}</span><span class="clave-caja">
@@ -79,11 +79,11 @@ export function Cuenta({ d, cerrar }) {
     : paso === 'unir' ? html`
       ${cuenta == null ? html`<p class="vacio">Revisando tu cuenta…</p>`
       : yaUnido ? html`<p class="vacio">Este negocio ya está en tu cuenta.</p>`
-      : negocioPropio(cuenta, N.sesion) ? html`<span class="sub" style="line-height:1.5">Tu cuenta ya tiene su negocio: <b>${negocioPropio(cuenta, N.sesion).nombre}</b>. Cada cuenta es para un solo negocio, así que no se puede guardar «${S.negocio.nombre}» en ella.</span>
-        <button type="button" class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => bajar(c, negocioPropio(cuenta, N.sesion))}><${Icono} n="descarga" t=${18} /><span class="crece"><b>Abrir «${negocioPropio(cuenta, N.sesion).nombre}» en este aparato</b><br /><span class="sub" style="font-weight:500">Lo que hay ahora en este aparato queda en una copia</span></span></button>
-        <span class="sub" style="line-height:1.45">Para guardar «${S.negocio.nombre}» crea una cuenta nueva: cierra sesión y elige «Crear cuenta».</span>`
+      : negocioPropio(cuenta, N.sesion) ? html`<span class="sub" style="line-height:1.5">Tu cuenta ya tiene su negocio: <b>${negocioPropio(cuenta, N.sesion).nombre}</b>. Cada cuenta es para un solo negocio, así que no se puede guardar “${S.negocio.nombre}” en ella.</span>
+        <button type="button" class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => bajar(c, negocioPropio(cuenta, N.sesion))}><${Icono} n="descarga" t=${18} /><span class="crece"><b>Abrir “${negocioPropio(cuenta, N.sesion).nombre}” en este aparato</b><br /><span class="sub" style="font-weight:500">Lo que hay ahora en este aparato queda en una copia</span></span></button>
+        <span class="sub" style="line-height:1.45">Para guardar “${S.negocio.nombre}” crea una cuenta nueva: cierra sesión y elige “Crear cuenta”.</span>`
       : html`<span class="sub" style="line-height:1.45">Sesión iniciada${N.usuario ? html` como <b>${N.usuario}</b>` : ''}.</span>
-        <button type="button" class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => subir(c)}><${Icono} n="subir" t=${18} /><span class="crece"><b>Guardar «${S.negocio.nombre}» en mi cuenta</b><br /><span class="sub" style="font-weight:500">Sube lo que tienes en este aparato</span></span></button>
+        <button type="button" class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => subir(c)}><${Icono} n="subir" t=${18} /><span class="crece"><b>Guardar “${S.negocio.nombre}” en mi cuenta</b><br /><span class="sub" style="font-weight:500">Sube lo que tienes en este aparato</span></span></button>
         ${cuenta.length > 0 && html`<span class="titulo-funciones">O usar uno que ya está en tu cuenta</span>${cuenta.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => bajar(c, g)}><${Icono} n="descarga" t=${18} /><span class="crece"><b>${g.nombre}</b><br /><span class="sub" style="font-weight:500">${datoNegocio(g)} · reemplaza lo de este aparato (se guarda una copia)</span></span></button>`)}`}`}`
     : html`
       ${d.inicio && html`<div class="pila" style="gap:8px">${[['escudo', 'Si pierdes o cambias el teléfono, no pierdes nada'], ['movil', 'Úsalo en varios aparatos con los mismos datos'], ['wifi', 'Sigue funcionando sin internet: se guarda al volver la conexión']].map(x => html`<span class="fila" style="gap:10px;font-size:14px"><span class="ic t-ver" style="width:30px;height:30px;border-radius:10px"><${Icono} n=${x[0]} t=${15} /></span>${x[1]}</span>`)}</div>`}
@@ -94,7 +94,7 @@ export function Cuenta({ d, cerrar }) {
   })} />`;
 }
 
-// ---------- pantalla: contraseña nueva (al volver del enlace «Olvidé mi contraseña») ----------
+// ---------- pantalla: contraseña nueva (al volver del enlace “Olvidé mi contraseña”) ----------
 // Pantalla completa: aparece sola, antes que todo lo demás, también en el panel de administración.
 export function ClaveNueva() {
   const N = useNube();
@@ -210,7 +210,7 @@ export function Suscripcion() {
       ${pagos.map(p => html`<div class="fila" key=${p.id} style="justify-content:space-between;padding:10px 0;font-size:13px"><span>${new Date(p.creado).toLocaleDateString('es')} · ${p.metodo} · ${p.moneda} ${p.monto}</span><span class=${'pildora ' + (p.estado === 'aprobado' ? 't-ver' : p.estado === 'rechazado' ? 't-ros' : 't-amb')}>${p.estado === 'pendiente' ? 'Por confirmar' : p.estado === 'aprobado' ? 'Aprobado' : 'Rechazado'}</span></div>`)}`}`;
 }
 
-// ---------- hoja: pagar y avisar «Ya pagué» ----------
+// ---------- hoja: pagar y avisar “Ya pagué” ----------
 // Por ahora solo se cobra por Binance (Pago Móvil y efectivo vuelven a esta lista cuando se activen).
 const METODOS_PAGO = ['Binance'];
 // La factura a nombre del negocio se activa cuando Orbe tenga imprenta digital.
@@ -260,7 +260,7 @@ export function Pagar({ d, cerrar }) {
   })} />`;
 }
 
-// ---------- bienvenida → «Empezar»: primero la cuenta (correo y contraseña), después se arma el negocio ----------
+// ---------- bienvenida → “Empezar”: primero la cuenta (correo y contraseña), después se arma el negocio ----------
 export function CrearCuentaInicio({ volver, entrar, listo }) {
   const N = useNube();
   const [f, setF] = useState({ correo: '', usuario: '', clave: '', clave2: '' });
@@ -299,7 +299,7 @@ export function CrearCuentaInicio({ volver, entrar, listo }) {
   </div>`;
 }
 
-// ---------- bienvenida → «Ya tengo cuenta»: abrir mi negocio en este aparato ----------
+// ---------- bienvenida → “Ya tengo cuenta”: abrir mi negocio en este aparato ----------
 export function EntrarInicio({ volver, crear }) {
   const N = useNube();
   const [modo, setModo] = useState('entrar');
@@ -379,7 +379,7 @@ export function EntrarDeNuevo({ tel }) {
       marcarBienvenida(S.negocio);
       // Solo entra una cuenta de este negocio: otra cuenta no ve lo que hay en el aparato.
       const nid = S.negocio && S.negocio.nubeId;
-      if (nid) { const lista = await misNegocios(); if (!lista.some(g => g.id === nid)) { await cerrarSesion(); throw new Error('Esa cuenta no es de ' + S.negocio.nombre + '. Toca «Entrar con otra cuenta»'); } }
+      if (nid) { const lista = await misNegocios(); if (!lista.some(g => g.id === nid)) { await cerrarSesion(); throw new Error('Esa cuenta no es de ' + S.negocio.nombre + '. Toca “Entrar con otra cuenta”'); } }
       iniciarNube();
     } catch (er) { avisar(er.message); } finally { verificandoCuenta(false); setOcupado(false); }
   };

@@ -422,7 +422,7 @@ function ejemplo(neg, productos, D, perfiles) {
       ['iPhone 12 — cambio de pantalla', 'Pantalla rota, táctil funciona.', [['Pantalla original', 90], ['Mano de obra', 30]], 'lista', 0, 60],
       ['Impresora Epson L3150 — atasco de papel', '', [['Revisión', 10]], 'recibida', 2, 0],
       ['Moto Bera — servicio de 5.000 km', 'Cambio de aceite y frenos.', [['Aceite y filtro', 25], ['Pastillas de freno', 18], ['Mano de obra', 22]], 'recibida', 3, 20]]
-    : [['Pedido: 3 tortas de cumpleaños', 'Una de chocolate, dos de vainilla. Escribir «Feliz día Ana».', [['Torta mediana', 30, 3]], 'proceso', -1, 45],
+    : [['Pedido: 3 tortas de cumpleaños', 'Una de chocolate, dos de vainilla. Escribir “Feliz día Ana”.', [['Torta mediana', 30, 3]], 'proceso', -1, 45],
       ['Encargo: 2 cajas de refrescos surtidos', 'Retira en el local.', [['Caja de refrescos', 18, 2]], 'lista', 0, 0],
       ['Pedido para empresa: café y azúcar', 'Facturar a nombre de la empresa.', [['Café 500 g', 6, 10], ['Azúcar 1 kg', 1.6, 10]], 'recibida', 2, 30],
       ['Bandeja de 50 tequeños', 'Para el sábado a las 10 am.', [['Bandeja de tequeños', 25]], 'recibida', 4, 0]];
@@ -457,7 +457,7 @@ const dolarDe = (v, t) => S.negocio.pais === 'VE' ? v : v / (t || tasaDe());
 const anotarHistorial = (s, f, v) => { const dia = diaClave(Date.now()), h = (s.historialTasas || []).filter(x => !(x.dia === dia && x.f === f)); return h.concat([{ dia, f, v }]).slice(-600); };
 const juntar = pagos => pagos.map(p => p.m).join(' + ');
 export const sigNumero = () => (S.ventas.length ? S.ventas[S.ventas.length - 1].n : 1000) + 1;
-// Cada línea de una venta se identifica por producto y, si tiene, por variante (talla, color…): «p12~v3».
+// Cada línea de una venta se identifica por producto y, si tiene, por variante (talla, color…): “p12~v3”.
 export const claveItem = it => it.vid ? it.pid + '~' + it.vid : it.pid;
 const redQ = x => Math.round(x * 1000) / 1000;
 // Suma o resta existencia; las cantidades pueden tener decimales (productos por peso) y bajar por variante.
@@ -494,7 +494,7 @@ export function anularVenta(vid, motivo) {
   cambiar(s => Object.assign({
     ventas: s.ventas.map(x => x.id === vid ? Object.assign({}, x, { anulada: { t: Date.now(), por: s.ajustes.perfil || '', motivo } }) : x),
     productos: stockMas(s.productos, quedan, 1)
-  }, v.plan ? { planes: (s.planes || []).map(p => p.id === v.plan ? Object.assign({}, p, { estado: 'anulado', hist: p.hist.concat([{ t: Date.now(), por: s.ajustes.perfil || '', txt: 'Se anuló la venta #' + v.n }]) }) : p) } : {}, v.orden ? { ordenes: s.ordenes.map(o => o.id === v.orden ? Object.assign({}, o, { estado: 'lista', venta: '', hist: o.hist.concat([{ t: Date.now(), por: s.ajustes.perfil || '', txt: 'Se anuló la venta #' + v.n + ': la orden vuelve a «Lista»', e: 'lista' }]) }) : o) } : {}, nota(s, 'Anuló la venta #' + v.n + ' (' + motivo + ')')));
+  }, v.plan ? { planes: (s.planes || []).map(p => p.id === v.plan ? Object.assign({}, p, { estado: 'anulado', hist: p.hist.concat([{ t: Date.now(), por: s.ajustes.perfil || '', txt: 'Se anuló la venta #' + v.n }]) }) : p) } : {}, v.orden ? { ordenes: s.ordenes.map(o => o.id === v.orden ? Object.assign({}, o, { estado: 'lista', venta: '', hist: o.hist.concat([{ t: Date.now(), por: s.ajustes.perfil || '', txt: 'Se anuló la venta #' + v.n + ': la orden vuelve a “Lista”', e: 'lista' }]) }) : o) } : {}, nota(s, 'Anuló la venta #' + v.n + ' (' + motivo + ')')));
   return true;
 }
 // Devolución: un movimiento nuevo en negativo (cuenta el día que se devuelve) y lo devuelto vuelve al inventario.
@@ -528,7 +528,7 @@ export const pagosDeAbono = a => a.pagos || [{ m: a.m, v: a.v }];
 // ---------- órdenes de trabajo y pedidos ----------
 // Cada orden guarda su historial (estados y notas). Los anticipos son abonos marcados con la orden:
 // entran a la caja el día que se pagan y no se mezclan con lo que el cliente debe por fiado.
-// Al entregar se hace la venta completa; lo adelantado se paga con «Anticipo» (no vuelve a entrar a la caja).
+// Al entregar se hace la venta completa; lo adelantado se paga con “Anticipo” (no vuelve a entrar a la caja).
 export const ESTADOS_ORDEN = [
   { k: 'recibida', n: 'Recibida', tono: 't-amb', c: 'var(--amber)' },
   { k: 'proceso', n: 'En proceso', tono: 't-azu', c: 'var(--blue)' },
@@ -562,9 +562,9 @@ export function estadoOrden(oid, estado, txt) {
   cambiarOrden(oid, o => Object.assign({}, o, { estado }, estado === 'lista' ? { lista: Date.now() } : {}, { hist: o.hist.concat([histOrden(txt, estado)]) }));
 }
 // ---------- cuotas y apartados ----------
-// Cuotas: la venta se hace hoy (el producto sale) y lo que falta se paga en partes con fecha («Cuotas» no entra a la caja).
+// Cuotas: la venta se hace hoy (el producto sale) y lo que falta se paga en partes con fecha (“Cuotas” no entra a la caja).
 // Apartado: el producto queda separado del inventario; el cliente abona y se lo lleva al completar (entonces se hace la venta).
-// Los pagos de un plan son abonos marcados con «plan»: entran a la caja el día que se pagan y no se mezclan con el fiado.
+// Los pagos de un plan son abonos marcados con “plan”: entran a la caja el día que se pagan y no se mezclan con el fiado.
 const DIA_MS = 86400000;
 export const FRECUENCIAS = [{ k: 'sem', n: 'Semanal', dias: 7 }, { k: 'quin', n: 'Quincenal', dias: 15 }, { k: 'mes', n: 'Mensual', meses: 1 }];
 export const ACUERDOS_APARTADO = [{ k: 'saldo', n: 'Queda como saldo a favor', corto: 'Saldo a favor' }, { k: 'devolver', n: 'Se le devuelve', corto: 'Se devuelve' }, { k: 'retener', n: 'Se queda en el negocio', corto: 'Se retiene' }];
@@ -602,7 +602,7 @@ export function cuentaPlan(p, ahora = Date.now()) {
 }
 const cambiarPlan = (pid, fn, que) => cambiar(s => Object.assign({ planes: (s.planes || []).map(p => p.id === pid ? fn(p) : p) }, que ? nota(s, que) : {}));
 const histPlan = txt => ({ t: Date.now(), por: S.ajustes.perfil || '', txt });
-// Venta a cuotas (la venta ya se hizo con la parte «Cuotas»).
+// Venta a cuotas (la venta ya se hizo con la parte “Cuotas”).
 export function crearPlanCuotas(venta, { inicial, financiado, n, cada, recargo, recargoPct }) {
   const plan = { id: 'p' + id(), n: sigPlan(), tipo: 'cuotas', t: Date.now(), por: S.ajustes.perfil || '', cli: venta.cli, suc: venta.suc, venta: venta.id,
     items: venta.items, total: venta.total, inicialVenta: r2(inicial), antes: r2(inicial), financiado: r2(financiado), recargo: r2(recargo || 0), recargoPct: recargoPct || 0, cada,
@@ -632,7 +632,7 @@ export function masTiempoApartado(pid, dias) {
   const p0 = (S.planes || []).find(p => p.id === pid); if (!p0) return;
   cambiarPlan(pid, p => Object.assign({}, p, { vence: mediodia(Math.max(p.vence, Date.now()) + dias * DIA_MS), posponer: 0, hist: p.hist.concat([histPlan('Le dio ' + dias + ' días más')]) }), 'Dio más tiempo al apartado ' + numeroPlan(p0));
 }
-// «Escribirle primero»: no se decide hoy; vuelve a preguntar mañana.
+// “Escribirle primero”: no se decide hoy; vuelve a preguntar mañana.
 export function posponerApartado(pid) { cambiarPlan(pid, p => Object.assign({}, p, { posponer: mediodia(Date.now() + DIA_MS) - 12 * 3600000, recordado: Date.now(), hist: p.hist.concat([histPlan('Se le escribió; decide mañana')]) })); }
 // Entregar un apartado pagado: ahora sí es una venta (pagada con lo abonado, que ya entró a la caja).
 export function entregarApartado(pid) {
@@ -747,7 +747,7 @@ export function anotarGasto(g) { cambiar(s => ({ gastos: s.gastos.concat([Object
 export function editarGasto(gid, g) { cambiar(s => ({ gastos: s.gastos.map(x => x.id === gid ? Object.assign({}, x, conPagos(g)) : x) })); }
 export function borrarGasto(gid) {
   const g = S.gastos.find(x => x.id === gid); if (!g) return;
-  cambiar(s => Object.assign({ gastos: s.gastos.filter(x => x.id !== gid) }, nota(s, 'Borró el gasto «' + g.n + '»')));
+  cambiar(s => Object.assign({ gastos: s.gastos.filter(x => x.id !== gid) }, nota(s, 'Borró el gasto “' + g.n + '”')));
 }
 export function pagarGasto(gid) { cambiar(s => ({ gastos: s.gastos.map(g => g.id === gid ? Object.assign({}, g, { pagado: true, t: Date.now() }) : g) })); }
 export function guardarProducto(p) {
@@ -756,7 +756,7 @@ export function guardarProducto(p) {
   if (p.c != null && (!p0 || Math.abs((p0.c || 0) - p.c) > 0.004 || !p0.cT)) p = Object.assign({}, p, { cT: tasaDe() });
   // Con variantes, la existencia del producto es la suma de las variantes.
   if (Array.isArray(p.vars) && p.vars.length && p.q != null) p = Object.assign({}, p, { q: redQ(p.vars.reduce((a, v) => a + (v.q || 0), 0)) });
-  // Producto nuevo: el id se genera aquí (un «id: undefined» no debe pisarlo).
+  // Producto nuevo: el id se genera aquí (un “id: undefined” no debe pisarlo).
   if (!p.id) { p = Object.assign({}, p, { id: 'p' + id() }); p.nuevo = true; }
   const esNuevo = p.nuevo; delete p.nuevo;
   cambiar(s => ({ productos: !esNuevo && s.productos.some(x => x.id === p.id) ? s.productos.map(x => { if (x.id !== p.id) return x; const n = Object.assign({}, x, p); if (p.imp === undefined) delete n.imp; return n; }) : s.productos.concat([Object.assign({ cod: '' }, p)]) }));
@@ -765,7 +765,7 @@ export function guardarProducto(p) {
 // Borrar producto o cliente: se ocultan, pero su historial de ventas se queda.
 export function borrarProducto(pid) {
   const p = S.productos.find(x => x.id === pid); if (!p) return;
-  cambiar(s => Object.assign({ productos: s.productos.map(x => x.id === pid ? Object.assign({}, x, { borrado: Date.now() }) : x) }, nota(s, 'Borró el producto «' + p.n + '»')));
+  cambiar(s => Object.assign({ productos: s.productos.map(x => x.id === pid ? Object.assign({}, x, { borrado: Date.now() }) : x) }, nota(s, 'Borró el producto “' + p.n + '”')));
 }
 // Reponer: si cambió lo que cuesta, se guarda como costo de reposición (el de hoy) y se anota.
 // ---------- grupos de productos ----------
@@ -787,7 +787,7 @@ export function guardarGrupo(g) {
 // Borrar un grupo: sus productos quedan sin grupo (no se borra ninguno).
 export function borrarGrupo(gid) {
   const g = S.grupos.find(x => x.id === gid); if (!g) return;
-  cambiar(s => Object.assign({ grupos: s.grupos.filter(x => x.id !== gid), productos: s.productos.map(p => p.g === gid ? Object.assign({}, p, { g: '' }) : p) }, nota(s, 'Borró el grupo «' + g.n + '»')));
+  cambiar(s => Object.assign({ grupos: s.grupos.filter(x => x.id !== gid), productos: s.productos.map(p => p.g === gid ? Object.assign({}, p, { g: '' }) : p) }, nota(s, 'Borró el grupo “' + g.n + '”')));
 }
 // Poner varios productos en un grupo de una vez (y sacar del grupo los que se desmarcaron).
 export function asignarGrupo(gid, ids) {
@@ -796,12 +796,12 @@ export function asignarGrupo(gid, ids) {
 export function reponer(pid, cuanto, costo) {
   const p0 = S.productos.find(p => p.id === pid);
   const cambio = p0 && costo > 0 && Math.abs(costo - p0.c) > 0.004;
-  cambiar(s => Object.assign({ productos: s.productos.map(p => p.id === pid && p.q != null ? Object.assign({}, p, { q: p.q + cuanto }, cambio ? { c: costo, cAntes: p.c, cT: tasaDe() } : {}) : p) }, cambio ? nota(s, 'Costo de «' + p0.n + '» pasó de ' + p0.c + ' a ' + costo) : {}));
+  cambiar(s => Object.assign({ productos: s.productos.map(p => p.id === pid && p.q != null ? Object.assign({}, p, { q: p.q + cuanto }, cambio ? { c: costo, cAntes: p.c, cT: tasaDe() } : {}) : p) }, cambio ? nota(s, 'Costo de “' + p0.n + '” pasó de ' + p0.c + ' a ' + costo) : {}));
 }
 // Ponerle (o cambiarle) el código de barras a un producto desde el escáner.
 export function asignarCodigo(pid, cod) {
   const p0 = S.productos.find(p => p.id === pid); if (!p0) return;
-  cambiar(s => Object.assign({ productos: s.productos.map(p => p.id === pid ? Object.assign({}, p, { cod }) : p) }, nota(s, 'Puso el código ' + cod + ' a «' + p0.n + '»' + (p0.cod ? ' (antes ' + p0.cod + ')' : ''))));
+  cambiar(s => Object.assign({ productos: s.productos.map(p => p.id === pid ? Object.assign({}, p, { cod }) : p) }, nota(s, 'Puso el código ' + cod + ' a “' + p0.n + '”' + (p0.cod ? ' (antes ' + p0.cod + ')' : ''))));
 }
 // Ajuste rápido de existencia (escáner): suma o resta unidades sin tocar el costo, y queda anotado.
 export function ajustarStock(pid, cuanto, vid) {
@@ -809,10 +809,10 @@ export function ajustarStock(pid, cuanto, vid) {
   const v0 = vid && (p0.vars || []).find(v => v.id === vid), antes = v0 ? v0.q || 0 : p0.q || 0;
   const nuevo = redQ(Math.max(0, antes + cuanto)), real = redQ(nuevo - antes), nombre = p0.n + (v0 ? ' · ' + v0.n : '');
   const k = v0 ? pid + '~' + vid : pid;
-  cambiar(s => Object.assign({ productos: real >= 0 ? stockMas(s.productos, { [k]: real }, 1) : stockMas(s.productos, { [k]: -real }, -1) }, nota(s, (real >= 0 ? 'Sumó ' + real + ' a' : 'Restó ' + -real + ' de') + ' «' + nombre + '» con el escáner (' + antes + ' → ' + nuevo + ')')));
+  cambiar(s => Object.assign({ productos: real >= 0 ? stockMas(s.productos, { [k]: real }, 1) : stockMas(s.productos, { [k]: -real }, -1) }, nota(s, (real >= 0 ? 'Sumó ' + real + ' a' : 'Restó ' + -real + ' de') + ' “' + nombre + '” con el escáner (' + antes + ' → ' + nuevo + ')')));
   return nuevo;
 }
-// Remarcar: sube (o baja) los precios en bloque un porcentaje, con redondeo «bonito».
+// Remarcar: sube (o baja) los precios en bloque un porcentaje, con redondeo “bonito”.
 export function remarcar(ids, pct, redondo) {
   cambiar(s => Object.assign({ productos: s.productos.map(p => ids.includes(p.id) ? Object.assign({}, p, { p: redondo(p.p * (1 + pct / 100)), pAntes: p.p }) : p) }, nota(s, 'Remarcó ' + ids.length + ' precios ' + (pct > 0 ? '+' : '') + pct + ' %')));
 }
@@ -820,7 +820,7 @@ export function nuevoCliente(c) { const nuevo = Object.assign({ id: 'c' + id(), 
 export function editarCliente(cid, c) { cambiar(s => ({ clientes: s.clientes.map(x => x.id === cid ? Object.assign({}, x, c) : x) })); }
 export function borrarCliente(cid) {
   const c = S.clientes.find(x => x.id === cid); if (!c || deudaDe(cid) > 0.004) return false;
-  cambiar(s => Object.assign({ clientes: s.clientes.map(x => x.id === cid ? Object.assign({}, x, { borrado: Date.now() }) : x) }, nota(s, 'Borró al cliente «' + c.n + '»')));
+  cambiar(s => Object.assign({ clientes: s.clientes.map(x => x.id === cid ? Object.assign({}, x, { borrado: Date.now() }) : x) }, nota(s, 'Borró al cliente “' + c.n + '”')));
   return true;
 }
 // Cierre Z: numerado y correlativo, con lo vendido por forma de pago y los impuestos del día.
@@ -842,7 +842,7 @@ export function movCaja(tipo, pagos, motivo) {
   cambiar(s => Object.assign({ movCaja: s.movCaja.concat([mv]) }, nombre ? nota(s, nombre + pagos.map(p => p.m + ' ' + Math.round(p.v * 100) / 100).join(' + ') + (motivo ? ' (' + motivo + ')' : '')) : {}));
 }
 export const movsEntre = (desde, hasta) => S.movCaja.filter(x => x.t >= desde && x.t < hasta);
-// Lo que debería haber en la caja por forma de pago, entre dos momentos, partiendo de «base».
+// Lo que debería haber en la caja por forma de pago, entre dos momentos, partiendo de “base”.
 export function cajaEntre(desde, hasta, base) {
   const partes = {}, parte = m => partes[m] || (partes[m] = { base: 0, ventas: 0, fondo: 0, ingresos: 0, retiros: 0, gastos: 0, ajustes: 0 });
   Object.keys(base || {}).forEach(m => { parte(m).base += base[m]; });
@@ -858,7 +858,7 @@ export function turnoActual() {
   const hoy0 = inicioDia(Date.now()), t = S.turnos.filter(x => x.hasta >= hoy0).slice(-1)[0];
   return t ? { desde: t.hasta, base: t.deja, anterior: t } : { desde: hoy0, base: {}, anterior: null };
 }
-// Hora en que de verdad empezó un turno: el primer fondo, venta o movimiento desde «desde».
+// Hora en que de verdad empezó un turno: el primer fondo, venta o movimiento desde “desde”.
 export function inicioVisible(desde) {
   const ts = [].concat(S.movCaja.filter(x => x.t >= desde).map(x => x.t), S.ventas.filter(v => v.t >= desde).map(v => v.t), S.abonos.filter(a => a.t >= desde).map(a => a.t));
   return ts.length ? Math.min(...ts) : desde;
@@ -898,7 +898,7 @@ const PIN_V = 'h1$';
 export const esPinCifrado = x => typeof x === 'string' && x.startsWith(PIN_V);
 export function cifrarPin(pid, pin) { let h = String(pin); for (let i = 0; i < 1500; i++) h = sha256('orbe-pin|' + pid + '|' + h); return PIN_V + h; }
 export const pinValido = (p, pin) => !!p && !!p.pin && (esPinCifrado(p.pin) ? cifrarPin(p.id, pin) === p.pin : p.pin === pin);
-// «Olvidé mi PIN»: queda el aviso para el dueño (en Hoy) hasta que le pongan uno nuevo.
+// “Olvidé mi PIN”: queda el aviso para el dueño (en Hoy) hasta que le pongan uno nuevo.
 export function pedirPinNuevo(pid) {
   const p = S.perfiles.find(x => x.id === pid); if (!p) return;
   if ((S.solicitudes || []).some(x => x.tipo === 'pin' && x.pid === pid && x.estado === 'abierta')) return;
@@ -924,7 +924,7 @@ export function guardarPerfil(p) {
 export function cambiarPin(pid, pin) {
   const p0 = S.perfiles.find(p => p.id === pid); if (!p0) return;
   const guardado = pin ? cifrarPin(pid, pin) : '';
-  // Con el PIN nuevo, el aviso de «olvidé mi PIN» queda atendido.
+  // Con el PIN nuevo, el aviso de “olvidé mi PIN” queda atendido.
   cambiar(s => Object.assign({ perfiles: s.perfiles.map(p => p.id === pid ? Object.assign({}, p, { pin: guardado }) : p), solicitudes: (s.solicitudes || []).map(x => x.tipo === 'pin' && x.pid === pid && x.estado === 'abierta' ? Object.assign({}, x, { estado: 'hecha', hecha: Date.now() }) : x) }, nota(s, (pin ? (p0.pin ? 'Cambió' : 'Puso') : 'Quitó') + ' el PIN de ' + p0.n)));
 }
 // Eliminar un perfil: ya no aparece ni puede entrar, pero sus ventas y su nombre se quedan en el historial.
@@ -936,9 +936,9 @@ export function borrarPerfil(pid) {
 const nombrePermiso = k => ((PERMISOS.find(p => p.k === k) || {}).n || k).toLowerCase();
 export function cambiarPermiso(rolId, k, v) {
   const r0 = S.roles.find(r => r.id === rolId); if (!r0 || r0.fijo || !!r0.p[k] === !!v) return;
-  cambiar(s => Object.assign({ roles: s.roles.map(r => r.id === rolId ? Object.assign({}, r, { p: Object.assign({}, r.p, { [k]: v }) }) : r) }, nota(s, (v ? 'Le dio a «' : 'Le quitó a «') + r0.n + '» el permiso «' + nombrePermiso(k) + '»')));
+  cambiar(s => Object.assign({ roles: s.roles.map(r => r.id === rolId ? Object.assign({}, r, { p: Object.assign({}, r.p, { [k]: v }) }) : r) }, nota(s, (v ? 'Le dio a “' : 'Le quitó a “') + r0.n + '” el permiso “' + nombrePermiso(k) + '”')));
 }
-export function nuevoRol(n) { const r = { id: 'r' + id(), n, p: { vender: true } }; cambiar(s => Object.assign({ roles: s.roles.concat([r]) }, nota(s, 'Creó el rol «' + n + '»'))); return r; }
+export function nuevoRol(n) { const r = { id: 'r' + id(), n, p: { vender: true } }; cambiar(s => Object.assign({ roles: s.roles.concat([r]) }, nota(s, 'Creó el rol “' + n + '”'))); return r; }
 // Borrar un rol: quienes lo tenían pasan al rol que se elija (nadie queda sin rol).
 export const perfilesConRol = rolId => S.perfiles.filter(p => !p.borrado && p.rol === rolId);
 export function borrarRol(rolId, pasarA) {
@@ -947,7 +947,7 @@ export function borrarRol(rolId, pasarA) {
   const quienes = perfilesConRol(rolId);
   if (quienes.length && (!dest || dest.id === rolId || dest.id === 'dueno')) return false;
   cambiar(s => Object.assign({ roles: s.roles.filter(r => r.id !== rolId), perfiles: s.perfiles.map(p => p.rol === rolId ? Object.assign({}, p, { rol: pasarA }) : p) },
-    nota(s, 'Borró el rol «' + r0.n + '»' + (quienes.length ? ' y pasó a ' + quienes.map(p => p.n.split(' ')[0]).join(', ') + ' a «' + dest.n + '»' : ''))));
+    nota(s, 'Borró el rol “' + r0.n + '”' + (quienes.length ? ' y pasó a ' + quienes.map(p => p.n.split(' ')[0]).join(', ') + ' a “' + dest.n + '”' : ''))));
   return true;
 }
 export function cambiarAjustes(a) { cambiar(s => ({ ajustes: Object.assign({}, s.ajustes, a) })); }
@@ -1017,7 +1017,7 @@ export async function borrarTodoLocal() {
   try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }
   cambiar(() => vacio());
 }
-// Deshacer un borrado: se guarda cómo estaba todo antes y, si se toca «Deshacer», vuelven las colecciones que cambiaron.
+// Deshacer un borrado: se guarda cómo estaba todo antes y, si se toca “Deshacer”, vuelven las colecciones que cambiaron.
 // (El registro de cambios no se toca: queda anotado que se borró y que se deshizo.)
 export function conDeshacer(fn, que) {
   const antes = S; const r = fn(); const despues = S;
@@ -1135,10 +1135,10 @@ export function guardarPromo(pr) {
   const nueva = !pr.id;
   if (nueva) { pr = Object.assign({}, pr); delete pr.id; }
   const x = Object.assign({ id: 'pr' + id(), activa: true, pids: [], g: '', hasta: 0 }, pr);
-  cambiar(s => Object.assign({ promos: nueva ? (s.promos || []).concat([x]) : (s.promos || []).map(y => y.id === x.id ? x : y) }, nota(s, (nueva ? 'Creó' : 'Cambió') + ' la promoción «' + x.n + '»')));
+  cambiar(s => Object.assign({ promos: nueva ? (s.promos || []).concat([x]) : (s.promos || []).map(y => y.id === x.id ? x : y) }, nota(s, (nueva ? 'Creó' : 'Cambió') + ' la promoción “' + x.n + '”')));
   return x.id;
 }
-export function borrarPromo(prid) { const x = (S.promos || []).find(y => y.id === prid); if (!x) return; cambiar(s => Object.assign({ promos: s.promos.filter(y => y.id !== prid) }, nota(s, 'Borró la promoción «' + x.n + '»'))); }
+export function borrarPromo(prid) { const x = (S.promos || []).find(y => y.id === prid); if (!x) return; cambiar(s => Object.assign({ promos: s.promos.filter(y => y.id !== prid) }, nota(s, 'Borró la promoción “' + x.n + '”'))); }
 export const promosVigentes = (ahora = Date.now()) => (S.promos || []).filter(x => x.activa && (!x.hasta || x.hasta >= ahora));
 export const promoAplica = (x, p) => (x.pids || []).includes(p.id) || (!!x.g && p.g === x.g);
 // ---------- precios e inflación ----------

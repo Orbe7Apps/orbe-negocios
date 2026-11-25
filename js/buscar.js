@@ -2,7 +2,7 @@
 // palabras en cualquier orden y el comienzo de una palabra. Ordena por parecido.
 
 export const normal = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-// Raíz simple en español: «empanadas» → «empanada», «papas» → «papa», «refrescos» → «refresco».
+// Raíz simple en español: “empanadas” → “empanada”, “papas” → “papa”, “refrescos” → “refresco”.
 const raiz = t => t.length > 4 && t.endsWith('es') && !/[aeiou]es$/.test(t) ? t.slice(0, -2) : t.length > 3 && t.endsWith('s') ? t.slice(0, -1) : t;
 
 // Distancia de edición (con letras cambiadas de lugar), cortando apenas supera el máximo.
@@ -34,13 +34,13 @@ function parecido(q, w) {
   const tol = q.length >= 7 ? 2 : q.length >= 4 ? 1 : 0;
   if (!tol) return 0;
   if (distancia(rq, rw, tol) <= tol) return 0.65 - 0.1 * distancia(rq, rw, tol);
-  // Comienzo con un error: «hambur» ~ «hamburguesa».
+  // Comienzo con un error: “hambur” ~ “hamburguesa”.
   if (q.length >= 4 && distancia(q, w.slice(0, q.length), 1) <= 1) return 0.5;
   return 0;
 }
 
 // Busca en una lista. textos(x) devuelve los textos de cada elemento (nombre, código, grupo…).
-// Devuelve los que coinciden, del más parecido al menos. Con «suelto», alcanza con que coincida una palabra.
+// Devuelve los que coinciden, del más parecido al menos. Con “suelto”, alcanza con que coincida una palabra.
 export function buscar(lista, q, textos, suelto) {
   const qs = normal(q).split(' ').filter(Boolean);
   if (!qs.length) return lista.slice();
@@ -62,5 +62,5 @@ export function buscar(lista, q, textos, suelto) {
   return (mejor >= 0.9 && !suelto ? out.filter(r => r.puntos >= 0.75) : out).map(r => r.x);
 }
 
-// Para «¿Quisiste decir…?»: los más parecidos aunque no coincidan todas las palabras.
+// Para “¿Quisiste decir…?”: los más parecidos aunque no coincidan todas las palabras.
 export const parecidos = (lista, q, textos, n = 4) => buscar(lista, q, textos, true).slice(0, n);

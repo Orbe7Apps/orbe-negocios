@@ -56,7 +56,7 @@ export function BotonOrbe({ seccion, tabs = [] }) {
     </button>`;
 }
 
-// Computadora: botón «Nuevo ▾» en la barra de arriba, con lo que se crea a diario.
+// Computadora: botón “Nuevo ▾” en la barra de arriba, con lo que se crea a diario.
 export function BotonNuevo() {
   const { T, ir, abrir, puede } = useApp();
   const [abierto, setAbierto] = useState(false);

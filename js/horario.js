@@ -56,7 +56,7 @@ export function EditorHorario({ h, onCambio }) {
   </div>`;
 }
 
-// Vacaciones y días libres: lista con «+ Agregar».
+// Vacaciones y días libres: lista con “+ Agregar”.
 const diaInput = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const deDiaInput = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).getTime(); };
 export function EditorAusencias({ lista, onCambio }) {
