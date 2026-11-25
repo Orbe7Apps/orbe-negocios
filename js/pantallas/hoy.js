@@ -4,7 +4,7 @@ import { useApp } from '../ctx.js';
 import { citaActiva, resumen, serieDias, inicioDia, deudores, porPagar, bajoMinimo, bajoCosto, bajoMeta, margenMeta, cajaAbierta, cierreDeHoy, leer, diaClave, vigentes, ordenAbierta, ordenAtrasada, numeroOrden } from '../datos.js';
 import { esElectronico } from '../paises.js';
 import { Barras, Linea, Reparto, Monto, Anillo, color } from '../graficos.js';
-import { Icono, LogoOrbe, iniciales, hora, fechaCorta, Bandera, MarcaNegocio, avisar, tonoZona } from '../ui.js';
+import { Icono, LogoOrbe, iniciales, hora, fechaCorta, Bandera, MarcaNegocio, avisar } from '../ui.js';
 import { nombreTasa } from '../paises.js';
 import { FilaVenta } from './hojas.js';
 import { OfertaRecorrido } from '../recorrido.js';
@@ -40,41 +40,41 @@ export function Hoy() {
   const sucs = E ? S.negocio.sucursales.map((s, i) => ({ n: s, v: r.porSuc[s] || 0, c: color(i) })) : [];
 
   const pendientes = [];
-  if (deben.length && T.mod('fiado')) pendientes.push({ i: 'campana', t: tonoZona('fiado'), txt: deben.length + (deben.length === 1 ? ' cliente te debe ' : ' clientes te deben ') + D.m(debenTot), sub: 'Mándales el recordatorio por WhatsApp', go: () => ir('clientes') });
-  if (bajos.length && T.inv) pendientes.push({ i: 'caja', t: tonoZona('inventario'), txt: bajos.length + (bajos.length === 1 ? ' producto por debajo del mínimo' : ' productos por debajo del mínimo'), sub: bajos.slice(0, 2).map(p => p.n).join(', '), go: () => ir('inventario') });
-  if (pp.length && puede('gastos')) pendientes.push({ i: 'calendario', t: tonoZona('gastos'), urg: pp[0].vence && pp[0].vence < Date.now() + DIA, txt: pp[0].n + ': ' + D.m(pp[0].v), sub: venceTxt(pp[0].vence), go: () => ir('gastos') });
+  if (deben.length && T.mod('fiado')) pendientes.push({ i: 'campana', t: 't-amb', txt: deben.length + (deben.length === 1 ? ' cliente te debe ' : ' clientes te deben ') + D.m(debenTot), sub: 'Mándales el recordatorio por WhatsApp', go: () => ir('clientes') });
+  if (bajos.length && T.inv) pendientes.push({ i: 'caja', t: 't-azu', txt: bajos.length + (bajos.length === 1 ? ' producto por debajo del mínimo' : ' productos por debajo del mínimo'), sub: bajos.slice(0, 2).map(p => p.n).join(', '), go: () => ir('inventario') });
+  if (pp.length && puede('gastos')) pendientes.push({ i: 'calendario', t: 't-ros', txt: pp[0].n + ': ' + D.m(pp[0].v), sub: venceTxt(pp[0].vence), go: () => ir('gastos') });
   // La tasa está en la tarjeta principal; aquí solo se avisa si quedó vieja (no se pudo leer hoy).
-  if (D.dual && S.tasa.modo !== 'manual' && S.tasa.fecha !== diaClave(Date.now())) pendientes.push({ i: 'sube', t: tonoZona('tasa'), txt: 'Actualiza la tasa', sub: nombreTasa(P, S.tasa) + ': se está usando la última guardada', go: () => abrir('tasa') });
+  if (D.dual && S.tasa.modo !== 'manual' && S.tasa.fecha !== diaClave(Date.now())) pendientes.push({ i: 'sube', t: 't-vio', txt: 'Actualiza la tasa', sub: nombreTasa(P, S.tasa) + ': se está usando la última guardada', go: () => abrir('tasa') });
   // La tasa saltó desde ayer: conviene revisar precios (o, en Venezuela, la tasa con la que cobras).
   if (D.dual) { const h = (S.historialTasas || []).filter(x => x.f === (S.tasa.fuente || 'oficial')); const q = h.length > 1 ? (h[h.length - 1].v / h[h.length - 2].v - 1) * 100 : 0;
-    if (Math.abs(q) >= 3) pendientes.unshift({ i: 'alerta', t: tonoZona('tasa'), txt: 'El dólar ' + (q > 0 ? 'subió ' : 'bajó ') + Math.abs(q).toFixed(1).replace('.', ',') + ' % desde ayer', sub: P.id === 'VE' || !puede('productos') ? 'Revisa las tasas con las que cobras' : 'Revisa tus precios', go: puede('productos') && P.id !== 'VE' ? () => abrir('precios') : () => abrir('tasa') }); }
+    if (Math.abs(q) >= 3) pendientes.unshift({ i: 'alerta', t: 't-amb', txt: 'El dólar ' + (q > 0 ? 'subió ' : 'bajó ') + Math.abs(q).toFixed(1).replace('.', ',') + ' % desde ayer', sub: P.id === 'VE' || !puede('productos') ? 'Revisa las tasas con las que cobras' : 'Revisa tus precios', go: puede('productos') && P.id !== 'VE' ? () => abrir('precios') : () => abrir('tasa') }); }
   // Precios que se quedaron atrás: por debajo de la meta de ganancia (los que casi no dejan nada, en rojo).
   const sinGan = bajoCosto(), flojos = bajoMeta();
-  if (flojos.length && puede('productos') && T.inv && T.mod('precios')) pendientes.push({ i: 'etiqueta', t: tonoZona('precios'), urg: sinGan.length > 0, txt: flojos.length + (flojos.length === 1 ? ' precio gana' : ' precios ganan') + ' menos de tu meta del ' + Math.round(margenMeta() * 100) + ' %', sub: sinGan.length ? sinGan.length + (sinGan.length === 1 ? ' casi no deja nada' : ' casi no dejan nada') + ': ' + sinGan.slice(0, 2).map(p => p.n).join(', ') : 'Toca para ajustarlos de un toque', go: () => abrir('precios') });
+  if (flojos.length && puede('productos') && T.inv && T.mod('precios')) pendientes.push({ i: 'etiqueta', t: sinGan.length ? 't-ros' : 't-amb', txt: flojos.length + (flojos.length === 1 ? ' precio gana' : ' precios ganan') + ' menos de tu meta del ' + Math.round(margenMeta() * 100) + ' %', sub: sinGan.length ? sinGan.length + (sinGan.length === 1 ? ' casi no deja nada' : ' casi no dejan nada') + ': ' + sinGan.slice(0, 2).map(p => p.n).join(', ') : 'Toca para ajustarlos de un toque', go: () => abrir('precios') });
   if (S.negocio.pedirRef && puede('ajustes')) { const n = vigentes().filter(v => v.t > Date.now() - 7 * DIA).reduce((a, v) => a + v.pagos.filter(p => p.ref && !p.ok && esElectronico(p.m)).length, 0);
-    if (n) pendientes.push({ i: 'check', t: tonoZona('banco'), txt: n + (n === 1 ? ' pago por verificar' : ' pagos por verificar') + ' con el banco', sub: 'Sube el estado de cuenta y Orbe los busca', go: () => abrir('conciliar') }); }
+    if (n) pendientes.push({ i: 'check', t: 't-azu', txt: n + (n === 1 ? ' pago por verificar' : ' pagos por verificar') + ' con el banco', sub: 'Sube el estado de cuenta y Orbe los busca', go: () => abrir('conciliar') }); }
   // Caja sin fondo: se sugiere anotar con cuánto efectivo se empieza (no obliga).
-  if (T.mod('caja') && !cierre && !cajaAbierta() && puede('vender') && S.negocio.pays.some(m => /Efectivo/.test(m))) pendientes.push({ i: 'billete', t: tonoZona('caja'), txt: 'Abre la caja', sub: 'Anota con cuánto efectivo empiezas para que el cierre cuadre', go: () => abrir('movCaja', { tipo: 'fondo' }) });
+  if (T.mod('caja') && !cierre && !cajaAbierta() && puede('vender') && S.negocio.pays.some(m => /Efectivo/.test(m))) pendientes.push({ i: 'billete', t: 't-vio', txt: 'Abre la caja', sub: 'Anota con cuánto efectivo empiezas para que el cierre cuadre', go: () => abrir('movCaja', { tipo: 'fondo' }) });
   // El cierre solo tiene sentido si hubo movimiento hoy (en una cuenta nueva sería ruido).
-  if (puede('cierre') && (r.n > 0 || cajaAbierta() || cierre)) pendientes.push(cierre ? { i: 'check', t: tonoZona('cierre'), txt: 'Día cerrado', sub: 'Cerraste a las ' + hora(cierre.t), go: null } : { i: 'candado', t: tonoZona('cierre'), txt: 'Cierre del día', sub: 'Cuenta la caja cuando cierres', go: () => abrir('cierre') });
+  if (puede('cierre') && (r.n > 0 || cajaAbierta() || cierre)) pendientes.push(cierre ? { i: 'check', t: 't-ver', txt: 'Día cerrado', sub: 'Cerraste a las ' + hora(cierre.t), go: null } : { i: 'candado', t: 't-ver', txt: 'Cierre del día', sub: 'Cuenta la caja cuando cierres', go: () => abrir('cierre') });
 
   // Órdenes: las atrasadas y las que se entregan hoy van a “Para hacer hoy”.
   if (puede('ordenes') && T.mod('ordenes')) {
     const fin = new Date(); fin.setHours(23, 59, 59, 999);
     const abiertas = S.ordenes.filter(ordenAbierta), tarde = abiertas.filter(o => ordenAtrasada(o)), paraHoy = abiertas.filter(o => !ordenAtrasada(o) && o.entrega && o.entrega <= fin.getTime() && o.estado !== 'lista');
-    if (tarde.length) pendientes.unshift({ i: 'orden', t: tonoZona('ordenes'), urg: true, txt: tarde.length + (tarde.length === 1 ? ' orden atrasada' : ' órdenes atrasadas'), sub: tarde.slice(0, 2).map(o => numeroOrden(o) + ' · ' + o.que).join(', '), go: () => tarde.length === 1 ? abrir('orden', { oid: tarde[0].id }) : ir('ordenes') });
-    if (paraHoy.length) pendientes.push({ i: 'orden', t: tonoZona('ordenes'), txt: paraHoy.length + (paraHoy.length === 1 ? ' orden para entregar hoy' : ' órdenes para entregar hoy'), sub: paraHoy.slice(0, 2).map(o => numeroOrden(o) + ' · ' + o.que).join(', '), go: () => ir('ordenes') });
+    if (tarde.length) pendientes.unshift({ i: 'orden', t: 't-ros', txt: tarde.length + (tarde.length === 1 ? ' orden atrasada' : ' órdenes atrasadas'), sub: tarde.slice(0, 2).map(o => numeroOrden(o) + ' · ' + o.que).join(', '), go: () => tarde.length === 1 ? abrir('orden', { oid: tarde[0].id }) : ir('ordenes') });
+    if (paraHoy.length) pendientes.push({ i: 'orden', t: 't-azu', txt: paraHoy.length + (paraHoy.length === 1 ? ' orden para entregar hoy' : ' órdenes para entregar hoy'), sub: paraHoy.slice(0, 2).map(o => numeroOrden(o) + ' · ' + o.que).join(', '), go: () => ir('ordenes') });
   }
   // Dueño sin PIN con más personas en el equipo: que se ponga uno (sin PIN, para entrar como dueño se pide la contraseña de la cuenta).
-  { const yo0 = S.perfiles.find(p => p.id === S.ajustes.perfil); if (yo0 && yo0.rol === 'dueno' && !yo0.pin && !S.negocio.demo) pendientes.unshift({ i: 'candado', t: tonoZona('perfil'), txt: 'Ponte un PIN de dueño', sub: 'Así entras rápido y nadie más entra como tú', go: () => abrir('pin', { pid: yo0.id }) }); }
+  { const yo0 = S.perfiles.find(p => p.id === S.ajustes.perfil); if (yo0 && yo0.rol === 'dueno' && !yo0.pin && !S.negocio.demo) pendientes.unshift({ i: 'candado', t: 't-amb', txt: 'Ponte un PIN de dueño', sub: 'Así entras rápido y nadie más entra como tú', go: () => abrir('pin', { pid: yo0.id }) }); }
   // Empleados que olvidaron su PIN: el dueño (o quien maneja el equipo) les pone uno nuevo.
-  if (puede('equipo')) (S.solicitudes || []).filter(x => x.tipo === 'pin' && x.estado === 'abierta').forEach(x => { const p = S.perfiles.find(y => y.id === x.pid); if (p) pendientes.unshift({ i: 'candado', t: tonoZona('pin'), txt: p.n.split(' ')[0] + ' olvidó su PIN', sub: 'Toca para ponerle uno nuevo', go: () => abrir('pin', { pid: p.id }) }); });
+  if (puede('equipo')) (S.solicitudes || []).filter(x => x.tipo === 'pin' && x.estado === 'abierta').forEach(x => { const p = S.perfiles.find(y => y.id === x.pid); if (p) pendientes.unshift({ i: 'candado', t: 't-amb', txt: p.n.split(' ')[0] + ' olvidó su PIN', sub: 'Toca para ponerle uno nuevo', go: () => abrir('pin', { pid: p.id }) }); });
   // Agenda: la próxima cita del día (y quién está esperando).
   const citasHoy = T.mod('agenda') ? citasDelDia(S, hoy0) : [];
   if (citasHoy.length) {
     const espera = citasHoy.filter(c => c.estado === 'llego'), prox = citasHoy.find(c => c.estado === 'pendiente' && c.t > Date.now() - 15 * 60000);
-    if (espera.length) pendientes.unshift({ i: 'personas', t: tonoZona('agenda'), txt: espera.length + (espera.length === 1 ? ' cliente esperando' : ' clientes esperando'), sub: espera.map(c => c.nom.split(' ')[0]).join(', '), go: () => abrir('cita', { cid: espera[0].id }) });
-    if (prox) pendientes.unshift({ i: 'calendario', t: tonoZona('agenda'), txt: 'Próxima cita: ' + prox.nom.split(' ')[0] + ' a las ' + hora(prox.t), sub: 'Toca para avisarle o cobrar', go: () => abrir('cita', { cid: prox.id }) });
+    if (espera.length) pendientes.unshift({ i: 'personas', t: 't-amb', txt: espera.length + (espera.length === 1 ? ' cliente esperando' : ' clientes esperando'), sub: espera.map(c => c.nom.split(' ')[0]).join(', '), go: () => abrir('cita', { cid: espera[0].id }) });
+    if (prox) pendientes.unshift({ i: 'calendario', t: 't-azu', txt: 'Próxima cita: ' + prox.nom.split(' ')[0] + ' a las ' + hora(prox.t), sub: 'Toca para avisarle o cobrar', go: () => abrir('cita', { cid: prox.id }) });
   }
   const recientes = leer().ventas.filter(v => !suc || v.suc === suc).slice(-6).reverse();
 
@@ -85,7 +85,7 @@ export function Hoy() {
     <div class="tarjeta-tit">Para hacer hoy<span class="pildora t-vio">${pendientes.filter(p => p.go).length}</span></div>
     <div class="lista">${porHacer.slice(0, nVer).map((p, k) => html`<button type="button" key=${p.txt} class="item toca entra" style=${{ '--i': k, color: 'var(--ink)', cursor: p.go ? 'pointer' : 'default' }} onClick=${p.go || undefined}>
       <span class=${'ic ' + p.t} style="width:34px;height:34px;border-radius:11px"><${Icono} n=${p.i} t=${17} g=${2.2} /></span>
-      <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px;font-weight:600;line-height:1.35">${p.txt}</b><span class=${'sub' + (p.urg ? '' : ' faint')} style=${p.urg ? { color: 'var(--out-text)', fontWeight: 600 } : null}>${p.sub}</span></span>
+      <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px;font-weight:600;line-height:1.35">${p.txt}</b><span class="sub faint">${p.sub}</span></span>
       ${p.go && html`<${Icono} n="sig" t=${16} c="var(--faint)" />`}
     </button>`)}</div>
     ${porHacer.length > nVer || verTodo ? html`<button type="button" class="ver-mas toca" onClick=${() => setVerTodo(!verTodo)}>${verTodo ? 'Ver menos' : 'Ver ' + (porHacer.length - nVer) + ' más'}</button>` : null}

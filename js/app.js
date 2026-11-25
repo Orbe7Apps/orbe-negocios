@@ -7,7 +7,7 @@ import { ChipTasa } from './pantallas/tasas.js';
 import { puede, rolDe } from './permisos.js';
 import { pais, dinero, leerTasa } from './paises.js';
 import { tipoNegocio } from './rubros.js';
-import { Icono, LogoOrbe, Avisos, iniciales, avisar, TONOS, Bandera, MarcaNegocio, useAtras, colorZona } from './ui.js';
+import { Icono, LogoOrbe, Avisos, iniciales, avisar, TONOS, Bandera, MarcaNegocio, useAtras } from './ui.js';
 import { Inicio } from './pantallas/inicio.js';
 import { Hoy } from './pantallas/hoy.js';
 import { Ordenes } from './pantallas/ordenes.js';
@@ -182,7 +182,7 @@ function App() {
         <nav style="display:flex;flex-direction:column;gap:10px">
           ${grupos.map(g => html`<div class="grupo"><small>${g[0]}</small>
             ${g[1].map(s => html`<button type="button" class=${'nav-btn toca' + (s === valida ? ' on' : '')} aria-current=${s === valida ? 'page' : 'false'} onClick=${() => ir(s)}>
-              <${Icono} n=${s === 'inventario' && !T.inv ? 'lista' : (SECCIONES[s].ipc || SECCIONES[s].i)} t=${18} c=${s === valida ? undefined : colorZona(s)} />${nombreSec(s)}
+              <${Icono} n=${s === 'inventario' && !T.inv ? 'lista' : (SECCIONES[s].ipc || SECCIONES[s].i)} t=${18} />${nombreSec(s)}
               ${cuenta[s] ? html`<span class="cuenta" style=${{ background: colores[s] }}>${cuenta[s]}</span>` : null}
             </button>`)}</div>`)}
         </nav>

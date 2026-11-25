@@ -5,7 +5,7 @@ import { BotonAyuda } from '../ayuda.js';
 import { bajoMinimo, bajoMeta, resumen, inicioDia, listaProductos, promosVigentes } from '../datos.js';
 import { verQ } from '../carrito.js';
 import { BarrasH, Reparto, color } from '../graficos.js';
-import { Chips, Icono, TONOS, avisar, FotoProd, colorZona } from '../ui.js';
+import { Chips, Icono, TONOS, avisar, FotoProd } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { FiltroGrupos, filtrarGrupo, textosProducto, grupoDe, colorGrupo, suaveGrupo, tonoProd } from './grupos.js';
 import { buscar, parecidos } from '../buscar.js';
@@ -71,8 +71,8 @@ export function Inventario() {
 
   // Herramientas en una fila: escanear, factura del proveedor, promociones y precios.
   // Solo las que el negocio tiene encendidas (Ajustes → Funciones).
-  const herr = [(pp || puede('reponer')) && T.mod('escaner') && ['escanear', 'Escanear', () => abrir('escaner', { para: 'inventario' }), 0, colorZona('inventario')], (pp || puede('reponer')) && T.mod('compras') && ['doc', 'Factura', () => abrir('factura'), 0, colorZona('inventario')],
-    pp && T.mod('promos') && ['porciento', 'Promos', () => abrir('promos'), promosVigentes().length, colorZona('inventario')], pp && T.mod('precios') && ['etiqueta', 'Precios', () => abrir('precios'), bajoMeta().length ? -1 : 0, colorZona('inventario')]].filter(Boolean);
+  const herr = [(pp || puede('reponer')) && T.mod('escaner') && ['escanear', 'Escanear', () => abrir('escaner', { para: 'inventario' }), 0, '#6a5cf2'], (pp || puede('reponer')) && T.mod('compras') && ['doc', 'Factura', () => abrir('factura'), 0, '#3d9be9'],
+    pp && T.mod('promos') && ['porciento', 'Promos', () => abrir('promos'), promosVigentes().length, '#e8436a'], pp && T.mod('precios') && ['etiqueta', 'Precios', () => abrir('precios'), bajoMeta().length ? -1 : 0, '#e8961a']].filter(Boolean);
   const Herramientas = herr.length ? html`<div class="herramientas entra" data-tour="escanear">${herr.map(h => html`<button type="button" key=${h[1]} class="toca" onClick=${h[2]}><span style=${{ background: h[4] }}><${Icono} n=${h[0]} t=${18} c="#fff" /></span><b>${h[1]}</b>${h[3] > 0 ? html`<em>${h[3]}</em>` : h[3] < 0 ? html`<i class="punto-aviso" style="top:8px;right:14px"></i>` : null}</button>`)}</div>` : null;
   const servs = listaProductos().filter(p => p.q == null);
   const Pestañas = html`<div class="segmento ancho entra" role="tablist" aria-label="Qué ver">${[['Todo', 'Productos ' + conStock.length], ['Por reponer', 'Por reponer ' + bajos.length]].concat(servs.length || (pp && T.mod('servicios')) ? [['Servicios', 'Servicios' + (servs.length ? ' ' + servs.length : '')]] : []).map(o => html`<button type="button" role="tab" aria-selected=${filtro === o[0] ? 'true' : 'false'} class=${filtro === o[0] ? 'on' : ''} onClick=${() => setFiltro(o[0])}>${o[1]}</button>`)}</div>`;

@@ -261,18 +261,3 @@ export function Bienvenida({ b, cargando, listo }) {
     </div>
   </div>`;
 }
-
-// ---------- zonas de color ----------
-// Las mismas zonas de Ajustes en toda la app: cada sección o acción lleva el color de su zona, así se reconoce de un vistazo.
-// (Los estados —atrasado, listo, pagado— conservan su propio color porque avisan algo.)
-export const ZONAS = { cuenta: ['t-vio', '#7b6cff'], dinero: ['t-ver', '#12a37a'], negocio: ['t-azu', '#3d9be9'], ventas: ['t-amb', '#e8961a'], app: ['t-gris', '#7d7a96'] };
-const ZONA_DE = {
-  vender: 'ventas', venta: 'ventas', cobrar: 'ventas', cliente: 'ventas', clientes: 'ventas', fiado: 'ventas', cita: 'ventas', agenda: 'ventas', orden: 'ventas', ordenes: 'ventas',
-  cotizaciones: 'ventas', cuotas: 'ventas', recordatorios: 'ventas', tasa: 'ventas', pagos: 'ventas',
-  gasto: 'dinero', gastos: 'dinero', caja: 'dinero', cierre: 'dinero', reportes: 'dinero', banco: 'dinero',
-  inventario: 'negocio', servicios: 'negocio', productos: 'negocio', escanear: 'negocio', factura: 'negocio', promos: 'negocio', precios: 'negocio', equipo: 'negocio', pin: 'negocio',
-  perfil: 'cuenta', cuenta: 'cuenta', hoy: 'cuenta', servicio: 'negocio', mas: 'app'
-};
-export const zonaDe = k => ZONAS[ZONA_DE[k] || k] || ZONAS.app;
-export const tonoZona = k => zonaDe(k)[0];
-export const colorZona = k => zonaDe(k)[1];
