@@ -6,7 +6,8 @@ import { ROLES_BASE } from './permisos.js';
 import { rubro, modulosDe } from './rubros.js';
 import { encadenar, revisar, firmaVenta, firmaRegistro, firmaCierre, sha256 } from './hash.js';
 
-const CLAVE = 'orbe-negocios';
+// La demostración (?demo en la dirección) guarda aparte: nunca toca los datos de un negocio real en este navegador.
+const CLAVE = /[?&]demo\b/.test(location.search) ? 'orbe-negocios-demo' : 'orbe-negocios';
 const subs = new Set();
 let S = vacio();
 
