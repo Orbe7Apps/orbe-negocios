@@ -163,8 +163,18 @@ export async function leerCopia(k) {
   if (k === 'ls-copia') return JSON.parse(localStorage.getItem(CLAVE + '-copia'));
   const x = await idbLeer(k); return x ? x.datos : null;
 }
+// Copia de seguridad en este aparato antes de algo grande (restaurar, abrir otro negocio, empezar de nuevo).
+// Solo se guardan las 3 más recientes, para no llenar el teléfono.
+const COPIAS_ANTES = 3;
 async function apartar(nombre) {
-  try { if (db) await idbPoner(nombre + '-' + Date.now(), { t: Date.now(), datos: S }); else localStorage.setItem(CLAVE + '-' + nombre, JSON.stringify(S)); } catch (e) { /* sin espacio */ }
+  try {
+    if (db) {
+      await idbPoner(nombre + '-' + Date.now(), { t: Date.now(), datos: S });
+      const ks = (await idb('readonly', st => st.getAllKeys())).filter(k => /^antes-de-.*-\d+$/.test(k)).sort((a, b) => Number(a.split('-').pop()) - Number(b.split('-').pop()));
+      const sobran = ks.slice(0, Math.max(0, ks.length - COPIAS_ANTES));
+      if (sobran.length) await idb('readwrite', st => { sobran.forEach(k => st.delete(k)); });
+    } else localStorage.setItem(CLAVE + '-' + nombre, JSON.stringify(S));
+  } catch (e) { /* sin espacio */ }
 }
 // Restaurar: lo de ahora se aparta primero, así también se puede deshacer.
 export async function restaurar(d) {
