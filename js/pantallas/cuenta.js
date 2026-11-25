@@ -308,17 +308,27 @@ export function EntrarInicio({ volver, crear }) {
   const pon = o => setF(x => Object.assign({}, x, o));
   const hacer = async fn => { setOcupado(true); try { await fn(); } catch (er) { avisar(er.message); } finally { setOcupado(false); } };
   // Con la sesión ya abierta (por ejemplo, al volver del enlace del correo) se muestran sus negocios directo.
-  useEffect(() => { if (N.sesion && !lista) misNegocios().then(setLista).catch(er => avisar(er.message)); }, [N.sesion]);
+  // Cada cuenta tiene un solo negocio: si ya lo tiene, se abre directo (sin pantalla para elegir).
+  const [abriendo, setAbriendo] = useState('');
+  const cargarLista = async () => {
+    const l = await misNegocios();
+    if (l.length === 1) { setAbriendo(l[0].nombre); try { await bajarNegocio(l[0].id); avisar('Listo: ' + l[0].nombre); } catch (er) { setAbriendo(''); setLista(l); throw er; } return; }
+    setLista(l);
+  };
+  useEffect(() => { if (N.sesion && !lista && !abriendo) hacer(cargarLista); }, [N.sesion]);
   const enviar = () => hacer(async () => {
     if (modo === 'olvido') { if (!correoOk(f.correo)) throw new Error('Escribe un correo válido'); await olvideClave(f.correo); avisar('Listo: revisa el correo del dueño'); setModo('entrar'); return; }
     await entrarUsuario(f.usuario, f.clave);
-    setLista(await misNegocios());
+    await cargarLista();
   });
   const abrirNeg = g => hacer(async () => { await bajarNegocio(g.id); avisar('Listo: ' + g.nombre); });
+  if (abriendo) return html`<div class="pila entra" style="gap:14px;align-items:center;text-align:center;padding-top:22vh">
+    <span class="vacio-ic" style="width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-text)"><${Icono} n="tienda" t=${28} /></span>
+    <b style="font-size:19px">Abriendo ${abriendo}…</b><span class="sub">Bajando tus ventas, productos y clientes</span></div>`;
   const salir = () => hacer(async () => { await cerrarSesion(); setLista(null); });
   return html`<div class="pila entra" style="gap:16px">
     <button type="button" class="icono-btn toca" aria-label="Atrás" onClick=${lista ? salir : volver}><${Icono} n="atras" /></button>
-    <h1 style="font-size:26px">${lista ? (lista.length ? 'Elige tu negocio' : 'Arma tu negocio') : 'Entra a tu cuenta'}</h1>
+    <h1 style="font-size:26px">${lista ? (lista.length ? 'Tu negocio' : 'Arma tu negocio') : 'Entra a tu cuenta'}</h1>
     ${lista ? html`<span class="sub">Sesión iniciada${N.usuario ? html` como <b>${N.usuario}</b>` : ''}</span>
       ${lista.length ? lista.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => abrirNeg(g)}><${Icono} n="tienda" t=${18} /><span class="crece"><b>${g.nombre}</b><br /><span class="sub" style="font-weight:500">${datoNegocio(g)}</span></span><${Icono} n="sig" t=${15} c="var(--faint)" /></button>`)
         : html`<span class="sub" style="line-height:1.45;font-size:15px">Tu cuenta está lista. Ahora contesta unas preguntas y Orbe se arma para tu negocio.</span>`}
