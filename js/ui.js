@@ -230,3 +230,32 @@ export function hace(t) {
 }
 export const hora = t => new Date(t).toLocaleTimeString('es', { hour: 'numeric', minute: '2-digit' });
 export const fechaCorta = t => new Date(t).toLocaleDateString('es', { day: 'numeric', month: 'short' }).replace('.', '');
+
+// ---------- bienvenida al entrar a un negocio ----------
+// Después de iniciar sesión: «Bienvenido a tu negocio» con el nombre, y luego se desvanece y quedan los perfiles para el PIN.
+let bienvenidaPend = null;
+export const marcarBienvenida = n => { bienvenidaPend = { nombre: (n && n.nombre) || '', logo: (n && n.logo) || '', t: Date.now() }; };
+export const tomarBienvenida = () => { const b = bienvenidaPend; bienvenidaPend = null; return b && Date.now() - b.t < 60000 ? b : null; };
+const MIN_BIENVENIDA = 1700;
+export function Bienvenida({ b, cargando, listo }) {
+  const [sale, setSale] = useState(false);
+  useEffect(() => {
+    if (cargando || !listo) return;
+    const falta = Math.max(250, MIN_BIENVENIDA - (Date.now() - b.t));
+    const t1 = setTimeout(() => setSale(true), falta), t2 = setTimeout(listo, falta + 520);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [cargando]);
+  const inic = (b.nombre || 'Orbe').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  // Si ya se venía mostrando (mientras bajaban los datos), sigue sin repetir la entrada.
+  const [sigue] = useState(() => Date.now() - b.t > 500);
+  return html`<div class=${'bienv' + (sigue ? ' sigue' : '') + (sale ? ' sale' : '')} role="status" aria-live="polite">
+    <div class="bienv-halo"></div>
+    <div class="bienv-centro">
+      <span class="bienv-marca">${b.logo ? html`<img src=${b.logo} alt="" />` : inic}</span>
+      <span class="bienv-t1">Bienvenido a tu negocio</span>
+      <b class="bienv-t2">${b.nombre}</b>
+      <span class="bienv-barra"><i class=${cargando ? '' : 'llena'}></i></span>
+      <span class="bienv-t3">${cargando ? 'Preparando tus ventas, productos y clientes…' : '¡Todo listo!'}</span>
+    </div>
+  </div>`;
+}

@@ -5,7 +5,7 @@ import { useDatos, entrar, pinValido, pedirPinNuevo, cambiarPin } from '../datos
 import { enlaceWA } from '../ordenpdf.js';
 import { pais } from '../paises.js';
 import { rolDe } from '../permisos.js';
-import { Icono, LogoOrbe, iniciales, TONOS, avisar } from '../ui.js';
+import { Icono, LogoOrbe, iniciales, TONOS, avisar, Bienvenida, tomarBienvenida } from '../ui.js';
 import { useNube, entrarCuenta, entrarUsuario, cerrarSesion } from '../nube.js';
 import { CampoClave, CampoUsuario } from './cuenta.js';
 
@@ -35,6 +35,8 @@ export function Acceso({ tel }) {
   const S = useDatos();
   const activos = S.perfiles.filter(p => !p.inactivo);
   const [elegido, setElegido] = useState(null);
+  // Recién iniciada la sesión: primero la bienvenida con el nombre del negocio y luego se desvanece sobre los perfiles.
+  const [bienv, setBienv] = useState(() => tomarBienvenida());
   // Solo en la demostración: un único perfil sin PIN entra directo. En un negocio de verdad siempre se pide el PIN.
   useEffect(() => { if ((S.negocio.demo || /[?&]demo\b/.test(location.search)) && activos.length === 1 && !activos[0].pin) entrar(activos[0].id); }, []);
   // Dueño sin PIN: para que nadie entre como dueño se pide la contraseña de la cuenta y luego crea su PIN.
@@ -126,6 +128,7 @@ export function Acceso({ tel }) {
       : html`<span class="sub faint" style="text-align:center">¿Olvidaste tu PIN de dueño? Inicia sesión con tu correo para ponerte uno nuevo (Ajustes → Cuenta).</span>`}`);
 
   return caja(html`
+    ${bienv && html`<${Bienvenida} b=${Object.assign({}, bienv, { logo: bienv.logo || S.negocio.logo || '' })} listo=${() => setBienv(null)} />`}
     <div class="fila entra" style="gap:12px"><${LogoOrbe} t=${44} orbita /><span style="display:flex;flex-direction:column"><b style="font-size:17px">${S.negocio.nombre}</b><span class="sub">Orbe Negocios</span></span></div>
     <h1 class="entra" style="--i:2;font-size:26px;margin-top:10px">¿Quién está usando Orbe?</h1>
     <div class="perfiles">${activos.map((p, i) => { const r = rolDe(S, p); return html`

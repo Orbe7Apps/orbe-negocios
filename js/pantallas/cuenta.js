@@ -1,10 +1,10 @@
 // Cuenta y nube: crear cuenta, iniciar sesión, recuperar la contraseña, unir el negocio a la cuenta,
 // ver si todo está guardado y la suscripción (pagar y avisar «Ya pagué»).
-import { html, useState, useEffect } from '../lib/preact-htm.js';
+import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal, exportar } from '../datos.js';
 import { descargar, ventasCSV } from './reportes.js';
-import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor } from '../ui.js';
+import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor, Bienvenida, marcarBienvenida } from '../ui.js';
 import { numero } from './pagos.js';
 import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos, negocioPropio, quitarConfirmado } from '../nube.js';
 
@@ -311,9 +311,14 @@ export function EntrarInicio({ volver, crear }) {
   // Con la sesión ya abierta (por ejemplo, al volver del enlace del correo) se muestran sus negocios directo.
   // Cada cuenta tiene un solo negocio: si ya lo tiene, se abre directo (sin pantalla para elegir).
   const [abriendo, setAbriendo] = useState('');
+  const cargandoLista = useRef(false);
   const cargarLista = async () => {
+    if (cargandoLista.current) return; cargandoLista.current = true;
+    try { await cargarLista0(); } finally { cargandoLista.current = false; }
+  };
+  const cargarLista0 = async () => {
     const l = await misNegocios();
-    if (l.length === 1) { setAbriendo(l[0].nombre); try { await bajarNegocio(l[0].id); avisar('Listo: ' + l[0].nombre); } catch (er) { setAbriendo(''); setLista(l); throw er; } return; }
+    if (l.length === 1) { setAbriendo(l[0].nombre); marcarBienvenida(l[0]); try { await bajarNegocio(l[0].id); } catch (er) { setAbriendo(''); setLista(l); throw er; } return; }
     setLista(l);
   };
   useEffect(() => { if (N.sesion && !lista && !abriendo) hacer(cargarLista); }, [N.sesion]);
@@ -322,10 +327,8 @@ export function EntrarInicio({ volver, crear }) {
     await entrarUsuario(f.usuario, f.clave);
     await cargarLista();
   });
-  const abrirNeg = g => hacer(async () => { await bajarNegocio(g.id); avisar('Listo: ' + g.nombre); });
-  if (abriendo) return html`<div class="pila entra" style="gap:14px;align-items:center;text-align:center;padding-top:22vh">
-    <span class="vacio-ic" style="width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-text)"><${Icono} n="tienda" t=${28} /></span>
-    <b style="font-size:19px">Abriendo ${abriendo}…</b><span class="sub">Bajando tus ventas, productos y clientes</span></div>`;
+  const abrirNeg = g => hacer(async () => { marcarBienvenida(g); await bajarNegocio(g.id); });
+  if (abriendo) return html`<${Bienvenida} b=${{ nombre: abriendo, t: Date.now() }} cargando />`;
   const salir = () => hacer(async () => { await cerrarSesion(); setLista(null); });
   return html`<div class="pila entra" style="gap:16px">
     <button type="button" class="icono-btn toca" aria-label="Atrás" onClick=${lista ? salir : volver}><${Icono} n="atras" /></button>
@@ -373,6 +376,7 @@ export function EntrarDeNuevo({ tel }) {
       if (olvido) { await olvideClave(f.correo); avisar('Listo: revisa el correo del dueño'); setOlvido(false); return; }
       verificandoCuenta(true);
       await entrarUsuario(f.usuario, f.clave);
+      marcarBienvenida(S.negocio);
       // Solo entra una cuenta de este negocio: otra cuenta no ve lo que hay en el aparato.
       const nid = S.negocio && S.negocio.nubeId;
       if (nid) { const lista = await misNegocios(); if (!lista.some(g => g.id === nid)) { await cerrarSesion(); throw new Error('Esa cuenta no es de ' + S.negocio.nombre + '. Toca «Entrar con otra cuenta»'); } }
@@ -454,7 +458,7 @@ export function CuentaConfirmada({ armar }) {
   const [suyo, setSuyo] = useState(null), [ocupado, setOcupado] = useState(false);
   useEffect(() => { misNegocios().then(l => setSuyo(l[0] || false)).catch(() => setSuyo(false)); }, []);
   const seguir = async () => {
-    if (suyo) { setOcupado(true); try { await bajarNegocio(suyo.id); quitarConfirmado(); avisar('Listo: ' + suyo.nombre); } catch (er) { avisar(er.message); setOcupado(false); } return; }
+    if (suyo) { setOcupado(true); try { marcarBienvenida(suyo); await bajarNegocio(suyo.id); quitarConfirmado(); } catch (er) { avisar(er.message); setOcupado(false); } return; }
     quitarConfirmado(); armar && armar();
   };
   return html`<div class="pila entra" style="gap:14px;align-items:center;text-align:center;padding:18px 4px 6px">
