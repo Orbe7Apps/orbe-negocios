@@ -58,6 +58,9 @@ export const TIPOS = [
   { id: 'indep', n: 'Independiente', ex: 'Diseño, fotos, clases, técnico, consultoría', inv: false, vender: 'Cobrar', color: 'azu' }
 ];
 
+// Países donde se pueden crear negocios nuevos. Los demás siguen en la lista para activarlos uno por uno más adelante.
+export const PAISES_ACTIVOS = ['VE'];
+export const paisActivo = id => PAISES_ACTIVOS.includes(id);
 export const pais = id => PAISES.find(p => p.id === id) || PAISES.find(p => p.id === 'VE');
 export const tipo = id => TIPOS.find(t => t.id === id) || TIPOS[0];
 

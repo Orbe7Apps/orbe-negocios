@@ -1,6 +1,6 @@
 // Primer uso: país, tipo de negocio, tamaño y datos. Al final se arma el negocio.
 import { html, useState, useEffect } from '../lib/preact-htm.js';
-import { PAISES, TIPOS, pais } from '../paises.js';
+import { PAISES, TIPOS, pais, paisActivo } from '../paises.js';
 import { RUBROS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
 import { ListaFunciones } from './funciones.js';
 import { EntrarInicio, CrearCuentaInicio } from './cuenta.js';
@@ -77,12 +77,12 @@ export function Inicio({ tel }) {
   }[paso];
 
   let cuerpo;
-  if (paso === 'pais') cuerpo = html`<div class="pila" style="gap:8px">${PAISES.map((p, k) => { const on = c.pais === p.id; return html`
+  if (paso === 'pais') cuerpo = html`<div class="pila" style="gap:8px">${PAISES.filter(p => paisActivo(p.id)).map((p, k) => { const on = c.pais === p.id; return html`
     <button type="button" key=${p.id} class=${'chip toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ pais: p.id, pays: null, taxOn: null })} style="min-height:58px;border-radius:18px;justify-content:flex-start;gap:12px;color:var(--ink);background:${on ? '' : 'var(--surface)'}">
       <${Bandera} id=${p.id} t=${30} />
       <span style="flex:1;display:flex;flex-direction:column;text-align:left;gap:1px"><b style="font-size:15px">${p.n}</b><span class="sub" style="font-weight:500">${p.id === 'VE' ? 'Dólares y bolívares, con la tasa BCV' : p.usd2 ? p.cur.charAt(0).toUpperCase() + p.cur.slice(1) + ' y dólares' : p.cur.charAt(0).toUpperCase() + p.cur.slice(1) + ' · ' + p.pays.slice(0, 2).join(', ')}</span></span>
       ${on && html`<span style="width:24px;height:24px;border-radius:12px;background:var(--accent);display:grid;place-items:center;animation:pop .4s var(--spring)"><${Icono} n="check" t=${14} g=${3} c="#0b0a14" /></span>`}
-    </button>`; })}</div>`;
+    </button>`; })}<span class="sub" style="text-align:center;margin-top:6px">Por ahora Orbe está disponible solo en Venezuela. Pronto en más países.</span></div>`;
   if (paso === 'tipo') {
     // Lo que escribe la persona ordena la lista: primero lo que se parece a su negocio.
     const sug = adivinarRubro(busca), resto = RUBROS.filter(r => !sug.includes(r));

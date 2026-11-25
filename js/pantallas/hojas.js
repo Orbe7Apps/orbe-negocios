@@ -3,7 +3,7 @@ import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
-import { telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
+import { paisActivo, telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
 import { ponerAyudaHoja, Hoja, Icono, Interruptor, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd } from '../ui.js';
 import { Monto, Linea } from '../graficos.js';
 import { usePagos, conSimbolo, numero, esEfectivo } from './pagos.js';
@@ -789,7 +789,7 @@ function Negocio({ d, cerrar }) {
       </div>
       <div class="campo"><span>Rubro</span><button type="button" class="btn2 toca" style="justify-content:flex-start;gap:10px;min-height:50px;border-radius:16px" onClick=${() => c(() => abrirH('rubro'))}><${Icono} n=${T.icono} t=${17} /><span class="crece" style="text-align:left">${T.n}</span><span class="acento-txt">Cambiar</span></button></div>
       ${T2.inv !== T.inv && html`<span class="sub entra" style="line-height:1.45">${T2.inv ? 'Ahora vas a llevar inventario: ponle existencia a tus productos en Inventario.' : 'Ahora vendes servicios: se deja de contar el inventario.'}</span>`}
-      <label class="campo"><span class="fila" style="gap:8px"><${Bandera} id=${f.pais} t=${18} />País y moneda</span><select value=${f.pais} onChange=${e => pon({ pais: e.target.value })}>${PAISES.map(x => html`<option value=${x.id}>${x.n} · ${x.cur}</option>`)}</select></label>
+      <label class="campo"><span class="fila" style="gap:8px"><${Bandera} id=${f.pais} t=${18} />País y moneda</span><select value=${f.pais} onChange=${e => pon({ pais: e.target.value })}>${PAISES.filter(x => paisActivo(x.id) || x.id === n.pais).map(x => html`<option value=${x.id}>${x.n} · ${x.cur}</option>`)}</select></label>
       ${otroPais && html`<div class="tarjeta fila entra" style="background:var(--amber-soft);box-shadow:none;gap:10px;align-items:flex-start"><${Icono} n="alerta" t=${18} c="var(--amber)" /><span class="sub" style="color:var(--ink);line-height:1.45"><b>Ojo:</b> los precios y montos guardados no se convierten. Si cambias de ${P.cur} a ${P2.cur}, el número se queda igual. Las formas de pago pasan a las de ${P2.n}.</span></div>`}`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar</button>`
   })} />`;
