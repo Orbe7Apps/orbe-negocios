@@ -105,19 +105,21 @@ const ERROR = /no coincid|no se pudo|no pude|no se encontr|no encontré|inválid
 const INFO = /^(escribe|elige|marca|agrega |crea tu|para crear|la contraseña (debe|es muy)|pon |pídele|reparte|falta|toca|lo encuentras|los vuelves|todavía|sin internet|la cámara|espera|primero|este producto|el dueño siempre|el porcentaje va|el usuario lleva|el pin (nuevo )?son|guardando|un momento|revisa)/i;
 export const tipoAviso = t => { const x = String(t || ''); return INFO.test(x) ? 'info' : ERROR.test(x) ? 'error' : 'ok'; };
 let ponerAviso = () => {};
-export const avisar = (t, tipo) => ponerAviso(t, tipo);
+export const avisar = (t, tipo, accion) => ponerAviso(t, tipo, accion);
+// Aviso con botón «Deshacer» (dura más para que dé tiempo de tocarlo).
+export const avisarDeshacer = (t, deshacer) => deshacer ? ponerAviso(t, 'ok', { n: 'Deshacer', fn: deshacer }) : ponerAviso(t);
 const ICONO_AVISO = { ok: ['check', '#3ddc9f'], error: ['alerta', '#ff7a8f'], info: ['info', '#f5b544'] };
 export function Avisos() {
   const [a, setA] = useState(null);
   useEffect(() => {
     let tm;
     // Los errores y los textos largos se quedan un poco más en pantalla.
-    ponerAviso = (t, tipo) => { const k = tipo || tipoAviso(t); setA(x => ({ t: String(t), k, n: (x ? x.n : 0) + 1 })); clearTimeout(tm); tm = setTimeout(() => setA(null), Math.min(6000, Math.max(k === 'ok' ? 2400 : 3400, String(t).length * 55))); };
+    ponerAviso = (t, tipo, accion) => { const k = tipo || tipoAviso(t); setA(x => ({ t: String(t), k, accion, n: (x ? x.n : 0) + 1 })); clearTimeout(tm); tm = setTimeout(() => setA(null), accion ? 7000 : Math.min(6000, Math.max(k === 'ok' ? 2400 : 3400, String(t).length * 55))); };
     return () => clearTimeout(tm);
   }, []);
   if (!a) return null;
   const ic = ICONO_AVISO[a.k];
-  return html`<div class=${'aviso-toast ' + a.k} role=${a.k === 'error' ? 'alert' : 'status'} key=${a.n}><${Icono} n=${ic[0]} t=${18} g=${2.6} c=${ic[1]} /><span>${a.t}</span></div>`;
+  return html`<div class=${'aviso-toast ' + a.k} role=${a.k === 'error' ? 'alert' : 'status'} key=${a.n}><${Icono} n=${ic[0]} t=${18} g=${2.6} c=${ic[1]} /><span>${a.t}</span>${a.accion && html`<button type="button" class="aviso-accion toca" onClick=${() => { const f = a.accion.fn; setA(null); f(); }}>${a.accion.n}</button>`}</div>`;
 }
 
 // ---------- interruptor ----------

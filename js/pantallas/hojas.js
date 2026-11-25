@@ -1,10 +1,10 @@
 // Todas las hojas (teléfono) o ventanas (computadora) de la app.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo } from '../datos.js';
+import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { paisActivo, telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
-import { ponerAyudaHoja, Hoja, Icono, Interruptor, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd } from '../ui.js';
+import { ponerAyudaHoja, Hoja, Icono, Interruptor, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd, avisarDeshacer } from '../ui.js';
 import { Monto, Linea } from '../graficos.js';
 import { usePagos, conSimbolo, numero, esEfectivo } from './pagos.js';
 import { infoTasas } from './tasas.js';
@@ -51,7 +51,8 @@ export function FilaVenta({ v, i, fecha }) {
 function Confirmar({ d, cerrar }) {
   return html`<${Hoja} titulo=${d.titulo} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`<p style="margin:0;line-height:1.5">${d.texto}</p>`,
-    pie: html`<button type="button" class="btn toca" style="background:var(--out)" onClick=${() => c(d.si)}>${d.boton}</button>${Pie2('Cancelar', () => c())}`
+    // d.deshacer: borrados que se pueden recuperar (nunca ventas, abonos, caja ni órdenes): sale el aviso con «Deshacer».
+    pie: html`<button type="button" class="btn toca" style="background:var(--out)" onClick=${() => c(() => { if (!d.deshacer) { d.si(); return; } const u = conDeshacer(d.si, d.deshacer); if (u) avisarDeshacer(d.deshacer, () => { u(); avisar('Listo: lo recuperaste'); }); })}>${d.boton}</button>${Pie2('Cancelar', () => c())}`
   })} />`;
 }
 
@@ -296,7 +297,7 @@ function Gasto({ d, cerrar }) {
     anotarGasto(g);
     c(() => avisar(despues ? 'Anotado en «Por pagar»' : 'Gasto guardado · ' + D.m(v)));
   };
-  const borrar = c => c(() => abrir('confirmar', { titulo: '¿Borrar este gasto?', texto: g0.n + ' · ' + D.m(g0.v) + '. Queda anotado en el registro de cambios.', boton: 'Sí, borrar', si: () => { borrarGasto(g0.id); avisar('Gasto borrado'); } }));
+  const borrar = c => c(() => abrir('confirmar', { deshacer: 'Gasto borrado', titulo: '¿Borrar este gasto?', texto: g0.n + ' · ' + D.m(g0.v) + '. Queda anotado en el registro de cambios.', boton: 'Sí, borrar', si: () => { borrarGasto(g0.id); avisar('Gasto borrado'); } }));
   return html`<${Hoja} titulo=${g0 ? 'Editar gasto' : 'Anotar gasto'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       <label class="campo"><span>Monto (${P.id === 'VE' ? 'dólares' : P.cur})</span><input class="grande num" type="text" inputmode="decimal" placeholder="0" value=${monto} onInput=${e => setMonto(e.target.value)} /></label>
@@ -486,7 +487,7 @@ function Producto({ d, cerrar }) {
     // Si se creó desde el escáner, se vuelve a él con el producto ya reconocido.
     c(() => { avisar('Guardado: ' + f.n.trim()); if (d.escaner && cod) abrir('escaner', Object.assign({}, d.escaner, { mostrar: cod })); });
   };
-  const borrar = c => c(() => abrir('confirmar', { titulo: '¿Borrar ' + p0.n + '?', texto: 'Ya no sale para vender ni en el inventario. Las ventas que tuvo se quedan en los reportes.', boton: 'Sí, borrar', si: () => { borrarProducto(p0.id); avisar('Borrado: ' + p0.n); } }));
+  const borrar = c => c(() => abrir('confirmar', { deshacer: 'Producto borrado', titulo: '¿Borrar ' + p0.n + '?', texto: 'Ya no sale para vender ni en el inventario. Las ventas que tuvo se quedan en los reportes.', boton: 'Sí, borrar', si: () => { borrarProducto(p0.id); avisar('Borrado: ' + p0.n); } }));
   return html`<${Hoja} titulo=${(p0 ? 'Editar ' : 'Nuevo ') + (inv ? 'producto' : 'servicio')} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       <div class="foto-producto">
@@ -566,7 +567,7 @@ function NuevoCliente({ d, cerrar }) {
   const borrar = c => {
     const debe = deudaDe(c0.id);
     if (debe > 0.004) { avisar(c0.n.split(' ')[0] + ' todavía debe ' + D.m(debe) + '. Primero anota el pago.'); return; }
-    c(() => abrir('confirmar', { titulo: '¿Borrar a ' + c0.n + '?', texto: 'Se borran su nombre y su teléfono, y ya no sale en tu lista. Sus compras se quedan en los reportes sin sus datos personales.', boton: 'Sí, borrar sus datos', si: () => { anonimizarCliente(c0.id); avisar('Datos del cliente borrados'); } }));
+    c(() => abrir('confirmar', { deshacer: 'Cliente borrado', titulo: '¿Borrar a ' + c0.n + '?', texto: 'Se borran su nombre y su teléfono, y ya no sale en tu lista. Sus compras se quedan en los reportes sin sus datos personales.', boton: 'Sí, borrar sus datos', si: () => { anonimizarCliente(c0.id); avisar('Datos del cliente borrados'); } }));
   };
   return html`<${Hoja} titulo=${c0 ? 'Editar cliente' : 'Nuevo cliente'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`<label class="campo"><span>Nombre</span><input type="text" value=${f.n} onInput=${e => setF(Object.assign({}, f, { n: e.target.value }))} autocomplete="name" /></label>
@@ -675,7 +676,7 @@ function Perfil({ d, cerrar }) {
   };
   // Eliminar: solo quien maneja el equipo, nunca al dueño ni a uno mismo.
   const puedeBorrar = p0 && admin && !esDueno && !soyYo && puedeEditarRol(yo, p0.rol);
-  const borrar = c => c(() => abrir('confirmar', { titulo: '¿Eliminar el perfil de ' + p0.n + '?', texto: 'Ya no podrá entrar. Sus ventas y lo que hizo se quedan en el historial con su nombre.', boton: 'Sí, eliminar perfil', si: () => { borrarPerfil(p0.id); avisar('Perfil eliminado'); } }));
+  const borrar = c => c(() => abrir('confirmar', { deshacer: 'Perfil eliminado', titulo: '¿Eliminar el perfil de ' + p0.n + '?', texto: 'Ya no podrá entrar. Sus ventas y lo que hizo se quedan en el historial con su nombre.', boton: 'Sí, eliminar perfil', si: () => { borrarPerfil(p0.id); avisar('Perfil eliminado'); } }));
   const rolActual = S.roles.find(r => r.id === f.rol);
   const i = Math.max(0, S.perfiles.indexOf(p0));
   if (!p0 && lleno) return html`<${Hoja} titulo="Nuevo perfil" onCerrar=${cerrar} contenido=${c => ({

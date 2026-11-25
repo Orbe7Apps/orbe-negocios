@@ -213,13 +213,14 @@ const pronto = () => { clearTimeout(reloj); reloj = setTimeout(sincronizar, 1500
 
 async function subir(c, nid) {
   if (!pend.size) return;
-  const S = leer(), dv = idDispositivo(), filas = [];
+  const S = leer(), dv = idDispositivo(), filas = [], porClave = new Map();
+  // Un mismo registro va una sola vez por subida (si se borró y se restauró con «Deshacer», queda lo que hay ahora).
+  const agregar = (k, clave, fila) => { const ya = porClave.get(clave); if (ya) { ya.ks.push(k); ya.fila = fila; return; } const x = { k, ks: [k], fila }; porClave.set(clave, x); filas.push(x); };
   [...pend].forEach(k => {
-    const [col, id, x] = k.split('|');
-    if (col === 'obj') { if (S[id] != null) filas.push({ k, fila: { negocio_id: nid, col: 'obj', id, datos: S[id], borrado: false, dispositivo: dv } }); else pend.delete(k); return; }
+    const [col, id] = k.split('|');
+    if (col === 'obj') { if (S[id] != null) agregar(k, 'obj|' + id, { negocio_id: nid, col: 'obj', id, datos: S[id], borrado: false, dispositivo: dv }); else pend.delete(k); return; }
     const el = (S[col] || []).find(y => idDe(col, y) === id);
-    if (x === 'x' || !el) filas.push({ k, fila: { negocio_id: nid, col, id, datos: el || {}, borrado: !el, dispositivo: dv } });
-    else filas.push({ k, fila: { negocio_id: nid, col, id, datos: el, borrado: false, dispositivo: dv } });
+    agregar(k, col + '|' + id, { negocio_id: nid, col, id, datos: el || {}, borrado: !el, dispositivo: dv });
   });
   // De a poco: lotes de hasta ~400 KB (las fotos y el logo pesan).
   let lote = [], peso = 0;
@@ -227,7 +228,7 @@ async function subir(c, nid) {
     if (!lote.length) return;
     const { error } = await c.from('registros').upsert(lote.map(x => x.fila), { onConflict: 'negocio_id,col,id' });
     if (error) throw error;
-    lote.forEach(x => pend.delete(x.k)); guardarPend(); lote = []; peso = 0;
+    lote.forEach(x => x.ks.forEach(k => pend.delete(k))); guardarPend(); lote = []; peso = 0;
   };
   for (const x of filas) {
     const p = JSON.stringify(x.fila.datos).length;

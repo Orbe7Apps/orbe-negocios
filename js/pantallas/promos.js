@@ -2,8 +2,8 @@
 // Se aplican solas al vender y salen en el recibo.
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { listaProductos, guardarPromo, borrarPromo, promoAplica } from '../datos.js';
-import { Hoja, Icono, Chips, Interruptor, avisar, fechaCorta } from '../ui.js';
+import { listaProductos, guardarPromo, borrarPromo, promoAplica, conDeshacer } from '../datos.js';
+import { Hoja, Icono, Chips, Interruptor, avisar, fechaCorta, avisarDeshacer } from '../ui.js';
 import { buscar } from '../buscar.js';
 import { textosProducto, colorGrupo } from './grupos.js';
 import { numero } from './pagos.js';
@@ -60,6 +60,6 @@ export function Promo({ d, cerrar }) {
       <label class="campo"><span>Nombre (opcional)</span><input type="text" value=${f.n} placeholder=${nombreSug()} autocomplete="off" onInput=${e => pon({ n: e.target.value })} /></label>
       <label class="campo"><span>Termina (opcional)</span><input type="date" value=${aLocal(f.hasta)} aria-label="Fecha de fin" onChange=${e => pon({ hasta: e.target.value ? new Date(e.target.value + 'T23:59:59').getTime() : 0 })} /></label>
       <${Interruptor} on=${f.activa} onCambio=${v => pon({ activa: v })} titulo="Activa" sub="Apágala para pausarla sin borrarla." />`,
-    pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar promoción</button>${x0 && html`<button type="button" class="btn2 rojo toca" style="min-height:50px;border-radius:25px" onClick=${() => { borrarPromo(x0.id); c(() => { avisar('Promoción borrada'); abrir('promos'); }); }}>Borrar</button>`}`
+    pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar promoción</button>${x0 && html`<button type="button" class="btn2 rojo toca" style="min-height:50px;border-radius:25px" onClick=${() => { const u = conDeshacer(() => borrarPromo(x0.id), 'Promoción borrada'); c(() => { avisarDeshacer('Promoción borrada', u && (() => { u(); avisar('Listo: la recuperaste'); })); abrir('promos'); }); }}>Borrar</button>`}`
   })} />`;
 }

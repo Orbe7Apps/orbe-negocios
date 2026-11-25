@@ -77,7 +77,7 @@ export function Grupo({ d, cerrar }) {
     guardarGrupo({ id: g0.id, n: n.trim(), c: c0 }); asignarGrupo(g0.id, marcados);
     c(() => avisar(n.trim() + ': ' + marcados.length + (marcados.length === 1 ? ' producto' : ' productos')));
   };
-  const borrar = c => c(() => abrir('confirmar', { titulo: '¿Borrar el grupo ' + g0.n + '?', texto: 'Sus productos no se borran: quedan sin grupo.', boton: 'Sí, borrar grupo', si: () => { borrarGrupo(g0.id); avisar('Grupo borrado'); } }));
+  const borrar = c => c(() => abrir('confirmar', { deshacer: 'Grupo borrado', titulo: '¿Borrar el grupo ' + g0.n + '?', texto: 'Sus productos no se borran: quedan sin grupo.', boton: 'Sí, borrar grupo', si: () => { borrarGrupo(g0.id); avisar('Grupo borrado'); } }));
   const otro = p => { const g = grupoDe(S, p); return g && g.id !== g0.id ? g : null; };
   return html`<${Hoja} titulo=${d.nuevo ? 'Grupo nuevo: ' + g0.n : 'Grupo ' + g0.n} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`

@@ -85,7 +85,7 @@ export function Cotizacion({ d, cerrar }) {
       </div>
       ${est === 'pendiente' || est === 'vencida' ? html`<div class="chips">
           <button type="button" class="btn2 chico toca" onClick=${() => { marcarCotizacion(ct.id, 'rechazada'); avisar('Anotado: no la aceptó'); }}>No la aceptó</button>
-          <button type="button" class="btn2 chico rojo toca" onClick=${() => c(() => abrir('confirmar', { titulo: '¿Borrar ' + numeroCot(ct) + '?', texto: 'Se quita de la lista. No afecta ventas ni inventario.', boton: 'Borrar', si: () => { borrarCotizacion(ct.id); avisar('Cotización borrada'); } }))}>Borrar</button></div>`
+          <button type="button" class="btn2 chico rojo toca" onClick=${() => c(() => abrir('confirmar', { deshacer: 'Cotización borrada', titulo: '¿Borrar ' + numeroCot(ct) + '?', texto: 'Se quita de la lista. No afecta ventas ni inventario.', boton: 'Borrar', si: () => { borrarCotizacion(ct.id); avisar('Cotización borrada'); } }))}>Borrar</button></div>`
         : est === 'rechazada' ? html`<div class="chips"><button type="button" class="btn2 chico toca" onClick=${() => { marcarCotizacion(ct.id, 'pendiente'); avisar('Cotización reabierta'); }}>Reabrir</button></div>` : null}`,
     pie: est === 'pendiente' || est === 'vencida'
       ? html`<button type="button" class="btn toca" onClick=${() => vender(c)}>${est === 'vencida' ? 'Vender igual (venció)' : 'El cliente aceptó: vender'}</button>`

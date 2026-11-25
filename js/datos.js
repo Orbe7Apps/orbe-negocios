@@ -993,6 +993,17 @@ export async function borrarTodoLocal() {
   try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }
   cambiar(() => vacio());
 }
+// Deshacer un borrado: se guarda cómo estaba todo antes y, si se toca «Deshacer», vuelven las colecciones que cambiaron.
+// (El registro de cambios no se toca: queda anotado que se borró y que se deshizo.)
+export function conDeshacer(fn, que) {
+  const antes = S; const r = fn(); const despues = S;
+  if (antes === despues) return null;
+  const claves = Object.keys(despues).filter(k => k !== 'registro' && k !== 'ajustes' && despues[k] !== antes[k]);
+  if (!claves.length) return null;
+  const deshacer = () => cambiar(s => Object.assign(claves.reduce((o, k) => (o[k] = antes[k], o), {}), nota(s, 'Deshizo' + (que ? ': ' + que : ' el último borrado'))));
+  deshacer.r = r;
+  return deshacer;
+}
 export function exportar() { return JSON.stringify(S, null, 1); }
 
 // ---------- cálculos (se recalculan solo cuando cambian los datos) ----------

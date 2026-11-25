@@ -136,7 +136,7 @@ h1, h2, h3 { margin: 0; letter-spacing: -0.02em; font-weight: 700; }
 .lista > .item { display: flex; align-items: center; gap: 12px; padding: 11px 0; min-height: 52px; }
 .lista > .item:first-child { border-top: 0; }
 .item > .crece { flex: 1; min-width: 0; }
-button.item { width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; }
+button.item { width: 100%; background: none; border: 0; text-align: left; }
 
 .barra-prog { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
 .barra-prog > i { display: block; height: 100%; border-radius: 3px; transform-origin: left; transition: width .6s var(--spring); animation: creceX .7s var(--spring) both; }
@@ -1004,7 +1004,6 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 
 /* Cuotas y apartados */
 .cuota-fila { gap: 10px; padding: 9px 0; font-size: 14px; }
-.cuota-fila + .cuota-fila { border-top: 1px solid var(--fill); }
 .punto-cuota { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 800; flex: none; }
 .opcion-plan { display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 12px; border-radius: 16px; border: 0; background: var(--fill2); color: var(--ink); font: inherit; transition: background .2s ease, box-shadow .2s ease; }
 .opcion-plan.on { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
@@ -1031,3 +1030,7 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 @keyframes bienvSale { to { opacity: 0; visibility: hidden; } }
 @keyframes bienvSaleC { to { transform: scale(1.06) translateY(-10px); } }
 @media (prefers-reduced-motion: reduce) { .bienv, .bienv * { animation-duration: .01s !important; animation-delay: 0s !important; } }
+
+/* Aviso con acción (Deshacer) */
+.aviso-toast .aviso-accion { margin-left: 6px; border: 0; background: rgba(255,255,255,.16); color: #fff; font: inherit; font-weight: 700; font-size: 13px; padding: 7px 12px; border-radius: 14px; cursor: pointer; white-space: nowrap; }
+.aviso-toast .aviso-accion:active { transform: scale(.96); }
