@@ -170,7 +170,7 @@ export function BorrarCuenta({ cerrar }) {
       <div class="tarjeta pila" style="box-shadow:none;background:var(--out-soft);gap:6px">
         <b style="color:var(--out-text)">Esto no se puede deshacer</b>
         <span class="sub" style="line-height:1.5;color:var(--ink)">Se borran tu cuenta, tu usuario y ${S.negocio ? html`<b>${S.negocio.nombre}</b>` : 'tus negocios'} con todo lo que tiene: productos, ventas, clientes, gastos, equipo, citas y reservas, en la nube y en este aparato. Tus empleados ya no podrán entrar.</span>
-        <span class="sub" style="line-height:1.5;color:var(--ink)">Lo que pagaste por la suscripción no se devuelve.</span>
+        <span class="sub" style="line-height:1.5;color:var(--ink)">Lo que pagaste por la suscripción no se devuelve. Solo guardamos el registro de esos pagos, porque la ley nos pide llevar la contabilidad.</span>
       </div>
       <${CampoClave} titulo="Tu contraseña" valor=${f.clave} onCambio=${v => setF(Object.assign({}, f, { clave: v }))} />
       <label class="campo"><span>Escribe BORRAR para confirmar</span><input type="text" value=${f.palabra} autocomplete="off" autocapitalize="characters" onInput=${e => setF(Object.assign({}, f, { palabra: e.target.value }))} /></label>`,
