@@ -15,7 +15,7 @@ import { Cotizaciones } from './pantallas/cotizaciones.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
 import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada } from './nube.js';
-import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion, AceptarTerminos } from './pantallas/cuenta.js';
+import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion, AceptarTerminos, CuentaSuspendida } from './pantallas/cuenta.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -137,6 +137,8 @@ function App() {
   const Pantalla = SECCIONES[valida].C;
   const cuenta = { clientes: deudores().filter(c => c.deuda > 0).length, inventario: bajoMinimo().length, gastos: porPagar().length, ordenes: S.ordenes.filter(o => ordenAtrasada(o)).length, agenda: T.mod('agenda') ? citasPendientesHoy(S) : 0 };
 
+  // Negocio suspendido por Orbe: no se usa hasta que se reactive (nada se borra).
+  if (S.negocio.nubeId && N.plan && N.plan.suspendido_en) return html`<${Ctx.Provider} value=${ctx}><${CuentaSuspendida} /><${Avisos} /></${Ctx.Provider}>`;
   if (tel) {
     // Barra de abajo: cuatro secciones y, en el centro, el botón Orbe con lo demás (crear y otras secciones).
     // Negocios con citas (barbería, salón…): la agenda ocupa el lugar de inventario; inventario queda en el botón Orbe.

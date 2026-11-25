@@ -2,7 +2,8 @@
 // ver si todo está guardado y la suscripción (pagar y avisar «Ya pagué»).
 import { html, useState, useEffect } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal } from '../datos.js';
+import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal, exportar } from '../datos.js';
+import { descargar, ventasCSV } from './reportes.js';
 import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor } from '../ui.js';
 import { numero } from './pagos.js';
 import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos, negocioPropio } from '../nube.js';
@@ -417,5 +418,21 @@ export function AceptarTerminos() {
       <div class="chips"><a class="btn2 chico toca" style="text-decoration:none" href="terminos.html" target="_blank" rel="noopener">Leer los términos</a><a class="btn2 chico toca" style="text-decoration:none" href="privacidad.html" target="_blank" rel="noopener">Leer la privacidad</a></div>
       <label class="fila toca" style="gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" checked=${ok} onChange=${e => setOk(e.target.checked)} style="width:22px;height:22px;margin-top:1px;accent-color:var(--accent);flex:none" /><span style="font-size:14px;line-height:1.45">Leí y acepto los Términos de uso y la Política de privacidad</span></label>
       <button type="button" class=${'btn toca' + (ok && !ocupado ? '' : ' apagado')} onClick=${aceptar}>${ocupado ? 'Guardando…' : 'Aceptar y seguir'}</button>
+    </div></div>`;
+}
+
+// Negocio suspendido por Orbe: no se puede usar ni guardar en la nube. Nada se borra; el dueño puede llevarse sus datos.
+export function CuentaSuspendida() {
+  const { S, yo } = useApp();
+  const N = useNube(), motivo = N.plan && N.plan.suspendido_motivo;
+  const dueno = yo && yo.rol === 'dueno';
+  return html`<div class="velo-terminos entra" style="background:var(--bg)" role="alert">
+    <div class="tarjeta pila" style="max-width:440px;width:100%;gap:14px;padding:26px;text-align:center;align-items:center">
+      <span class="ic t-ros" style="width:56px;height:56px;border-radius:18px"><${Icono} n="candado" t=${26} /></span>
+      <b style="font-size:21px;letter-spacing:-0.02em">Esta cuenta está suspendida</b>
+      <span class="sub" style="line-height:1.5">${S.negocio.nombre} no puede usar Orbe por ahora.${motivo ? html`<br /><b style="color:var(--ink)">Motivo:</b> ${motivo}` : ''}</span>
+      <span class="sub" style="line-height:1.5">Tus datos no se borraron. Escríbenos para resolverlo: <a href="mailto:orbeappsoficial@gmail.com" style="color:var(--accent-text);font-weight:600">orbeappsoficial@gmail.com</a></span>
+      ${dueno && html`<div class="chips" style="justify-content:center"><button type="button" class="btn2 chico toca" onClick=${() => { descargar('orbe-negocios-copia-' + new Date().toISOString().slice(0, 10) + '.json', exportar(), 'application/json'); avisar('Copia descargada'); }}>Descargar mis datos</button><button type="button" class="btn2 chico toca" onClick=${() => { descargar('orbe-ventas.csv', ventasCSV(0, Date.now() + 1), 'text/csv;charset=utf-8'); avisar('Excel descargado'); }}>Ventas en Excel</button></div>`}
+      <button type="button" class="olvide-pin toca" onClick=${() => cerrarSesion().then(() => avisar('Sesión cerrada'))}>Cerrar sesión</button>
     </div></div>`;
 }

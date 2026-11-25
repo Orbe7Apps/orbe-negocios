@@ -6,7 +6,7 @@ import { ClaveNueva, CampoClave } from './pantallas/cuenta.js';
 import { Icono, Avisos, avisar, LogoOrbe } from './ui.js';
 
 const fecha = t => t ? new Date(t).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-const ESTADO = { activa: ['Activa', 't-ver'], prueba: ['En prueba', 't-azu'], gracia: ['En gracia', 't-amb'], vencida: ['Vencida', 't-ros'] };
+const ESTADO = { activa: ['Activa', 't-ver'], prueba: ['En prueba', 't-azu'], gracia: ['En gracia', 't-amb'], vencida: ['Vencida', 't-ros'], suspendida: ['Suspendida', 't-ros'] };
 
 function Entrar({ listo }) {
   const [f, setF] = useState({ correo: '', clave: '' }), [olvido, setOlvido] = useState(false);
@@ -48,6 +48,14 @@ function Panel({ c, correo }) {
     const { error } = await c.rpc('activar_negocio', { n: g.id, plan, meses });
     if (error) avisar(explicar(error)); else { avisar('Activado'); cargar(); }
   };
+  // Suspender: el negocio no puede usar Orbe ni guardar en la nube hasta que lo reactives. Nada se borra.
+  const suspender = async (g, si) => {
+    let motivo = null;
+    if (si) { motivo = prompt('¿Por qué suspendes «' + g.nombre + '»? El dueño verá este motivo (puedes dejarlo vacío).', 'Falta de pago'); if (motivo === null) return; }
+    else if (!confirm('¿Reactivar «' + g.nombre + '»? Podrá volver a usar Orbe de inmediato.')) return;
+    const { error } = await c.rpc('suspender_negocio', { n: g.id, suspender: si, motivo });
+    if (error) avisar(explicar(error)); else { avisar(si ? 'Cuenta suspendida' : 'Cuenta reactivada'); cargar(); }
+  };
   const pend = (pagos || []).filter(p => p.estado === 'pendiente');
   const mes0 = new Date(); mes0.setDate(1); mes0.setHours(0, 0, 0, 0);
   const cobradoMes = (pagos || []).filter(p => p.estado === 'aprobado' && new Date(p.revisado || p.creado) >= mes0).reduce((a, p) => { a[p.moneda] = (a[p.moneda] || 0) + Number(p.monto); return a; }, {});
@@ -70,7 +78,7 @@ function Panel({ c, correo }) {
       </div>`)}</div>` : html`<p class="vacio">No hay pagos por revisar. Esta página se actualiza sola cada 30 segundos.</p>`)}
 
     ${tab === 'negocios' && html`<div class="tabla-caja"><table class="tabla"><thead><tr><th>Negocio</th><th>Dueño</th><th>Estado</th><th>Hasta</th><th>Creado</th><th>Último movimiento</th><th class="der">Activar a mano</th></tr></thead>
-      <tbody>${(negocios || []).map((g, i) => { const e = estados[i]; return html`<tr key=${g.id}><td><b>${g.nombre}</b><br /><span class="sub">${g.plan}</span></td><td class="muted">${g.correo}</td><td><span class=${'pildora ' + ESTADO[e.k][1]}>${ESTADO[e.k][0]}</span></td><td class="num">${fecha(e.hasta)}</td><td class="num muted">${fecha(g.creado)}</td><td class="num muted">${fecha(g.ultimo_cambio)}</td>
+      <tbody>${(negocios || []).map((g, i) => { const e = estados[i]; return html`<tr key=${g.id}><td><b>${g.nombre}</b><br /><span class="sub">${g.plan}</span><br />${g.suspendido_en ? html`<button type="button" class="btn2 chico lleno toca" style="margin-top:6px" onClick=${() => suspender(g, false)}>Reactivar</button>` : html`<button type="button" class="btn2 chico rojo toca" style="margin-top:6px" onClick=${() => suspender(g, true)}>Suspender</button>`}</td><td class="muted">${g.correo}</td><td><span class=${'pildora ' + ESTADO[e.k][1]}>${ESTADO[e.k][0]}</span>${g.suspendido_en ? html`<br /><span class="sub">Desde el ${fecha(g.suspendido_en)}${g.suspendido_motivo ? ' · ' + g.suspendido_motivo : ''}</span>` : null}</td><td class="num">${fecha(e.hasta)}</td><td class="num muted">${fecha(g.creado)}</td><td class="num muted">${fecha(g.ultimo_cambio)}</td>
         <td class="der"><span class="fila" style="gap:6px;justify-content:flex-end">${[['negocio', 1, 'Negocio 1 mes'], ['empresa', 1, 'Empresa 1 mes'], ['negocio', 12, 'Negocio 1 año']].map(o => html`<button type="button" class="btn2 chico toca" onClick=${() => activar(g, o[0], o[1])}>${o[2]}</button>`)}</span></td></tr>`; })}</tbody></table>
       ${negocios && !negocios.length && html`<p class="vacio">Todavía no hay negocios con cuenta.</p>`}</div>`}
 

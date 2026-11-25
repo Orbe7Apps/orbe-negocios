@@ -268,7 +268,7 @@ function mezclar(s, filas) {
 
 // Plan y fechas de la suscripción (y si soy administrador de Orbe).
 async function leerPlan(c, nid) {
-  const { data } = await c.from('negocios').select('plan, prueba_hasta, pagado_hasta').eq('id', nid).maybeSingle();
+  const { data } = await c.from('negocios').select('plan, prueba_hasta, pagado_hasta, suspendido_en, suspendido_motivo').eq('id', nid).maybeSingle();
   if (data) { poner({ plan: data }); try { localStorage.setItem('orbe-nube-plan', JSON.stringify(data)); } catch (e) { /* sin espacio */ } }
 }
 
@@ -412,6 +412,7 @@ export const perfilesActivos = S => S.perfiles.filter(p => !p.inactivo && !p.bor
 // Estado de la suscripción en palabras: prueba, activa, en gracia (7 días) o vencida (solo lectura).
 export function estadoPlan(plan) {
   if (!plan) return null;
+  if (plan.suspendido_en) return { k: 'suspendida', txt: 'Suspendida', dias: null };
   const ahora = Date.now(), prueba = new Date(plan.prueba_hasta).getTime(), pagado = plan.pagado_hasta ? new Date(plan.pagado_hasta).getTime() : 0, DIA = 86400000;
   if (plan.plan === 'cortesia') return { k: 'activa', txt: 'Cortesía', dias: null };
   if (pagado > ahora) return { k: 'activa', txt: 'Activa', hasta: pagado, dias: Math.ceil((pagado - ahora) / DIA) };

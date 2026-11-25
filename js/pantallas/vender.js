@@ -92,7 +92,7 @@ export function Vender() {
     if (!n) return;
     // Suscripción vencida: la venta no se guardaría en la nube. Se manda a pagar.
     const ep = S.negocio.nubeId ? estadoPlan(estadoNube().plan) : null;
-    if (ep && ep.k === 'vencida') { avisar('Tu suscripción venció: renuévala en Más → Mi suscripción'); ir('mas'); return; }
+    if (ep && (ep.k === 'vencida' || ep.k === 'suspendida')) { avisar('Tu suscripción venció: renuévala en Más → Mi suscripción'); ir('mas'); return; }
     const cot = cotEnVenta;
     abrir('cobrar', { items, tt, onListo: () => { if (cot) { marcarCotizacion(cot, 'aceptada'); avisar('Cotización vendida'); } vaciar(); } });
   };
