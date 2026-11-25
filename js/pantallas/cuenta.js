@@ -18,7 +18,7 @@ export function CampoClave({ titulo, valor, onCambio, nueva, onEnter }) {
 // Usuario para iniciar sesión (lo usan el dueño y su equipo; el correo es solo del dueño).
 export function CampoUsuario({ valor, onCambio, crear, onEnter }) {
   return html`<label class="campo"><span>${crear ? 'Usuario (con esto entran tú y tu equipo)' : 'Usuario'}</span>
-    <input type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" value=${valor} placeholder=${crear ? 'Ej.: ferreteria.tornillo' : 'Tu usuario'} onInput=${e => onCambio(crear ? e.target.value.toLowerCase().replace(/\s+/g, '') : e.target.value)} onKeyDown=${e => e.key === 'Enter' && onEnter && onEnter()} />
+    <input type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" value=${valor} placeholder=${crear ? 'Ej.: ferreteria.tornillo' : 'Tu usuario (o el correo del dueño)'} onInput=${e => onCambio(crear ? e.target.value.toLowerCase().replace(/\s+/g, '') : e.target.value)} onKeyDown=${e => e.key === 'Enter' && onEnter && onEnter()} />
     ${crear && html`<span class="sub faint" style="font-size:12px">De 3 a 30 letras o números, sin espacios. Puede llevar punto o guion.</span>`}</label>`;
 }
 export const CampoCorreoDueno = ({ valor, onCambio, crear }) => html`<label class="campo"><span>${crear ? 'Correo del dueño (solo para recuperar la contraseña)' : 'Correo del dueño'}</span><input type="email" inputmode="email" autocomplete="email" autocapitalize="off" value=${valor} placeholder="tu@correo.com" onInput=${e => onCambio(e.target.value)} /></label>`;
@@ -42,8 +42,8 @@ function FormCuenta({ modo, setModo, f, pon }) {
     ${modo === 'crear' && html`<${CampoClave} titulo="Repite la contraseña" valor=${f.clave2} nueva onCambio=${v => pon({ clave2: v })} />`}
     ${modo === 'crear' && f.clave2 && f.clave !== f.clave2 && html`<span class="sub" style="color:var(--out-text);margin-top:-4px">Las contraseñas no coinciden</span>`}
     ${modo === 'crear' && html`<${AceptoLegal} on=${!!f.acepto} onCambio=${v => pon({ acepto: v })} />`}
-    ${modo === 'entrar' && html`<button type="button" class="olvide-pin toca" style="align-self:flex-start;padding-left:0" onClick=${() => setModo('olvido')}>Olvidé mi contraseña</button>`}
-    ${modo === 'olvido' && html`<span class="sub" style="line-height:1.45">Le mandamos al correo del dueño un enlace para poner una contraseña nueva.</span>`}
+    ${modo === 'entrar' && html`<button type="button" class="olvide-pin toca" style="align-self:flex-start;padding-left:0" onClick=${() => setModo('olvido')}>Olvidé mi usuario o contraseña</button>`}
+    ${modo === 'olvido' && html`<span class="sub" style="line-height:1.45">Escribe el correo del dueño y te mandamos un enlace. Al abrirlo verás tu usuario y, si quieres, pones una contraseña nueva.</span>`}
   </div>`;
 }
 // Para distinguir negocios con el mismo nombre: cuándo se creó y su plan.
@@ -108,12 +108,13 @@ export function ClaveNueva() {
   return html`<div class="clave-nueva entra">
     <div class="tarjeta pila" style="gap:16px;padding:26px;max-width:420px;width:100%">
       <${LogoOrbe} t=${44} />
-      <span style="display:flex;flex-direction:column;gap:4px"><b style="font-size:21px">Pon tu contraseña nueva</b><span class="sub">${N.usuario ? 'Para el usuario ' + N.usuario : 'Escríbela dos veces para no equivocarte'}</span></span>
+      ${N.usuario && html`<div class="tarjeta pila" style="box-shadow:none;background:var(--accent-soft);gap:2px;padding:14px 16px"><span class="sub">Tu usuario es</span><b class="num" style="font-size:22px;color:var(--accent-text);letter-spacing:.01em">${N.usuario}</b><span class="sub faint" style="font-size:12px">Anótalo: con él entran tú y tu equipo.</span></div>`}
+      <span style="display:flex;flex-direction:column;gap:4px"><b style="font-size:21px">${N.usuario ? '¿Quieres una contraseña nueva?' : 'Pon tu contraseña nueva'}</b><span class="sub">Escríbela dos veces para no equivocarte</span></span>
       <${CampoClave} titulo="Contraseña nueva (al menos 8 caracteres)" valor=${f.a} nueva onCambio=${v => setF(x => Object.assign({}, x, { a: v }))} />
       <${CampoClave} titulo="Repite la contraseña" valor=${f.b} nueva onCambio=${v => setF(x => Object.assign({}, x, { b: v }))} onEnter=${guardar} />
       ${f.b && f.a !== f.b && html`<span class="sub" style="color:var(--out-text);margin-top:-6px">Las contraseñas no coinciden</span>`}
       <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${guardar}>${ocupado ? 'Guardando…' : 'Guardar contraseña'}</button>
-      <button type="button" class="olvide-pin toca" onClick=${terminarRecuperar}>Ahora no</button>
+      <button type="button" class="olvide-pin toca" onClick=${terminarRecuperar}>${N.usuario ? 'Mantener mi contraseña actual' : 'Ahora no'}</button>
     </div></div>`;
 }
 
@@ -340,9 +341,9 @@ export function EntrarInicio({ volver, crear }) {
     : html`<span class="sub" style="line-height:1.45">Con tu cuenta abres tu negocio en este aparato, con todas tus ventas, productos y clientes.</span>
       ${modo !== 'olvido' ? html`<${CampoUsuario} valor=${f.usuario} onCambio=${v => pon({ usuario: v })} />` : html`<${CampoCorreoDueno} valor=${f.correo} onCambio=${v => pon({ correo: v })} />`}
       ${modo !== 'olvido' && html`<${CampoClave} titulo="Contraseña" valor=${f.clave} onCambio=${v => pon({ clave: v })} onEnter=${enviar} />`}
-      ${modo === 'olvido' && html`<span class="sub" style="line-height:1.45">Le mandamos al correo del dueño un enlace para poner una contraseña nueva.</span>`}
+      ${modo === 'olvido' && html`<span class="sub" style="line-height:1.45">Escribe el correo del dueño y te mandamos un enlace. Al abrirlo verás tu usuario y, si quieres, pones una contraseña nueva.</span>`}
       <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${enviar}>${ocupado ? 'Un momento…' : modo === 'olvido' ? 'Mandar el enlace' : 'Entrar'}</button>
-      <button type="button" class="olvide-pin toca" onClick=${() => setModo(modo === 'olvido' ? 'entrar' : 'olvido')}>${modo === 'olvido' ? 'Volver' : 'Olvidé mi contraseña'}</button>`}
+      <button type="button" class="olvide-pin toca" onClick=${() => setModo(modo === 'olvido' ? 'entrar' : 'olvido')}>${modo === 'olvido' ? 'Volver' : 'Olvidé mi usuario o contraseña'}</button>`}
   </div>`;
 }
 
@@ -384,9 +385,9 @@ export function EntrarDeNuevo({ tel }) {
       <span style="display:flex;flex-direction:column;gap:4px"><b style="font-size:21px">Entra a tu cuenta</b><span class="sub" style="line-height:1.45">${S.negocio ? 'Para abrir ' + S.negocio.nombre + ' en este navegador, entra con el usuario y la contraseña del negocio.' : 'Entra con tu usuario y contraseña.'}</span></span>
       ${!olvido ? html`<${CampoUsuario} valor=${f.usuario} onCambio=${v => pon({ usuario: v })} />` : html`<${CampoCorreoDueno} valor=${f.correo} onCambio=${v => pon({ correo: v })} />`}
       ${!olvido && html`<${CampoClave} titulo="Contraseña" valor=${f.clave} onCambio=${v => pon({ clave: v })} onEnter=${enviar} />`}
-      ${olvido && html`<span class="sub" style="line-height:1.45">Le mandamos al correo del dueño un enlace para poner una contraseña nueva.</span>`}
+      ${olvido && html`<span class="sub" style="line-height:1.45">Escribe el correo del dueño y te mandamos un enlace. Al abrirlo verás tu usuario y, si quieres, pones una contraseña nueva.</span>`}
       <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${enviar}>${ocupado ? 'Un momento…' : olvido ? 'Mandar el enlace' : 'Entrar'}</button>
-      <button type="button" class="olvide-pin toca" onClick=${() => setOlvido(!olvido)}>${olvido ? 'Volver' : 'Olvidé mi contraseña'}</button>
+      <button type="button" class="olvide-pin toca" onClick=${() => setOlvido(!olvido)}>${olvido ? 'Volver' : 'Olvidé mi usuario o contraseña'}</button>
       ${!olvido && html`<div class="pila" style="gap:8px;padding-top:14px;margin-top:2px;align-items:stretch">
         <span class="sub" style="text-align:center">¿No es tu negocio?</span>
         <div class="pila" style="gap:8px">
