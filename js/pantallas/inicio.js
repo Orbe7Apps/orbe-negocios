@@ -3,7 +3,7 @@ import { html, useState, useEffect } from '../lib/preact-htm.js';
 import { PAISES, TIPOS, pais, paisActivo } from '../paises.js';
 import { RUBROS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
 import { ListaFunciones } from './funciones.js';
-import { EntrarInicio, CrearCuentaInicio } from './cuenta.js';
+import { EntrarInicio, CrearCuentaInicio, CuentaConfirmada } from './cuenta.js';
 import { useNube, subirNegocio } from '../nube.js';
 import { crearNegocio, nombreSugerido, cambiarNegocio } from '../datos.js';
 import { Icono, LogoOrbe, Interruptor, avisar, Bandera } from '../ui.js';
@@ -52,6 +52,7 @@ export function Inicio({ tel }) {
   const marco = (contenido, compacto) => html`<div style=${tel ? '' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
     <div class=${tel ? '' : 'tarjeta'} style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column' : 'width:min(520px,100%);' + (compacto ? 'max-height:calc(100vh - 64px)' : 'height:min(820px,calc(100vh - 64px))') + ';padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:28px'}>${contenido}</div></div>`;
 
+  if (N.confirmado && N.sesion && !demo) return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto;display:flex;flex-direction:column;justify-content:center"><${CuentaConfirmada} armar=${() => setPaso('pais')} /></div>`, true);
   if (paso === 'entrar') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${EntrarInicio} volver=${() => setPaso(-1)} crear=${() => setPaso('pais')} /></div>`, true);
   if (paso === 'cuenta') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${CrearCuentaInicio} volver=${() => setPaso(-1)} entrar=${() => setPaso('entrar')} listo=${() => setPaso('pais')} /></div>`, true);
   if (paso === -1) return marco(html`<div class="entra" style="flex:1;display:flex;flex-direction:column;gap:16px;padding:calc(72px + var(--sa-top)) 26px calc(28px + var(--sa-bottom))">

@@ -15,7 +15,7 @@ import { Cotizaciones } from './pantallas/cotizaciones.js';
 import { Cuotas } from './pantallas/cuotas.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
-import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada } from './nube.js';
+import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada, quitarConfirmado } from './nube.js';
 import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion, AceptarTerminos, CuentaSuspendida } from './pantallas/cuenta.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
@@ -90,6 +90,8 @@ function App() {
   const N = useNube();
   // Aviso al volver del enlace del correo (cuenta confirmada, enlace vencido…).
   useEffect(() => { if (N.avisoEnlace) { avisar(N.avisoEnlace); quitarAvisoEnlace(); } }, [N.avisoEnlace]);
+  // Confirmó el correo con un negocio ya abierto en este aparato: solo se avisa (sin él, sale «¡Tu cuenta está confirmada!»).
+  useEffect(() => { if (N.confirmado && leer().negocio) { quitarConfirmado(); avisar('Listo: tu cuenta quedó confirmada'); } }, [N.confirmado]);
   // Negocio recién creado (sin ejemplo): se ofrece guardarlo en la nube una vez.
   // También si ya hay sesión y el negocio no está en la nube (un negocio recién creado espera un minuto: se está subiendo solo).
   const ng = S.negocio || {};

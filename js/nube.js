@@ -74,9 +74,10 @@ export async function leerEnlace() {
   const { error } = await c.auth.setSession({ access_token: q.get('access_token'), refresh_token: q.get('refresh_token') });
   if (error) { poner({ avisoEnlace: explicar(error) }); return 'error'; }
   if (q.get('type') === 'recovery') { poner({ recuperar: true }); return 'recuperar'; }
-  poner({ avisoEnlace: 'Listo: tu correo quedó confirmado' });
+  poner({ confirmado: true });
   return 'confirmado';
 }
+export const quitarConfirmado = () => poner({ confirmado: false });
 export const yaHayEnlace = () => { try { return !!sessionStorage.getItem('orbe-enlace'); } catch (e) { return false; } };
 // ¿Hay una sesión guardada en este navegador? (sirve sin internet: no pregunta al servidor)
 export const haySesionGuardada = () => { try { return !!localStorage.getItem('orbe-negocios-sesion'); } catch (e) { return false; } };

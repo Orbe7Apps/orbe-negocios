@@ -6,7 +6,7 @@ import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal, exportar } from 
 import { descargar, ventasCSV } from './reportes.js';
 import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor } from '../ui.js';
 import { numero } from './pagos.js';
-import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos, negocioPropio } from '../nube.js';
+import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos, negocioPropio, quitarConfirmado } from '../nube.js';
 
 // Campo de contraseña con «Ver» para revisar lo que se escribió.
 export function CampoClave({ titulo, valor, onCambio, nueva, onEnter }) {
@@ -426,7 +426,7 @@ export function AceptarTerminos() {
       <span class="ic t-vio" style="width:46px;height:46px;border-radius:14px"><${Icono} n="escudo" t=${22} /></span>
       <b style="font-size:20px;letter-spacing:-0.02em">${primera ? 'Nuestros términos y privacidad' : 'Actualizamos nuestros términos'}</b>
       <span class="sub" style="line-height:1.5">Te contamos qué datos guarda Orbe, para qué y qué puedes hacer con ellos. En resumen: tus datos son tuyos, no los vendemos, puedes descargarlos o borrarlos cuando quieras, y los recibos de Orbe son comprobantes no fiscales.</span>
-      <div class="chips"><a class="btn2 chico toca" style="text-decoration:none" href="terminos.html" target="_blank" rel="noopener">Leer los términos</a><a class="btn2 chico toca" style="text-decoration:none" href="privacidad.html" target="_blank" rel="noopener">Leer la privacidad</a></div>
+      <div class="chips" style="justify-content:center"><a class="btn2 chico toca" style="text-decoration:none" href="terminos.html" target="_blank" rel="noopener">Leer los términos</a><a class="btn2 chico toca" style="text-decoration:none" href="privacidad.html" target="_blank" rel="noopener">Leer la privacidad</a></div>
       <label class="fila toca" style="gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" checked=${ok} onChange=${e => setOk(e.target.checked)} style="width:22px;height:22px;margin-top:1px;accent-color:var(--accent);flex:none" /><span style="font-size:14px;line-height:1.45">Leí y acepto los Términos de uso y la Política de privacidad</span></label>
       <button type="button" class=${'btn toca' + (ok && !ocupado ? '' : ' apagado')} onClick=${aceptar}>${ocupado ? 'Guardando…' : 'Aceptar y seguir'}</button>
     </div></div>`;
@@ -446,4 +446,23 @@ export function CuentaSuspendida() {
       ${dueno && html`<div class="chips" style="justify-content:center"><button type="button" class="btn2 chico toca" onClick=${() => { descargar('orbe-negocios-copia-' + new Date().toISOString().slice(0, 10) + '.json', exportar(), 'application/json'); avisar('Copia descargada'); }}>Descargar mis datos</button><button type="button" class="btn2 chico toca" onClick=${() => { descargar('orbe-ventas.csv', ventasCSV(0, Date.now() + 1), 'text/csv;charset=utf-8'); avisar('Excel descargado'); }}>Ventas en Excel</button></div>`}
       <button type="button" class="olvide-pin toca" onClick=${() => cerrarSesion().then(() => avisar('Sesión cerrada'))}>Cerrar sesión</button>
     </div></div>`;
+}
+
+// Al abrir el enlace del correo de confirmación: la cuenta ya quedó lista y con la sesión abierta (no se vuelve a pedir la contraseña).
+export function CuentaConfirmada({ armar }) {
+  const N = useNube();
+  const [suyo, setSuyo] = useState(null), [ocupado, setOcupado] = useState(false);
+  useEffect(() => { misNegocios().then(l => setSuyo(l[0] || false)).catch(() => setSuyo(false)); }, []);
+  const seguir = async () => {
+    if (suyo) { setOcupado(true); try { await bajarNegocio(suyo.id); quitarConfirmado(); avisar('Listo: ' + suyo.nombre); } catch (er) { avisar(er.message); setOcupado(false); } return; }
+    quitarConfirmado(); armar && armar();
+  };
+  return html`<div class="pila entra" style="gap:14px;align-items:center;text-align:center;padding:18px 4px 6px">
+    <span style="width:76px;height:76px;border-radius:50%;background:var(--in);display:grid;place-items:center;animation:pop .5s var(--spring) both"><${Icono} n="check" t=${36} g=${2.8} c="#fff" /></span>
+    <b style="font-size:24px;letter-spacing:-0.02em">¡Tu cuenta está confirmada!</b>
+    <span class="sub" style="line-height:1.5;max-width:340px">Ya estás dentro${N.correo ? ' con ' + N.correo : ''}. No tienes que volver a iniciar sesión.</span>
+    ${N.usuario && html`<div class="tarjeta pila" style="box-shadow:none;background:var(--accent-soft);gap:2px;padding:12px 18px;align-self:stretch"><span class="sub">Tu usuario para entrar</span><b style="font-size:20px;color:var(--accent-text)">${N.usuario}</b></div>`}
+    <button type="button" class=${'btn toca' + (ocupado || suyo === null ? ' apagado' : '')} style="align-self:stretch;margin-top:6px" onClick=${seguir}>${suyo === null ? 'Un momento…' : ocupado ? 'Abriendo…' : suyo ? 'Abrir ' + suyo.nombre : 'Armar mi negocio'}</button>
+    ${!suyo && suyo !== null && html`<span class="sub faint" style="font-size:12px">Son unas preguntas rápidas: país, tipo de negocio y tu PIN.</span>`}
+  </div>`;
 }
