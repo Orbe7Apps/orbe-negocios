@@ -168,7 +168,10 @@ export async function borrarMiCuenta(clave) {
 // Los negocios de esta cuenta (para elegir cuál bajar en un aparato nuevo).
 export async function misNegocios() {
   const c = await cliente();
-  const { data, error } = await c.from('negocios').select('id, nombre, plan, prueba_hasta, pagado_hasta, creado, dueno').order('creado');
+  // Solo los negocios de esta cuenta (dueña o miembro). Una cuenta administradora de Orbe ve todos en el panel, no aquí.
+  const { data: { session } } = await c.auth.getSession();
+  const uid = session && session.user ? session.user.id : '';
+  const { data, error } = await c.from('negocios').select('id, nombre, plan, prueba_hasta, pagado_hasta, creado, dueno, miembros!inner(user_id)').eq('miembros.user_id', uid).order('creado');
   if (error) throw new Error(explicar(error));
   return data || [];
 }
