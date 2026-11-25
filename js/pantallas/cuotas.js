@@ -7,6 +7,7 @@ import { Hoja, Icono, avisar } from '../ui.js';
 import { usePagos, numero } from './pagos.js';
 import { enlaceWA } from '../ordenpdf.js';
 import { buscar } from '../buscar.js';
+import { BotonAyuda } from '../ayuda.js';
 
 export const CUOTAS_M = 'En cuotas', APARTADO_M = 'Apartado';
 const DIA = 86400000;
@@ -104,8 +105,8 @@ export function Cuotas() {
   const nombre = p => (S.clientes.find(c => c.id === p.cli) || {}).n || 'Cliente';
   const lista = q.trim() ? buscar(base, q, p => [nombre(p), numeroPlan(p), queEs(p)], true) : base;
   return html`<div class="pila" style="gap:14px">
-    <div class="fila" style="justify-content:space-between"><h1 class="titulo">Cuotas</h1></div>
-    <div class="rejilla-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fila entra"><h1 class="titulo crece">Cuotas</h1><${BotonAyuda} /></div>
+    <div class="rejilla-2" data-tour="cuotas" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="tarjeta pila" style="gap:2px"><span class="sub">Por cobrar</span><b class="num" style="font-size:24px">${D.m(porCobrar)}</b><span class="sub faint">${abiertos.length} ${abiertos.length === 1 ? 'plan abierto' : 'planes abiertos'}</span></div>
       <div class="tarjeta pila" style="gap:2px"><span class="sub">Atrasado</span><b class="num" style=${{ fontSize: '24px', color: atrasado > 0.004 ? 'var(--out)' : 'var(--ink)' }}>${D.m(atrasado)}</b><span class="sub faint">${atrasados.length} ${atrasados.length === 1 ? 'cliente' : 'clientes'}</span></div>
     </div>

@@ -1034,3 +1034,7 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 /* Aviso con acción (Deshacer) */
 .aviso-toast .aviso-accion { margin-left: 6px; border: 0; background: rgba(255,255,255,.16); color: #fff; font: inherit; font-weight: 700; font-size: 13px; padding: 7px 12px; border-radius: 14px; cursor: pointer; white-space: nowrap; }
 .aviso-toast .aviso-accion:active { transform: scale(.96); }
+
+/* Ayuda: captura de cómo se ve */
+.ayuda-img { border-radius: 18px; overflow: hidden; background: var(--fill2); box-shadow: inset 0 0 0 1px var(--fill); max-height: 240px; display: flex; justify-content: center; animation: bienvSube .5s .1s var(--spring) both; }
+.ayuda-img img { width: 100%; max-width: 420px; height: auto; display: block; object-fit: cover; object-position: top; }

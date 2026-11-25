@@ -4,36 +4,53 @@ import { html, useState, useEffect, useLayoutEffect, useRef } from './lib/preact
 import { useApp } from './ctx.js';
 import { Icono, LogoOrbe } from './ui.js';
 import { pais, dosMonedas } from './paises.js';
+import { rubro } from './rubros.js';
 
-function pasosPara({ S, T, tel, puede, ver, E }) {
-  const vender = T.vender === 'Pedido' ? 'pedidos' : T.vender === 'Cobrar' ? 'cobros' : 'ventas';
-  const dual = dosMonedas(pais(S.negocio.pais));
+// Los pasos cambian según el rubro, las funciones encendidas (Ajustes → Funciones), el aparato y los permisos de quien lo ve.
+// Los ejemplos usan los productos del propio negocio. Si algo no está en pantalla (p. ej. no hay recordatorios hoy), ese paso se salta solo.
+function pasosPara({ S, T, tel, puede, ver, E, yo }) {
+  const m = k => T.mod(k), n = S.negocio, R = rubro(n.rubro);
+  const dual = dosMonedas(pais(n.pais));
+  const prods = (S.productos || []).filter(p => !p.borrado), ej = (prods[0] || {}).n || (R && R.cat && R.cat[0] ? R.cat[0][1] : '');
+  const taller = ['taller', 'indep'].includes(n.rubro) || T.id === 'citas';
+  const pedido = T.vender === 'Pedido', cobro = T.vender === 'Cobrar';
+  const ventaN = pedido ? 'al pedido' : 'a la venta';
+  // Lo más importante de este rubro, para contarlo en la bienvenida.
+  const destacadas = [m('agenda') && 'tu agenda de citas', m('cuotas') && 'las ventas en cuotas', m('ordenes') && (taller ? 'las órdenes de trabajo' : 'los pedidos y encargos'), m('cotizaciones') && 'las cotizaciones', m('fiado') && 'lo que te deben', T.inv && 'tu inventario', m('caja') && 'la caja'].filter(Boolean).slice(0, 3);
+  const lista = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' y ' + a[a.length - 1] : a[0] || '';
   const p = [
-    { titulo: 'Bienvenido a Orbe Negocios', texto: 'Te muestro lo principal en un minuto. Puedes salir cuando quieras y verlo otra vez en Ajustes.', icono: true },
+    { titulo: 'Bienvenido' + (yo ? ', ' + yo.n.split(' ')[0] : ''), texto: 'Te muestro cómo usar Orbe en ' + n.nombre + (R ? ' (' + R.n.toLowerCase() + ')' : '') + '.' + (destacadas.length ? ' Vas a ver lo que más usa un negocio como el tuyo: ' + lista(destacadas) + '.' : '') + ' Puedes salir cuando quieras.', icono: true },
     tel
-      ? { sec: 'hoy', sel: '[data-tour=resumen]', titulo: 'Cómo va el día', texto: 'Lo vendido hoy, comparado con ayer y con tu promedio. Las barras muestran a qué hora vendes más.' }
+      ? { sec: 'hoy', sel: '[data-tour=resumen]', titulo: 'Cómo va el día', texto: 'Lo ' + (cobro ? 'cobrado' : 'vendido') + ' hoy, comparado con ayer y con tu promedio. Las barras muestran a qué hora vendes más.' }
       : { sec: 'hoy', sel: '.panel-cifras', titulo: 'Tu panel', texto: 'Lo vendido hoy, lo que ganaste, lo que te deben y lo que tienes por pagar. Todo se actualiza al instante.' },
-    { sec: 'hoy', sel: '[data-tour=pendientes]', titulo: 'Para hacer hoy', texto: 'Orbe te avisa a quién cobrarle, qué reponer, qué cuentas vencen' + (dual ? ' y la tasa del dólar' : '') + '. Toca cualquiera para resolverlo.' },
+    { sec: 'hoy', sel: '[data-tour=pendientes]', titulo: 'Para hacer hoy', texto: 'Orbe te avisa qué atender: ' + lista(['a quién cobrarle', T.inv && 'qué reponer', 'qué cuentas vencen', m('ordenes') && (taller ? 'órdenes atrasadas' : 'pedidos por entregar'), dual && 'la tasa del dólar'].filter(Boolean)) + '. Toca cualquiera para resolverlo.' },
+    { sec: 'hoy', sel: '[data-tour=recordatorios]', titulo: 'Recordatorios por WhatsApp', texto: 'Orbe te deja listos los mensajes' + (m('agenda') ? ' para las citas de mañana' : '') + (m('fiado') ? ', para cobrar lo fiado' : '') + (m('ordenes') ? ', para avisar que una orden está lista' : '') + '. Tocas “Enviar” y se abre WhatsApp con el texto escrito.' },
+    m('agenda') && ver('agenda') ? { sec: 'hoy', sel: '[data-tour=citas-hoy]', titulo: 'Citas de hoy', texto: 'Quién viene hoy y a qué hora. Toca una cita para avisarle, marcar que llegó o cobrarle.' } : null,
     tel ? { sel: '.nav-tel', titulo: 'Las secciones', texto: 'Abajo cambias de sección. Solo ves las que tu perfil tiene permitidas.' } : null,
-    tel ? { sel: '.boton-orbe', titulo: 'El botón Orbe', texto: 'Tócalo para crear lo de todos los días (una venta, un gasto, un cliente…) y para ir a las demás secciones.' }
+    tel ? { sel: '.boton-orbe', titulo: 'El botón Orbe', texto: 'Tócalo para crear lo de todos los días (' + lista([pedido ? 'un pedido' : 'una venta', 'un gasto', 'un cliente', m('agenda') && 'una cita', m('ordenes') && 'una orden'].filter(Boolean)) + ') y para ir a las demás secciones.' }
       : { sel: '.lateral nav', titulo: 'El menú', texto: 'Ordenado en Día a día, Operación y Gestión. Los números de colores son cosas pendientes.' },
     !tel ? { sel: '.barra-sup .buscador', titulo: 'Buscar', texto: 'Escribe un producto o un cliente y pulsa Enter. Lo encuentras desde cualquier pantalla.' } : null,
     ver('vender') && (tel
-      ? { sec: 'vender', sel: '.productos, .vacio-guia', titulo: 'Vender', texto: 'Toca un producto para sumarlo a la venta. Si lo tocas otra vez, suma uno más.' }
+      ? { sec: 'vender', sel: '.productos, .vacio-guia', titulo: pedido ? 'Tomar un pedido' : cobro ? 'Elegir lo que se hizo' : 'Vender', texto: (ej ? 'Toca “' + ej + '” para sumarlo ' + ventaN + '. ' : 'Toca un producto para sumarlo. ') + 'Si lo tocas otra vez, suma uno más.' + (m('medidas') ? ' Lo que se vende por kilo o metro te pregunta cuánto lleva.' : '') + (m('variantes') ? ' Si tiene tallas o colores, eliges cuál.' : '') + (m('escaner') ? ' También puedes escanear el código con la cámara.' : '') }
       : { sec: 'vender', sel: '[data-tour=lector]', titulo: 'La caja', texto: 'Pasa el lector de códigos o escribe el nombre y pulsa Enter. F1 te trae aquí; F12 cobra; Esc vacía la venta.' }),
-    ver('vender') && { sec: 'vender', sel: tel ? '[data-tour=cobrar]' : '.caja-pc .ticket', titulo: 'Cobrar', texto: 'Al cobrar eliges la forma de pago. Puedes combinar varias: por ejemplo, una parte por ' + (S.negocio.pays[0] || 'transferencia') + ' y el resto por ' + (S.negocio.pays[S.negocio.pays.length - 1] || 'efectivo') + (puede('fiado') ? ', o dejar una parte fiada' : '') + '.' },
-    ver('ordenes') ? { sec: 'ordenes', sel: tel ? '[data-tour=ordenes] > :first-child' : '.tablero-ordenes', titulo: 'Órdenes de trabajo', texto: 'Lo que te dejan para reparar o te encargan, con fecha de entrega y anticipo. ' + (tel ? 'Toca una orden para avanzarla, avisarle al cliente o mandarle el PDF por WhatsApp.' : 'Arrastra las tarjetas de una columna a otra para cambiar el estado.') } : null,
-    ver('agenda') ? { sec: 'agenda', sel: tel ? '.dias-agenda' : '.agenda-cols, .dias-agenda', titulo: 'Agenda', texto: 'Tus citas por día y por profesional. Toca una para avisarle por WhatsApp, marcar que llegó o cobrarle con los servicios ya puestos.' } : null,
-    T.mod('fiado') ? { sec: 'clientes', sel: tel ? '[data-tour=deben], .vacio-guia, .pantalla .tarjeta' : '.tabla-caja, .vacio-guia', titulo: 'Clientes', texto: 'Quién te debe y desde cuándo. Con un toque le mandas el recordatorio por WhatsApp' + (puede('clientes') ? ' o anotas lo que te pagó, también combinado' : '') + '.' }
-      : { sec: 'clientes', sel: tel ? '.vacio-guia, .pantalla .tarjeta' : '.tabla-caja, .vacio-guia', titulo: 'Clientes', texto: 'Tus clientes con su teléfono y lo que te han comprado. Desde aquí les mandas el recibo o un mensaje por WhatsApp.' },
-    { sec: 'inventario', sel: tel ? '[data-tour=productos] > :first-child, .vacio-guia' : '.tabla-caja, .vacio-guia', titulo: T.inv ? 'Inventario' : 'Servicios', texto: T.inv ? 'Lo que tienes y lo que falta. Orbe te avisa cuando algo baja del mínimo. Toca un producto para cambiarlo o borrarlo.' : 'Tus servicios con su precio y lo que duran. Toca uno para cambiarlo.' },
+    ver('vender') && { sec: 'vender', sel: tel ? '[data-tour=cobrar]' : '.caja-pc .ticket', titulo: 'Cobrar', texto: 'Eliges la forma de pago y puedes combinar varias: una parte por ' + (n.pays[0] || 'transferencia') + ' y el resto por ' + (n.pays[n.pays.length - 1] || 'efectivo') + '.' + (m('fiado') && puede('fiado') ? ' También puedes fiar.' : '') + (m('cuotas') && puede('fiado') ? ' O venderlo en cuotas o apartarlo con un abono.' : '') + (m('cotizaciones') ? ' Si solo quiere el precio, toca “Cotizar” y se lo mandas en PDF.' : '') },
+    m('agenda') && ver('agenda') ? { sec: 'agenda', sel: tel ? '.dias-agenda' : '.agenda-cols, .dias-agenda', titulo: 'Agenda', texto: 'Tus citas por día' + (S.perfiles.filter(x => !x.borrado).length > 1 ? ' y por profesional' : '') + '. Con el link de reservas (en Más) tus clientes agendan solos desde Instagram o WhatsApp, y las citas entran aquí.' } : null,
+    m('ordenes') && ver('ordenes') ? { sec: 'ordenes', sel: tel ? '[data-tour=ordenes] > :first-child' : '.tablero-ordenes', titulo: taller ? 'Órdenes de trabajo' : 'Pedidos y encargos', texto: (taller ? 'Lo que te dejan para reparar' : 'Lo que te encargan') + ', con fecha de entrega y anticipo. ' + (tel ? 'Toca una para avanzarla, avisarle al cliente o mandarle el PDF por WhatsApp.' : 'Arrastra las tarjetas de una columna a otra para cambiar el estado.') } : null,
+    m('cotizaciones') && ver('cotizaciones') ? { sec: 'cotizaciones', sel: '[data-tour=cotizaciones]', titulo: 'Cotizaciones', texto: 'Los presupuestos que mandaste, esperando respuesta. Cuando el cliente acepta, con un toque pasan a venta con los mismos precios.' } : null,
+    m('cuotas') && ver('cuotas') ? { sec: 'cuotas', sel: '[data-tour=cuotas]', titulo: 'Cuotas y apartados', texto: 'Lo que te deben en cuotas y lo apartado. Orbe te avisa quién está atrasado, prepara el recordatorio y, si un apartado vence, te pregunta qué hacer.' } : null,
+    ver('clientes') ? (m('fiado')
+      ? { sec: 'clientes', sel: tel ? '[data-tour=deben], .vacio-guia, .pantalla .tarjeta' : '.tabla-caja, .vacio-guia', titulo: 'Clientes', texto: 'Quién te debe y desde cuándo. Con un toque le mandas el recordatorio por WhatsApp' + (puede('clientes') ? ' o anotas lo que te pagó' : '') + '.' }
+      : { sec: 'clientes', sel: tel ? '.vacio-guia, .pantalla .tarjeta' : '.tabla-caja, .vacio-guia', titulo: 'Clientes', texto: 'Tus clientes con su teléfono y lo que te han comprado. Desde aquí les mandas el recibo o un mensaje por WhatsApp.' }) : null,
+    ver('inventario') ? { sec: 'inventario', sel: tel ? '[data-tour=productos] > :first-child, .vacio-guia' : '.tabla-caja, .vacio-guia, .contenido .lista, .contenido .tarjeta', titulo: T.inv ? 'Inventario' : 'Servicios', texto: T.inv ? 'Lo que tienes y lo que falta: te avisa cuando algo baja del mínimo.' + (m('compras') ? ' Con “Factura” le tomas foto a la factura del proveedor y suma lo que llegó.' : '') + (m('promos') ? ' En “Promos” creas 2x1 y descuentos.' : '') : 'Tus servicios con su precio y lo que duran. Toca uno para cambiarlo.' } : null,
     !tel && ver('gastos') ? { sec: 'gastos', sel: '.tres', titulo: 'Gastos y por pagar', texto: 'Anota lo que gastas y las cuentas que pagas después. Orbe te avisa antes de que venzan.' } : null,
-    tel && (puede('gastos') || puede('cierre')) ? { sec: 'mas', sel: '[data-tour=mas-acciones]', titulo: 'Gastos y cierre', texto: 'Anota gastos y cuentas por pagar, y al final del día cuenta la caja: Orbe te dice si cuadra.' } : null,
-    ver('reportes') ? { sec: 'reportes', sel: tel ? '.pantalla > section, .pantalla > .tarjeta, .vacio-guia' : '.contenido .cifras, .vacio-guia', titulo: 'Reportes', texto: 'Cuánto vendiste, cuánto ganaste de verdad después de gastos, cómo te pagan y qué se vende más.' } : null,
-    ver('equipo') ? { sec: 'equipo', sel: tel ? '.pantalla .tarjeta' : '[data-tour=equipo]', titulo: 'Tu equipo', texto: 'Con “+ Perfil” creas a cada persona con su rol y su PIN. Con “+ Rol” y los interruptores decides qué puede hacer cada rol.' } : null,
+    tel && (puede('gastos') || puede('cierre')) ? { sec: 'mas', sel: '[data-tour=mas-acciones]', titulo: m('caja') ? 'Gastos, caja y cierre' : 'Gastos y cierre', texto: 'Anota gastos y cuentas por pagar' + (m('caja') ? ', abre la caja con su fondo' : '') + ' y al final del día cuenta lo que hay: Orbe te dice si cuadra.' } : null,
+    ver('reportes') ? { sec: 'reportes', sel: tel ? '.pantalla > section, .pantalla > .tarjeta, .vacio-guia' : '.contenido .cifras, .vacio-guia', titulo: 'Reportes', texto: 'Cuánto vendiste, cuánto ganaste de verdad después de gastos, cómo te pagan y qué se vende más' + (m('comisiones') ? ', y la comisión de cada persona' : '') + '.' } : null,
+    ver('equipo') ? { sec: 'equipo', sel: tel ? '.pantalla .tarjeta' : '[data-tour=equipo]', titulo: 'Tu equipo', texto: 'Cada persona entra con su PIN y ve solo lo que su rol le permite. Dar permisos delicados (anular, descuentos, ver ganancias) pide confirmación y queda registrado.' } : null,
+    puede('ajustes') ? { sec: 'mas', sel: '[data-tour=funciones]', titulo: 'Funciones', texto: 'Enciende lo que necesites y apaga lo que no uses. Cuando enciendes algo nuevo, Orbe te enseña a usarlo.' } : null,
+    { sec: 'hoy', sel: '.boton-ayuda', titulo: 'El botón “?”', texto: 'En cada pantalla. Tócalo cuando tengas una duda: te explica qué es, cómo se usa y te lleva paso a paso.' },
     { sec: 'mas', sel: '[data-tour=perfil]', titulo: 'Tu perfil', texto: 'Cambia tu nombre o PIN, o pásale el aparato a otra persona con “Cambiar de perfil”.' },
-    puede('ajustes') ? { sec: 'mas', sel: '[data-tour=copias]', titulo: 'Copias', texto: 'Orbe guarda una copia cada día. Si algo sale mal, aquí la restauras. También puedes descargarla.' } : null,
-    { titulo: '¡Listo!', texto: 'Eso es lo principal. Si quieres ver este recorrido otra vez, está en Ajustes → Ayuda.', icono: true, fin: true }
+    puede('ajustes') ? { sec: 'mas', sel: '[data-tour=copias]', titulo: 'Copias', texto: 'Orbe guarda una copia cada día. Si algo sale mal, aquí la restauras. Y si borras algo por error, toca “Deshacer” en el aviso.' } : null,
+    { titulo: '¡Listo!', texto: 'Eso es lo principal de ' + n.nombre + '. Si quieres ver este recorrido otra vez, está en Más → Ayuda y recorrido.', icono: true, fin: true }
   ];
   return p.filter(Boolean);
 }
@@ -233,7 +250,7 @@ export function OfertaRecorrido() {
   if (!yo || yo.tour) return null;
   return html`<section class="tarjeta entra oferta-tour" data-tour-oferta>
     <span class="oferta-logo"><${LogoOrbe} t=${44} orbita /></span>
-    <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:15px">¿Primera vez, ${yo.n.split(' ')[0]}?</b><span class="sub" style="line-height:1.4">Te muestro cómo funciona Orbe en un minuto.</span></span>
+    <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:15px">¿Primera vez, ${yo.n.split(' ')[0]}?</b><span class="sub" style="line-height:1.4">Te muestro cómo usar Orbe en tu negocio, con lo que tienes encendido.</span></span>
     <span class="oferta-btns">
       <button type="button" class="btn2 chico toca" onClick=${omitirRecorrido}>Ahora no</button>
       <button type="button" class="btn2 chico lleno toca" onClick=${verRecorrido}>Ver recorrido</button>

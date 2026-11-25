@@ -109,7 +109,7 @@ export function Cotizaciones() {
   const opciones = [['pendiente', 'Esperando'], ['aceptada', 'Vendidas'], ['vencida', 'Vencidas'], ['rechazada', 'No aceptadas']].map(o => ({ v: o[0], n: o[1] + ' ' + cuenta(o[0]) }));
   const Nueva = html`<button type="button" class="btn2 chico lleno toca" onClick=${() => { ir('vender'); avisar('Agrega los productos y toca “Cotizar”'); }}>+ Nueva cotización</button>`;
   return html`
-    <div class="fila entra"><h1 class="titulo crece">Cotizaciones</h1><${BotonAyuda} />${Nueva}</div>
+    <div class="fila entra" data-tour="cotizaciones"><h1 class="titulo crece">Cotizaciones</h1><${BotonAyuda} />${Nueva}</div>
     <div class="rejilla-2" style="gap:10px">
       <div class="tarjeta cifra entra"><span class="sub">Esperando respuesta</span><span class="v num" style="font-size:22px">${D.m(pendientes.reduce((a, c) => a + totalDe(c), 0))}</span><span class="sub faint">${pendientes.length} ${pendientes.length === 1 ? 'cotización' : 'cotizaciones'}</span></div>
       <div class="tarjeta cifra entra" style="--i:1"><span class="sub">Se vendieron</span><span class="v num" style="font-size:22px">${hechas ? Math.round(aceptadas.length / hechas * 100) + ' %' : '—'}</span><span class="sub faint">${aceptadas.length} de ${hechas} respondidas</span></div>

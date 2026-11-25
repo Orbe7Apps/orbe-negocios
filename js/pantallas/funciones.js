@@ -22,12 +22,17 @@ export function ListaFunciones({ on, onCambio, reco = [], rubroN = '' }) {
   </div>`;
 }
 
+// La guía que se ofrece al encender cada función.
+const GUIA_DE = { agenda: 'cita', ordenes: 'orden', cotizaciones: 'cotizar', cuotas: 'cuotas', fiado: 'fiar', caja: 'caja', promos: 'promo', compras: 'factura', medidas: 'medidas', comisiones: 'comisiones', escaner: 'reponer', inventario: 'productos', servicios: 'productos', variantes: 'productos' };
 export function Funciones() {
-  const { S, T, abrir } = useApp();
+  const { S, T, abrir, ayuda } = useApp();
   const n = S.negocio, R = rubro(n.rubro);
   const poner = (m, v) => {
     cambiarNegocio({ mods: Object.assign({}, n.mods || {}, { [m.k]: v }) }, (v ? 'Activó ' : 'Apagó ') + '“' + m.n + '”');
-    avisar((v ? 'Activado: ' : 'Apagado: ') + m.n);
+    // Al encender algo nuevo, Orbe ofrece enseñar a usarlo (la guía paso a paso de esa función).
+    const g = v && GUIA_DE[m.k];
+    if (g) avisar('Activado: ' + m.n, 'ok', { n: 'Ver cómo se usa', fn: () => ayuda(g) });
+    else avisar((v ? 'Activado: ' : 'Apagado: ') + m.n);
   };
   return html`
     <button type="button" class="tarjeta fila toca" style="width:100%;box-shadow:none;background:var(--fill2);gap:12px;padding:12px;border:0;color:var(--ink);text-align:left" onClick=${() => abrir('rubro')}>

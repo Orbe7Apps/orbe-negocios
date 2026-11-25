@@ -118,7 +118,7 @@ function useTemas() {
 }
 const GRUPOS = ['', 'Dinero', 'Tu negocio', 'Ventas y cobro', 'La app'];
 const COLOR_ZONA = { '': 't-vio', Dinero: 't-ver', 'Tu negocio': 't-azu', 'Ventas y cobro': 't-amb', 'La app': 't-gris' };
-const TOUR = { perfil: 'perfil', copias: 'copias' };
+const TOUR = { perfil: 'perfil', copias: 'copias', funciones: 'funciones', reservas: 'reservas', recordatorios: 'recordatorios-ajustes', ayuda: 'ayuda', suscripcion: 'suscripcion' };
 const Fila = (t, onClick) => html`<button type="button" key=${t.k} class="opcion-menu toca" data-tour=${TOUR[t.k]} onClick=${onClick}>
   <span class=${'ic ' + t.c} style="width:36px;height:36px;border-radius:11px"><${Icono} n=${t.i} t=${17} g=${2.2} /></span>
   <span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><b>${t.n}</b><span class="sub corta">${t.r}</span></span>

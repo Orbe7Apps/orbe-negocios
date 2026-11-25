@@ -80,7 +80,7 @@ export function RecordatoriosHoy() {
   if (!puede('vender') && !puede('clientes')) return null;
   const lista = recordatorios(S, T, P, D);
   if (!lista.length) return null;
-  return html`<section class="tarjeta entra rec-tarjeta">
+  return html`<section class="tarjeta entra rec-tarjeta" data-tour="recordatorios">
     <div class="fila" style="gap:10px;margin-bottom:4px"><span class="ic t-ver"><${Icono} n="movil" t=${18} /></span>
       <span class="crece" style="display:flex;flex-direction:column"><b style="font-size:16px">Recordatorios por enviar</b><span class="sub">Mensaje listo: tócalo y se abre WhatsApp</span></span>
       <span class="pildora t-ver">${lista.length}</span></div>
