@@ -5,7 +5,7 @@ import { useApp } from '../ctx.js';
 import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal } from '../datos.js';
 import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor } from '../ui.js';
 import { numero } from './pagos.js';
-import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta } from '../nube.js';
+import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos } from '../nube.js';
 
 // Campo de contraseña con «Ver» para revisar lo que se escribió.
 export function CampoClave({ titulo, valor, onCambio, nueva, onEnter }) {
@@ -391,4 +391,27 @@ export function AvisoPlan() {
   const txt = ep.k === 'vencida' ? 'Tu suscripción venció: ves todo, pero no se guardan cambios nuevos.' : ep.k === 'gracia' ? 'Tu suscripción venció. Te quedan ' + ep.dias + (ep.dias === 1 ? ' día' : ' días') + ' de gracia.' : ep.k === 'prueba' ? 'Tu prueba gratis termina en ' + ep.dias + (ep.dias === 1 ? ' día' : ' días') + '.' : 'Tu suscripción vence en ' + ep.dias + (ep.dias === 1 ? ' día' : ' días') + '.';
   return html`<button type="button" class=${'aviso-plan toca entra ' + (ep.k === 'vencida' ? 'rojo' : 'ambar')} onClick=${() => configCobro().then(cfg => abrir('pagar', { cfg, plan: S.negocio.escala === 'empresa' ? 'empresa' : 'negocio' })).catch(er => avisar(er.message))}>
     <${Icono} n="tarjeta" t=${18} /><span class="crece">${txt}</span><b>Pagar</b></button>`;
+}
+
+// Términos nuevos (o cuentas creadas antes de que existieran): el dueño los acepta una vez para seguir.
+export function AceptarTerminos() {
+  const { yo } = useApp();
+  const N = useNube();
+  const [ok, setOk] = useState(false), [ocupado, setOcupado] = useState(false);
+  if (!faltaAceptar(N.sesion) || !yo || yo.rol !== 'dueno') return null;
+  const primera = !(N.sesion.user_metadata || {}).acepto_terminos;
+  const aceptar = async () => {
+    if (!ok) { avisar('Marca la casilla para aceptar'); return; }
+    setOcupado(true);
+    try { await aceptarTerminos(); avisar('Gracias: términos aceptados'); } catch (er) { avisar(er.message); setOcupado(false); }
+  };
+  return html`<div class="velo-terminos entra" role="dialog" aria-modal="true" aria-label="Términos de uso">
+    <div class="tarjeta pila" style="max-width:440px;width:100%;gap:14px;padding:24px">
+      <span class="ic t-vio" style="width:46px;height:46px;border-radius:14px"><${Icono} n="escudo" t=${22} /></span>
+      <b style="font-size:20px;letter-spacing:-0.02em">${primera ? 'Nuestros términos y privacidad' : 'Actualizamos nuestros términos'}</b>
+      <span class="sub" style="line-height:1.5">Te contamos qué datos guarda Orbe, para qué y qué puedes hacer con ellos. En resumen: tus datos son tuyos, no los vendemos, puedes descargarlos o borrarlos cuando quieras, y los recibos de Orbe son comprobantes no fiscales.</span>
+      <div class="chips"><a class="btn2 chico toca" style="text-decoration:none" href="terminos.html" target="_blank" rel="noopener">Leer los términos</a><a class="btn2 chico toca" style="text-decoration:none" href="privacidad.html" target="_blank" rel="noopener">Leer la privacidad</a></div>
+      <label class="fila toca" style="gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" checked=${ok} onChange=${e => setOk(e.target.checked)} style="width:22px;height:22px;margin-top:1px;accent-color:var(--accent);flex:none" /><span style="font-size:14px;line-height:1.45">Leí y acepto los Términos de uso y la Política de privacidad</span></label>
+      <button type="button" class=${'btn toca' + (ok && !ocupado ? '' : ' apagado')} onClick=${aceptar}>${ocupado ? 'Guardando…' : 'Aceptar y seguir'}</button>
+    </div></div>`;
 }

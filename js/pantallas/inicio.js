@@ -63,7 +63,7 @@ export function Inicio({ tel }) {
     <div style="margin-top:auto;display:flex;flex-direction:column;gap:10px">
       <button type="button" class="btn toca" onClick=${() => setPaso(demo || N.sesion ? 'pais' : 'cuenta')}>Empezar</button>
       <button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => setPaso('entrar')}>Ya tengo cuenta</button>
-      <span class="sub" style="text-align:center">14 días gratis, sin tarjeta. Nunca se borra nada.</span>
+      <span class="sub" style="text-align:center">3 días gratis, sin tarjeta. Nunca se borra nada.</span>
       <span class="sub faint" style="text-align:center;font-size:12px"><a href="terminos.html" target="_blank" rel="noopener" style="color:inherit">Términos de uso</a> · <a href="privacidad.html" target="_blank" rel="noopener" style="color:inherit">Privacidad</a></span>
     </div>
   </div>`);

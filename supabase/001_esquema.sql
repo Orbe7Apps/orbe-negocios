@@ -8,7 +8,7 @@ create table public.negocios (
   nombre text not null check (char_length(nombre) between 1 and 120),
   dueno uuid not null references auth.users(id) on delete cascade,
   plan text not null default 'prueba' check (plan in ('prueba', 'negocio', 'empresa', 'cortesia')),
-  prueba_hasta timestamptz not null default (now() + interval '14 days'),
+  prueba_hasta timestamptz not null default (now() + interval '3 days'),
   pagado_hasta timestamptz,
   creado timestamptz not null default now()
 );

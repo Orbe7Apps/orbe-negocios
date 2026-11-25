@@ -15,7 +15,7 @@ import { Cotizaciones } from './pantallas/cotizaciones.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
 import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada } from './nube.js';
-import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion } from './pantallas/cuenta.js';
+import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion, AceptarTerminos } from './pantallas/cuenta.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -158,6 +158,7 @@ function App() {
       ${hoja && html`<${HojaActual} key=${hoja.n} hoja=${hoja} cerrar=${() => setHoja(null)} />`}
       ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
       ${Tour}
+      <${AceptarTerminos} />
       <${Avisos} />
     </${Ctx.Provider}>`;
   }
@@ -204,6 +205,7 @@ function App() {
     ${hoja && html`<${HojaActual} key=${hoja.n} hoja=${hoja} cerrar=${() => setHoja(null)} />`}
     ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
     ${Tour}
+    <${AceptarTerminos} />
     <${Avisos} />
   </${Ctx.Provider}>`;
 }

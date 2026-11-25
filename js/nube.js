@@ -86,6 +86,15 @@ export function olvidarNegocioLocal() { pend.clear(); guardarPend(); parar(); po
 export const verificandoCuenta = v => poner({ verificando: !!v });
 export const terminarRecuperar = () => poner({ recuperar: false });
 export const quitarAvisoEnlace = () => poner({ avisoEnlace: '' });
+// Versión vigente de los términos y la privacidad: si cambian, se sube y se vuelve a pedir que los acepten.
+export const VERSION_TERMINOS = '2026-11-25';
+export const faltaAceptar = user => !!user && ((user.user_metadata || {}).terminos_version || '') !== VERSION_TERMINOS;
+export async function aceptarTerminos() {
+  const c = await cliente();
+  const { data, error } = await c.auth.updateUser({ data: { acepto_terminos: new Date().toISOString(), terminos_version: VERSION_TERMINOS } });
+  if (error) throw new Error(explicar(error));
+  poner({ sesion: data.user });
+}
 // El usuario: de 3 a 30 letras, números, punto, guion o guion bajo (sin espacios ni acentos).
 export const usuarioOk = u => /^[a-z0-9._-]{3,30}$/.test(String(u || '').trim().toLowerCase());
 export async function crearCuenta(correo, clave, usuario) {
@@ -95,7 +104,7 @@ export async function crearCuenta(correo, clave, usuario) {
     if (e1) throw new Error(explicar(e1));
     if (!libre) throw new Error('Ese usuario ya existe: elige otro');
   }
-  const { data, error } = await c.auth.signUp({ email: correo.trim(), password: clave, options: { emailRedirectTo: vuelta(), data: Object.assign({ acepto_terminos: new Date().toISOString() }, u ? { usuario: u } : {}) } });
+  const { data, error } = await c.auth.signUp({ email: correo.trim(), password: clave, options: { emailRedirectTo: vuelta(), data: Object.assign({ acepto_terminos: new Date().toISOString(), terminos_version: VERSION_TERMINOS }, u ? { usuario: u } : {}) } });
   if (error) throw new Error(explicar(error));
   // Si el proyecto pide confirmar el correo, no hay sesión todavía.
   return { confirmar: !data.session };
