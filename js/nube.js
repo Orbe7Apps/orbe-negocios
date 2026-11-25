@@ -87,7 +87,7 @@ export const verificandoCuenta = v => poner({ verificando: !!v });
 export const terminarRecuperar = () => poner({ recuperar: false });
 export const quitarAvisoEnlace = () => poner({ avisoEnlace: '' });
 // Versión vigente de los términos y la privacidad: si cambian, se sube y se vuelve a pedir que los acepten.
-export const VERSION_TERMINOS = '2026-11-25';
+export const VERSION_TERMINOS = '2026-11-25b';
 export const faltaAceptar = user => !!user && ((user.user_metadata || {}).terminos_version || '') !== VERSION_TERMINOS;
 export async function aceptarTerminos() {
   const c = await cliente();
