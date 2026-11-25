@@ -1,7 +1,7 @@
 // Primer uso: país, tipo de negocio, tamaño y datos. Al final se arma el negocio.
 import { html, useState, useEffect } from '../lib/preact-htm.js';
 import { PAISES, TIPOS, pais, paisActivo } from '../paises.js';
-import { RUBROS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
+import { RUBROS, MODULOS, rubro, adivinarRubro, modulosDe } from '../rubros.js';
 import { ListaFunciones } from './funciones.js';
 import { EntrarInicio, CrearCuentaInicio, CuentaConfirmada } from './cuenta.js';
 import { useNube, subirNegocio } from '../nube.js';
@@ -25,6 +25,11 @@ export function Inicio({ tel }) {
   const N = useNube();
   // Volvió del enlace de confirmación con la sesión abierta: se muestran sus negocios (o se arma uno).
   useEffect(() => { if (N.sesion && !demo && paso === -1) setPaso('entrar'); }, [N.sesion]);
+  // Demostración (el botón «Abrir la demo» de la web): entra directo a un negocio de ejemplo lleno y con todas las funciones.
+  // Con «?demo=elegir» se recorren los pasos para escoger país y rubro.
+  const directo = demo && !/[?&]demo=elegir\b/.test(location.search);
+  // (Con un instante de espera: la app termina de conectarse antes de recibir el negocio nuevo.)
+  useEffect(() => { if (directo) setTimeout(() => crearNegocio({ pais: 'VE', tipo: 'tienda', rubro: 'ferreteria', escala: 'negocio', mods: Object.fromEntries(MODULOS.map(m => [m.k, true])) }, true), 0); }, []);
   const P = pais(c.pais || 'VE');
   const pon = o => setC(x => Object.assign({}, x, o));
   const i = PASOS.indexOf(paso);
@@ -52,6 +57,7 @@ export function Inicio({ tel }) {
   const marco = (contenido, compacto) => html`<div style=${tel ? '' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
     <div class=${tel ? '' : 'tarjeta'} style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column' : 'width:min(520px,100%);' + (compacto ? 'max-height:calc(100vh - 64px)' : 'height:min(820px,calc(100vh - 64px))') + ';padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:28px'}>${contenido}</div></div>`;
 
+  if (directo) return marco(html`<div style="flex:1;display:grid;place-items:center;min-height:60vh"><${LogoOrbe} t=${88} orbita /></div>`);
   if (N.confirmado && N.sesion && !demo) return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto;display:flex;flex-direction:column;justify-content:center"><${CuentaConfirmada} armar=${() => setPaso('pais')} /></div>`, true);
   if (paso === 'entrar') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${EntrarInicio} volver=${() => setPaso(-1)} crear=${() => setPaso('pais')} /></div>`, true);
   if (paso === 'cuenta') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${CrearCuentaInicio} volver=${() => setPaso(-1)} entrar=${() => setPaso('entrar')} listo=${() => setPaso('pais')} /></div>`, true);
