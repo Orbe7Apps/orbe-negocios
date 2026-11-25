@@ -93,7 +93,8 @@ function App() {
     <section class="tarjeta pila entra" style="--i:3"><div class="paso-cita"><span class="paso-n">${pros.length > 1 ? 4 : 3}</span><b>Tus datos</b></div>
       <label class="campo"><span>Nombre</span><input type="text" value=${f.nom} autocomplete="name" placeholder="Tu nombre" onInput=${e => pon({ nom: e.target.value })} /></label>
       <label class="campo"><span>WhatsApp</span><input type="tel" inputmode="tel" value=${f.tel} autocomplete="tel" placeholder="0414-0000000" onInput=${e => pon({ tel: e.target.value })} /></label>
-      <label class="campo"><span>Nota (opcional)</span><input type="text" value=${f.nota} placeholder="Algo que debamos saber" onInput=${e => pon({ nota: e.target.value })} /></label></section>
+      <label class="campo"><span>Nota (opcional)</span><input type="text" value=${f.nota} placeholder="Algo que debamos saber" onInput=${e => pon({ nota: e.target.value })} /></label>
+      <span class="sub" style="line-height:1.5;font-size:12.5px">Tu nombre y tu WhatsApp solo los usa <b>${pag.nombre}</b> para confirmar y recordarte tu cita. No se usan para publicidad. <a href="privacidad.html" target="_blank" rel="noopener" style="color:var(--accent-text);font-weight:600">Política de privacidad</a></span></section>
     <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${reservar}>${ocupado ? 'Reservando…' : f.min != null ? 'Reservar ' + nombreDia(f.dia).toLowerCase() + ' a las ' + hora(f.dia + f.min * 60000) : 'Reservar'}</button>
     <span class="sub res-pie">Reservas con Orbe Negocios</span></div>`;
 }
