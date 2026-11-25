@@ -114,5 +114,7 @@ export function usePagos(total, metodos, inicial, ajuste) {
     </div>`;
   }
 
-  return { m, setM, varias, ok, falta, vuelto, pagos, vista, efectivo: !varias && esEfectivo(m) };
+  // Armar las partes desde fuera (cuotas: «inicial hoy» + lo que va en cuotas). Montos en la moneda principal.
+  const preparar = lista => { if (!lista || !lista.length) { setVariasRaw(false); return; } setVariasRaw(true); setFilas(lista.map(([mm, v]) => Object.assign(fila(mm), { en: 'p', txt: v > 0 ? String(v).replace('.', ',') : '' }))); };
+  return { m, setM, varias, ok, falta, vuelto, pagos, vista, preparar, efectivo: !varias && esEfectivo(m) };
 }

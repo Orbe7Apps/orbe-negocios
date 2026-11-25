@@ -3,7 +3,7 @@
 // Solo aparecen las opciones que el perfil tiene permitidas.
 import { html, useState, useEffect } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { ordenAtrasada } from '../datos.js';
+import { ordenAtrasada, cuentaPlan } from '../datos.js';
 import { Icono, useAtras } from '../ui.js';
 
 const COLORES = { cita: '#12a37a', inventario: '#e8961a', servicio: '#3d9be9', venta: '#6a5cf2', orden: '#2f7fd1', gasto: '#e8436a', escanear: '#12a37a', cliente: '#c98512', caja: '#8f84ff' };
@@ -36,6 +36,7 @@ export function BotonOrbe({ seccion, tabs = [] }) {
     ver('clientes') && ['clientes', 'personas', 'Clientes', 0],
     ver('ordenes') && ['ordenes', 'orden', 'Órdenes', atrasadas],
     ver('cotizaciones') && ['cotizaciones', 'doc', 'Cotizaciones', (S.cotizaciones || []).filter(c => c.estado === 'pendiente' && !(c.vence < Date.now())).length],
+    ver('cuotas') && ['cuotas', 'calendario', 'Cuotas', (S.planes || []).filter(p => p.estado === 'abierto' && (c => c.atrasado > 0.004 || c.vencido)(cuentaPlan(p))).length],
     ver('reportes') && ['reportes', 'grafico', 'Reportes', 0],
     ver('equipo') && ['equipo', 'escudo', 'Equipo', 0]
   ].filter(Boolean);

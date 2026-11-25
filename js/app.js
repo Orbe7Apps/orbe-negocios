@@ -12,6 +12,7 @@ import { Inicio } from './pantallas/inicio.js';
 import { Hoy } from './pantallas/hoy.js';
 import { Ordenes } from './pantallas/ordenes.js';
 import { Cotizaciones } from './pantallas/cotizaciones.js';
+import { Cuotas } from './pantallas/cuotas.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
 import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada } from './nube.js';
@@ -41,6 +42,7 @@ const SECCIONES = {
   agenda: { n: 'Agenda', i: 'calendario', C: Agenda },
   ordenes: { n: 'Órdenes', i: 'orden', C: Ordenes },
   cotizaciones: { n: 'Cotizaciones', i: 'doc', C: Cotizaciones },
+  cuotas: { n: 'Cuotas', npc: 'Cuotas y apartados', i: 'calendario', C: Cuotas },
   clientes: { n: 'Clientes', i: 'personas', C: Clientes },
   inventario: { n: 'Inventario', i: 'caja', C: Inventario },
   gastos: { n: 'Gastos y por pagar', i: 'dinero', C: Gastos },
@@ -49,9 +51,9 @@ const SECCIONES = {
   mas: { n: 'Más', npc: 'Ajustes', i: 'mas', ipc: 'ajustes', C: Mas }
 };
 // Secciones que necesitan un permiso para verse.
-const PERMISO_SEC = { vender: 'vender', gastos: 'gastos', reportes: 'ganancias', equipo: 'equipo', ordenes: 'ordenes', agenda: 'vender', cotizaciones: 'vender' };
+const PERMISO_SEC = { cuotas: 'fiado', vender: 'vender', gastos: 'gastos', reportes: 'ganancias', equipo: 'equipo', ordenes: 'ordenes', agenda: 'vender', cotizaciones: 'vender' };
 // Secciones que dependen de una función que se puede apagar.
-const MODULO_SEC = { ordenes: 'ordenes', agenda: 'agenda', cotizaciones: 'cotizaciones' };
+const MODULO_SEC = { cuotas: 'cuotas', ordenes: 'ordenes', agenda: 'agenda', cotizaciones: 'cotizaciones' };
 
 function aplicarTema(tema) {
   const r = document.documentElement;
@@ -165,7 +167,7 @@ function App() {
     </${Ctx.Provider}>`;
   }
 
-  const grupos = [['Día a día', ['hoy', 'vender', 'agenda', 'ordenes', 'cotizaciones', 'clientes']], ['Operación', ['inventario', 'gastos']], ['Gestión', ['reportes', 'equipo']]].map(g => [g[0], g[1].filter(permitida)]).filter(g => g[1].length);
+  const grupos = [['Día a día', ['hoy', 'vender', 'agenda', 'ordenes', 'cotizaciones', 'cuotas', 'clientes']], ['Operación', ['inventario', 'gastos']], ['Gestión', ['reportes', 'equipo']]].map(g => [g[0], g[1].filter(permitida)]).filter(g => g[1].length);
   const colores = { agenda: 'var(--c2)', clientes: 'var(--c3)', inventario: 'var(--c3)', gastos: 'var(--c5)', ordenes: 'var(--c5)', cotizaciones: 'var(--c4)' };
   return html`<${Ctx.Provider} value=${ctx}>
     <div class="marco-pc">

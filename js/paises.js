@@ -99,7 +99,7 @@ export const esEuro = m => /€|Euro/i.test(m);
 // Euro por dólar de referencia, si todavía no se leyó la tasa del euro.
 export const EUR_USD = 1.16;
 // Formas de pago electrónicas: se les puede pedir el número de referencia.
-export const esElectronico = m => !/Efectivo|Fiado|Por cobrar|Saldo a favor/i.test(m);
+export const esElectronico = m => !/Efectivo|Fiado|Por cobrar|Saldo a favor|En cuotas|Apartado|Cuotas|Anticipo/i.test(m);
 
 // Billetes de cada moneda, para contar la caja.
 const BILLETES = { TRY: [5, 10, 20, 50, 100, 200], NGN: [100, 200, 500, 1000], EGP: [5, 10, 20, 50, 100, 200], LBP: [5000, 10000, 20000, 50000, 100000], ZWG: [10, 20, 50, 100, 200], PLN: [10, 20, 50, 100, 200, 500], CHF: [10, 20, 50, 100, 200, 1000], AUD: [5, 10, 20, 50, 100], INR: [10, 20, 50, 100, 200, 500], PHP: [20, 50, 100, 200, 500, 1000], ZAR: [10, 20, 50, 100, 200], MAD: [20, 50, 100, 200], KES: [50, 100, 200, 500, 1000], USD: [1, 2, 5, 10, 20, 50, 100], VES: [5, 10, 20, 50, 100, 200, 500], ARS: [100, 200, 500, 1000, 2000, 10000, 20000], COP: [2000, 5000, 10000, 20000, 50000, 100000], MXN: [20, 50, 100, 200, 500, 1000], CLP: [1000, 2000, 5000, 10000, 20000], PEN: [10, 20, 50, 100, 200], EUR: [5, 10, 20, 50, 100, 200], BRL: [2, 5, 10, 20, 50, 100, 200], GBP: [5, 10, 20, 50], CAD: [5, 10, 20, 50, 100], BOB: [10, 20, 50, 100, 200], CRC: [1000, 2000, 5000, 10000, 20000], GTQ: [1, 5, 10, 20, 50, 100, 200], HNL: [1, 2, 5, 10, 20, 50, 100, 500], NIO: [10, 20, 50, 100, 200, 500, 1000], PYG: [2000, 5000, 10000, 20000, 50000, 100000], DOP: [50, 100, 200, 500, 1000, 2000], UYU: [20, 50, 100, 200, 500, 1000, 2000] };

@@ -10,7 +10,7 @@ const CLAVE = 'orbe-negocios';
 const subs = new Set();
 let S = vacio();
 
-function vacio() { return { v: 2, negocio: null, productos: [], clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], ordenes: [], cotizaciones: [], citas: [], solicitudes: [], movCaja: [], turnos: [], promos: [], perfiles: [], roles: ROLES_BASE(), registro: [], ajustes: { tema: 'auto', perfil: '' }, tasa: { modo: 'auto', valor: 0, fuente: 'oficial', fecha: '' }, tasas: {}, historialTasas: [], grupos: [] }; }
+function vacio() { return { v: 2, negocio: null, productos: [], clientes: [], ventas: [], abonos: [], gastos: [], cierres: [], ordenes: [], cotizaciones: [], citas: [], solicitudes: [], movCaja: [], turnos: [], promos: [], planes: [], perfiles: [], roles: ROLES_BASE(), registro: [], ajustes: { tema: 'auto', perfil: '' }, tasa: { modo: 'auto', valor: 0, fuente: 'oficial', fecha: '' }, tasas: {}, historialTasas: [], grupos: [] }; }
 // Datos guardados con versiones anteriores: se completan sin perder nada.
 function migrar(d) {
   if (!Array.isArray(d.roles) || !d.roles.length) d.roles = ROLES_BASE();
@@ -27,6 +27,7 @@ function migrar(d) {
   if (!Array.isArray(d.grupos)) d.grupos = [];
   if (!Array.isArray(d.ordenes)) d.ordenes = [];
   if (!Array.isArray(d.cotizaciones)) d.cotizaciones = [];
+  if (!Array.isArray(d.planes)) d.planes = [];
   if (!Array.isArray(d.citas)) d.citas = [];
   if (!Array.isArray(d.solicitudes)) d.solicitudes = [];
   // PIN cifrado: los que estaban guardados tal cual se cifran (nunca se guardan los 4 números).
@@ -389,6 +390,29 @@ function ejemplo(neg, productos, D, perfiles) {
     gastos.forEach(g => { g.tasa = tasaDia(g.t); });
     for (let d = 63; d >= 1; d--) historialTasas.push({ dia: diaClave(hoy0 - d * DIA), f: 'oficial', v: tasaDia(hoy0 - d * DIA) });
   }
+  // Cuotas y apartados de ejemplo: uno atrasado, uno al día y un apartado a medio pagar.
+  const planes = [];
+  if (mods.cuotas && clientes.length >= 3) {
+    const caros = productos.filter(p => p.q != null).slice().sort((a, b) => b.p - a.p), tasaUlt = (ventas[ventas.length - 1] || {}).tasa || 0;
+    const itemDe = p => Object.assign({ pid: p.id, n: p.n, q: 1, p: p.p, c: p.c }, p.gar && mods.garantia ? { gar: p.gar } : {});
+    const planCuotas = (p, ci, hace, n, cada, pct, pagadas) => {
+      const t = hoy0 - hace * DIA + 11 * 3600000, it = itemDe(p), total = D.redondo(p.p), inicial = D.redondo(total * pct / 100), fin = D.redondo(total - inicial);
+      const v = { id: id(), n: 0, t, items: [it], total, pagos: [{ m: neg.pays[0], v: inicial }, { m: 'Cuotas', v: fin }], cli: clientes[ci].id, suc: neg.sucursales[0], fiado: false, por: perfiles[0].id, tasa: tasaUlt };
+      const pl = { id: 'p' + id(), n: planes.length + 1, tipo: 'cuotas', t, por: perfiles[0].id, cli: v.cli, suc: v.suc, venta: v.id, items: [it], total, inicialVenta: inicial, antes: inicial, financiado: fin, recargo: 0, recargoPct: 0, cada,
+        cuotas: calendarioCuotas(fin, n, cada, t), estado: 'abierto', hist: [{ t, por: perfiles[0].id, txt: 'Venta en ' + n + ' cuotas' }] };
+      v.plan = pl.id; ventas.push(v); planes.push(pl);
+      pagadas.forEach((x, k) => abonos.push({ id: id(), t: pl.cuotas[k].f - DIA, cli: v.cli, v: D.redondo(pl.cuotas[k].v * x), m: neg.pays[k % neg.pays.length], plan: pl.id, nota: 'Abono ' + numeroPlan(pl) }));
+    };
+    if (caros[0]) planCuotas(caros[0], 1, 50, 4, 'quin', 20, [1, 1, 0.5]);
+    if (caros[1]) planCuotas(caros[1], 4, 20, 6, 'mes', 25, []);
+    if (caros[2]) {
+      const p = caros[2], t = hoy0 - 12 * DIA + 15 * 3600000, pl = { id: 'p' + id(), n: planes.length + 1, tipo: 'apartado', t, por: perfiles[0].id, cli: clientes[2].id, suc: neg.sucursales[0], items: [itemDe(p)], total: D.redondo(p.p),
+        vence: t + 30 * DIA, dias: 30, acuerdo: 'saldo', estado: 'abierto', hist: [{ t, por: perfiles[0].id, txt: 'Apartado por 30 días' }] };
+      planes.push(pl);
+      [[0.15, 12], [0.15, 5]].forEach(([x, h]) => abonos.push({ id: id(), t: hoy0 - h * DIA + 16 * 3600000, cli: pl.cli, v: D.redondo(pl.total * x), m: neg.pays[0], plan: pl.id, nota: 'Abono ' + numeroPlan(pl) }));
+    }
+    ventas.sort((a, b) => a.t - b.t); ventas.forEach((v, i) => { v.n = 1001 + i; });
+  }
   // Órdenes de ejemplo (se ven si el negocio usa órdenes): una atrasada, una lista y dos recién recibidas.
   const taller = neg.rubro ? ['taller', 'indep'].includes(neg.rubro) : neg.tipo === 'citas' || neg.tipo === 'indep', hora17 = d => { const x = new Date(hoy0 + d * DIA); x.setHours(17, 0, 0, 0); return x.getTime(); };
   const ej = !mods.ordenes ? [] : ORDENES_EJ[neg.rubro] ? ORDENES_EJ[neg.rubro]
@@ -412,7 +436,7 @@ function ejemplo(neg, productos, D, perfiles) {
   ordenes.forEach((o, i) => { const a = abonos.find(x => x.ord === o.id); if (a) a.nota = 'Anticipo ' + (o.tipo === 'pedido' ? 'PED-' : 'OT-') + String(i + 1).padStart(4, '0'); });
   // Lo vendido sale del inventario, pero el ejemplo arranca con lo que hay ahora.
   const citas = mods.agenda ? citasEjemplo(r, productos, clientes, perfiles, hoy0, ahora) : [];
-  return { clientes, ventas, abonos, gastos, cierres: [], historialTasas, ordenes, citas };
+  return { clientes, ventas, abonos, gastos, cierres: [], historialTasas, ordenes, citas, planes };
 }
 
 // ---------- acciones ----------
@@ -450,7 +474,7 @@ const porLinea = items => items.reduce((o, it) => { const k = claveItem(it); o[k
 // Registro de cambios: quién hizo qué y cuándo (anulaciones, devoluciones, borrados, cambios del negocio).
 const nota = (s, que) => ({ registro: (s.registro || []).concat([{ t: Date.now(), por: s.ajustes.perfil || '', que }]).slice(-500) });
 
-export function vender({ items, pagos, cli, suc, fiado, total: conImpuesto, igtf }) {
+export function vender({ items, pagos, cli, suc, fiado, total: conImpuesto, igtf, sinStock }) {
   // Si el impuesto va aparte, el total cobrado es mayor que la suma de los productos.
   const total = conImpuesto || items.reduce((a, it) => a + it.q * it.p, 0);
   const venta = { id: id(), n: sigNumero(), t: Date.now(), items, total, pagos, cli: cli || '', suc: suc || S.negocio.sucursales[0], fiado: !!fiado, por: S.ajustes.perfil || '', tasa: S.tasa.valor || 0 };
@@ -458,7 +482,7 @@ export function vender({ items, pagos, cli, suc, fiado, total: conImpuesto, igtf
   if (S.negocio.euro) venta.tasaEur = tasaEuro();
   // Fiado en dólares (Argentina): la deuda se guarda también en dólares para que no pierda valor.
   if (S.negocio.fiadoUsd) venta.pagos = pagos.map(p => p.m === 'Fiado' || p.m === 'Saldo a favor' ? Object.assign({}, p, { fu: dolarDe(p.v) }) : p);
-  cambiar(s => ({ ventas: s.ventas.concat([venta]), productos: stockMas(s.productos, porLinea(items), -1) }));
+  cambiar(s => ({ ventas: s.ventas.concat([venta]), productos: sinStock ? s.productos : stockMas(s.productos, porLinea(items), -1) }));
   return venta;
 }
 // Anular: la venta queda en el historial marcada, deja de contar y lo vendido vuelve al inventario.
@@ -469,7 +493,7 @@ export function anularVenta(vid, motivo) {
   cambiar(s => Object.assign({
     ventas: s.ventas.map(x => x.id === vid ? Object.assign({}, x, { anulada: { t: Date.now(), por: s.ajustes.perfil || '', motivo } }) : x),
     productos: stockMas(s.productos, quedan, 1)
-  }, v.orden ? { ordenes: s.ordenes.map(o => o.id === v.orden ? Object.assign({}, o, { estado: 'lista', venta: '', hist: o.hist.concat([{ t: Date.now(), por: s.ajustes.perfil || '', txt: 'Se anuló la venta #' + v.n + ': la orden vuelve a «Lista»', e: 'lista' }]) }) : o) } : {}, nota(s, 'Anuló la venta #' + v.n + ' (' + motivo + ')')));
+  }, v.plan ? { planes: (s.planes || []).map(p => p.id === v.plan ? Object.assign({}, p, { estado: 'anulado', hist: p.hist.concat([{ t: Date.now(), por: s.ajustes.perfil || '', txt: 'Se anuló la venta #' + v.n }]) }) : p) } : {}, v.orden ? { ordenes: s.ordenes.map(o => o.id === v.orden ? Object.assign({}, o, { estado: 'lista', venta: '', hist: o.hist.concat([{ t: Date.now(), por: s.ajustes.perfil || '', txt: 'Se anuló la venta #' + v.n + ': la orden vuelve a «Lista»', e: 'lista' }]) }) : o) } : {}, nota(s, 'Anuló la venta #' + v.n + ' (' + motivo + ')')));
   return true;
 }
 // Devolución: un movimiento nuevo en negativo (cuenta el día que se devuelve) y lo devuelto vuelve al inventario.
@@ -536,6 +560,119 @@ export function estadoOrden(oid, estado, txt) {
   const o0 = S.ordenes.find(o => o.id === oid); if (!o0 || o0.estado === estado) return;
   cambiarOrden(oid, o => Object.assign({}, o, { estado }, estado === 'lista' ? { lista: Date.now() } : {}, { hist: o.hist.concat([histOrden(txt, estado)]) }));
 }
+// ---------- cuotas y apartados ----------
+// Cuotas: la venta se hace hoy (el producto sale) y lo que falta se paga en partes con fecha («Cuotas» no entra a la caja).
+// Apartado: el producto queda separado del inventario; el cliente abona y se lo lleva al completar (entonces se hace la venta).
+// Los pagos de un plan son abonos marcados con «plan»: entran a la caja el día que se pagan y no se mezclan con el fiado.
+const DIA_MS = 86400000;
+export const FRECUENCIAS = [{ k: 'sem', n: 'Semanal', dias: 7 }, { k: 'quin', n: 'Quincenal', dias: 15 }, { k: 'mes', n: 'Mensual', meses: 1 }];
+export const ACUERDOS_APARTADO = [{ k: 'saldo', n: 'Queda como saldo a favor', corto: 'Saldo a favor' }, { k: 'devolver', n: 'Se le devuelve', corto: 'Se devuelve' }, { k: 'retener', n: 'Se queda en el negocio', corto: 'Se retiene' }];
+export const numeroPlan = p => (p.tipo === 'apartado' ? 'AP-' : 'CU-') + String(p.n).padStart(4, '0');
+const sigPlan = () => (S.planes || []).reduce((a, p) => Math.max(a, p.n || 0), 0) + 1;
+const r2 = x => Math.round(x * 100) / 100;
+const mediodia = t => { const d = new Date(t); d.setHours(12, 0, 0, 0); return d.getTime(); };
+export function calendarioCuotas(monto, n, cada, desde = Date.now()) {
+  const fr = FRECUENCIAS.find(f => f.k === cada) || FRECUENCIAS[1], base = Math.floor(monto / n * 100) / 100;
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(desde); if (fr.meses) d.setMonth(d.getMonth() + i + 1); else d.setDate(d.getDate() + fr.dias * (i + 1));
+    return { f: mediodia(d.getTime()), v: i === n - 1 ? r2(monto - base * (n - 1)) : base };
+  });
+}
+export const abonosDePlan = pid => S.abonos.filter(a => a.plan === pid);
+export const pagadoPlan = p => r2((p.inicialVenta || 0) + abonosDePlan(p.id).reduce((a, x) => a + x.v, 0));
+// Cómo va un plan: lo pagado, lo que falta y, en cuotas, cuáles están pagadas, atrasadas o por venir.
+export function cuentaPlan(p, ahora = Date.now()) {
+  const pagado = pagadoPlan(p), falta = Math.max(0, r2(p.total - pagado));
+  const hoy0 = new Date(ahora); hoy0.setHours(0, 0, 0, 0);
+  if (p.tipo === 'apartado') {
+    const vencido = p.estado === 'abierto' && falta > 0.004 && p.vence < ahora;
+    return { pagado, falta, completo: falta <= 0.004, vencido, diasQuedan: Math.ceil((p.vence - ahora) / DIA_MS), cuotas: [], atrasado: 0, diasAtraso: 0, proxima: null };
+  }
+  let resto = Math.max(0, pagado - (p.antes || 0)), atrasado = 0, diasAtraso = 0, proxima = null;
+  const cuotas = (p.cuotas || []).map((c, i) => {
+    const aplicado = Math.min(c.v, resto); resto = r2(resto - aplicado);
+    const queda = r2(c.v - aplicado), vencida = c.f < hoy0.getTime();
+    const estado = queda <= 0.004 ? 'pagada' : vencida ? 'atrasada' : c.f < hoy0.getTime() + DIA_MS ? 'hoy' : aplicado > 0 ? 'parcial' : 'pendiente';
+    if (estado === 'atrasada') { atrasado += queda; diasAtraso = Math.max(diasAtraso, Math.floor((ahora - c.f) / DIA_MS)); }
+    if (!proxima && queda > 0.004) proxima = { i, f: c.f, v: c.v, queda };
+    return Object.assign({}, c, { i, aplicado, queda, estado });
+  });
+  return { pagado, falta, completo: falta <= 0.004, vencido: false, cuotas, atrasado: r2(atrasado), diasAtraso, proxima };
+}
+const cambiarPlan = (pid, fn, que) => cambiar(s => Object.assign({ planes: (s.planes || []).map(p => p.id === pid ? fn(p) : p) }, que ? nota(s, que) : {}));
+const histPlan = txt => ({ t: Date.now(), por: S.ajustes.perfil || '', txt });
+// Venta a cuotas (la venta ya se hizo con la parte «Cuotas»).
+export function crearPlanCuotas(venta, { inicial, financiado, n, cada, recargo, recargoPct }) {
+  const plan = { id: 'p' + id(), n: sigPlan(), tipo: 'cuotas', t: Date.now(), por: S.ajustes.perfil || '', cli: venta.cli, suc: venta.suc, venta: venta.id,
+    items: venta.items, total: venta.total, inicialVenta: r2(inicial), antes: r2(inicial), financiado: r2(financiado), recargo: r2(recargo || 0), recargoPct: recargoPct || 0, cada,
+    cuotas: calendarioCuotas(financiado, n, cada), estado: 'abierto', hist: [] };
+  plan.hist = [histPlan('Venta #' + venta.n + ' en ' + n + (n === 1 ? ' cuota' : ' cuotas'))];
+  cambiar(s => Object.assign({ planes: (s.planes || []).concat([plan]), ventas: s.ventas.map(v => v.id === venta.id ? Object.assign({}, v, { plan: plan.id }) : v) }, nota(s, 'Vendió a cuotas (' + numeroPlan(plan) + ')')));
+  venta.plan = plan.id;
+  return plan;
+}
+// Apartado: se separa del inventario ya; el abono inicial entra a la caja hoy.
+export function crearApartado({ items, cli, suc, total, pagos, dias, acuerdo }) {
+  const plan = { id: 'p' + id(), n: sigPlan(), tipo: 'apartado', t: Date.now(), por: S.ajustes.perfil || '', cli, suc: suc || S.negocio.sucursales[0],
+    items, total: r2(total), vence: mediodia(Date.now() + dias * DIA_MS), dias, acuerdo: acuerdo || 'saldo', estado: 'abierto', hist: [histPlan('Apartado por ' + dias + ' días')] };
+  cambiar(s => Object.assign({ planes: (s.planes || []).concat([plan]), productos: stockMas(s.productos, porLinea(items), -1) }, nota(s, 'Apartó productos (' + numeroPlan(plan) + ')')));
+  if (pagos && pagos.some(p => p.v > 0)) abonar(cli, pagos.filter(p => p.v > 0), 'Abono inicial ' + numeroPlan(plan), { plan: plan.id });
+  return plan;
+}
+export function abonarPlan(pid, pagos) {
+  const p0 = (S.planes || []).find(p => p.id === pid); if (!p0) return;
+  const v = pagos.reduce((a, x) => a + x.v, 0); if (!(v > 0)) return;
+  abonar(p0.cli, pagos, 'Abono ' + numeroPlan(p0), { plan: pid });
+  const c = cuentaPlan((S.planes || []).find(p => p.id === pid));
+  cambiarPlan(pid, p => Object.assign({}, p, p.tipo === 'cuotas' && c.completo ? { estado: 'pagado', pagado: Date.now() } : {}, { hist: p.hist.concat([histPlan('Abonó ' + r2(v) + (p.tipo === 'cuotas' && c.completo ? ' · plan pagado' : ''))]) }));
+}
+export function recordadoPlan(pid) { cambiarPlan(pid, p => Object.assign({}, p, { recordado: Date.now(), hist: p.hist.concat([histPlan('Se le escribió por WhatsApp')]) })); }
+export function masTiempoApartado(pid, dias) {
+  const p0 = (S.planes || []).find(p => p.id === pid); if (!p0) return;
+  cambiarPlan(pid, p => Object.assign({}, p, { vence: mediodia(Math.max(p.vence, Date.now()) + dias * DIA_MS), posponer: 0, hist: p.hist.concat([histPlan('Le dio ' + dias + ' días más')]) }), 'Dio más tiempo al apartado ' + numeroPlan(p0));
+}
+// «Escribirle primero»: no se decide hoy; vuelve a preguntar mañana.
+export function posponerApartado(pid) { cambiarPlan(pid, p => Object.assign({}, p, { posponer: mediodia(Date.now() + DIA_MS) - 12 * 3600000, recordado: Date.now(), hist: p.hist.concat([histPlan('Se le escribió; decide mañana')]) })); }
+// Entregar un apartado pagado: ahora sí es una venta (pagada con lo abonado, que ya entró a la caja).
+export function entregarApartado(pid) {
+  const p0 = (S.planes || []).find(p => p.id === pid); if (!p0 || p0.estado !== 'abierto') return null;
+  const pagado = pagadoPlan(p0);
+  const venta = vender({ items: p0.items, pagos: [{ m: 'Anticipo', v: pagado }], cli: p0.cli, suc: p0.suc, total: p0.total, sinStock: true });
+  cambiarPlan(pid, p => Object.assign({}, p, { estado: 'entregado', entregado: Date.now(), venta: venta.id, hist: p.hist.concat([histPlan('Entregado · venta #' + venta.n)]) }), 'Entregó el apartado ' + numeroPlan(p0));
+  return venta;
+}
+// Liberar: lo apartado vuelve al inventario. Lo abonado queda como saldo a favor, se devuelve o se queda en el negocio.
+export function liberarApartado(pid, como) {
+  const p0 = (S.planes || []).find(p => p.id === pid); if (!p0 || p0.estado !== 'abierto') return;
+  const ab = abonosDePlan(pid), pagado = pagadoPlan(p0);
+  if (pagado > 0 && como === 'devolver') {
+    const por = {}; ab.forEach(a => pagosDeAbono(a).forEach(p => { por[p.m] = (por[p.m] || 0) + p.v; }));
+    const pagos = Object.keys(por).filter(m => Math.abs(por[m]) > 0.0001).map(m => ({ m, v: -por[m] }));
+    if (pagos.length) abonar(p0.cli, pagos, 'Devolución del apartado ' + numeroPlan(p0), { plan: pid });
+  }
+  const txt = { saldo: 'lo abonado quedó como saldo a favor', devolver: 'se devolvió lo abonado', retener: 'lo abonado se quedó en el negocio' }[como] || '';
+  cambiar(s => Object.assign({
+    productos: stockMas(s.productos, porLinea(p0.items), 1),
+    abonos: pagado > 0 && como === 'saldo' ? s.abonos.map(a => a.plan === pid ? Object.assign({}, a, { plan: '', dePlan: pid }) : a) : s.abonos,
+    planes: s.planes.map(p => p.id === pid ? Object.assign({}, p, { estado: 'liberado', liberado: Date.now(), como, hist: p.hist.concat([histPlan('Liberado' + (pagado > 0 ? ': ' + txt : ''))]) }) : p)
+  }, nota(s, 'Liberó el apartado ' + numeroPlan(p0) + (pagado > 0 ? ' (' + txt + ')' : ''))));
+}
+// Pasar un apartado a cuotas: se lleva el producto hoy y lo que falta (más el recargo, si hay) se paga en cuotas.
+export function apartadoACuotas(pid, { n, cada, recargoPct }) {
+  const p0 = (S.planes || []).find(p => p.id === pid); if (!p0 || p0.estado !== 'abierto') return null;
+  const pagado = pagadoPlan(p0), resto = r2(p0.total - pagado), recargo = r2(resto * (recargoPct || 0) / 100);
+  const items = p0.items.concat(recargo > 0 ? [{ n: 'Recargo por financiar (' + recargoPct + ' %)', q: 1, p: recargo, c: 0, cargo: true }] : []);
+  const total = r2(p0.total + recargo);
+  const venta = vender({ items, pagos: (pagado > 0 ? [{ m: 'Anticipo', v: pagado }] : []).concat([{ m: 'Cuotas', v: r2(resto + recargo) }]), cli: p0.cli, suc: p0.suc, total, sinStock: true });
+  cambiar(s => Object.assign({
+    ventas: s.ventas.map(v => v.id === venta.id ? Object.assign({}, v, { plan: pid }) : v),
+    planes: s.planes.map(p => p.id === pid ? Object.assign({}, p, { tipo: 'cuotas', venta: venta.id, items, total, inicialVenta: 0, antes: pagado, financiado: r2(resto + recargo), recargo, recargoPct: recargoPct || 0, cada,
+      cuotas: calendarioCuotas(r2(resto + recargo), n, cada), deApartado: true, hist: p.hist.concat([histPlan('Pasó a ' + n + ' cuotas · se llevó el producto (venta #' + venta.n + ')')]) }) : p)
+  }, nota(s, 'Pasó el apartado ' + numeroPlan(p0) + ' a cuotas')));
+  venta.plan = pid;
+  return venta;
+}
+
 // ---------- cotizaciones y presupuestos ----------
 // Una lista con precios que se le manda al cliente (PDF por WhatsApp). Si la acepta, se convierte en venta con esos precios.
 // Estados: pendiente, aceptada (ya se vendió), rechazada. Vencida = pendiente cuya fecha de validez pasó.
@@ -696,7 +833,7 @@ export function anonimizarCliente(cid) {
 // Movimientos de efectivo que no son ventas: fondo inicial, retiros (depósito, pago, para el dueño), ingresos (sencillo)
 // y ajustes (lo que faltó o sobró al cerrar un turno, para que el cierre del día no lo cuente otra vez).
 const SIGNO_MOV = { fondo: 1, ingreso: 1, ajuste: 1, retiro: -1 };
-const NO_CAJA = ['Fiado', 'Saldo a favor', 'Anticipo'];
+const NO_CAJA = ['Fiado', 'Saldo a favor', 'Anticipo', 'Cuotas'];
 export function movCaja(tipo, pagos, motivo) {
   const v = pagos.reduce((a, p) => a + p.v, 0); if (!(v > 0) && tipo !== 'ajuste') return;
   const mv = { id: id(), t: Date.now(), por: S.ajustes.perfil || '', tipo, pagos, motivo: motivo || '' };
@@ -913,10 +1050,10 @@ export function deudaDe(cid) {
     if (S.negocio.pais !== 'VE') {
       let pesos = 0, usd = 0;
       vigentes().filter(v => v.cli === cid).forEach(v => v.pagos.forEach(p => { if (p.m === 'Fiado' || p.m === 'Saldo a favor') { if (p.fu != null) usd += p.fu; else pesos += p.v; } }));
-      S.abonos.filter(a => a.cli === cid && !a.ord).forEach(x => { if (x.fu != null) usd -= x.fu; else pesos -= x.v; });
+      S.abonos.filter(a => a.cli === cid && !a.ord && !a.plan).forEach(x => { if (x.fu != null) usd -= x.fu; else pesos -= x.v; });
       return pesos + usd * tasaDe();
     }
-    return vigentes().filter(v => v.cli === cid).reduce((a, v) => a + fiadoDe(v), 0) - S.abonos.filter(a => a.cli === cid && !a.ord).reduce((a, x) => a + x.v, 0);
+    return vigentes().filter(v => v.cli === cid).reduce((a, v) => a + fiadoDe(v), 0) - S.abonos.filter(a => a.cli === cid && !a.ord && !a.plan).reduce((a, x) => a + x.v, 0);
   });
 }
 export function deudores() {

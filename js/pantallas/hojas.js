@@ -24,6 +24,7 @@ import { Cita, NuevaCita } from './agenda.js';
 import { ElegirRubro } from './funciones.js';
 import { Sugerencias } from './empezar.js';
 import { Cuenta, Pagar, BorrarCuenta } from './cuenta.js';
+import { OpcionesPlan, planDesdeCobro, CUOTAS_M, APARTADO_M, Plan, AbonoPlan, ApartadoVencido } from './cuotas.js';
 import { useNube, soloUnLocal, configCobro, limitePerfiles, perfilesActivos } from '../nube.js';
 import { Cotizar, Cotizacion } from './cotizaciones.js';
 import { horarioDe, textoHorario, EditorHorario, EditorAusencias } from '../horario.js';
@@ -55,7 +56,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { cuenta: Cuenta, pagar: Pagar, borrarCuenta: BorrarCuenta, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  const H = { cuenta: Cuenta, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
@@ -69,7 +70,10 @@ function Cobrar({ d, cerrar }) {
   // Orden de trabajo o pedido: lo ya adelantado se descuenta y se paga con «Anticipo» (ya entró a la caja).
   const anticipo = D.redondo(d.anticipo || 0);
   const clientes = deudores(), cliObj = clientes.find(x => x.id === cli), saldoCli = cliObj ? cliObj.saldo : 0;
-  const metodos = S.negocio.pays.concat(puede('fiado') && T.mod('fiado') ? [fiadoN] : [], saldoCli > 0 ? ['Saldo a favor'] : []);
+  // Cuotas y apartados: solo en ventas nuevas (no al entregar una orden) y con permiso de vender a crédito.
+  const conPlanes = T.mod('cuotas') && puede('fiado') && !d.orden && !(d.anticipo > 0);
+  const metodos = S.negocio.pays.concat(puede('fiado') && T.mod('fiado') ? [fiadoN] : [], conPlanes ? [CUOTAS_M, APARTADO_M] : [], saldoCli > 0 ? ['Saldo a favor'] : []);
+  const [op, setOp] = useState({ n: 4, cada: 'quin', rec: '', dias: 30, acuerdo: 'saldo' });
   // Quién atendió (barbería, salón, taller…): para la comisión de cada uno.
   const conPro = T.mod('comisiones'), pros = conPro ? S.perfiles.filter(p => !p.inactivo && !p.borrado) : [];
   const [pro, setPro] = useState(d.pro || (pros.some(p => p.id === S.ajustes.perfil) ? S.ajustes.perfil : (pros[0] || {}).id || ''));
@@ -98,11 +102,23 @@ function Cobrar({ d, cerrar }) {
   const vueltoEn = vueltoElegido || (monEf && monEf.eur ? 'e' : monEf && monEf.otra ? 's' : 'p');
   const dado = recibe >= totalCobrar ? recibe : totalCobrar;
   const vuelto = efectivo ? D.redondo(dado - totalCobrar) : fp.vuelto;
-  const pideCli = fiado || usaSaldo > 0 || verCli || comoSaldo;
+  const enCuotas = partes.reduce((a, p) => a + (p.m === CUOTAS_M ? p.v : 0), 0), apartar = partes.reduce((a, p) => a + (p.m === APARTADO_M ? p.v : 0), 0);
+  const conPlan = enCuotas > 0 || apartar > 0;
+  const pideCli = fiado || usaSaldo > 0 || verCli || comoSaldo || conPlan;
   const listo = c => {
     if (!fp.ok) { avisar(fp.falta > 0 ? 'Falta ' + D.m(fp.falta) + ' por repartir' : 'Sobran ' + D.m(-fp.falta)); return; }
     if ((fiado || usaSaldo > 0 || comoSaldo) && !cli) { avisar('Elige el cliente'); return; }
     if (usaSaldo > saldoCli + 0.004) { avisar('Su saldo a favor es ' + D.m(saldoCli)); return; }
+    if (conPlan) {
+      if (!cli) { avisar(enCuotas > 0 ? 'Elige el cliente que paga en cuotas' : 'Elige el cliente que aparta'); return; }
+      if (enCuotas > 0 && apartar > 0) { avisar('Elige cuotas o apartado, no los dos'); return; }
+      if (fiado) { avisar('No mezcles fiado con cuotas o apartado'); return; }
+      const r = planDesdeCobro({ d, partes, cli, suc: suc || S.negocio.sucursales[0], op, total, D, igtf });
+      if (conPro && pro && r.venta) guardarAtendio(r.venta.id, pro);
+      d.onListo && d.onListo(r.venta);
+      c(() => r.venta ? abrir('recibo', { venta: r.venta, nueva: true }) : abrir('plan', { pid: r.plan.id, nuevo: true }));
+      return;
+    }
     const items = d.items.map(it => Object.assign({}, it));
     const venta = vender({ items, pagos: (anticipo > 0 ? [{ m: 'Anticipo', v: anticipo }] : []).concat(total > 0 ? partes : []), cli, suc: suc || S.negocio.sucursales[0], fiado: fiado || usaSaldo > 0, total: total + anticipo, igtf });
     if (d.orden) venta.orden = d.orden;
@@ -116,7 +132,10 @@ function Cobrar({ d, cerrar }) {
     d.onListo && d.onListo(venta);
     c(() => abrir('recibo', { venta, nueva: true }));
   };
+  const hoyPaga = D.redondo(totalCobrar - enCuotas - apartar);
   const textoBoton = !fp.ok ? (fp.falta > 0 ? 'Falta ' + D.m(fp.falta) : 'Sobran ' + D.m(-fp.falta))
+    : enCuotas > 0 ? (hoyPaga > 0 ? 'Cobrar ' + D.m(hoyPaga) + ' y crear plan' : 'Crear plan de cuotas')
+    : apartar > 0 ? (hoyPaga > 0 ? 'Cobrar ' + D.m(hoyPaga) + ' y apartar' : 'Apartar sin abono')
     : fiado && parteFiada >= total - 0.001 ? 'Anotar ' + D.m(total) + (cliObj ? ' a ' + cliObj.n.split(' ')[0] : '')
     : 'Cobrar ' + D.m(totalCobrar) + (fiado ? ' · ' + D.m(parteFiada) + ' fiado' : '');
   const fmt2 = x => new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
@@ -135,6 +154,7 @@ function Cobrar({ d, cerrar }) {
           <button type="button" class=${'chip chico toca' + (comoSaldo ? ' on' : '')} onClick=${() => setComoSaldo(!comoSaldo)}>Dejar como saldo a favor</button>
         </div>
       </div>`}
+      ${conPlan && html`<${OpcionesPlan} tipo=${enCuotas > 0 ? 'cuotas' : 'apartado'} monto=${enCuotas > 0 ? enCuotas : apartar} total=${total} op=${op} setOp=${setOp} onInicial=${x => { const mm = enCuotas > 0 ? CUOTAS_M : APARTADO_M; if (!x) { fp.preparar(null); fp.setM(mm); return; } const v = D.redondo(total * x / 100); fp.preparar([[S.negocio.pays[0], v], [mm, D.redondo(total - v)]]); }} />`}
       ${conPro && pros.length > 1 && html`<div class="campo"><span>¿Quién atendió?</span><div class="chips">${pros.map((x, i) => html`<button type="button" key=${x.id} class=${'chip chico toca' + (pro === x.id ? ' on' : '')} aria-pressed=${pro === x.id ? 'true' : 'false'} onClick=${() => setPro(x.id)}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:22px;height:22px;font-size:9px;margin-left:-4px">${iniciales(x.n)}</span>${x.n.split(' ')[0]}</button>`)}</div></div>`}
       ${pideCli ? html`<div class="campo entra"><span>${fiado ? '¿A quién se lo anotas?' + (parteFiada < total - 0.001 ? ' (' + D.m(parteFiada) + ')' : '') : comoSaldo ? '¿De quién es el saldo a favor?' : 'Cliente'}</span>
         <div class="chips">${clientes.map((x, i) => html`<button type="button" class=${'chip toca' + (cli === x.id ? ' on calido' : '')} style="padding-left:6px;color:var(--ink)" onClick=${() => setCli(cli === x.id ? '' : x.id)}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:28px;height:28px;font-size:11px">${iniciales(x.n)}</span>${x.n.split(' ')[0]}${x.saldo > 0 ? html`<span class="sub in" style="font-size:11px">+${D.m(x.saldo)}</span>` : null}</button>`)}
@@ -172,7 +192,8 @@ function Recibo({ d, cerrar }) {
   return html`<${Hoja} titulo=${d.nueva ? (v.fiado ? 'Anotado' : 'Venta guardada') : v.dev ? 'Devolución #' + v.n : 'Venta #' + v.n} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       ${d.nueva && html`<div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center"><span style="width:64px;height:64px;border-radius:50%;background:var(--in);display:grid;place-items:center;animation:pop .55s var(--spring) both"><${Icono} n="check" t=${30} g=${2.8} c="#0b0a14" /></span>
-        <span class="sub">${navigator.onLine ? (v.fiado ? 'Sumado a lo que te debe ' + (cli ? cli.n.split(' ')[0] : '') + '.' : 'Sumada a la caja de hoy.') : 'Guardada en este aparato. Se sube cuando vuelva el internet.'}</span></div>`}
+        <span class="sub">${navigator.onLine ? (v.plan ? 'La inicial entró a la caja; el resto queda en cuotas.' : v.fiado ? 'Sumado a lo que te debe ' + (cli ? cli.n.split(' ')[0] : '') + '.' : 'Sumada a la caja de hoy.') : 'Guardada en este aparato. Se sube cuando vuelva el internet.'}</span></div>`}
+      ${v.plan && (S.planes || []).some(x => x.id === v.plan) && html`<button type="button" class="tarjeta fila toca entra" style="box-shadow:none;background:var(--accent-soft);gap:10px;border:0;font:inherit;color:var(--ink);text-align:left" onClick=${() => c(() => abrir('plan', { pid: v.plan, nuevo: d.nueva }))}><${Icono} n="calendario" t=${18} c="var(--accent-text)" /><span class="crece sub" style="color:var(--ink)">Venta en cuotas: ver el calendario e imprimir el acuerdo</span><b style="color:var(--accent-text)">Ver</b></button>`}
       ${v.anulada && html`<div class="tarjeta fila entra" style="background:var(--out-soft, color-mix(in srgb, var(--out) 14%, transparent));box-shadow:none;gap:10px"><${Icono} n="deshacer" t=${18} c="var(--out)" /><span class="sub" style="color:var(--ink);line-height:1.4"><b>Venta anulada</b> ${hace(v.anulada.t)}${quien(v.anulada.por) ? ' por ' + quien(v.anulada.por) : ''}. Motivo: ${v.anulada.motivo}. No cuenta en la caja ni en los reportes.</span></div>`}
       ${v.devuelto && !v.anulada && html`<div class="tarjeta fila entra" style="background:var(--fill2);box-shadow:none;gap:10px"><${Icono} n="deshacer" t=${18} c="var(--muted)" /><span class="sub" style="color:var(--ink)">Devolvieron: ${v.items.filter(it => v.devuelto[claveItem(it)]).map(it => v.devuelto[claveItem(it)] + ' × ' + it.n).join(', ')}</span></div>`}
       ${v.dev && html`<div class="tarjeta fila entra" style="background:var(--fill2);box-shadow:none;gap:10px"><${Icono} n="deshacer" t=${18} c="var(--muted)" /><span class="sub" style="color:var(--ink)">Devolución de la venta #${v.dev}${v.motivo ? ' · ' + v.motivo : ''}</span></div>`}

@@ -17,6 +17,7 @@ export const MODULOS = [
   { k: 'comisiones', g: 'Clientes y atención', i: 'personas', n: 'Quién atendió y comisiones', d: 'Cada venta guarda quién atendió y el reporte calcula la comisión de cada uno.' },
   { k: 'cotizaciones', g: 'Clientes y atención', i: 'doc', n: 'Cotizaciones y presupuestos', d: 'Arma una lista con precios, mándala en PDF por WhatsApp y conviértela en venta cuando el cliente acepte.' },
   { k: 'ordenes', g: 'Clientes y atención', i: 'orden', n: 'Órdenes de trabajo y pedidos', d: 'Recibe equipos o encargos con anticipo, sigue cada uno y mándalo en PDF por WhatsApp.' },
+  { k: 'cuotas', g: 'Clientes y atención', i: 'calendario', n: 'Cuotas y apartados', d: 'Vende en cuotas con fechas y recordatorios, o aparta un producto con un abono hasta que lo termine de pagar.' },
   { k: 'fiado', g: 'Clientes y atención', i: 'tarjeta', n: 'Fiado y cuentas por cobrar', d: 'Vende a crédito y lleva lo que te debe cada cliente, con sus abonos.' },
   { k: 'promos', g: 'Ventas y caja', i: 'porciento', n: 'Promociones', d: '2x1, descuentos por porcentaje y precios especiales por cantidad.' },
   { k: 'caja', g: 'Ventas y caja', i: 'billete', n: 'Caja con fondo y turnos', d: 'Abre la caja con un fondo, anota retiros y cierra cada turno contando el dinero.' }
@@ -44,7 +45,7 @@ export const RUBROS = [
     grupos: [['Construcción', ['CE', 'CR', 'TU']], ['Electricidad', ['CA']], ['Herramientas', ['MA']], ['Tornillería', ['TO', 'CL']], ['Pinturas', ['PI', 'MZ']], ['Servicios', ['LL']]] },
   { id: 'electro', t: 'tienda', n: 'Electrodomésticos', i: 'tele', c: 'azu', ex: 'Línea blanca, TV, aires, celulares',
     kw: ['electrodom', 'linea blanca', 'nevera', 'lavadora', 'televis', 'tv', 'electronic', 'celular', 'telefono', 'aire acond', 'computad', 'laptop'],
-    mods: ['cotizaciones', 'inventario', 'servicios', 'variantes', 'garantia', 'escaner', 'compras', 'precios', 'promos', 'fiado', 'ordenes', 'caja'], nombre: 'Electro Hogar', ventas: 6,
+    mods: ['cotizaciones', 'inventario', 'servicios', 'variantes', 'garantia', 'escaner', 'compras', 'precios', 'promos', 'fiado', 'cuotas', 'ordenes', 'caja'], nombre: 'Electro Hogar', ventas: 6,
     cat: [['NV', 'Nevera 14 pies', 520, 410, 4, 2, 0, 3, { gar: 12 }], ['LV', 'Lavadora 12 kg', 380, 295, 5, 2, 0, 4, { gar: 12 }], ['TV', 'TV 50" 4K', 420, 330, 6, 2, 0, 5, { gar: 12 }],
       ['AA', 'Aire acondicionado 12.000 BTU', 350, 270, 3, 2, 0, 4, { gar: 12 }], ['MI', 'Microondas', 95, 68, 10, 3, 0, 6, { gar: 6 }], ['LI', 'Licuadora', 38, 25, 14, 4, 0, 7, { gar: 6, vars: ['Negra', 'Roja'] }],
       ['CF', 'Cafetera', 29, 19, 9, 3, 0, 5, { gar: 6 }], ['IN', 'Instalación de aire', 45, 10, -1, 0, 120, 3], ['EN', 'Entrega a domicilio', 8, 3, -1, 0, 0, 6]],
