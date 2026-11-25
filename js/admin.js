@@ -29,7 +29,7 @@ function Panel({ c, correo }) {
   const [tab, setTab] = useState('pagos');
   const [negocios, setNegocios] = useState(null), [pagos, setPagos] = useState(null), [cfg, setCfg] = useState(null);
   const cargar = async () => {
-    const [n, p, k] = await Promise.all([c.rpc('admin_negocios'), c.from('pagos').select('id, negocio_id, negocio_nombre, cliente_correo, factura, plan, meses, monto, moneda, metodo, referencia, nota, estado, creado, revisado').order('creado', { ascending: false }).limit(1000), c.from('config_orbe').select('*').eq('id', 1).maybeSingle()]);
+    const [n, p, k] = await Promise.all([c.rpc('admin_negocios'), c.from('pagos').select('id, negocio_id, negocio_nombre, cliente_correo, factura, plan, meses, monto, moneda, metodo, referencia, nota, estado, creado, revisado').order('creado', { ascending: false }).limit(1000), c.rpc('admin_config')]);
     if (n.error) { avisar(explicar(n.error)); return; }
     setNegocios(n.data || []); setPagos(p.data || []); setCfg(k.data);
   };
@@ -124,12 +124,12 @@ function Cobro({ c, cfg, listo }) {
   };
   const Campo = (k, n, ph) => html`<label class="campo"><span>${n}</span><input type="text" value=${f[k]} placeholder=${ph || ''} onInput=${e => pon({ [k]: e.target.value })} /></label>`;
   return html`<div class="dos-uno" style="align-items:start">
-    <section class="tarjeta pila" style="gap:14px"><b>Pago Móvil</b>${Campo('banco', 'Banco', 'Ej.: Banesco (0134)')}${Campo('telefono', 'Teléfono', '0414-0000000')}${Campo('documento', 'Cédula o RIF', 'V-12345678')}
+    <section class="tarjeta pila" style="gap:14px"><b>Pago Móvil</b><span class="sub" style="line-height:1.45">Guardado y oculto: por ahora los clientes solo pagan por Binance. Nadie más puede leer estos datos.</span>${Campo('banco', 'Banco', 'Ej.: Banesco (0134)')}${Campo('telefono', 'Teléfono', '0414-0000000')}${Campo('documento', 'Cédula o RIF', 'V-12345678')}
       <b style="margin-top:6px">Binance</b>${Campo('binance', 'Binance Pay ID', 'Ej.: 123456789')}
       <b style="margin-top:6px">Soporte</b>${Campo('soporte', 'WhatsApp de soporte', '0414-0000000')}</section>
     <section class="tarjeta pila" style="gap:14px"><b>Precios (US$)</b>
       <div class="rejilla-2" style="gap:10px">${Campo('nm', 'Negocio · mes')}${Campo('na', 'Negocio · año')}${Campo('em', 'Empresa · mes')}${Campo('ea', 'Empresa · año')}</div>
-      <span class="sub">Los clientes pagan en bolívares a la tasa BCV del día o en USDT por Binance.</span>
+      <span class="sub">Por ahora los clientes pagan en USDT por Binance.</span>
       <b style="margin-top:6px">Tus datos para facturar</b>
       <span class="sub" style="line-height:1.45">Los clientes no los ven. Sirven para cuando te formalices: con qué nombre y RIF facturas, y tu imprenta digital.</span>
       ${Campo('erazon', 'Nombre o razón social', 'Ej.: Orbe Apps, C.A.')}${Campo('erif', 'RIF', 'J-12345678-9')}${Campo('edir', 'Dirección fiscal')}${Campo('eimp', 'Imprenta digital o máquina fiscal', 'Cuando la tengas')}

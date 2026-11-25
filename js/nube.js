@@ -373,7 +373,7 @@ export async function bajarNegocio(nid) {
 // ---------- suscripción ----------
 export async function configCobro() {
   const c = await cliente();
-  const { data, error } = await c.from('config_orbe').select('precios, pago_movil, binance, soporte').eq('id', 1).maybeSingle();
+  const { data, error } = await c.from('config_orbe').select('precios, binance, soporte').eq('id', 1).maybeSingle();
   if (error) throw new Error(explicar(error));
   return data;
 }

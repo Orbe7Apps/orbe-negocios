@@ -206,12 +206,16 @@ export function Suscripcion() {
 }
 
 // ---------- hoja: pagar y avisar «Ya pagué» ----------
+// Por ahora solo se cobra por Binance (Pago Móvil y efectivo vuelven a esta lista cuando se activen).
+const METODOS_PAGO = ['Binance'];
+// La factura a nombre del negocio se activa cuando Orbe tenga imprenta digital.
+const PEDIR_FACTURA = false;
 export function Pagar({ d, cerrar }) {
   const { S, D, P } = useApp();
   const cfg = d.cfg, pm = cfg.pago_movil || {};
   const conSedes = !!S.negocio && (S.negocio.escala === 'empresa' || (S.negocio.sucursales || []).length > 1);
   const fac0 = (S.negocio && S.negocio.facturaOrbe) || {};
-  const [f, setF] = useState({ plan: conSedes ? 'empresa' : d.plan || 'negocio', meses: 1, metodo: pm.telefono ? 'Pago Móvil' : cfg.binance ? 'Binance' : 'Efectivo', referencia: '', nota: '', fac: !!fac0.rif, rif: fac0.rif || '', razon: fac0.razon || (S.negocio && S.negocio.nombre) || '', dir: fac0.dir || '' });
+  const [f, setF] = useState({ plan: conSedes ? 'empresa' : d.plan || 'negocio', meses: 1, metodo: 'Binance', referencia: '', nota: '', fac: PEDIR_FACTURA && !!fac0.rif, rif: fac0.rif || '', razon: fac0.razon || (S.negocio && S.negocio.nombre) || '', dir: fac0.dir || '' });
   const pon = o => setF(x => Object.assign({}, x, o));
   const usd = (cfg.precios[f.plan] || {})[f.meses === 12 ? 'anio' : 'mes'] || 0;
   const enBs = P.id === 'VE' && pm.telefono ? D.redondo(usd * D.tasa) : 0;
@@ -236,13 +240,13 @@ export function Pagar({ d, cerrar }) {
       ${conSedes && html`<span class="sub" style="line-height:1.45;margin-top:-4px">Las sedes van con el plan Empresa. El plan Negocio es para un solo local.</span>`}
       <div class="segmento" style="width:100%">${[[1, 'Un mes'], [12, 'Un año (2 meses gratis)']].map(o => html`<button type="button" style="flex:1" class=${f.meses === o[0] ? 'on' : ''} onClick=${() => pon({ meses: o[0] })}>${o[1]}</button>`)}</div>
       <div class="tasa-hoy" style="padding:14px"><span class="sub">A pagar</span><b class="num">US$ ${usd}</b>${enBs ? html`<span class="sub num">o Bs ${new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2 }).format(enBs)} por Pago Móvil (tasa BCV de hoy)</span>` : null}</div>
-      <div class="campo"><span>¿Cómo pagas?</span><div class="chips">${['Pago Móvil', 'Binance', 'Efectivo'].filter(m => m !== 'Pago Móvil' || pm.telefono).filter(m => m !== 'Binance' || cfg.binance).map(m => html`<button type="button" class=${'chip chico toca' + (f.metodo === m ? ' on' : '')} onClick=${() => pon({ metodo: m })}>${m}</button>`)}</div></div>
+      <div class="campo"><span>¿Cómo pagas?</span><div class="chips">${METODOS_PAGO.filter(m => m !== 'Binance' || cfg.binance).map(m => html`<button type="button" class=${'chip chico toca' + (f.metodo === m ? ' on' : '')} onClick=${() => pon({ metodo: m })}>${m}</button>`)}</div></div>
       ${f.metodo === 'Pago Móvil' && html`<div class="pila" style="gap:0">${Dato('Banco', pm.banco)}${Dato('Teléfono', pm.telefono)}${Dato('Cédula o RIF', pm.documento)}${Dato('Monto', 'Bs ' + new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2 }).format(enBs))}</div>`}
-      ${f.metodo === 'Binance' && html`<div class="pila" style="gap:0">${Dato('Binance Pay ID', cfg.binance)}${Dato('Monto', usd + ' USDT')}</div>`}
+      ${f.metodo === 'Binance' && (cfg.binance ? html`<div class="pila" style="gap:0">${Dato('Binance Pay ID', cfg.binance)}${Dato('Monto', usd + ' USDT')}</div><span class="sub" style="line-height:1.45">Envía el monto exacto en USDT por Binance Pay y escribe abajo el ID de la orden.</span>` : html`<span class="sub" style="line-height:1.45">Escríbenos para darte los datos de pago${cfg.soporte ? ': ' + cfg.soporte : '.'}</span>`)}
       ${f.metodo === 'Efectivo' && html`<span class="sub" style="line-height:1.45">Págalo en persona y avisa aquí para que lo registremos.</span>`}
       ${f.metodo !== 'Efectivo' && html`<label class="campo"><span>Referencia del pago</span><input type="text" value=${f.referencia} placeholder=${f.metodo === 'Binance' ? 'ID de la orden' : 'Últimos 4 a 6 números'} autocomplete="off" onInput=${e => pon({ referencia: e.target.value })} /></label>`}
       <label class="campo"><span>Nota (opcional)</span><input type="text" value=${f.nota} autocomplete="off" onInput=${e => pon({ nota: e.target.value })} /></label>
-      <${Interruptor} on=${f.fac} onCambio=${v => pon({ fac: v })} titulo="Necesito factura a nombre de mi negocio" sub="Guardamos tus datos para emitirla" />
+      ${PEDIR_FACTURA && html`<${Interruptor} on=${f.fac} onCambio=${v => pon({ fac: v })} titulo="Necesito factura a nombre de mi negocio" sub="Guardamos tus datos para emitirla" />`}
       ${f.fac && html`<div class="pila" style="gap:12px">
         <label class="campo"><span>RIF o cédula</span><input type="text" value=${f.rif} placeholder="J-12345678-9" autocomplete="off" autocapitalize="characters" onInput=${e => pon({ rif: e.target.value })} /></label>
         <label class="campo"><span>Nombre o razón social</span><input type="text" value=${f.razon} autocomplete="organization" onInput=${e => pon({ razon: e.target.value })} /></label>
