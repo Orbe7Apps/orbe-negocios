@@ -48,11 +48,12 @@ export function Inicio({ tel }) {
   const taxOn = c.taxOn ?? P.tax[1] > 0;
   const E = c.escala === 'empresa';
 
-  const marco = contenido => html`<div style=${tel ? '' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
-    <div class=${tel ? '' : 'tarjeta'} style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column' : 'width:min(520px,100%);height:min(820px,calc(100vh - 64px));padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:28px'}>${contenido}</div></div>`;
+  // compacto: la tarjeta toma el alto de lo que lleva (entrar y crear cuenta), sin espacio en blanco de sobra.
+  const marco = (contenido, compacto) => html`<div style=${tel ? '' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
+    <div class=${tel ? '' : 'tarjeta'} style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column' : 'width:min(520px,100%);' + (compacto ? 'max-height:calc(100vh - 64px)' : 'height:min(820px,calc(100vh - 64px))') + ';padding:0;display:flex;flex-direction:column;overflow:hidden;border-radius:28px'}>${contenido}</div></div>`;
 
-  if (paso === 'entrar') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${EntrarInicio} volver=${() => setPaso(-1)} crear=${() => setPaso('pais')} /></div>`);
-  if (paso === 'cuenta') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${CrearCuentaInicio} volver=${() => setPaso(-1)} entrar=${() => setPaso('entrar')} listo=${() => setPaso('pais')} /></div>`);
+  if (paso === 'entrar') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${EntrarInicio} volver=${() => setPaso(-1)} crear=${() => setPaso('pais')} /></div>`, true);
+  if (paso === 'cuenta') return marco(html`<div style="flex:1;padding:calc(20px + var(--sa-top)) 22px 28px;overflow-y:auto"><${CrearCuentaInicio} volver=${() => setPaso(-1)} entrar=${() => setPaso('entrar')} listo=${() => setPaso('pais')} /></div>`, true);
   if (paso === -1) return marco(html`<div class="entra" style="flex:1;display:flex;flex-direction:column;gap:16px;padding:calc(72px + var(--sa-top)) 26px calc(28px + var(--sa-bottom))">
     <span class="entra"><${LogoOrbe} t=${88} orbita /></span>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px"><h1 style="font-size:34px">Orbe Negocios</h1><span style="font-size:18px;color:var(--muted)">Tú vendes. Orbe hace lo repetitivo.</span></div>
