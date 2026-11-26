@@ -15,7 +15,7 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
 | `--line` | `#dedcf0` | `#2a2745` | Separadores |
 | `--accent` | `#8f84ff` | `#8f84ff` | Morado de Orbe: selección, enlaces |
 | `--accent-ink` | `#ffffff` | `#ffffff` | Texto sobre morado |
-| `--in` | `#12a37a` | `#3ddc9f` | Ingresos, «todo bien» |
+| `--in` | `#12a37a` | `#3ddc9f` | Ingresos, “todo bien” |
 | `--out` | `#e8436a` | `#ff6b8b` | Gastos, errores, vencido |
 | `--fill` | tinta al 7 % | tinta al 7 % | Fondo de campos y botones secundarios |
 
@@ -81,11 +81,15 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
 - **Contraseñas:** se piden dos veces al crear la cuenta, con el ojito para verlas.
 - Nada que aparezca solo para vender algo. Las guías opcionales, como la de Binance, se abren desde un menú.
 - **Antes de un cambio grande de diseño, primero una maqueta.**
+- **Sin líneas horizontales** separando filas en las listas (perfiles, Para hacer hoy, últimas ventas, órdenes, gastos…).
+- **Comillas:** usar “ ” en toda la app, nunca « ».
+- **Deshacer:** al borrar algo aparece un aviso con "Deshacer" por 7 s, solo en lo que no mueve dinero (gasto, producto, cliente, perfil, rol). Nunca en ventas, abonos, órdenes de trabajo ni nada que pueda servir para estafar.
+- **Colores por zona** (violeta cuenta, verde dinero, azul negocio, ámbar ventas, gris app) **solo en Ajustes**. Se probó en toda la app y el dueño pidió revertirlo.
 - **iPhone:**
   - Respetar las zonas seguras (`env(safe-area-inset-*)`).
   - Arreglo de la franja de abajo en la app instalada: `@media (display-mode: standalone){ html{ min-height: min(100lvh, calc(100% + env(safe-area-inset-top))) } }`.
 
-## 6. Maquetas ya aprobadas como punto de partida
+## 6. Maquetas
 
-- Lienzo «Orbe Negocios»: https://claude.ai/artifact/G5XgQd56oAYGYSxnKFB5j4 (página «Orbe Negocios»). Incluye el teléfono (recorrido inicial, los cinco tipos y empresa), la computadora (negocio y empresa) y las primeras maquetas: la app con 5 pestañas, el catálogo que ve el cliente y los planes.
-- Plan completo: `docs/PLAN.md`.
+- Lienzo original “Orbe Negocios” (fase 1, octubre 2026): https://claude.ai/artifact/G5XgQd56oAYGYSxnKFB5j4. Es historia: la app ya superó esas maquetas.
+- Contexto completo del proyecto: `docs/CONTEXTO.md`.
