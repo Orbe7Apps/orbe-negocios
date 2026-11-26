@@ -67,7 +67,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 
 12 rubros: Bodega o minimarket, Ferretería, Electrodomésticos, Ropa y calzado, Farmacia, Restaurante o comida rápida, Panadería o cafetería, Barbería, Salón de belleza, Taller o servicio técnico, Venta en línea, Independiente.
 
-16 funciones (Ajustes → Funciones, cada rubro trae las suyas encendidas): inventario, servicios, venta por peso o medida (también “Medio”: entero o por mitad, cada toque suma ½), variantes (tallas/colores), garantía y serial, escáner con cámara, factura del proveedor con foto (OCR), cuidar precios, agenda de citas, comisiones, cotizaciones, órdenes de trabajo, **cuotas y apartados** (encendido en electro), fiado, promociones, caja con fondo y turnos.
+16 funciones (Ajustes → Funciones, cada rubro trae las suyas encendidas): inventario, servicios, venta por peso o medida (también “Medio” y “Cuarto”: entero o por partes, cada toque suma ½ o ¼), variantes (tallas/colores), garantía y serial, escáner con cámara, factura del proveedor con foto (OCR), cuidar precios, agenda de citas, comisiones, cotizaciones, órdenes de trabajo, **cuotas y apartados** (encendido en electro), fiado, promociones, caja con fondo y turnos.
 
 ## 5. Lo que ya está hecho (resumen)
 
