@@ -42,7 +42,7 @@ export function Equipo() {
         <span class=${'pildora ' + (p.rol === 'dueno' ? 't-vio' : p.rol === 'admin' ? 't-ver' : 't-azu')}>${rr ? rr.n : 'Sin rol'}</span>
         ${puedo && html`<${Icono} n="sig" t=${15} c="var(--faint)" />`}
       </button>`; })())}</div>
-    <span class="sub faint" style="display:block;padding:6px 2px 8px">Toca una persona para cambiar su nombre, rol o PIN, desactivarla o eliminarla.</span>
+    <span class="sub faint" style="display:block;padding:6px 2px 8px">Toca a alguien para cambiar su rol o PIN.</span>
   </section>`;
 
   const Ventas = puede('ganancias') && porPersona.length ? html`<section class="tarjeta entra" style="--i:2"><div class="tarjeta-tit">Ventas por persona<span class="sub">hoy</span></div><${Reparto} segs=${porPersona} f=${D.m} titulo="Vendido hoy" /></section>` : null;
@@ -65,7 +65,7 @@ export function Equipo() {
     <div class="lista" style="margin-top:8px">${PERMISOS.filter(visible).map(pm => { const on = !!rolActual.p[pm.k], bloq = !puedeEditarRol(yo, rolActual.id) || !puedeEditarPermiso(yo, pm.k); return html`
       <button type="button" key=${rolActual.id + pm.k} class="item toca" role="switch" aria-checked=${on ? 'true' : 'false'} style=${{ color: 'var(--ink)', opacity: bloq ? 0.6 : 1 }} onClick=${() => tocar(rolActual, pm.k, on)}>
         <span class="simb-c" style=${{ '--c': on ? 'var(--in)' : 'var(--faint)', width: '32px', height: '32px' }}><${Icono} n=${pm.i} t=${16} /></span>
-        <span class="crece" style="font-size:14px">${pm.n}${pm.principal ? html`<span class="sub faint" style="display:block;font-size:11px">Lo tienen las cuentas principales</span>` : null}</span>
+        <span class="crece" style="font-size:14px">${pm.n}${pm.principal ? html`<span class="sub faint" style="display:block;font-size:11px">Solo cuentas principales</span>` : null}</span>
         <span class=${'inter' + (on ? ' on' : '')}></span>
       </button>`; })}</div>
     <span class="sub faint" style="display:block;margin-top:8px">El dueño siempre puede todo. Un administrador no puede cambiar a otros administradores.</span>

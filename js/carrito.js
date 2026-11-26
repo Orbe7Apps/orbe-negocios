@@ -7,8 +7,10 @@ import { promosVigentes, promoAplica } from './datos.js';
 export const nuevoCarrito = () => ({ q: {}, meta: {}, desc: null, libres: {} });
 export const UNIDADES = { kg: 'kg', g: 'g', l: 'l', m: 'm', 'm²': 'm²' };
 export const porPeso = p => !!(p && p.u && UNIDADES[p.u]);
+// “Medio”: se vende entero o por mitad (medio pollo, media torta). Cada toque suma ½; el precio es por unidad entera.
+export const porMedio = p => !!(p && p.u === 'medio');
 // Cantidad bonita: “3”, “0,75 kg”.
-export const verQ = (q, u) => (Number.isInteger(q) ? String(q) : String(Math.round(q * 1000) / 1000).replace('.', ',')) + (u ? ' ' + u : '');
+export const verQ = (q, u) => (Number.isInteger(q) ? String(q) : String(Math.round(q * 1000) / 1000).replace('.', ',')) + (u && u !== 'medio' ? ' ' + u : '');
 export const varDe = (p, vid) => (p && Array.isArray(p.vars) ? p.vars.find(v => v.id === vid) : null) || null;
 // Existencia disponible de la línea (de la variante si tiene).
 export const existencia = (p, vid) => { const v = varDe(p, vid); return v ? (v.q != null ? v.q : null) : p.q; };
@@ -37,7 +39,7 @@ export function lineasDe(cart, prods) {
     const [pid, vid] = k.split('~'), p = prods.find(x => x.id === pid); if (!p) return;
     const v = varDe(p, vid), meta = cart.meta[k] || {};
     const base = v && v.p > 0 ? v.p : p.p, pLista = meta.pm != null ? meta.pm : base;
-    const it = Object.assign({ pid: p.id, n: v ? p.n + ' · ' + v.n : p.n, q, p: pLista, c: p.c, k }, v ? { vid: v.id, nb: p.n } : {}, p.imp != null ? { imp: p.imp } : {}, porPeso(p) ? { u: p.u } : {});
+    const it = Object.assign({ pid: p.id, n: v ? p.n + ' · ' + v.n : p.n, q, p: pLista, c: p.c, k }, v ? { vid: v.id, nb: p.n } : {}, p.imp != null ? { imp: p.imp } : {}, porPeso(p) ? { u: p.u } : {}, porMedio(p) ? { med: 1 } : {});
     // Garantía (meses) y número de serie: salen en el recibo.
     if (p.gar) it.gar = p.gar;
     if (meta.serial) it.serial = meta.serial;
@@ -57,5 +59,5 @@ export function lineasDe(cart, prods) {
   const ahorro = items.reduce((a, it) => a + (it.pLista != null ? it.q * (it.pLista - it.p) : 0), 0);
   return { items, ahorro, descGlobal, descTxt: cart.desc ? (cart.desc.tipo === 'pct' ? cart.desc.v + ' %' : '') : '' };
 }
-// Cuántas cosas lleva: los productos por peso cuentan como uno.
-export const cuantos = items => items.reduce((a, it) => a + (it.u ? 1 : it.q), 0);
+// Cuántas cosas lleva: los productos por peso cuentan como uno; los de “medio”, redondeado hacia arriba.
+export const cuantos = items => items.reduce((a, it) => a + (it.u ? 1 : it.med ? Math.ceil(it.q) : it.q), 0);

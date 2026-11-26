@@ -3,6 +3,9 @@ import { html, useState, useEffect, useRef } from './lib/preact-htm.js';
 import { useApp } from './ctx.js';
 
 export const ICONOS = {
+  dividir: 'M12 3a9 9 0 100 18 9 9 0 000-18zM12 3v18',
+  persona: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-4 4-6 8-6s7 2 8 6',
+  clienteMas: 'M9 12a4 4 0 100-8 4 4 0 000 8zM2 21c1-4 3-6 7-6s6 2 7 6M19 8v6M16 11h6',
   escanear: 'M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M7 8v8M10 8v8M13 8v5M13 15v1M16.5 8v8',
   tijeras: 'M6 9a3 3 0 100-6 3 3 0 000 6zM6 21a3 3 0 100-6 3 3 0 000 6zM20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12',
   llave: 'M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z',
@@ -123,6 +126,28 @@ export function Avisos() {
 }
 
 // ---------- interruptor ----------
+// Botón cuadrado con ícono y una etiqueta corta (opciones secundarias de una hoja).
+export function Atajo({ n, t, on, onClick }) {
+  return html`<button type="button" class=${'atajo toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${onClick}><${Icono} n=${n} t=${22} /><span>${t}</span></button>`;
+}
+// “Más opciones”: lo poco usado de un formulario queda plegado. resumen: qué hay adentro.
+export function MasOpciones({ abierto, onCambio, resumen, children }) {
+  return html`<div class="pila" style="gap:12px">
+    <button type="button" class=${'mas-opciones toca' + (abierto ? ' abierto' : '')} aria-expanded=${abierto ? 'true' : 'false'} onClick=${() => onCambio(!abierto)}>
+      <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${abierto ? 'Menos opciones' : 'Más opciones'}</b>${!abierto && resumen && html`<span class="sub">${resumen}</span>`}</span>
+      <${Icono} n="sig" t=${18} estilo=${{ transform: abierto ? 'rotate(90deg)' : 'none', transition: 'transform .3s var(--spring)', color: 'var(--muted)' }} />
+    </button>
+    ${abierto && html`<div class="pila entra" style="gap:14px">${children}</div>`}
+  </div>`;
+}
+// Pista que sale una sola vez en este aparato. Se cierra con “Entendido”.
+export function Pista({ id, children }) {
+  const clave = 'orbe-pista-' + id;
+  const [vista, setVista] = useState(() => { try { return !!localStorage.getItem(clave); } catch (e) { return true; } });
+  if (vista) return null;
+  return html`<div class="pista entra" role="note">${children}<button type="button" class="pista-ok toca" onClick=${() => { try { localStorage.setItem(clave, '1'); } catch (e) { /* sin espacio */ } setVista(true); }}>Entendido</button></div>`;
+}
+
 export function Interruptor({ on, onCambio, titulo, sub }) {
   return html`<button type="button" class="opcion" role="switch" aria-checked=${on ? 'true' : 'false'} onClick=${() => onCambio(!on)}>
     <span style="flex:1;display:flex;flex-direction:column;gap:2px"><b style="font-size:14px;font-weight:600">${titulo}</b>${sub && html`<span class="sub">${sub}</span>`}</span>
@@ -195,7 +220,7 @@ export function Hoja({ titulo, onCerrar, contenido }) {
 
 // Símbolo para una forma de pago, una categoría de gasto o una sucursal.
 const SIMBOLOS = [
-  [/Efectivo/i, 'billete'], [/Tarjeta/i, 'tarjeta'], [/USDT|Binance|cripto/i, 'cripto'],
+  [/Efectivo/i, 'billete'], [/Tarjeta|Punto de venta/i, 'tarjeta'], [/USDT|Binance|cripto/i, 'cripto'],
   [/Transfer|SPEI|Zelle|Interac|Pix|De Una/i, 'transfer'], [/Pago Móvil|Nequi|Daviplata|Yape|Plin|SINPE|Yappy|Bizum|MB Way|CoDi|QR|Cash App|Venmo|Satispay|Mercado Pago/i, 'movil'],
   [/Fiado|Por cobrar|Crédito/i, 'reloj'], [/cuotas/i, 'calendario'], [/^Apartado/i, 'candado'], [/Mercancía|Compras/i, 'caja'], [/Alquiler/i, 'casa'], [/Servicios/i, 'rayo'], [/Sueldo/i, 'personas'], [/Transporte/i, 'bus'],
   [/Centro|Norte|Sur|Este|Oeste|Principal|Sucursal|Local/i, 'edificio'], [/Otros?$/i, 'mas']

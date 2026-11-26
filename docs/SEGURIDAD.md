@@ -36,7 +36,7 @@ También se agregó `<meta name="referrer" content="strict-origin-when-cross-ori
 
 1. **Supabase → Authentication → Providers → Email → activar “Leaked password protection”** (rechaza contraseñas filtradas, revisando contra HaveIBeenPwned). Es la única alerta de seguridad que queda en el asesor de Supabase.
 2. En la misma sección: contraseña mínima de **8 caracteres** con letras y números (*Password Requirements: Letters and digits*), y **confirmar correo** obligatorio.
-   La app ya lo acompaña (v95): pide lo mismo antes de enviar y traduce los rechazos de Supabase (`weak_password` con `pwned`, `characters` o `length`; `same_password`; `email_not_confirmed`) en `explicar()` y `errorNube()` de `js/nube.js`. Los avisos salen junto al formulario (`AvisoCuenta` en `js/pantallas/cuenta.js`).
+   La app ya lo acompaña (v97): pide lo mismo antes de enviar y traduce los rechazos de Supabase (`weak_password` con `pwned`, `characters` o `length`; `same_password`; `email_not_confirmed`) en `explicar()` y `errorNube()` de `js/nube.js`. Los avisos salen junto al formulario (`AvisoCuenta` en `js/pantallas/cuenta.js`).
 3. **Activar MFA (TOTP)** en las cuentas de `admins_orbe`. Cuando todos los administradores lo tengan, se puede exigir en el servidor cambiando `privado.es_admin_orbe()` para pedir `auth.jwt()->>'aal' = 'aal2'`.
 4. Authentication → URL Configuration: dejar en *Redirect URLs* solo `https://orbe7apps.github.io/orbe-negocios/` (y `admin.html`).
 5. GitHub: proteger la rama `main` (revisión antes de unir) y activar *secret scanning* y *Dependabot alerts*. Quien pueda subir código a `main` controla la app de todos.

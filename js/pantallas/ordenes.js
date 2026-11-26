@@ -266,7 +266,7 @@ export function NuevaOrden({ d, cerrar }) {
           : html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start;padding:10px 0" onClick=${() => setAgregando(true)}>+ Agregar trabajo o producto</button>`}
           ${f.items.length > 0 && html`<div class="fila" style="padding:9px 0 3px"><span class="crece sub">Total</span><b class="num">${D.m(total)}</b></div>`}
         </div>
-        <span class="sub faint" style="font-size:12px">Puedes dejarlo vacío y agregarlo después del diagnóstico.${T.inv ? ' Los productos se descuentan del inventario al entregar.' : ''}</span>
+        <span class="sub faint" style="font-size:12px">Puedes agregarlo después.</span>
       </div>
       <div class="campo"><span>Entrega</span>
         <div class="chips">${rapidas.map(r => { const v = enDias(r[0], r[0] === 0 ? Math.max(new Date().getHours() + 2, 17) % 24 : 17); const on = f.entrega && new Date(f.entrega).toDateString() === new Date(v).toDateString(); return html`<button type="button" class=${'chip chico toca' + (on ? ' on' : '')} onClick=${() => pon({ entrega: v })}>${r[1]}</button>`; })}<button type="button" class=${'chip chico toca' + (!f.entrega ? ' on' : '')} onClick=${() => pon({ entrega: 0 })}>Sin fecha</button></div>

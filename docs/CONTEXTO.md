@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 26 nov 2026 (app en la versión **v95** del service worker).
+Última actualización: 26 nov 2026 (app en la versión **v97** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 16 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v91`). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v97`). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
@@ -67,12 +67,12 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 
 12 rubros: Bodega o minimarket, Ferretería, Electrodomésticos, Ropa y calzado, Farmacia, Restaurante o comida rápida, Panadería o cafetería, Barbería, Salón de belleza, Taller o servicio técnico, Venta en línea, Independiente.
 
-16 funciones (Ajustes → Funciones, cada rubro trae las suyas encendidas): inventario, servicios, venta por peso o medida, variantes (tallas/colores), garantía y serial, escáner con cámara, factura del proveedor con foto (OCR), cuidar precios, agenda de citas, comisiones, cotizaciones, órdenes de trabajo, **cuotas y apartados** (encendido en electro), fiado, promociones, caja con fondo y turnos.
+16 funciones (Ajustes → Funciones, cada rubro trae las suyas encendidas): inventario, servicios, venta por peso o medida (también “Medio”: entero o por mitad, cada toque suma ½), variantes (tallas/colores), garantía y serial, escáner con cámara, factura del proveedor con foto (OCR), cuidar precios, agenda de citas, comisiones, cotizaciones, órdenes de trabajo, **cuotas y apartados** (encendido en electro), fiado, promociones, caja con fondo y turnos.
 
 ## 5. Lo que ya está hecho (resumen)
 
-- Vender y cobrar en $ y Bs con tasa BCV, pago mixto, vuelto, fiado, recibo por WhatsApp, impresora térmica, escáner.
-- Clientes, deudas y abonos; inventario con mínimos; gastos y cuentas por pagar; caja con turnos y cierre; reportes con gráficos, CSV y PDF.
+- Vender y cobrar en $ y Bs con tasa BCV (formas de pago en Venezuela: Pago Móvil, **Punto de venta**, efectivo $ y Bs, USDT, Zelle, Binance Pay; Punto de venta se agregó solo una vez a los negocios que ya existían), pago mixto, vuelto, fiado, recibo por WhatsApp, impresora térmica, escáner.
+- Clientes con **cédula o RIF obligatoria al agregarlos** (campo `doc`; se escribe “V-12345678”, no deja repetirla; a los clientes viejos se les puede completar al editarlos), deudas y abonos; inventario con mínimos; gastos y cuentas por pagar; caja con turnos y cierre; reportes con gráficos, CSV y PDF.
 - Agenda con horario por profesional, link público de reservas, recordatorios por WhatsApp (con un toque, opción “A” gratuita).
 - Órdenes de trabajo con anticipo y PDF; cotizaciones que se convierten en venta.
 - **Cuotas y apartados**: recargo por venta, calendario de cuotas, abonos, recordatorios; al vencer un apartado pregunta qué hacer (más tiempo, escribir primero, pasar a cuotas o liberar → saldo a favor / devolver / retener).
@@ -82,6 +82,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - Un negocio por cuenta: al iniciar sesión entra directo con animación de bienvenida y luego la pantalla de perfiles/PIN.
 - Deshacer (7 s) al borrar gasto, producto, cliente, perfil o rol.
 - Ayudas “?” con imágenes en cada pantalla y tutorial adaptado.
+- **Textos claros (enfoque “lo esencial primero”, 26 nov):** textos de una línea con palabras de mostrador; opciones secundarias como botones con ícono (`Atajo` en `js/ui.js`, p. ej. Cobrar → Dividir pago / Atendió / Cliente); lo poco usado plegado en “Más opciones” (`MasOpciones`, p. ej. Nuevo producto); pistas que salen una sola vez por aparato (`Pista`, guardada en `localStorage`); Funciones en cuadrícula con nombre corto (`c` en `MODULOS`) y “mantén presionado” para ver qué hace. Maqueta: https://claude.ai/artifact/YUrbGvkrh2GuyuAZ5hEpge
 - Panel admin: negocios, activar planes, aprobar pagos, historial mensual con CSV para el contador, suspender/reactivar cuentas, datos de cobro.
 
 ## 6. Decisiones de negocio vigentes

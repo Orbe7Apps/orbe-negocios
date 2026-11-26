@@ -5,22 +5,22 @@ import { tipo } from './paises.js';
 
 // Funciones que se pueden encender o apagar. g: grupo en Ajustes.
 export const MODULOS = [
-  { k: 'inventario', g: 'Productos', i: 'caja', n: 'Inventario y existencias', d: 'Cuántas unidades tienes de cada producto, aviso de lo que falta y reponer.' },
-  { k: 'servicios', g: 'Productos', i: 'llave', n: 'Servicios y mano de obra', d: 'Servicios con su precio y duración, o mano de obra, instalación y envío junto con los productos.' },
-  { k: 'medidas', g: 'Productos', i: 'regla', n: 'Venta por peso o medida', d: 'Kilo, gramo, litro, metro y metro cuadrado. Lee las etiquetas de la balanza.' },
-  { k: 'variantes', g: 'Productos', i: 'capas', n: 'Tallas, colores y variantes', d: 'Un mismo producto en varias tallas, colores o sabores, cada uno con su existencia.' },
-  { k: 'garantia', g: 'Productos', i: 'escudo', n: 'Garantía y número de serie', d: 'Meses de garantía por producto. El serial y la fecha de vencimiento salen en el recibo.' },
-  { k: 'escaner', g: 'Productos', i: 'escanear', n: 'Escáner con la cámara', d: 'Lee códigos de barras y nombres con la cámara del teléfono para vender o contar.' },
-  { k: 'compras', g: 'Productos', i: 'doc', n: 'Factura del proveedor con una foto', d: 'Toma una foto de la factura y Orbe suma lo que llegó al inventario.' },
-  { k: 'precios', g: 'Productos', i: 'sube', n: 'Cuidar precios', d: 'Te avisa cuando un precio queda por debajo de lo que cuesta reponerlo.' },
-  { k: 'agenda', g: 'Clientes y atención', i: 'calendario', n: 'Agenda de citas', d: 'Citas por día y por profesional, recordatorio por WhatsApp y cobro al terminar.' },
-  { k: 'comisiones', g: 'Clientes y atención', i: 'personas', n: 'Quién atendió y comisiones', d: 'Cada venta guarda quién atendió y el reporte calcula la comisión de cada uno.' },
-  { k: 'cotizaciones', g: 'Clientes y atención', i: 'doc', n: 'Cotizaciones y presupuestos', d: 'Arma una lista con precios, mándala en PDF por WhatsApp y conviértela en venta cuando el cliente acepte.' },
-  { k: 'ordenes', g: 'Clientes y atención', i: 'orden', n: 'Órdenes de trabajo y pedidos', d: 'Recibe equipos o encargos con anticipo, sigue cada uno y mándalo en PDF por WhatsApp.' },
-  { k: 'cuotas', g: 'Clientes y atención', i: 'calendario', n: 'Cuotas y apartados', d: 'Vende en cuotas con fechas y recordatorios, o aparta un producto con un abono hasta que lo termine de pagar.' },
-  { k: 'fiado', g: 'Clientes y atención', i: 'tarjeta', n: 'Fiado y cuentas por cobrar', d: 'Vende a crédito y lleva lo que te debe cada cliente, con sus abonos.' },
-  { k: 'promos', g: 'Ventas y caja', i: 'porciento', n: 'Promociones', d: '2x1, descuentos por porcentaje y precios especiales por cantidad.' },
-  { k: 'caja', g: 'Ventas y caja', i: 'billete', n: 'Caja con fondo y turnos', d: 'Abre la caja con un fondo, anota retiros y cierra cada turno contando el dinero.' }
+  { k: 'inventario', g: 'Productos', i: 'caja', n: 'Inventario y existencias', c: 'Inventario', d: 'Cuánto te queda de cada producto y qué reponer.' },
+  { k: 'servicios', g: 'Productos', i: 'llave', n: 'Servicios y mano de obra', c: 'Servicios', d: 'Mano de obra, instalación o envío, con su precio.' },
+  { k: 'medidas', g: 'Productos', i: 'regla', n: 'Venta por peso o medida', c: 'Peso y medida', d: 'Vende por kilo, litro o metro. Lee la etiqueta de la balanza.' },
+  { k: 'variantes', g: 'Productos', i: 'capas', n: 'Tallas, colores y variantes', c: 'Variantes', d: 'Un producto en varias tallas, colores o sabores.' },
+  { k: 'garantia', g: 'Productos', i: 'escudo', n: 'Garantía y número de serie', c: 'Garantía', d: 'Meses de garantía y serial en el recibo.' },
+  { k: 'escaner', g: 'Productos', i: 'escanear', n: 'Escáner con la cámara', c: 'Escáner', d: 'Lee códigos de barras con la cámara.' },
+  { k: 'compras', g: 'Productos', i: 'doc', n: 'Factura del proveedor con una foto', c: 'Factura con foto', d: 'Tomas foto a la factura del proveedor y entra al inventario.' },
+  { k: 'precios', g: 'Productos', i: 'sube', n: 'Cuidar precios', c: 'Cuidar precios', d: 'Te avisa si un precio queda por debajo del costo.' },
+  { k: 'agenda', g: 'Clientes y atención', i: 'calendario', n: 'Agenda de citas', c: 'Agenda', d: 'Citas por día y por persona, con recordatorio por WhatsApp.' },
+  { k: 'comisiones', g: 'Clientes y atención', i: 'personas', n: 'Quién atendió y comisiones', c: 'Comisiones', d: 'Guarda quién atendió y calcula su comisión.' },
+  { k: 'cotizaciones', g: 'Clientes y atención', i: 'doc', n: 'Cotizaciones y presupuestos', c: 'Cotizaciones', d: 'Precios en PDF por WhatsApp; pasan a venta si el cliente acepta.' },
+  { k: 'ordenes', g: 'Clientes y atención', i: 'orden', n: 'Órdenes de trabajo y pedidos', c: 'Órdenes', d: 'Equipos o encargos con anticipo, en PDF por WhatsApp.' },
+  { k: 'cuotas', g: 'Clientes y atención', i: 'calendario', n: 'Cuotas y apartados', c: 'Cuotas', d: 'Vende en cuotas o aparta un producto con un abono.' },
+  { k: 'fiado', g: 'Clientes y atención', i: 'tarjeta', n: 'Fiado y cuentas por cobrar', c: 'Fiado', d: 'Vende a crédito y anota los abonos de cada cliente.' },
+  { k: 'promos', g: 'Ventas y caja', i: 'porciento', n: 'Promociones', c: 'Promociones', d: '2x1, porcentajes y precio por cantidad.' },
+  { k: 'caja', g: 'Ventas y caja', i: 'billete', n: 'Caja con fondo y turnos', c: 'Caja y turnos', d: 'Abre la caja con un fondo y cuenta el dinero al cerrar.' }
 ];
 const TODOS = ['inventario', 'servicios', 'medidas', 'variantes', 'escaner', 'compras', 'precios', 'promos', 'fiado', 'ordenes', 'caja'];
 // Negocios creados antes de los rubros: todo lo que ya tenían sigue encendido.
