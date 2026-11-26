@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 26 nov 2026 (app en la versión **v99** del service worker).
+Última actualización: 26 nov 2026 (app en la versión **v100** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 17 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v99`). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v100`). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
