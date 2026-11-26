@@ -25,6 +25,67 @@ function Entrar({ listo }) {
   </div>`;
 }
 
+// ---------- verificación en dos pasos (obligatoria para administrar) ----------
+// La contraseña sola no basta para el panel: también se pide el código de 6 números de una app de autenticación
+// (Google Authenticator, Microsoft Authenticator, 1Password…). El servidor no entrega datos de administración sin él.
+function CampoCodigo6({ valor, onCambio, onEnter }) {
+  return html`<label class="campo"><span>Código de 6 números</span><input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="num" style="letter-spacing:.3em;font-size:22px;text-align:center" value=${valor} placeholder="000000" onInput=${e => onCambio(e.target.value.replace(/\D/g, '').slice(0, 6))} onKeyDown=${e => e.key === 'Enter' && onEnter()} /></label>`;
+}
+const salirDelPanel = async c => { await c.auth.signOut(); location.reload(); };
+
+function PedirCodigo({ c, factorId, listo }) {
+  const [codigo, setCodigo] = useState(''), [ocupado, setOcupado] = useState(false);
+  const enviar = async () => {
+    if (codigo.length !== 6) { avisar('Escribe los 6 números de tu app'); return; }
+    setOcupado(true);
+    const { error } = await c.auth.mfa.challengeAndVerify({ factorId, code: codigo });
+    setOcupado(false);
+    if (error) { setCodigo(''); avisar(/invalid|expired/i.test(error.message) ? 'Ese código no sirve: escribe el que sale ahora en tu app' : explicar(error)); return; }
+    listo();
+  };
+  return html`<div class="tarjeta pila" style="max-width:420px;margin:12vh auto 0;padding:28px;gap:16px">
+    <div class="fila" style="gap:12px"><${LogoOrbe} t=${40} /><span style="display:flex;flex-direction:column"><b style="font-size:17px">Verificación en dos pasos</b><span class="sub">Abre tu app de autenticación</span></span></div>
+    <span class="sub" style="line-height:1.5">Escribe el código de 6 números que sale para “Orbe Negocios”. Cambia cada 30 segundos.</span>
+    <${CampoCodigo6} valor=${codigo} onCambio=${setCodigo} onEnter=${enviar} />
+    <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${enviar}>${ocupado ? 'Revisando…' : 'Entrar al panel'}</button>
+    <button type="button" class="olvide-pin toca" onClick=${() => salirDelPanel(c)}>Salir</button>
+  </div>`;
+}
+
+function ActivarDosPasos({ c, listo }) {
+  const [f, setF] = useState(null), [codigo, setCodigo] = useState(''), [ocupado, setOcupado] = useState(false), [verClave, setVerClave] = useState(false);
+  useEffect(() => { (async () => {
+    // Si quedó un intento a medias (sin verificar), se borra y se empieza de nuevo.
+    const { data: l } = await c.auth.mfa.listFactors();
+    for (const x of ((l && l.all) || []).filter(x => x.status !== 'verified')) await c.auth.mfa.unenroll({ factorId: x.id });
+    const { data, error } = await c.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Orbe admin ' + new Date().toISOString().slice(0, 10), issuer: 'Orbe Negocios' });
+    if (error) { avisar(explicar(error)); setF(false); return; }
+    setF(data);
+  })().catch(er => { avisar(explicar(er)); setF(false); }); }, []);
+  const verificar = async () => {
+    if (codigo.length !== 6) { avisar('Escribe los 6 números de tu app'); return; }
+    setOcupado(true);
+    const { error } = await c.auth.mfa.challengeAndVerify({ factorId: f.id, code: codigo });
+    setOcupado(false);
+    if (error) { setCodigo(''); avisar(/invalid|expired/i.test(error.message) ? 'Ese código no sirve: escribe el que sale ahora en tu app' : explicar(error)); return; }
+    avisar('Listo: la verificación en dos pasos quedó activada', 'ok');
+    listo();
+  };
+  const qr = f && f.totp && typeof f.totp.qr_code === 'string' && /^data:image\/svg\+xml/.test(f.totp.qr_code) ? f.totp.qr_code : '';
+  return html`<div class="tarjeta pila" style="max-width:460px;margin:8vh auto 0;padding:28px;gap:14px">
+    <div class="fila" style="gap:12px"><${LogoOrbe} t=${40} /><span style="display:flex;flex-direction:column"><b style="font-size:17px">Activa la verificación en dos pasos</b><span class="sub">Obligatoria para el panel de administración</span></span></div>
+    <span class="sub" style="line-height:1.5">Desde aquí se aprueban pagos y se ven todos los negocios. Para que nadie entre solo con tu contraseña, cada vez se pedirá también un código de tu teléfono.</span>
+    ${f === null ? html`<p class="vacio">Preparando…</p>` : f === false ? html`<p class="vacio">No se pudo empezar. Recarga la página.</p>` : html`
+      <div class="pila" style="gap:8px">${[['1', 'Instala en tu teléfono Google Authenticator o Microsoft Authenticator (gratis).'], ['2', 'En la app toca “+” y escanea este código.'], ['3', 'Escribe abajo los 6 números que te muestra.']].map(x => html`<span class="fila" style="gap:10px;font-size:14px;line-height:1.4"><span class="paso-n">${x[0]}</span>${x[1]}</span>`)}</div>
+      ${qr && html`<div style="align-self:center;background:#fff;padding:12px;border-radius:16px"><img src=${qr} alt="Código QR para tu app de autenticación" width="190" height="190" style="display:block" /></div>`}
+      <button type="button" class="olvide-pin toca" style="align-self:center" onClick=${() => setVerClave(!verClave)}>${verClave ? 'Ocultar la clave' : '¿No puedes escanear? Ver la clave para escribirla'}</button>
+      ${verClave && html`<b class="num" style="align-self:center;font-size:15px;letter-spacing:.08em;word-break:break-all;text-align:center">${f.totp.secret}</b>`}
+      <${CampoCodigo6} valor=${codigo} onCambio=${setCodigo} onEnter=${verificar} />
+      <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${verificar}>${ocupado ? 'Revisando…' : 'Activar y entrar'}</button>`}
+    <button type="button" class="olvide-pin toca" onClick=${() => salirDelPanel(c)}>Salir</button>
+  </div>`;
+}
+
 function Panel({ c, correo }) {
   const [tab, setTab] = useState('pagos');
   const [negocios, setNegocios] = useState(null), [pagos, setPagos] = useState(null), [cfg, setCfg] = useState(null);
@@ -146,7 +207,7 @@ function Cobro({ c, cfg, listo }) {
 }
 
 function App() {
-  const [c, setC] = useState(null), [estado, setEstado] = useState('cargando'), [correo, setCorreo] = useState('');
+  const [c, setC] = useState(null), [estado, setEstado] = useState('cargando'), [correo, setCorreo] = useState(''), [factor, setFactor] = useState('');
   const N = useNube();
   useEffect(() => { if (N.avisoEnlace) { avisar(N.avisoEnlace); quitarAvisoEnlace(); } }, [N.avisoEnlace]);
   const revisar = async () => {
@@ -155,8 +216,14 @@ function App() {
     const { data: { session } } = await cl.auth.getSession();
     if (!session) { setEstado('entrar'); return; }
     setCorreo(session.user.email);
-    const { data } = await cl.rpc('soy_admin_orbe');
-    setEstado(data ? 'admin' : 'no');
+    const { data, error } = await cl.rpc('estado_admin_orbe');
+    if (error) throw error;
+    if (data === 'ok') { setEstado('admin'); return; }
+    if (data !== 'falta_mfa') { setEstado('no'); return; }
+    // Administrador sin el segundo paso: si ya tiene su app configurada se pide el código; si no, se configura.
+    const { data: l } = await cl.auth.mfa.listFactors();
+    const lista = ((l && l.totp) || []).filter(x => x.status === 'verified');
+    if (lista.length) { setFactor(lista[0].id); setEstado('codigo'); } else setEstado('activar');
   };
   useEffect(() => { revisar().catch(er => { avisar(explicar(er)); setEstado('entrar'); }); }, []);
   // Al volver del enlace “Olvidé mi contraseña”: primero la contraseña nueva; luego se revisa de nuevo la cuenta.
@@ -164,6 +231,8 @@ function App() {
   if (N.recuperar) return html`<${ClaveNueva} /><${Avisos} />`;
   return html`${estado === 'cargando' ? html`<p class="vacio" style="margin-top:20vh">Cargando…</p>`
     : estado === 'entrar' ? html`<${Entrar} listo=${revisar} />`
+    : estado === 'codigo' ? html`<${PedirCodigo} c=${c} factorId=${factor} listo=${revisar} />`
+    : estado === 'activar' ? html`<${ActivarDosPasos} c=${c} listo=${revisar} />`
     : estado === 'no' ? html`<div class="tarjeta pila" style="max-width:420px;margin:12vh auto 0;padding:28px;gap:12px;text-align:center"><b>Esta cuenta no es administradora</b><span class="sub">${correo}</span><button type="button" class="btn2 toca" onClick=${async () => { await c.auth.signOut(); location.reload(); }}>Salir</button></div>`
     : html`<${Panel} c=${c} correo=${correo} />`}<${Avisos} />`;
 }

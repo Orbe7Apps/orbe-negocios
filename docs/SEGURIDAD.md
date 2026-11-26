@@ -55,6 +55,11 @@ Ahora:
 
 Pendiente de esta parte: los empleados todavía comparten la cuenta del aparato entre ellos (se distinguen por PIN dentro de la app). Si algún día hace falta saber en el servidor qué persona hizo cada cambio, se puede dar una cuenta por persona con el mismo sistema de códigos.
 
+## Contraseñas filtradas y verificación en dos pasos (26-11-2026)
+
+- **Contraseñas filtradas:** el proyecto está en el plan gratis de Supabase y su protección propia es solo del plan Pro. La app revisa la contraseña nueva (al crear la cuenta y al cambiarla) contra la lista pública de HaveIBeenPwned con *k-anonimato*: solo viaja el comienzo de la huella SHA-1, nunca la contraseña. Si el servicio no responde, no se frena a nadie. Quien use la API directo se la salta; si se pasa a Pro, activar también la de Supabase.
+- **Panel de administración con dos pasos (TOTP):** `supabase/011_admin_dos_pasos.sql`. El servidor no entrega datos de administración sin el código de la app de autenticación (sesión `aal2`); probado contra el servidor real con una cuenta temporal. La primera vez el panel muestra el QR para configurar Google Authenticator o similar; después pide solo el código. **Si el administrador pierde el teléfono:** borrar su factor en el panel SQL de Supabase (`delete from auth.mfa_factors where user_id = '…'`) y volver a configurarlo.
+
 ## Límites del diseño actual (para la siguiente etapa)
 
 - **Los PIN distinguen a las personas dentro de un aparato, no en el servidor.** Un PIN de 4 dígitos guardado como hash se adivina rápido fuera de la app; por eso lo delicado (permisos, borrar ventas, cuenta) ya no depende del PIN sino del tipo de cuenta del aparato.

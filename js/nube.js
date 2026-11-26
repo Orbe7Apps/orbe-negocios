@@ -109,8 +109,27 @@ export async function aceptarTerminos() {
 }
 // El usuario: de 3 a 30 letras, números, punto, guion o guion bajo (sin espacios ni acentos).
 export const usuarioOk = u => /^[a-z0-9._-]{3,30}$/.test(String(u || '').trim().toLowerCase());
+// ¿La contraseña apareció en filtraciones de datos? Se revisa contra la lista pública de HaveIBeenPwned sin mandar la
+// contraseña: solo viajan los primeros 5 caracteres de su huella SHA-1 (y la respuesta trae relleno para no delatar nada).
+// Si no hay internet o el servicio no responde, no se frena a nadie.
+export async function vecesFiltrada(clave) {
+  try {
+    const h = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-1', new TextEncoder().encode(clave))), b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    const ctl = new AbortController(), reloj = setTimeout(() => ctl.abort(), 4000);
+    const r = await fetch('https://api.pwnedpasswords.com/range/' + h.slice(0, 5), { headers: { 'Add-Padding': 'true' }, signal: ctl.signal, cache: 'no-store', referrerPolicy: 'no-referrer' });
+    clearTimeout(reloj);
+    if (!r.ok) return 0;
+    const fila = (await r.text()).split('\n').find(l => l.startsWith(h.slice(5) + ':'));
+    return fila ? parseInt(fila.split(':')[1], 10) || 0 : 0;
+  } catch (e) { return 0; }
+}
+async function revisarFiltrada(clave) {
+  const n = await vecesFiltrada(clave);
+  if (n > 0) throw new Error('Esa contraseña apareció en filtraciones de datos de internet' + (n > 1 ? ' (' + n.toLocaleString('es') + ' veces)' : '') + ': cualquiera podría adivinarla. Elige otra que no uses en ningún otro lado');
+}
 export async function crearCuenta(correo, clave, usuario) {
   const c = await cliente(), u = String(usuario || '').trim().toLowerCase();
+  await revisarFiltrada(clave);
   if (u) {
     const { data: libre, error: e1 } = await c.rpc('usuario_libre', { u });
     if (e1) throw new Error(explicar(e1));
@@ -157,6 +176,7 @@ export async function olvideClave(correo) {
 }
 export async function nuevaClave(clave) {
   const c = await cliente();
+  await revisarFiltrada(clave);
   const { error } = await c.auth.updateUser({ password: clave });
   if (error) throw new Error(explicar(error));
 }
@@ -484,7 +504,7 @@ export async function iniciarNube() {
     const c = await cliente();
     const { data: { session } } = await c.auth.getSession();
     poner(Object.assign(datosSesion(session ? session.user : null), { negocioId: (S.negocio && S.negocio.nubeId) || '' }));
-    if (session) { c.rpc('soy_admin_orbe').then(({ data }) => poner({ admin: !!data })); if (S.negocio && S.negocio.nubeId) arrancar(); }
+    if (session) { c.rpc('estado_admin_orbe').then(({ data }) => poner({ admin: !!data && data !== 'no' })); if (S.negocio && S.negocio.nubeId) arrancar(); }
   } catch (e) { poner({ estado: 'sin internet' }); }
 }
 
