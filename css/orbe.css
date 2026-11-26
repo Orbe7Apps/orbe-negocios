@@ -1057,3 +1057,37 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .funciones-rejilla .funcion-op { position: relative; flex-direction: column; align-items: flex-start; gap: 10px; min-height: 96px; padding: 14px; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 .funciones-rejilla .funcion-op b { padding-right: 4px; line-height: 1.25; }
 .funciones-rejilla .funcion-op .inter { position: absolute; top: 14px; right: 12px; transform: scale(.82); transform-origin: right top; }
+
+/* ---------- personalizados (se arma en 3 pasos: piezas, extras y precio) ---------- */
+.armar-chip { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 800; letter-spacing: .02em; padding: 2px 7px; border-radius: 8px; background: var(--primary); color: #fff; }
+.armar-pasos { display: flex; gap: 6px; }
+.armar-pasos > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.armar-pasos i { position: relative; display: block; height: 5px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+.armar-pasos i::after { content: ""; position: absolute; inset: 0; background: var(--primary); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--spring); }
+.armar-pasos .on i::after, .armar-pasos .hecho i::after { transform: scaleX(1); }
+.armar-pasos span { font-size: 12px; font-weight: 600; color: var(--faint); transition: color .25s ease; }
+.armar-pasos .on span, .armar-pasos .hecho span { color: var(--ink); }
+.armar-vista { display: flex; flex-direction: column; gap: 14px; animation: fadeUp .4s var(--spring) both; }
+.armar-pieza { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 18px; background: var(--fill2); border: 1.5px solid transparent; transition: background-color .25s ease, border-color .25s ease; }
+.armar-pieza.on { background: var(--accent-soft); border-color: var(--accent); }
+.armar-btn { width: 34px; height: 34px; background: var(--surface); box-shadow: var(--shadow); }
+.armar-btn:disabled { opacity: .4; }
+.armar-extras { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.armar-extra { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 70px; padding: 12px 14px; border-radius: 18px; border: 1.5px solid transparent; background: var(--fill2); color: var(--ink); text-align: left; transition: background-color .25s ease, border-color .25s ease; }
+.armar-extra b { font-size: 14px; line-height: 1.25; padding-right: 22px; }
+.armar-extra.on { background: var(--accent-soft); border-color: var(--accent); }
+.armar-extra .ok { position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; transform: scale(0); transition: transform .3s var(--bounce); }
+.armar-extra.on .ok { transform: scale(1); }
+.armar-extra.mas { align-items: center; justify-content: center; border: 1.5px dashed var(--line); background: transparent; color: var(--accent-text); font-weight: 600; font-size: 14px; }
+.armar-dibujo { position: relative; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 18px; border-radius: 22px; background: var(--fill2); overflow: hidden; transition: height .35s var(--spring); }
+.armar-plato { position: absolute; bottom: 12px; left: 50%; width: 230px; height: 8px; margin-left: -115px; border-radius: 4px; background: var(--line); }
+.armar-pisos { position: relative; display: flex; flex-direction: column-reverse; align-items: center; }
+.armar-piso { position: relative; height: 36px; max-width: 100%; border-radius: 10px 10px 6px 6px; display: grid; place-items: center; padding: 0 8px; background: var(--c); color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; overflow: visible; animation: pisoCae .5s var(--bounce) both; transition: width .35s var(--spring), background-color .35s ease; }
+.armar-piso.fondant { background: #f2c5d3; color: #7a3550; }
+.armar-letrero { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); padding: 3px 8px; border-radius: 8px; background: var(--amber-soft); color: var(--amber-text); font-size: 10px; font-weight: 700; white-space: nowrap; animation: fadeIn .3s ease both; }
+.armar-figura { position: absolute; top: -10px; right: -12px; width: 18px; height: 18px; border-radius: 50%; background: var(--c2); animation: fadeIn .3s ease both; }
+.armar-vacio { position: absolute; inset: 0; display: grid; place-items: center; }
+@keyframes pisoCae { from { opacity: 0; transform: translateY(-24px) scaleY(.6); } to { opacity: 1; transform: none; } }
+.armar-desglose { display: flex; flex-direction: column; gap: 7px; padding: 12px 14px; border-radius: 18px; background: var(--fill2); font-size: 14px; }
+.armar-desglose .tit { margin-top: 2px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }
+.armar-desglose .sug { padding-top: 8px; font-size: 15px; font-weight: 700; }

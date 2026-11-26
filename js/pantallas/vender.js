@@ -5,7 +5,7 @@ import { BotonAyuda } from '../ayuda.js';
 import { Icono, avisar, TONOS, hora, FotoProd } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { estadoNube, estadoPlan } from '../nube.js';
-import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto, marcarCotizacion, numeroCot } from '../datos.js';
+import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto, marcarCotizacion, numeroCot, apartadas } from '../datos.js';
 import { nuevoCarrito, lineasDe, cuantos, porPeso, verQ, existencia } from '../carrito.js';
 import { FilaVenta } from './hojas.js';
 import { BarraTasas } from './tasas.js';
@@ -66,13 +66,22 @@ export function Vender() {
     setCart(Object.assign({}, c0, { q: qs, meta }));
   };
   // Sumar: si tiene variantes se elige cuál; si se vende por peso se pide cuánto.
+  // Personalizado (torta de varios pisos, arreglo…): se arma en su hoja y entra como una línea con sus piezas.
+  const armar = p => abrir('armar', { pid: p.id, onAgregar: linea => {
+    const k = 'libre:' + Date.now().toString(36), c0 = carritoGuardado;
+    setCart(Object.assign({}, c0, { q: Object.assign({}, c0.q, { [k]: 1 }), libres: Object.assign({}, c0.libres || {}, { [k]: linea }) }));
+  } });
+  const esArmable = p => p && p.per && T.mod('personalizados');
   const sumar = (p, d = 1, vid, cant) => {
     if (!p) return false;
+    if (d > 0 && esArmable(p)) { armar(p); return false; }
     if (d > 0 && Array.isArray(p.vars) && p.vars.length && !vid) { abrir('variante', { pid: p.id, onElegir: v => sumar(p, 1, v) }); return false; }
     const k = vid ? p.id + '~' + vid : p.id, ya = cantEn(carritoGuardado, k);
     if (d > 0 && porPeso(p) && cant == null) { abrir('cantidad', { pid: p.id, vid, q: ya, onListo: x => ponCant(k, x) }); return false; }
     // Sin inventario (servicios, independientes): la existencia no frena la venta.
-    const suma = cant != null ? cant : d, hay = T.inv && T.mod('inventario') ? existencia(p, vid) : null;
+    const suma = cant != null ? cant : d, hay0 = T.inv && T.mod('inventario') ? existencia(p, vid) : null;
+    // Lo apartado para encargos (piezas de personalizados) no se vende por error.
+    const hay = hay0 != null && !vid && p.pz ? Math.max(0, hay0 - (apartadas()[p.id] || 0)) : hay0;
     if (suma > 0 && hay != null && ya + suma > hay + 1e-9) { avisar(hay <= 0 ? p.n + ': agotado' : 'Solo quedan ' + verQ(hay, p.u) + ' de ' + p.n); return false; }
     ponCant(k, ya + suma);
     return true;
@@ -111,8 +120,10 @@ export function Vender() {
   });
   // Búsqueda tolerante (acentos, errores de tipeo, plurales) dentro del grupo elegido.
   // Tienda con servicios (mano de obra, instalación…): productos y servicios van separados; al buscar se encuentra todo.
-  const nServ = T.inv ? prods.filter(p => p.q == null).length : 0, conServ = nServ > 0 && nServ < prods.length;
-  const deClase = conServ && !q.trim() ? prods.filter(p => clase === 'serv' ? p.q == null : p.q != null) : prods;
+  // Un personalizado (se arma a la medida) va con los productos aunque no lleve existencia.
+  const esServ = p => p.q == null && !esArmable(p);
+  const nServ = T.inv ? prods.filter(esServ).length : 0, conServ = nServ > 0 && nServ < prods.length;
+  const deClase = conServ && !q.trim() ? prods.filter(p => clase === 'serv' ? esServ(p) : !esServ(p)) : prods;
   const Clases = conServ ? html`<div class="segmento ancho entra" role="tablist" aria-label="Productos o servicios">${[['prod', 'Productos', prods.length - nServ], ['serv', 'Servicios', nServ]].map(c => html`<button type="button" role="tab" aria-selected=${clase === c[0] ? 'true' : 'false'} class=${'toca' + (clase === c[0] ? ' on' : '')} onClick=${() => { setClase(c[0]); setGrupo(''); }}>${c[1]} <span class="faint num">${c[2]}</span></button>`)}</div>` : null;
   const enGrupo = filtrarGrupo(deClase, S, grupo);
   const visibles = q.trim() ? buscarEn(enGrupo, q, textosProducto(S)) : enGrupo;
@@ -135,9 +146,9 @@ export function Vender() {
     <button type="button" key=${p.id} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
       ${c ? html`<span class="cant" key=${c}>${c}</span>` : null}
       ${FotoProd(p, 36) || html`<span class="ic" style=${Object.assign({ width: '36px', height: '36px', fontSize: '13px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`}
-      <b>${p.n}</b><small class="num">${D.m(p.p)}${porPeso(p) ? ' / ' + p.u : ''}${p.dur ? ' · ' + (p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min') : ''}${p.vars && p.vars.length ? ' · ' + p.vars.length + ' opciones' : ''}</small>
+      ${esArmable(p) && html`<span class="armar-chip">Armar</span>`}<b>${p.n}</b><small class="num">${esArmable(p) ? 'Precio variable' : D.m(p.p)}${porPeso(p) ? ' / ' + p.u : ''}${p.dur ? ' · ' + (p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min') : ''}${p.vars && p.vars.length ? ' · ' + p.vars.length + ' opciones' : ''}</small>
       ${promosVigentes().some(x => promoAplica(x, p)) && html`<span class="promo-chip">Promo</span>`}
-      ${T.inv && p.q == null && (!conServ || q.trim()) && html`<span class="servicio-chip">Servicio</span>`}
+      ${T.inv && p.q == null && !esArmable(p) && (!conServ || q.trim()) && html`<span class="servicio-chip">Servicio</span>`}
       ${T.inv && p.q === 0 && html`<span class="sin"><i></i>Agotado</span>`}
     </button>`; })}</div>`;
 

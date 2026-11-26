@@ -11,7 +11,7 @@ import { iniciales2 } from './grupos.js';
 export function sugeridos(S, T) {
   const ya = new Set(listaProductos().map(p => p.n.toLowerCase())), R = rubro(S.negocio.rubro);
   const grupoDe = ab => ((R && R.grupos) || []).find(g => g[1].includes(ab));
-  return catalogoDe(S.negocio.rubro, T.id).filter(x => !ya.has(x[1].toLowerCase())).map(x => ({ x, g: (grupoDe(x[0]) || [])[0] || '' }));
+  return catalogoDe(S.negocio.rubro, T.id).filter(x => !ya.has(x[1].toLowerCase()) && !(x[8] && x[8].per && !T.mod('personalizados'))).map(x => ({ x, g: (grupoDe(x[0]) || [])[0] || '' }));
 }
 
 // Tarjeta de Hoy: lo que falta para dejar el negocio listo. Se va sola al completarlo (o con “Ocultar”).
@@ -55,7 +55,7 @@ export function Sugerencias({ cerrar }) {
   const agregar = c => {
     if (!elegidos.length) { avisar('Marca al menos uno'); return; }
     agregarVarios(elegidos.map(x => Object.assign({ n: x.n, ab: iniciales2(x.n), p: numero(x.p) || D.precio(0), c: x.c, q: x.srv ? null : Math.max(0, Math.round(numero(x.q))), dur: x.dur, g: x.g },
-      x.ex.u ? { u: x.ex.u } : {}, x.ex.gar && T.mod('garantia') ? { gar: x.ex.gar } : {})));
+      x.ex.u ? { u: x.ex.u } : {}, x.ex.gar && T.mod('garantia') ? { gar: x.ex.gar } : {}, T.mod('personalizados') ? (x.ex.per ? { per: 1 } : x.ex.pz ? { pz: 1 } : x.ex.ex ? { ex: 1 } : {}) : {})));
     c(() => { avisar('Agregados: ' + elegidos.length + '. Cambia lo que quieras en ' + (T.inv ? 'Inventario' : 'Servicios')); ir('inventario'); });
   };
   return html`<${Hoja} titulo=${'Lo típico de ' + (R ? R.n.toLowerCase() : 'tu negocio')} onCerrar=${cerrar} contenido=${c => ({

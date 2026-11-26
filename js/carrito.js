@@ -33,7 +33,7 @@ export function lineasDe(cart, prods) {
   Object.keys(cart.q).forEach(k => {
     const q = cart.q[k]; if (!(q > 0)) return;
     const lib = (cart.libres || {})[k];
-    if (lib) { const pm = (cart.meta[k] || {}).pm, desc = (cart.meta[k] || {}).desc || 0, base = pm != null ? pm : lib.p; items.push(Object.assign({ pid: k, n: lib.n, q, p: base * (1 - desc / 100), c: 0, k, libre: true }, desc ? { desc, pLista: base } : {})); return; }
+    if (lib) { const pm = (cart.meta[k] || {}).pm, desc = (cart.meta[k] || {}).desc || 0, base = pm != null ? pm : lib.p; items.push(Object.assign({ pid: k, n: lib.n, q, p: base * (1 - desc / 100), c: lib.c || 0, k, libre: true }, lib.pz ? { pz: lib.pz, per: lib.per, det: lib.det || '' } : {}, desc ? { desc, pLista: base } : {})); return; }
     const [pid, vid] = k.split('~'), p = prods.find(x => x.id === pid); if (!p) return;
     const v = varDe(p, vid), meta = cart.meta[k] || {};
     const base = v && v.p > 0 ? v.p : p.p, pLista = meta.pm != null ? meta.pm : base;

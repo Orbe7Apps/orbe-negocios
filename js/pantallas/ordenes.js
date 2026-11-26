@@ -176,7 +176,7 @@ export function Orden({ d, cerrar }) {
         <button type="button" class="btn2 toca" onClick=${() => { imprimirOrden(o, ctx); notaOrden(o.id, 'Se imprimió'); }}><${Icono} n="doc" t=${15} />Imprimir</button>
       </div>
       <div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);padding:12px 14px;gap:6px">
-        ${o.items.map(it => html`<div class="fila sub num" style="gap:8px"><span class="crece corta" style="color:var(--ink)">${it.q > 1 ? it.q + ' × ' : ''}${it.n}</span><span>${D.m(it.q * it.p)}</span></div>`)}
+        ${o.items.map(it => html`<div class="fila sub num" style="gap:8px"><span class="crece corta" style="color:var(--ink)">${it.q > 1 ? it.q + ' × ' : ''}${it.n}</span><span>${D.m(it.q * it.p)}</span></div>${it.pz && it.pz.length ? html`<span class="sub faint" style="font-size:12px;line-height:1.4">Lleva ${it.pz.map(z => z.q * it.q + '× ' + z.n).join(' + ')} · ${o.estado === 'entregada' ? 'descontado del inventario' : o.estado === 'cancelada' ? 'liberado' : 'apartado hasta entregar'}</span>` : null}`)}
         ${!o.items.length && html`<span class="sub">Sin trabajos ni productos todavía.</span>`}
         <div class="fila" style="padding-top:8px;margin-top:2px"><span class="crece sub">Total</span><b class="num">${D.m(tot)}</b></div>
         ${ant > 0 && html`<div class="fila sub num"><span class="crece">Anticipos y abonos</span><span>−${D.m(ant)}</span></div>`}
@@ -208,7 +208,7 @@ export function NuevaOrden({ d, cerrar }) {
   const o0 = d.oid ? S.ordenes.find(x => x.id === d.oid) : null;
   const tipoBase = T.id === 'comida' || T.id === 'online' ? 'pedido' : 'trabajo';
   const [f, setF] = useState(() => o0 ? { tipo: o0.tipo, cli: o0.cli, que: o0.que, det: o0.det || '', items: o0.items.map(it => Object.assign({}, it)), entrega: o0.entrega || 0, resp: o0.resp || '' }
-    : { tipo: d.tipo || tipoBase, cli: d.cli || '', que: '', det: '', items: [], entrega: enDias(1), resp: yo ? yo.id : '' });
+    : { tipo: d.tipo || tipoBase, cli: d.cli || '', que: d.que || '', det: d.det || '', items: (d.items || []).map(it => Object.assign({}, it)), entrega: enDias(1), resp: yo ? yo.id : '' });
   const pon = x => setF(v => Object.assign({}, v, x));
   const [qc, setQc] = useState('');
   const [telNuevo, setTelNuevo] = useState('');
