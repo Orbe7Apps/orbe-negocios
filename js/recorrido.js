@@ -250,7 +250,7 @@ export function OfertaRecorrido() {
   if (!yo || yo.tour) return null;
   return html`<section class="tarjeta entra oferta-tour" data-tour-oferta>
     <span class="oferta-logo"><${LogoOrbe} t=${44} orbita /></span>
-    <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:15px">¿Primera vez, ${yo.n.split(' ')[0]}?</b><span class="sub" style="line-height:1.4">Te muestro cómo usar Orbe en tu negocio, con lo que tienes encendido.</span></span>
+    <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:15px">¿Primera vez, ${yo.n.split(' ')[0]}?</b><span class="sub" style="line-height:1.4">Un recorrido corto por tu app.</span></span>
     <span class="oferta-btns">
       <button type="button" class="btn2 chico toca" onClick=${omitirRecorrido}>Ahora no</button>
       <button type="button" class="btn2 chico lleno toca" onClick=${verRecorrido}>Ver recorrido</button>
