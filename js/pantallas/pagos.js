@@ -77,14 +77,14 @@ export function usePagos(total, metodos, inicial, ajuste) {
 
   // calido: para marcar “Fiado” en ámbar.
   // Se llama como función (no como componente) para que los campos no pierdan lo escrito al redibujar.
-  function vista({ titulo = 'Forma de pago', desliza, calido, ayuda } = {}) {
+  function vista({ titulo = 'Forma de pago', desliza, calido, ayuda, sinInterruptor } = {}) {
     const pagado = Math.min(total, suma);
     return html`<div class="pila" style="gap:12px">
       ${!varias && html`<div class="campo"><span>${titulo}</span><${Chips} opciones=${conSimbolo(metodos)} valor=${m} onCambio=${setM} desliza=${desliza} calido=${calido} /></div>`}
       ${!varias && conEuro && esEuro(m) && total > 0 && html`<span class="sub num entra">Con ${m}: € ${new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(D.aEur(total * (ajuste ? ajuste(m) : 1)))} · tasa euro</span>`}
       ${!varias && D.dual && total > 0 && nombreTasaDe(m) && html`<span class="sub num entra">Con ${m}: ${otra(aOtra(total * (ajuste ? ajuste(m) : 1), m))} · ${nombreTasaDe(m)}</span>`}
-      ${!varias && pideRef(m) && html`<label class="campo entra"><span>Referencia de ${m} (opcional)</span><input class="num" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Últimos 4 a 6 números" value=${ref} onInput=${e => setRef(e.target.value.replace(/[^\dA-Za-z]/g, ''))} /></label>`}
-      ${metodos.length > 1 && html`<${Interruptor} on=${varias} onCambio=${setVarias} titulo="Combinar formas de pago" sub=${ayuda || 'Ej.: una parte por ' + metodos[0] + ' y el resto por ' + (metodos[1] || metodos[0])} />`}
+      ${!varias && pideRef(m) && html`<label class="campo entra"><span>Referencia (opcional)</span><input class="num" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Últimos números" value=${ref} onInput=${e => setRef(e.target.value.replace(/[^\dA-Za-z]/g, ''))} /></label>`}
+      ${metodos.length > 1 && !sinInterruptor && html`<${Interruptor} on=${varias} onCambio=${setVarias} titulo="Pagar con dos formas" sub=${ayuda || 'Ej.: mitad ' + metodos[0] + ', mitad ' + (metodos[1] || metodos[0])} />`}
       ${varias && html`<div class="pagos-mix entra">
         ${filas.map((f, k) => { const v = valor(f); return html`<div class="pago-fila entra" key=${k} style=${{ '--i': k }}>
           <div class="pago-linea">
@@ -100,7 +100,7 @@ export function usePagos(total, metodos, inicial, ajuste) {
             <span class="crece num faint">${v > 0 ? (f.en !== 'p' ? '= ' + D.m(v) : D.dual ? '= ' + otra(aOtra(v, f.m)) : '') + (f.en === 'e' ? ' · tasa euro' : nombreTasaDe(f.m) ? ' · ' + nombreTasaDe(f.m) : '') : ''}</span>
             ${falta > tol && !(numero(f.txt) > 0) ? html`<button type="button" class="pago-resto toca" onClick=${() => llenar(k)}>Poner lo que falta</button>` : null}
           </div>
-          ${pideRef(f.m) && html`<input class="pago-ref num" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder=${'Referencia de ' + f.m + ' (opcional)'} value=${f.ref || ''} aria-label=${'Referencia de ' + f.m} onInput=${e => pon(k, { ref: e.target.value.replace(/[^\dA-Za-z]/g, '') })} />`}
+          ${pideRef(f.m) && html`<input class="pago-ref num" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Referencia (opcional)" value=${f.ref || ''} aria-label=${'Referencia de ' + f.m} onInput=${e => pon(k, { ref: e.target.value.replace(/[^\dA-Za-z]/g, '') })} />`}
         </div>`; })}
         ${filas.length < 5 && html`<button type="button" class="btn2 chico toca" style="align-self:flex-start" onClick=${() => setFilas(filas.concat([fila(metodos.find(x => !filas.some(f => f.m === x)) || metodos[0])]))}>+ Otra forma de pago</button>`}
         <div class="pago-cuenta">
@@ -116,5 +116,5 @@ export function usePagos(total, metodos, inicial, ajuste) {
 
   // Armar las partes desde fuera (cuotas: “inicial hoy” + lo que va en cuotas). Montos en la moneda principal.
   const preparar = lista => { if (!lista || !lista.length) { setVariasRaw(false); return; } setVariasRaw(true); setFilas(lista.map(([mm, v]) => Object.assign(fila(mm), { en: 'p', txt: v > 0 ? String(v).replace('.', ',') : '' }))); };
-  return { m, setM, varias, ok, falta, vuelto, pagos, vista, preparar, efectivo: !varias && esEfectivo(m) };
+  return { m, setM, varias, setVarias, ok, falta, vuelto, pagos, vista, preparar, efectivo: !varias && esEfectivo(m) };
 }

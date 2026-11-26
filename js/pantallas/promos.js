@@ -15,7 +15,7 @@ export function Promos({ d, cerrar }) {
   const lista = S.promos || [], prods = listaProductos(), ahora = Date.now();
   const cuantos = x => prods.filter(p => promoAplica(x, p)).length;
   return html`<${Hoja} titulo="Promociones" onCerrar=${cerrar} contenido=${c => ({
-    cuerpo: html`<span class="sub" style="margin-top:-6px;line-height:1.45">Se aplican solas al vender: 2x1, 3x2, un porcentaje o precio por mayor. Salen en el recibo.</span>
+    cuerpo: html`<span class="sub" style="margin-top:-6px;line-height:1.45">Se aplican solas al vender y salen en el recibo.</span>
       ${lista.length ? html`<div class="lista">${lista.map((x, i) => { const vencida = x.hasta && x.hasta < ahora; return html`<button type="button" key=${x.id} class="item toca entra" style=${{ '--i': i, color: 'var(--ink)', opacity: x.activa && !vencida ? 1 : 0.55 }} onClick=${() => c(() => abrir('promo', { prid: x.id }))}>
           <span class="ic t-ros"><${Icono} n="porciento" t=${16} /></span>
           <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0"><b class="corta" style="font-size:14px">${x.n}</b><span class="sub corta">${textoPromo(x, D)} · ${cuantos(x)} ${cuantos(x) === 1 ? 'producto' : 'productos'}${vencida ? ' · terminó' : x.hasta ? ' · hasta ' + fechaCorta(x.hasta) : ''}${!x.activa ? ' · pausada' : ''}</span></span>
