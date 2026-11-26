@@ -81,6 +81,7 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
 - **Contraseñas:** se piden dos veces al crear la cuenta, con el ojito para verlas.
 - Nada que aparezca solo para vender algo. Las guías opcionales, como la de Binance, se abren desde un menú.
 - **Antes de un cambio grande de diseño, primero una maqueta.**
+- **Textos cortos:** ninguna ayuda bajo una opción pasa de una línea; palabras del mostrador (“Costo”, “Cantidad”, “inventario”), no de sistema (“existencia”, “conciliar”). Lo poco usado va en “Más opciones”; las explicaciones largas, en el “?” de la pantalla.
 - **Sin líneas horizontales** separando filas en las listas (perfiles, Para hacer hoy, últimas ventas, órdenes, gastos…).
 - **Comillas:** usar “ ” en toda la app, nunca « ».
 - **Deshacer:** al borrar algo aparece un aviso con "Deshacer" por 7 s, solo en lo que no mueve dinero (gasto, producto, cliente, perfil, rol). Nunca en ventas, abonos, órdenes de trabajo ni nada que pueda servir para estafar.
