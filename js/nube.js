@@ -7,6 +7,7 @@ import { leer, alCambiar, aplicarRemoto, restaurar, idDispositivo, cambiarNegoci
 import { pais, dinero } from './paises.js';
 import { horarioDe } from './horario.js';
 import { avisar } from './ui.js';
+import { ponerAparatoEquipo } from './permisos.js';
 
 const URL_NUBE = 'https://cwjmstctrxrcisfbknam.supabase.co';
 const CLAVE_PUBLICA = 'sb_publishable_x95K8o7WAhVtldQrU3fnGw_nbcVSEGE';
@@ -21,7 +22,7 @@ const SIN_BORRAR = ['registro', 'historialTasas'];
 const idDe = (col, x) => col === 'registro' ? String(x.h || x.t) : col === 'historialTasas' ? x.dia + '|' + x.f : x && x.id != null ? String(x.id) : '';
 
 // ---------- estado de la nube (para la pantalla) ----------
-let E = { sesion: null, correo: '', usuario: '', negocioId: '', estado: 'apagada', pendientes: 0, ultima: 0, error: '', plan: null, admin: false, recuperar: false, avisoEnlace: '' };
+let E = { sesion: null, correo: '', usuario: '', negocioId: '', estado: 'apagada', pendientes: 0, ultima: 0, error: '', plan: null, admin: false, recuperar: false, avisoEnlace: '', aparato: false };
 const subs = new Set();
 const poner = o => { E = Object.assign({}, E, o); subs.forEach(f => f(E)); };
 export const estadoNube = () => E;
@@ -39,11 +40,20 @@ export async function cliente() {
   if (!window.supabase) await cargar(LIB);
   sb = window.supabase.createClient(URL_NUBE, CLAVE_PUBLICA, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'orbe-negocios-sesion' } });
   sb.auth.onAuthStateChange((ev, s) => {
-    poner({ sesion: s ? s.user : null, correo: s && s.user ? s.user.email : '', usuario: s && s.user ? ((s.user.user_metadata || {}).usuario || '') : '' });
+    poner(datosSesion(s ? s.user : null));
     if (ev === 'PASSWORD_RECOVERY') poner({ recuperar: true });
   });
   return sb;
 }
+// Lo que la app sabe de la sesión. Un aparato del equipo tiene su propia cuenta (la marca el servidor al crearla):
+// no muestra correo ni usuario, y no administra el equipo.
+const esCuentaAparato = u => !!(u && u.app_metadata && u.app_metadata.aparato);
+function datosSesion(u) {
+  const ap = esCuentaAparato(u);
+  ponerAparatoEquipo(ap);
+  return { sesion: u || null, aparato: ap, correo: u && !ap ? u.email : '', usuario: u && !ap ? ((u.user_metadata || {}).usuario || '') : '', nombreAparato: ap ? ((u.user_metadata || {}).nombre || 'Aparato del equipo') : '' };
+}
+export const esAparato = () => !!E.aparato;
 // Mensajes de error en palabras simples.
 export function explicar(er) {
   const m = String((er && (er.message || er.error_description)) || er || '');
@@ -52,6 +62,7 @@ export function explicar(er) {
   if (/already registered|already been registered/i.test(m)) return 'Ese correo ya tiene cuenta: inicia sesión';
   if (/Password should be at least|weak/i.test(m)) return 'La contraseña es muy corta: usa al menos 8 caracteres';
   if (/Database error saving new user|Ese usuario ya existe/i.test(m)) return 'Ese usuario ya existe: elige otro';
+  if (/ORBE_SOLO_DUENO/.test(m)) return 'Eso solo se cambia desde el aparato del dueño';
   if (/rate limit|too many/i.test(m)) return 'Demasiados intentos. Espera unos minutos';
   if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Sin conexión con la nube. Revisa tu internet';
   if (/row-level security|permission denied/i.test(m)) return 'Tu suscripción no permite guardar cambios ahora';
@@ -118,6 +129,8 @@ export async function entrarUsuario(usuario, clave) {
   const c = await cliente();
   const { data, error } = await c.rpc('correo_para_entrar', { u: x, clave });
   if (error) throw new Error(explicar(error));
+  // El servidor responde vacío (sin error) cuando no coinciden: así cada intento fallido queda contado.
+  if (!data) throw new Error('El usuario o la contraseña no coinciden');
   return entrarCuenta(data, clave);
 }
 // Ponerle usuario a la cuenta (las cuentas creadas antes de que existiera).
@@ -148,7 +161,11 @@ export async function nuevaClave(clave) {
   if (error) throw new Error(explicar(error));
 }
 export async function cerrarSesion() {
-  const c = await cliente(); await c.auth.signOut();
+  const c = await cliente();
+  // Un aparato del equipo que se desconecta: primero sube lo pendiente y después se borra su cuenta de aparato
+  // (no sirve para nada más; para volver a conectarlo, el dueño da otro código).
+  if (E.aparato) { try { await subirTodo(); } catch (e) { /* sin internet: queda en la copia del aparato */ } try { await c.rpc('borrar_mi_cuenta'); } catch (e) { /* el dueño lo puede desconectar desde su lista */ } }
+  await c.auth.signOut();
   if (leer().negocio) salir();
   parar(); poner({ sesion: null, correo: '', negocioId: '', estado: 'apagada', plan: null, admin: false });
 }
@@ -224,9 +241,21 @@ async function subir(c, nid) {
   });
   // De a poco: lotes de hasta ~400 KB (las fotos y el logo pesan).
   let lote = [], peso = 0;
+  const rechazados = [];
   const enviar = async () => {
     if (!lote.length) return;
     const { error } = await c.from('registros').upsert(lote.map(x => x.fila), { onConflict: 'negocio_id,col,id' });
+    if (error && esSoloDueno(error)) {
+      // En un aparato del equipo, algo del lote solo lo puede cambiar el dueño: se sube uno por uno y lo rechazado
+      // se deshace aquí (vuelve a como está en la nube), para que lo demás siga guardándose.
+      for (const x of lote) {
+        const { error: e1 } = await c.from('registros').upsert([x.fila], { onConflict: 'negocio_id,col,id' });
+        if (e1 && !esSoloDueno(e1)) throw e1;
+        if (e1) rechazados.push(x.fila);
+        x.ks.forEach(k => pend.delete(k));
+      }
+      guardarPend(); lote = []; peso = 0; return;
+    }
     if (error) throw error;
     lote.forEach(x => x.ks.forEach(k => pend.delete(k))); guardarPend(); lote = []; peso = 0;
   };
@@ -236,6 +265,21 @@ async function subir(c, nid) {
     lote.push(x); peso += p;
   }
   await enviar();
+  if (rechazados.length) await deshacerRechazados(c, nid, rechazados);
+}
+const esSoloDueno = er => /ORBE_SOLO_DUENO/.test(String((er && er.message) || ''));
+// Trae de la nube cómo están de verdad los registros que el servidor no dejó cambiar, y los pone así en este aparato.
+async function deshacerRechazados(c, nid, filas) {
+  const res = [];
+  for (const f of filas) {
+    const { data, error } = await c.from('registros').select('col, id, datos, borrado').eq('negocio_id', nid).eq('col', f.col).eq('id', f.id).maybeSingle();
+    if (error) { pend.add(f.col === 'obj' ? 'obj|' + f.id : f.col + '|' + f.id + (f.borrado ? '|x' : '')); continue; } // se reintenta en la próxima vuelta
+    // Si en la nube no existe, era algo nuevo que no se dejó crear: se quita de aquí.
+    res.push(data || { col: f.col, id: f.id, datos: {}, borrado: true });
+  }
+  if (pend.size) guardarPend();
+  if (res.length) aplicarRemoto(s => mezclar(s, res));
+  avisar('Algunos cambios (equipo, permisos o borrar ventas) solo se hacen desde el aparato del dueño: aquí se deshicieron', 'error');
 }
 
 async function bajar(c, nid) {
@@ -273,7 +317,7 @@ function mezclar(s, filas) {
 
 // Plan y fechas de la suscripción (y si soy administrador de Orbe).
 async function leerPlan(c, nid) {
-  const { data } = await c.from('negocios').select('plan, prueba_hasta, pagado_hasta, suspendido_en, suspendido_motivo').eq('id', nid).maybeSingle();
+  const { data } = await c.from('negocios').select('plan, prueba_hasta, pagado_hasta, suspendido_en, suspendido_motivo, dueno').eq('id', nid).maybeSingle();
   if (data) { poner({ plan: data }); try { localStorage.setItem('orbe-nube-plan', JSON.stringify(data)); } catch (e) { /* sin espacio */ } }
 }
 
@@ -331,7 +375,7 @@ export async function publicarReservas(conf) {
 // Si la página está activa y algo cambió (citas, servicios, horarios), se vuelve a publicar sola.
 async function publicarSiCambio(c, nid) {
   const S = leer(), conf = S.negocio.reservas;
-  if (!conf || !conf.activa || !conf.slug) return;
+  if (!conf || !conf.activa || !conf.slug || E.aparato) return;
   const datos = datosReserva(S), firma = JSON.stringify(datos);
   let antes = ''; try { antes = localStorage.getItem('orbe-reservas-firma') || ''; } catch (e) { /* sin almacenamiento */ }
   if (firma === antes) return;
@@ -439,7 +483,102 @@ export async function iniciarNube() {
   try {
     const c = await cliente();
     const { data: { session } } = await c.auth.getSession();
-    poner({ sesion: session ? session.user : null, correo: session ? session.user.email : '', usuario: session ? ((session.user.user_metadata || {}).usuario || '') : '', negocioId: (S.negocio && S.negocio.nubeId) || '' });
+    poner(Object.assign(datosSesion(session ? session.user : null), { negocioId: (S.negocio && S.negocio.nubeId) || '' }));
     if (session) { c.rpc('soy_admin_orbe').then(({ data }) => poner({ admin: !!data })); if (S.negocio && S.negocio.nubeId) arrancar(); }
   } catch (e) { poner({ estado: 'sin internet' }); }
+}
+
+// ---------- aparatos del equipo ----------
+// Cada aparato que usa el equipo (caja, tablet del local) tiene su propia cuenta: entra con un código de un solo uso
+// que da el dueño, sin correo ni contraseña. Así la contraseña del dueño queda solo en sus aparatos.
+// El código llega escrito o en un enlace (…?aparato=CODIGO): se guarda al abrir la página.
+export const codigoGuardado = () => { try { return sessionStorage.getItem('orbe-codigo') || ''; } catch (e) { return ''; } };
+export const olvidarCodigo = () => { try { sessionStorage.removeItem('orbe-codigo'); } catch (e) { /* sin almacenamiento */ } };
+export const codigoOk = x => /^[A-Z2-9]{8}$/.test(String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
+export const enlaceAparato = codigo => location.origin + location.pathname + '?aparato=' + encodeURIComponent(codigo);
+// Nombre que se le sugiere al aparato.
+export const nombreSugerido = () => /Android.+Mobile|iPhone|iPod/i.test(navigator.userAgent) ? 'Teléfono del equipo' : /iPad|Android|Tablet/i.test(navigator.userAgent) ? 'Tablet del local' : 'Computadora de caja';
+
+// Entrar con un código: el servidor crea la cuenta del aparato y se abre la sesión aquí (la contraseña no se guarda).
+export async function entrarConCodigo(codigo, nombre) {
+  const c = await cliente(), x = String(codigo || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!codigoOk(x)) throw new Error('El código tiene 8 letras y números');
+  const { data, error } = await c.functions.invoke('aparato', { body: { codigo: x, nombre: String(nombre || '').trim() || nombreSugerido() } });
+  if (error) {
+    let m = '';
+    try { m = (await error.context.json()).error || ''; } catch (e) { /* sin detalle */ }
+    throw new Error(m || explicar(error) || 'No se pudo conectar el aparato');
+  }
+  const { error: e2 } = await c.auth.signInWithPassword({ email: data.correo, password: data.clave });
+  if (e2) throw new Error(explicar(e2));
+  olvidarCodigo();
+  return data.negocio;
+}
+
+// Sube todo lo pendiente antes de cambiar de cuenta (espera si ya se estaba subiendo).
+async function subirTodo() {
+  for (let i = 0; i < 12; i++) {
+    if (!ocupado) await sincronizar();
+    if (!pend.size && !ocupado) return;
+    await new Promise(r => setTimeout(r, 700));
+  }
+  throw new Error('Todavía hay cambios sin subir. Revisa el internet e intenta otra vez');
+}
+
+// “Este aparato lo usa mi equipo”: deja de usar la cuenta del dueño y pasa a tener su propia cuenta de equipo.
+// Nada se borra: los datos y los perfiles quedan igual. La sesión del dueño en este aparato se cierra en el servidor.
+export async function pasarAEquipo(nombre) {
+  if (!navigator.onLine) throw new Error('Necesitas internet para hacer esto');
+  const c = await cliente(), nid = leer().negocio && leer().negocio.nubeId;
+  if (!nid) throw new Error('Primero guarda tu negocio en la nube');
+  await subirTodo();
+  const { data: { session: delDueno } } = await c.auth.getSession();
+  const { data: codigo, error } = await c.rpc('crear_invitacion', { n: nid, rol: 'equipo' });
+  if (error) throw new Error(explicar(error));
+  const n2 = await entrarConCodigo(codigo, nombre);
+  if (n2 !== nid) throw new Error('No se pudo conectar el aparato');
+  if (delDueno) cerrarSesionAparte(delDueno);
+  try { localStorage.setItem('orbe-aparato-' + nid, 'equipo'); } catch (e) { /* sin almacenamiento */ }
+  sincronizar();
+}
+// Cierra en el servidor una sesión que ya no está en este aparato (con un cliente aparte, sin tocar la sesión actual).
+async function cerrarSesionAparte(s) {
+  try {
+    const t = window.supabase.createClient(URL_NUBE, CLAVE_PUBLICA, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'orbe-cerrar-aparte' } });
+    await t.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token });
+    await t.auth.signOut({ scope: 'local' });
+  } catch (e) { /* si no se pudo, vence sola */ }
+}
+
+// ¿Este aparato ya se marcó como del dueño o del equipo? (para preguntarlo una sola vez)
+export const tipoAparatoGuardado = nid => { try { return localStorage.getItem('orbe-aparato-' + nid) || ''; } catch (e) { return 'dueno'; } };
+export const marcarAparatoDueno = nid => { try { localStorage.setItem('orbe-aparato-' + nid, 'dueno'); } catch (e) { /* sin almacenamiento */ } };
+// ¿La sesión de este aparato es la del dueño del negocio?
+export const sesionEsDelDueno = () => !!(E.sesion && !E.aparato && E.plan && E.plan.dueno && E.plan.dueno === E.sesion.id);
+
+// El dueño: sus aparatos del equipo, un código nuevo y desconectar.
+export async function misAparatos() {
+  const c = await cliente(), nid = leer().negocio.nubeId;
+  const { data, error } = await c.rpc('mis_aparatos', { n: nid });
+  if (error) throw new Error(explicar(error));
+  return data || [];
+}
+export async function codigoAparato() {
+  const c = await cliente(), nid = leer().negocio.nubeId;
+  const { data, error } = await c.rpc('crear_invitacion', { n: nid, rol: 'equipo' });
+  if (error) throw new Error(explicar(error));
+  return data;
+}
+export async function desconectarAparato(uid) {
+  const c = await cliente(), nid = leer().negocio.nubeId;
+  const { error } = await c.rpc('quitar_aparato', { n: nid, usuario: uid });
+  if (error) throw new Error(explicar(error));
+}
+// En un aparato del equipo: el dueño confirma que es él con su contraseña, sin abrir su sesión aquí.
+export async function verificarClaveDueno(clave) {
+  const c = await cliente(), nid = leer().negocio.nubeId;
+  const { data, error } = await c.rpc('verificar_clave_dueno', { n: nid, clave });
+  if (error) throw new Error(explicar(error));
+  if (!data) throw new Error('Esa no es la contraseña del dueño');
+  return true;
 }

@@ -6,7 +6,7 @@ import { enlaceWA } from '../ordenpdf.js';
 import { pais } from '../paises.js';
 import { rolDe } from '../permisos.js';
 import { Icono, LogoOrbe, iniciales, TONOS, avisar, Bienvenida, tomarBienvenida } from '../ui.js';
-import { useNube, entrarCuenta, entrarUsuario, cerrarSesion } from '../nube.js';
+import { useNube, entrarCuenta, entrarUsuario, cerrarSesion, verificarClaveDueno } from '../nube.js';
 import { CampoClave, CampoUsuario } from './cuenta.js';
 
 export function Teclado({ largo = 4, onListo, error }) {
@@ -55,7 +55,9 @@ export function Acceso({ tel }) {
   const entrarConClave = async () => {
     setOcupado(true);
     try {
-      if (N.correo) await entrarCuenta(N.correo, cl.clave); else await entrarUsuario(cl.usuario, cl.clave);
+      // En un aparato del equipo se revisa la contraseña del dueño sin abrir su sesión aquí.
+      if (N.aparato) await verificarClaveDueno(cl.clave);
+      else if (N.correo) await entrarCuenta(N.correo, cl.clave); else await entrarUsuario(cl.usuario, cl.clave);
       setNuevoPin({ p: conClave, primero: '' }); setConClave(null);
     } catch (er) { avisar(er.message); } finally { setOcupado(false); }
   };
@@ -112,7 +114,7 @@ export function Acceso({ tel }) {
       <h1 style="font-size:24px">Hola, ${conClave.n.split(' ')[0]}</h1>
       <span class="sub" style="line-height:1.45;max-width:340px">Todavía no tienes PIN. Para entrar como dueño, escribe la contraseña de la cuenta Orbe y después creas tu PIN.</span>
     </div>
-    ${!N.correo && html`<${CampoUsuario} valor=${cl.usuario} onCambio=${v => setCl(Object.assign({}, cl, { usuario: v }))} />`}
+    ${!N.correo && !N.aparato && html`<${CampoUsuario} valor=${cl.usuario} onCambio=${v => setCl(Object.assign({}, cl, { usuario: v }))} />`}
     ${N.correo && N.usuario && html`<span class="sub" style="text-align:center">Usuario: ${N.usuario}</span>`}
     <${CampoClave} titulo="Contraseña" valor=${cl.clave} onCambio=${v => setCl(Object.assign({}, cl, { clave: v }))} onEnter=${entrarConClave} />
     <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${entrarConClave}>${ocupado ? 'Un momento…' : 'Entrar'}</button>`);

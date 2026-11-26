@@ -27,9 +27,16 @@ export const ROLES_BASE = () => [
   { id: 'cajero', n: 'Cajero', p: con(['vender']) }
 ];
 
+// En un aparato del equipo (cuenta propia del aparato, no la del dueño) nadie administra el equipo ni los permisos:
+// el servidor no lo deja y la app ni lo muestra. Se hace desde el aparato del dueño.
+let enAparatoEquipo = false;
+export const ponerAparatoEquipo = v => { enAparatoEquipo = !!v; };
+export const esAparatoEquipo = () => enAparatoEquipo;
+
 export function rolDe(S, perfil) { return (S.roles || []).find(r => r.id === (perfil && perfil.rol)) || null; }
 export function puede(S, perfil, k) {
   if (!perfil) return false;
+  if (k === 'equipo' && enAparatoEquipo) return false;
   if (perfil.rol === 'dueno') return true;
   const r = rolDe(S, perfil);
   return !!(r && r.p[k]);

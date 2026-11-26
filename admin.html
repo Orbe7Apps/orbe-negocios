@@ -2,6 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' data: blob: https://cwjmstctrxrcisfbknam.supabase.co wss://cwjmstctrxrcisfbknam.supabase.co; manifest-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0a14">
 <meta name="robots" content="noindex, nofollow">
@@ -24,10 +26,7 @@
   .admin .rejilla-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .admin .dos-uno { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 </style>
-<script>
-// Enlace del correo (confirmar cuenta o cambiar contraseña): se guarda antes de que la app use la dirección.
-(function () { var h = location.hash || ''; if (/access_token=|error_description=|type=recovery/.test(h)) { try { sessionStorage.setItem('orbe-enlace', h.slice(1)); } catch (e) {} history.replaceState(null, '', location.pathname + location.search); } })();
-</script>
+<script src="js/enlace.js"></script>
 </head>
 <body>
 <div id="app"></div>

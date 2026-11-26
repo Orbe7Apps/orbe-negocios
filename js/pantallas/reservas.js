@@ -26,6 +26,7 @@ export function LinkReservas() {
   const url = conf.slug ? urlReservas(conf.slug) : '';
   const copiar = () => { try { navigator.clipboard.writeText(url); avisar('Link copiado: pégalo en tu Instagram o WhatsApp'); } catch (e) { avisar(url); } };
   const compartir = async () => { const texto = 'Reserva tu cita en ' + n.nombre + ': ' + url; if (navigator.share) { try { await navigator.share({ title: n.nombre, text: texto, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank', 'noopener'); };
+  if (enNube && N.aparato) return html`<p class="sub" style="margin:0 0 10px;line-height:1.5">${conf.activa && conf.slug ? html`Tu link está activo: <b class="num" style="word-break:break-all">${urlReservas(conf.slug)}</b>. ` : ''}El link de reservas se activa y se cambia desde el aparato del dueño.</p>`;
   if (!enNube) return html`<p class="sub" style="margin:0 0 10px;line-height:1.5">El link de reservas funciona con la nube: primero guarda tu negocio en tu cuenta.</p>
     <div class="chips"><button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('cuenta', { modo: 'entrar' })}>Guardar en la nube</button></div>`;
   return html`<p class="sub" style="margin:0 0 12px;line-height:1.5">Tus clientes eligen servicio, con quién, día y hora libre, y la cita entra sola a tu Agenda. Ponlo en tu Instagram o mándalo por WhatsApp.</p>

@@ -8,6 +8,7 @@ import { usePagos, numero } from './pagos.js';
 import { enlaceWA } from '../ordenpdf.js';
 import { buscar } from '../buscar.js';
 import { BotonAyuda } from '../ayuda.js';
+import { esc, imgSegura } from '../seguro.js';
 
 export const CUOTAS_M = 'En cuotas', APARTADO_M = 'Apartado';
 const DIA = 86400000;
@@ -15,7 +16,6 @@ const fCorta = t => new Date(t).toLocaleDateString('es', { day: 'numeric', month
 const fLarga = t => new Date(t).toLocaleDateString('es', { day: 'numeric', month: 'long' });
 const primero = s => String(s || '').trim().split(' ')[0];
 const queEs = p => p.items.filter(it => !it.cargo).map(it => (it.q !== 1 ? it.q + ' × ' : '') + it.n).join(', ');
-const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // Estado de un plan en palabras, con su color.
 export function estadoTxt(p, c) {
@@ -285,11 +285,11 @@ export function imprimirAcuerdo(p, c, { S, D, P }) {
   const acuerdo = (ACUERDOS_APARTADO.find(a => a.k === p.acuerdo) || ACUERDOS_APARTADO[0]).n.toLowerCase();
   const z = document.createElement('div'); z.className = 'zona-imprimir';
   z.innerHTML = `<style>@page { size: A4; margin: 14mm; } .zona-imprimir table { width: 100%; border-collapse: collapse; } .zona-imprimir td { padding: 5px 4px; border-bottom: 1px solid #e6e4f2; font-size: 10pt; }</style>
-    <div class="imp-cab">${n.logo ? `<img src="${n.logo}" alt="" class="imp-logo">` : `<span class="imp-logo imp-inic">${esc(n.nombre.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`}
+    <div class="imp-cab">${imgSegura(n.logo) ? `<img src="${esc(imgSegura(n.logo))}" alt="" class="imp-logo">` : `<span class="imp-logo imp-inic">${esc(n.nombre.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`}
       <div class="imp-neg"><b>${esc(n.nombre)}</b><span>${esc([n.razon, n.fiscal ? P.fiscal[0] + ' ' + n.fiscal : '', n.tel, n.dir].filter(Boolean).join(' · '))}</span></div>
       <div class="imp-num"><b>${apartado ? 'ACUERDO DE APARTADO' : 'ACUERDO DE PAGO EN CUOTAS'}</b><strong>${esc(numeroPlan(p))}</strong><span>${esc(new Date(p.t).toLocaleDateString('es'))}</span></div></div>
     <div class="imp-dos"><div><small>CLIENTE</small><b>${esc(cli.n || '')}</b><span>${esc([cli.tel, cli.doc].filter(Boolean).join(' · '))}</span></div><div><small>${apartado ? 'SE GUARDA HASTA' : 'CUOTAS'}</small><b>${esc(apartado ? new Date(p.vence).toLocaleDateString('es') : p.cuotas.length + ' · ' + ((FRECUENCIAS.find(f => f.k === p.cada) || {}).n || '').toLowerCase())}</b><span></span></div></div>
-    <table><thead><tr><th style="text-align:left">Producto</th><th>Cant.</th><th>Total</th></tr></thead><tbody>${p.items.map(it => `<tr><td>${esc(it.n)}</td><td style="text-align:center">${it.q}</td><td style="text-align:right">${esc(D.m(it.q * it.p))}</td></tr>`).join('')}</tbody></table>
+    <table><thead><tr><th style="text-align:left">Producto</th><th>Cant.</th><th>Total</th></tr></thead><tbody>${p.items.map(it => `<tr><td>${esc(it.n)}</td><td style="text-align:center">${esc(it.q)}</td><td style="text-align:right">${esc(D.m(it.q * it.p))}</td></tr>`).join('')}</tbody></table>
     <div class="imp-tot"><div><span>Total</span><span>${esc(D.m(p.total))}</span></div><div><span>${apartado ? 'Abonado' : 'Pagado'} a la fecha</span><span>${esc(D.m(c.pagado))}</span></div><div><span>Falta</span><span>${esc(D.m(c.falta))}</span></div></div>
     ${apartado ? '' : `<p style="margin:12px 0 4px;font-weight:700;font-size:10pt">Calendario de pagos</p><table><tbody>${p.cuotas.map((q, i) => fil('Cuota ' + (i + 1) + ' · ' + new Date(q.f).toLocaleDateString('es'), D.m(q.v))).join('')}</tbody></table>`}
     <p class="imp-cond">${apartado
