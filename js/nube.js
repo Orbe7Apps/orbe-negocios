@@ -56,17 +56,34 @@ function datosSesion(u) {
 export const esAparato = () => !!E.aparato;
 // Mensajes de error en palabras simples.
 export function explicar(er) {
-  const m = String((er && (er.message || er.error_description)) || er || '');
+  const m = String((er && (er.message || er.error_description)) || er || ''), cod = (er && er.code) || '';
   if (/Invalid login credentials/i.test(m)) return 'El correo o la contraseña no coinciden';
-  if (/Email not confirmed/i.test(m)) return 'Primero confirma tu correo: te mandamos un enlace';
+  if (cod === 'email_not_confirmed' || /Email not confirmed/i.test(m)) return 'Falta confirmar tu correo. Abre el enlace que te mandamos (búscalo también en Spam o Promociones) y vuelve a intentar.';
   if (/already registered|already been registered/i.test(m)) return 'Ese correo ya tiene cuenta: inicia sesión';
-  if (/Password should be at least|weak/i.test(m)) return 'La contraseña es muy corta: usa al menos 8 caracteres';
+  if (cod === 'same_password' || /should be different from the old/i.test(m)) return 'Esa ya es tu contraseña actual: escribe una distinta';
+  // Contraseña rechazada por Supabase: filtrada (apareció en robos de datos de otros sitios), sin letras y números, o corta.
+  const razones = (er && er.reasons) || [];
+  if (razones.includes('pwned') || /known to be weak|easy to guess|pwned/i.test(m)) return 'Esa contraseña apareció en filtraciones de datos de otros sitios, así que es fácil de adivinar. Elige otra que no uses en ningún lado.';
+  if (razones.includes('characters') || /should contain at least one character/i.test(m)) return 'La contraseña debe tener letras y números';
+  if (razones.includes('length') || /Password should be at least/i.test(m)) return 'La contraseña es muy corta: usa al menos 8 caracteres';
+  if (cod === 'weak_password' || /weak/i.test(m)) return 'Esa contraseña es muy débil: usa al menos 8 caracteres con letras y números';
+  const seg = m.match(/only request this after (\d+) seconds?/i);
+  if (seg) return 'Espera ' + seg[1] + ' segundos para pedir otro correo';
   if (/Database error saving new user|Ese usuario ya existe/i.test(m)) return 'Ese usuario ya existe: elige otro';
   if (/ORBE_SOLO_DUENO/.test(m)) return 'Eso solo se cambia desde el aparato del dueño';
   if (/rate limit|too many/i.test(m)) return 'Demasiados intentos. Espera unos minutos';
   if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Sin conexión con la nube. Revisa tu internet';
   if (/row-level security|permission denied/i.test(m)) return 'Tu suscripción no permite guardar cambios ahora';
   return m || 'Algo salió mal';
+}
+
+// Error de la nube con su tipo, para que la pantalla sepa dónde mostrarlo:
+// 'clave' (contraseña rechazada) o 'confirmar' (falta confirmar el correo; trae el correo para reenviar el enlace).
+function errorNube(er, correo) {
+  const e = new Error(explicar(er)), m = String((er && er.message) || ''), cod = (er && er.code) || '';
+  if (cod === 'weak_password' || cod === 'same_password' || /^Password /i.test(m) || /known to be weak|should be different from the old/i.test(m)) e.tipo = 'clave';
+  if (cod === 'email_not_confirmed' || /Email not confirmed/i.test(m)) { e.tipo = 'confirmar'; e.correo = correo || ''; }
+  return e;
 }
 
 // ---------- cuenta ----------
@@ -117,7 +134,7 @@ export async function crearCuenta(correo, clave, usuario) {
     if (!libre) throw new Error('Ese usuario ya existe: elige otro');
   }
   const { data, error } = await c.auth.signUp({ email: correo.trim(), password: clave, options: { emailRedirectTo: vuelta(), data: Object.assign({ acepto_terminos: new Date().toISOString(), terminos_version: VERSION_TERMINOS }, u ? { usuario: u } : {}) } });
-  if (error) throw new Error(explicar(error));
+  if (error) throw errorNube(error, correo.trim());
   // Si el proyecto pide confirmar el correo, no hay sesión todavía.
   return { confirmar: !data.session };
 }
@@ -145,7 +162,7 @@ export async function ponerUsuario(u) {
 export async function entrarCuenta(correo, clave) {
   const c = await cliente();
   const { error } = await c.auth.signInWithPassword({ email: correo.trim(), password: clave });
-  if (error) throw new Error(explicar(error));
+  if (error) throw errorNube(error, correo.trim());
   // Después de la cuenta, cada persona elige su perfil y pone su PIN (nunca se entra directo con el último perfil).
   if (leer().negocio) salir();
   return true;
@@ -158,6 +175,12 @@ export async function olvideClave(correo) {
 export async function nuevaClave(clave) {
   const c = await cliente();
   const { error } = await c.auth.updateUser({ password: clave });
+  if (error) throw errorNube(error);
+}
+// Vuelve a mandar el enlace para confirmar el correo de una cuenta nueva.
+export async function reenviarConfirmacion(correo) {
+  const c = await cliente();
+  const { error } = await c.auth.resend({ type: 'signup', email: String(correo || '').trim(), options: { emailRedirectTo: vuelta() } });
   if (error) throw new Error(explicar(error));
 }
 export async function cerrarSesion() {
