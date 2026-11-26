@@ -221,7 +221,7 @@ export function Hoja({ titulo, onCerrar, contenido }) {
 
 // Símbolo para una forma de pago, una categoría de gasto o una sucursal.
 const SIMBOLOS = [
-  [/Efectivo/i, 'billete'], [/Tarjeta/i, 'tarjeta'], [/USDT|Binance|cripto/i, 'cripto'],
+  [/Efectivo/i, 'billete'], [/Tarjeta|Punto de venta/i, 'tarjeta'], [/USDT|Binance|cripto/i, 'cripto'],
   [/Transfer|SPEI|Zelle|Interac|Pix|De Una/i, 'transfer'], [/Pago Móvil|Nequi|Daviplata|Yape|Plin|SINPE|Yappy|Bizum|MB Way|CoDi|QR|Cash App|Venmo|Satispay|Mercado Pago/i, 'movil'],
   [/Fiado|Por cobrar|Crédito/i, 'reloj'], [/cuotas/i, 'calendario'], [/^Apartado/i, 'candado'], [/Mercancía|Compras/i, 'caja'], [/Alquiler/i, 'casa'], [/Servicios/i, 'rayo'], [/Sueldo/i, 'personas'], [/Transporte/i, 'bus'],
   [/Centro|Norte|Sur|Este|Oeste|Principal|Sucursal|Local/i, 'edificio'], [/Otros?$/i, 'mas']

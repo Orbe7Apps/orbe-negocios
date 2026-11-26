@@ -15,7 +15,7 @@ import { Caja, MovCaja } from './caja.js';
 import { Variante, Cantidad, Linea as LineaVenta, Descuento, Cargo } from './lineas.js';
 import { Promos, Promo } from './promos.js';
 import { Factura } from './factura.js';
-import { verQ } from '../carrito.js';
+import { verQ, FRACCIONES } from '../carrito.js';
 import { imprimir, lineasRecibo, lineasZ, ajustesImpresora } from '../impresora.js';
 import { Orden, NuevaOrden, AbonoOrden, CancelarOrden } from './ordenes.js';
 import { Armar } from './personalizados.js';
@@ -514,9 +514,9 @@ function Producto({ d, cerrar }) {
       ${p > 0 && !esPer && html`<span class="sub entra">Ganas <b class="in num">${D.m(p - co)}</b> por cada uno (${Math.round((p - co) / p * 100)} %)</span>`}
       ${conPer && html`<div class="campo"><span>En personalizados</span><${Chips} opciones=${[{ v: '', n: 'No' }, { v: 'pz', n: 'Es una pieza' }, { v: 'ex', n: 'Es un extra' }, { v: 'per', n: 'Se arma a la medida' }]} valor=${rolP} onCambio=${setRolP} chico />
         ${rolP && html`<span class="sub faint entra" key=${rolP} style="font-size:12px;line-height:1.4">${rolP === 'pz' ? 'Sale en el paso 1 al armar, con su existencia. Ej.: torta base de 1 kg. Se vende por unidad.' : rolP === 'ex' ? 'Sale en el paso 2 y suma su precio. Ej.: relleno, fondant, letrero. Si lleva existencia, también se descuenta.' : 'Al tocarlo en Pedido se arma en 3 pasos: piezas, extras y precio. El precio se sugiere solo; el de aquí es opcional (mínimo).'}</span>`}</div>`}
-      ${inv && !esPer && (T.mod('medidas') || u) && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }]} valor=${u} onCambio=${setU} chico />${u && html`<span class="sub faint entra" style="font-size:12px">Precio por ${u}. Al vender escribes cuánto lleva.</span>`}</div>`}
-      ${inv && vars.length > 0 ? html`<span class="sub">Tienes ${vars.reduce((a2, v) => a2 + numero(v.q), 0)}${u ? ' ' + u : ''} en total (la suma de las variantes).</span>`
-      : inv && !esPer ? html`<div class="rejilla-2" style="gap:10px"><label class="campo"><span>Cantidad${u ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avisar al quedar</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
+      ${inv && !esPer && (T.mod('medidas') || u) && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }, { v: 'medio', n: 'Medio' }, { v: 'cuarto', n: 'Cuarto' }]} valor=${u} onCambio=${setU} chico />${FRACCIONES[u] ? html`<span class="sub faint entra" style="font-size:12px">Precio por unidad entera. Al vender, cada toque suma ${u === 'cuarto' ? 'un cuarto' : 'medio'}.</span>` : u && html`<span class="sub faint entra" style="font-size:12px">Precio por ${u}. Al vender escribes cuánto lleva.</span>`}</div>`}
+      ${inv && vars.length > 0 ? html`<span class="sub">Tienes ${vars.reduce((a2, v) => a2 + numero(v.q), 0)}${u && !FRACCIONES[u] ? ' ' + u : ''} en total (la suma de las variantes).</span>`
+      : inv && !esPer ? html`<div class="rejilla-2" style="gap:10px"><label class="campo"><span>Cantidad${u && !FRACCIONES[u] ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avisar al quedar</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
         : T.inv ? null : html`<div class="campo"><span>Dura</span><${Chips} opciones=${[{ v: 30, n: '30 min' }, { v: 45, n: '45 min' }, { v: 60, n: '1 hora' }, { v: 120, n: '2 horas' }]} valor=${f.dur} onCambio=${v => pon({ dur: v })} /></div>`}
       <${MasOpciones} abierto=${masOp} onCambio=${setMasOp} resumen=${resumenMas}>
         ${T.inv && (T.mod('servicios') || svc) && html`<${Interruptor} on=${svc} onCambio=${setSvc} titulo="Es un servicio" sub="No se cuenta en inventario" />`}
@@ -526,7 +526,7 @@ function Producto({ d, cerrar }) {
         <button type="button" class=${'chip chico toca' + (grupoNuevo != null ? ' on' : '')} style="border:1.5px dashed var(--line)" onClick=${() => setGrupoNuevo(grupoNuevo == null ? '' : null)}>+ Nuevo</button></div>
         ${grupoNuevo != null && html`<input class="entra" type="text" value=${grupoNuevo} placeholder="Nombre del grupo nuevo" autocomplete="off" onInput=${e => setGrupoNuevo(e.target.value)} />`}</div>
       ${S.negocio.taxOn && html`<div class="campo"><span>${P.tax[0]} de este ${T.inv ? 'producto' : 'servicio'}</span><${Chips} opciones=${opcionesImp} valor=${imp} onCambio=${setImp} chico /></div>`}
-      ${inv && !u && (T.mod('variantes') || vars.length > 0) && html`<div class="campo"><span>Variantes (talla, color, sabor…)</span>
+      ${inv && (!u || FRACCIONES[u]) && (T.mod('variantes') || vars.length > 0) && html`<div class="campo"><span>Variantes (talla, color, sabor…)</span>
         ${vars.length ? html`<div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);padding:8px 12px;gap:0">${vars.map((v, i) => html`<div class="variante-fila entra" key=${v.id}>
           <div class="fila" style="gap:6px"><input type="text" class="crece" value=${v.n} placeholder="Ej.: M · Rojo" aria-label="Nombre de la variante" autocomplete="off" onInput=${e => ponVar(i, { n: e.target.value })} /><button type="button" class="icono-btn chico toca" style="width:30px;height:30px" aria-label="Quitar variante" onClick=${() => setVars(vars.filter((_, k) => k !== i))}><${Icono} n="cerrar" t=${12} g=${2.6} /></button></div>
           <div class="variante-datos">
@@ -563,29 +563,40 @@ function Reponer({ d, cerrar }) {
 }
 
 // ---------- clientes ----------
+// Cédula o RIF tal como se escribe en Venezuela: “v12345678” → “V-12345678”.
+const docLimpio = t => { const s = String(t || '').toUpperCase().replace(/[\s.]/g, ''); const m = s.match(/^([VEJGP])-?(\d.*)$/); return m ? m[1] + '-' + m[2] : s; };
 function NuevoCliente({ d, cerrar }) {
-  const { S, D, abrir } = useApp();
+  const { S, D, P, abrir } = useApp();
   const c0 = d.cid ? S.clientes.find(x => x.id === d.cid) : null;
-  const [f, setF] = useState(c0 ? { n: c0.n, tel: c0.tel || '', tipo: c0.tipo || 'persona', consent: !!c0.consent } : { n: '', tel: '', tipo: 'persona', consent: false });
+  const [f, setF] = useState(c0 ? { n: c0.n, doc: c0.doc || '', tel: c0.tel || '', tipo: c0.tipo || 'persona', consent: !!c0.consent } : { n: '', doc: '', tel: '', tipo: 'persona', consent: false });
   const permiso = f.consent ? { consent: (c0 && c0.consent) || Date.now() } : { consent: 0 };
+  const ve = P.id === 'VE', nDoc = ve ? (f.tipo === 'empresa' ? 'RIF' : 'Cédula o RIF') : 'Documento de identidad';
   const guardar = c => {
     if (!f.n.trim()) { avisar('Escribe el nombre'); return; }
-    if (c0) { editarCliente(c0.id, Object.assign({ n: f.n.trim(), tel: f.tel, tipo: f.tipo }, permiso)); c(() => { avisar('Cliente guardado'); abrir('cliente', { cid: c0.id }); }); return; }
-    nuevoCliente(Object.assign({ n: f.n.trim(), tel: f.tel, tipo: f.tipo }, permiso)); c(() => { avisar('Cliente guardado'); if (d.volver) abrir('cobrar', d.volver); });
+    const doc = docLimpio(f.doc);
+    // Al agregar un cliente se pide su identificación; a los que ya estaban se les puede completar después.
+    if (!doc && !c0) { avisar('Escribe ' + (ve ? 'su cédula o RIF' : 'su documento de identidad')); return; }
+    if (doc && (doc.replace(/\D/g, '').length < 5 || doc.length > 20)) { avisar('Revisa ' + (ve ? 'la cédula o RIF' : 'el documento')); return; }
+    const igual = doc && S.clientes.find(x => !x.borrado && x.id !== (c0 && c0.id) && docLimpio(x.doc) === doc);
+    if (igual) { avisar('Ya tienes a ' + igual.n + ' con ' + doc); return; }
+    const datos = Object.assign({ n: f.n.trim(), doc, tel: f.tel, tipo: f.tipo }, permiso);
+    if (c0) { editarCliente(c0.id, datos); c(() => { avisar('Cliente guardado'); abrir('cliente', { cid: c0.id }); }); return; }
+    nuevoCliente(datos); c(() => { avisar('Cliente guardado'); if (d.volver) abrir('cobrar', d.volver); });
   };
   // Privacidad (GDPR, LGPD y similares): el cliente puede pedir sus datos o que se borren.
   const exportarCliente = x => {
-    const datos = { cliente: { nombre: x.n, telefono: x.tel, tipo: x.tipo, consentimiento: x.consent ? new Date(x.consent).toISOString() : null }, compras: vigentes().filter(v => v.cli === x.id).map(v => ({ numero: v.n, fecha: new Date(v.t).toISOString(), total: v.total, productos: v.items.map(it => it.q + ' x ' + it.n) })), pagos: S.abonos.filter(a => a.cli === x.id).map(a => ({ fecha: new Date(a.t).toISOString(), monto: a.v, forma: a.m })) };
+    const datos = { cliente: { nombre: x.n, identificacion: x.doc || '', telefono: x.tel, tipo: x.tipo, consentimiento: x.consent ? new Date(x.consent).toISOString() : null }, compras: vigentes().filter(v => v.cli === x.id).map(v => ({ numero: v.n, fecha: new Date(v.t).toISOString(), total: v.total, productos: v.items.map(it => it.q + ' x ' + it.n) })), pagos: S.abonos.filter(a => a.cli === x.id).map(a => ({ fecha: new Date(a.t).toISOString(), monto: a.v, forma: a.m })) };
     descargar('datos-' + x.n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w]+/g, '-').toLowerCase() + '.json', JSON.stringify(datos, null, 2), 'application/json');
     avisar('Datos de ' + x.n.split(' ')[0] + ' descargados');
   };
   const borrar = c => {
     const debe = deudaDe(c0.id);
     if (debe > 0.004) { avisar(c0.n.split(' ')[0] + ' todavía debe ' + D.m(debe) + '. Primero anota el pago.'); return; }
-    c(() => abrir('confirmar', { deshacer: 'Cliente borrado', titulo: '¿Borrar a ' + c0.n + '?', texto: 'Se borran su nombre y su teléfono, y ya no sale en tu lista. Sus compras se quedan en los reportes sin sus datos personales.', boton: 'Sí, borrar sus datos', si: () => { anonimizarCliente(c0.id); avisar('Datos del cliente borrados'); } }));
+    c(() => abrir('confirmar', { deshacer: 'Cliente borrado', titulo: '¿Borrar a ' + c0.n + '?', texto: 'Se borran su nombre, su identificación y su teléfono, y ya no sale en tu lista. Sus compras se quedan en los reportes sin sus datos personales.', boton: 'Sí, borrar sus datos', si: () => { anonimizarCliente(c0.id); avisar('Datos del cliente borrados'); } }));
   };
   return html`<${Hoja} titulo=${c0 ? 'Editar cliente' : 'Nuevo cliente'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`<label class="campo"><span>Nombre</span><input type="text" value=${f.n} onInput=${e => setF(Object.assign({}, f, { n: e.target.value }))} autocomplete="name" /></label>
+      <label class="campo"><span>${nDoc}</span><input type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" value=${f.doc} placeholder=${ve ? (f.tipo === 'empresa' ? 'J-12345678-9' : 'V-12345678') : ''} onInput=${e => setF(Object.assign({}, f, { doc: e.target.value }))} onBlur=${e => setF(Object.assign({}, f, { doc: docLimpio(e.target.value) }))} /></label>
       <label class="campo"><span>WhatsApp</span><input type="tel" inputmode="tel" value=${f.tel} placeholder="0414-555-1234" onInput=${e => setF(Object.assign({}, f, { tel: e.target.value }))} /></label>
       ${S.negocio.escala === 'empresa' && html`<div class="campo"><span>Es</span><${Chips} opciones=${[{ v: 'persona', n: 'Persona' }, { v: 'empresa', n: 'Empresa' }]} valor=${f.tipo} onCambio=${v => setF(Object.assign({}, f, { tipo: v }))} /></div>`}
       <${Interruptor} on=${f.consent} onCambio=${v => setF(Object.assign({}, f, { consent: v }))} titulo="Aceptó que guardemos sus datos" sub="Para enviarle recibos y recordatorios." />`,
@@ -602,7 +613,7 @@ function Cliente({ d, cerrar }) {
   return html`<${Hoja} titulo=${c0.n} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       <div class="rejilla-2">${c0.saldo > 0 ? html`<div class="tarjeta cifra" style="background:var(--in-soft);box-shadow:none;padding:12px"><span class="sub">A su favor</span><b class="num in" style="font-size:20px">${D.m(c0.saldo)}</b></div>` : html`<div class="tarjeta cifra" style="background:var(--amber-soft);box-shadow:none;padding:12px"><span class="sub">Debe</span><b class="num amber" style="font-size:20px">${D.m(c0.deuda)}</b>${S.negocio.fiadoUsd && c0.deuda > 0 && html`<span class="sub num">US$ ${(c0.deuda / tasaDe()).toFixed(2).replace('.', ',')} · sigue al dólar</span>`}</div>`}<div class="tarjeta cifra" style="background:var(--fill2);box-shadow:none;padding:12px"><span class="sub">Compras</span><b class="num" style="font-size:20px">${c0.compras}</b></div></div>
-      <div class="fila"><span class="sub crece">${c0.tel ? 'WhatsApp: ' + c0.tel : 'Sin WhatsApp anotado'}${c0.consent ? ' · aceptó guardar sus datos' : ''}</span>${puede('clientes') && html`<button type="button" class="btn2 chico toca" onClick=${() => c(() => abrir('nuevoCliente', { cid: c0.id }))}><${Icono} n="lapiz" t=${14} />Editar</button>`}</div>
+      <div class="fila"><span class="sub crece">${c0.doc ? c0.doc + ' · ' : ''}${c0.tel ? 'WhatsApp: ' + c0.tel : 'Sin WhatsApp anotado'}${c0.consent ? ' · aceptó guardar sus datos' : ''}</span>${puede('clientes') && html`<button type="button" class="btn2 chico toca" onClick=${() => c(() => abrir('nuevoCliente', { cid: c0.id }))}><${Icono} n="lapiz" t=${14} />Editar</button>`}</div>
       <div class="lista">${mov.length ? mov.map((m, i) => html`<button type="button" class="item toca entra" style=${{ '--i': i, color: 'var(--ink)', cursor: m.venta ? 'pointer' : 'default' }} onClick=${() => m.venta && c(() => abrir('recibo', { venta: m.venta }))}><span class="crece" style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px">${m.txt}</span><span class="sub faint">${fechaCorta(m.t)} · ${hora(m.t)}</span></span><b class=${'num ' + (m.v < 0 ? 'in' : m.fiado ? 'amber' : '')}>${D.m(m.v)}</b></button>`) : html`<p class="vacio">Sin movimientos todavía.</p>`}</div>`,
     pie: c0.deuda > 0 ? html`<button type="button" class="btn wa toca" onClick=${() => c(() => abrir('recordar', { cid: c0.id }))}>Recordar por WhatsApp</button>${puede('clientes') && html`<button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => c(() => abrir('abono', { cid: c0.id }))}>Anotar abono</button>`}` : null
   })} />`;
@@ -613,7 +624,7 @@ function Buscar({ d, cerrar }) {
   const { S, D, abrir, ir } = useApp();
   // Tolerante a acentos, errores de tipeo y plurales; si no hay nada, sugiere lo más parecido.
   const prods = buscar(listaProductos(), d.q, textosProducto(S)).slice(0, 30);
-  const clis = buscar(listaClientes(), d.q, x => [x.n, x.tel]).slice(0, 20);
+  const clis = buscar(listaClientes(), d.q, x => [x.n, x.tel, x.doc]).slice(0, 20);
   // También las órdenes: por número, cliente o lo que se recibió.
   const ords = buscar(S.ordenes.slice().reverse(), d.q, o => [numeroOrden(o), o.que, (S.clientes.find(x => x.id === o.cli) || {}).n, o.det], true).slice(0, 10);
   const sugeridos = !prods.length && !clis.length && !ords.length ? parecidos(listaProductos(), d.q, textosProducto(S)) : [];
