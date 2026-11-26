@@ -1,4 +1,4 @@
-// Orbe Negocios · función «aparato»: conecta un aparato del equipo con el código que da el dueño.
+// Orbe Negocios · función “aparato”: conecta un aparato del equipo con el código que da el dueño.
 // Recibe { codigo, nombre } y, si el código sirve, crea una cuenta propia para ese aparato (sin correo real ni
 // contraseña que recordar) y la une al negocio con el rol del código. Devuelve con qué iniciar la sesión una sola vez;
 // el aparato no guarda la contraseña: si pierde la sesión, el dueño le da otro código.

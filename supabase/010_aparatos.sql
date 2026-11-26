@@ -3,7 +3,7 @@
 -- Antes, todos los aparatos de un negocio entraban con el usuario y la contraseña del dueño: cualquier empleado
 -- conocía esa contraseña y su aparato podía hacer todo (cambiar permisos, borrar ventas, pagar, borrar la cuenta).
 -- Ahora cada aparato del equipo (caja, tablet del local) se conecta con un código de un solo uso que da el dueño y
--- recibe una cuenta propia, sin correo ni contraseña que recordar (la crea la función «aparato» del servidor).
+-- recibe una cuenta propia, sin correo ni contraseña que recordar (la crea la función “aparato” del servidor).
 -- Una cuenta de equipo trabaja normal (vende, cobra, anota), pero el servidor no le deja:
 --   · cambiar roles ni permisos, crear o eliminar perfiles, cambiar el rol de un perfil;
 --   · cambiar el PIN del dueño o de un administrador (sí ponerlo la primera vez, después de la contraseña del dueño);
@@ -69,7 +69,7 @@ begin
   return nid;
 end $$;
 
--- ---------- alta de un aparato (solo la llama la función «aparato» del servidor, con la clave de servicio) ----------
+-- ---------- alta de un aparato (solo la llama la función “aparato” del servidor, con la clave de servicio) ----------
 -- Reclama el código: lo marca usado en un solo paso (dos aparatos no pueden usar el mismo). 20 fallos por hora por IP.
 create or replace function public.reclamar_invitacion_aparato(p_codigo text, p_ip text) returns table (negocio_id uuid, rol text)
 language plpgsql security definer set search_path = '' as $$
