@@ -57,7 +57,7 @@ export function Linea({ d, cerrar }) {
   const final = pN * (1 - Math.min(100, dN || 0) / 100);
   const listo = c => {
     if (!(qN > 0)) { avisar('La cantidad debe ser mayor que cero'); return; }
-    if (!it.u && !Number.isInteger(qN * (it.med ? 2 : 1))) { avisar(it.med ? 'Este producto se vende entero o por medio (0,5 · 1 · 1,5…)' : 'Este producto se vende por unidad'); return; }
+    if (!it.u && Math.abs(qN / (it.fr || 1) - Math.round(qN / (it.fr || 1))) > 1e-6) { avisar(it.fr === 0.25 ? 'Este producto se vende entero o por cuartos (0,25 · 0,5 · 0,75 · 1…)' : it.fr ? 'Este producto se vende entero o por medio (0,5 · 1 · 1,5…)' : 'Este producto se vende por unidad'); return; }
     const sn = serial.trim() ? { serial: serial.trim() } : {};
     if (pd) d.onMeta(Object.assign({}, Math.abs(pN - base) > 1e-9 ? { pm: pN } : {}, dN > 0 ? { desc: Math.min(100, dN) } : {}, sn));
     else if (it.gar) d.onMeta(sn);

@@ -3,7 +3,7 @@ import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
 import { bajoMinimo, bajoMeta, resumen, inicioDia, listaProductos, promosVigentes } from '../datos.js';
-import { verQ } from '../carrito.js';
+import { verQ, FRACCIONES } from '../carrito.js';
 import { BarrasH, Reparto, color } from '../graficos.js';
 import { Chips, Icono, TONOS, avisar, FotoProd } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
@@ -62,10 +62,10 @@ export function Inventario() {
     <button type="button" key=${p.id} class="tarjeta fila toca entra" style=${{ '--i': i, border: 0, color: 'var(--ink)', textAlign: 'left' }} onClick=${() => editarP({ pid: p.id })}>
       ${FotoProd(p, 0, html`<span class="ic" style=${Object.assign({ fontSize: '12px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`)}
       <span class="crece" style="display:flex;flex-direction:column;gap:6px">
-        <span class="fila" style="gap:8px"><b class="crece corta" style="font-size:14px;font-weight:600">${p.n}</b>${vg && p.c > 0 && p.p < p.c * 1.05 ? html`<span class="pildora t-ros">Sin ganancia</span>` : null}<b class="num" style=${{ fontSize: '13px', color: e[2] }}>${verQ(p.q, p.u && p.u !== 'medio' ? p.u : 'und')}</b></span>
+        <span class="fila" style="gap:8px"><b class="crece corta" style="font-size:14px;font-weight:600">${p.n}</b>${vg && p.c > 0 && p.p < p.c * 1.05 ? html`<span class="pildora t-ros">Sin ganancia</span>` : null}<b class="num" style=${{ fontSize: '13px', color: e[2] }}>${verQ(p.q, p.u && !FRACCIONES[p.u] ? p.u : 'und')}</b></span>
         <span class="barra-prog"><i style=${{ width: Math.min(100, Math.round(p.q / Math.max(1, p.min * 2) * 100)) + '%', background: e[2] }}></i></span>
         ${p.vars && p.vars.length ? html`<span class="sub num" style="font-size:11px">${p.vars.map(v => v.n + ' ' + verQ(v.q || 0)).join(' · ')}</span>` : null}
-        <span class="sub faint num" style="font-size:11px">${vg ? 'Costo ' + D.m(p.c) + ' · ' : ''}Precio ${D.m(p.p)}${p.u && p.u !== 'medio' ? ' / ' + p.u : p.u ? ' · por medio' : ''}${vg ? ' · Ganas ' + (p.p ? Math.round((p.p - p.c) / p.p * 100) : 0) + ' %' : ''}</span>
+        <span class="sub faint num" style="font-size:11px">${vg ? 'Costo ' + D.m(p.c) + ' · ' : ''}Precio ${D.m(p.p)}${p.u && !FRACCIONES[p.u] ? ' / ' + p.u : p.u ? ' · por ' + p.u : ''}${vg ? ' · Ganas ' + (p.p ? Math.round((p.p - p.c) / p.p * 100) : 0) + ' %' : ''}</span>
       </span>
     </button>`; })}</div>`;
 

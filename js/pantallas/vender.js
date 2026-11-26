@@ -6,7 +6,7 @@ import { Icono, avisar, TONOS, hora, FotoProd } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { estadoNube, estadoPlan } from '../nube.js';
 import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto, marcarCotizacion, numeroCot } from '../datos.js';
-import { nuevoCarrito, lineasDe, cuantos, porPeso, porMedio, verQ, existencia } from '../carrito.js';
+import { nuevoCarrito, lineasDe, cuantos, porPeso, fraccion, verQ, existencia } from '../carrito.js';
 import { FilaVenta } from './hojas.js';
 import { BarraTasas } from './tasas.js';
 import { FiltroGrupos, filtrarGrupo, textosProducto, grupoDe, colorGrupo, suaveGrupo, iniciales2, tonoProd } from './grupos.js';
@@ -72,7 +72,7 @@ export function Vender() {
     const k = vid ? p.id + '~' + vid : p.id, ya = cantEn(carritoGuardado, k);
     if (d > 0 && porPeso(p) && cant == null) { abrir('cantidad', { pid: p.id, vid, q: ya, onListo: x => ponCant(k, x) }); return false; }
     // Sin inventario (servicios, independientes): la existencia no frena la venta.
-    const suma = cant != null ? cant : porMedio(p) ? d / 2 : d, hay = T.inv && T.mod('inventario') ? existencia(p, vid) : null;
+    const suma = cant != null ? cant : fraccion(p) ? d * fraccion(p) : d, hay = T.inv && T.mod('inventario') ? existencia(p, vid) : null;
     if (suma > 0 && hay != null && ya + suma > hay + 1e-9) { avisar(hay <= 0 ? p.n + ': agotado' : 'Solo quedan ' + verQ(hay, p.u) + ' de ' + p.n); return false; }
     ponCant(k, ya + suma);
     return true;
@@ -135,7 +135,7 @@ export function Vender() {
     <button type="button" key=${p.id} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
       ${c ? html`<span class="cant" key=${c}>${verQ(c)}</span>` : null}
       ${FotoProd(p, 36) || html`<span class="ic" style=${Object.assign({ width: '36px', height: '36px', fontSize: '13px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`}
-      <b>${p.n}</b><small class="num">${D.m(p.p)}${porPeso(p) ? ' / ' + p.u : porMedio(p) ? ' · por medio' : ''}${p.dur ? ' · ' + (p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min') : ''}${p.vars && p.vars.length ? ' · ' + p.vars.length + ' opciones' : ''}</small>
+      <b>${p.n}</b><small class="num">${D.m(p.p)}${porPeso(p) ? ' / ' + p.u : fraccion(p) ? ' · por ' + p.u : ''}${p.dur ? ' · ' + (p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min') : ''}${p.vars && p.vars.length ? ' · ' + p.vars.length + ' opciones' : ''}</small>
       ${promosVigentes().some(x => promoAplica(x, p)) && html`<span class="promo-chip">Promo</span>`}
       ${T.inv && p.q == null && (!conServ || q.trim()) && html`<span class="servicio-chip">Servicio</span>`}
       ${T.inv && p.q === 0 && html`<span class="sin"><i></i>Agotado</span>`}
@@ -147,9 +147,9 @@ export function Vender() {
       <span class="sub faint num">${it.pLista != null ? html`<s>${D.m(it.pLista)}</s> ` : ''}${D.m(it.p)}${it.u ? ' / ' + it.u : ' c/u'}${it.promo ? html` · <span class="promo-txt">${it.promo}</span>` : it.desc ? html` · <span class="promo-txt">-${it.desc} %</span>` : ''}</span></button>
     <span class="fila" style="gap:4px">
       ${it.u ? html`<button type="button" class="btn2 chico toca num" onClick=${() => abrir('cantidad', { pid: it.pid, vid: it.vid, q: it.q, onListo: x => ponCant(it.k, x) })}>${verQ(it.q, it.u)}</button>`
-        : html`<button type="button" class="icono-btn chico toca" style="width:30px;height:30px" aria-label=${'Quitar uno de ' + it.n} onClick=${() => ponCant(it.k, it.q - (it.med ? 0.5 : 1))}><${Icono} n="menos1" t=${14} g=${2.6} /></button>
+        : html`<button type="button" class="icono-btn chico toca" style="width:30px;height:30px" aria-label=${'Quitar uno de ' + it.n} onClick=${() => ponCant(it.k, it.q - (it.fr || 1))}><${Icono} n="menos1" t=${14} g=${2.6} /></button>
       <b class="num" style="min-width:24px;text-align:center">${verQ(it.q)}</b>
-      <button type="button" class="icono-btn chico toca" style="width:30px;height:30px" aria-label=${'Agregar uno de ' + it.n} onClick=${() => p0 ? sumar(p0, 1, it.vid, it.med ? 0.5 : 1) : ponCant(it.k, it.q + 1)}><${Icono} n="mas1" t=${14} g=${2.6} /></button>`}
+      <button type="button" class="icono-btn chico toca" style="width:30px;height:30px" aria-label=${'Agregar uno de ' + it.n} onClick=${() => p0 ? sumar(p0, 1, it.vid, it.fr || 1) : ponCant(it.k, it.q + 1)}><${Icono} n="mas1" t=${14} g=${2.6} /></button>`}
     </span>
     <b class="num" style="min-width:76px;text-align:right">${D.m(it.q * it.p)}</b>
   </div>`; }) : html`<p class="vacio">${tel ? 'Toca lo que vas a ' + (T.inv ? 'vender' : 'cobrar') + '.' : 'Pasa el lector o toca un producto. Cada lectura suma uno.'}</p>`}</div>`;
