@@ -46,7 +46,7 @@ export const PAISES = [
   { id: 'CH', n: 'Suiza', f: '🇨🇭', s: 'CHF', r: 0.8, cur: 'francos suizos', loc: 'de-CH', pays: ['Twint', 'Tarjeta', 'Efectivo'], tax: ['MWST', 8.1], red: [2.6], fiscal: ['UID', ''] },
   { id: 'TR', n: 'Turquía', f: '🇹🇷', s: '₺', r: 41.5, usd2: true, cur: 'liras', loc: 'tr-TR', pays: ['Tarjeta', 'Efectivo', 'Transferencia', 'Papara'], tax: ['KDV', 20], red: [10, 1], fiscal: ['VKN', ''] },
   { id: 'UY', n: 'Uruguay', f: '🇺🇾', s: '$', r: 40, cur: 'pesos uruguayos', loc: 'es-UY', pays: GEN, tax: ['IVA', 22], red: [10], fiscal: ['RUT', ''] },
-  { id: 'VE', n: 'Venezuela', f: '🇻🇪', s: '$', r: 1, cur: 'dólares y bolívares', loc: 'es-VE', pays: ['Pago Móvil', 'Efectivo $', 'Efectivo Bs', 'USDT', 'Zelle', 'Binance Pay'], tax: ['IVA', 16], red: [8], fiscal: ['RIF', 'J-50123456-7'], suf: 'C.A.' },
+  { id: 'VE', n: 'Venezuela', f: '🇻🇪', s: '$', r: 1, cur: 'dólares y bolívares', loc: 'es-VE', pays: ['Pago Móvil', 'Punto de venta', 'Efectivo $', 'Efectivo Bs', 'USDT', 'Zelle', 'Binance Pay'], tax: ['IVA', 16], red: [8], fiscal: ['RIF', 'J-50123456-7'], suf: 'C.A.' },
   { id: 'ZW', n: 'Zimbabue', f: '🇿🇼', s: 'ZiG', r: 27, usd2: true, cur: 'ZiG (oro de Zimbabue)', loc: 'en-ZW', pays: ['Efectivo US$', 'EcoCash', 'Tarjeta', 'Efectivo ZiG'], tax: ['VAT', 15.5], red: [0], fiscal: ['BP number', ''] }
 ];
 
