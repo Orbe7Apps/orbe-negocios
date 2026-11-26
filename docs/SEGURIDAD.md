@@ -41,9 +41,23 @@ También se agregó `<meta name="referrer" content="strict-origin-when-cross-ori
 5. GitHub: proteger la rama `main` (revisión antes de unir) y activar *secret scanning* y *Dependabot alerts*. Quien pueda subir código a `main` controla la app de todos.
 6. Respaldos: revisar que el plan de Supabase tenga copias diarias (o hacer un `pg_dump` semanal).
 
+## Aparatos del equipo (26-11-2026, `supabase/010_aparatos.sql` y función `aparato`)
+
+Antes todos los aparatos entraban con el usuario y la contraseña del dueño (la app decía “con esto entran tú y tu equipo”), así que cualquier empleado conocía esa contraseña y su aparato podía hacer todo por la API.
+
+Ahora:
+- **La contraseña del dueño queda solo en sus aparatos.** Cada aparato del equipo (caja, tablet del local) se conecta con un **código de 8 letras de un solo uso que vence en 30 minutos** (Ajustes → Cuenta y nube → Conectar un aparato, o por enlace `?aparato=CODIGO`). La función `aparato` del servidor le crea una cuenta propia (sin correo real ni contraseña que recordar; la contraseña es al azar y no se guarda) y la une al negocio con rol `equipo`.
+- **Lo que el servidor no le deja hacer a un aparato del equipo** (trigger `registros_revisar_equipo`): cambiar roles o permisos, crear o eliminar perfiles, cambiar el rol, los locales o la activación de un perfil, cambiar el PIN del dueño o de un administrador, borrar ventas, abonos, cierres, movimientos de caja, turnos o el registro. Tampoco invita, paga, publica el link de reservas, ve la lista de aparatos ni crea negocios. Todo probado contra la API real con una cuenta de aparato.
+- **En la app:** un aparato del equipo no muestra “Equipo y permisos” (ni con el perfil del dueño), ni la suscripción para pagar, ni borrar la cuenta. Si algo prohibido llega a la sincronización, el servidor lo rechaza y la app lo deshace sola sin trabar el resto.
+- **Dueño sin PIN en una caja:** confirma su contraseña con `verificar_clave_dueno` (5 intentos cada 15 minutos) sin que su sesión quede en ese aparato.
+- **Negocios que ya existían:** al dueño se le pregunta una vez en cada aparato “¿Es tuyo o lo usa tu equipo?”. Si es del equipo, en un toque pasa a su propio acceso (sube lo pendiente, cambia de cuenta y cierra en el servidor la sesión vieja del dueño). Nada se borra.
+- **Desconectar:** el dueño ve sus aparatos (con su último cambio) y los desconecta; la cuenta del aparato se borra al instante.
+
+Pendiente de esta parte: los empleados todavía comparten la cuenta del aparato entre ellos (se distinguen por PIN dentro de la app). Si algún día hace falta saber en el servidor qué persona hizo cada cambio, se puede dar una cuenta por persona con el mismo sistema de códigos.
+
 ## Límites del diseño actual (para la siguiente etapa)
 
-- **Los PIN y los permisos por perfil solo protegen dentro del aparato.** Todos los perfiles de un negocio usan la misma cuenta de Supabase; quien tenga esa sesión (por ejemplo, abriendo las herramientas de desarrollo en una computadora del negocio) puede leer y cambiar todo por la API. Un PIN de 4 dígitos guardado como hash se adivina en segundos fuera de la app. Solución de fondo: una cuenta de Supabase por empleado (las invitaciones ya existen en el servidor) y permisos por colección revisados en RLS.
+- **Los PIN distinguen a las personas dentro de un aparato, no en el servidor.** Un PIN de 4 dígitos guardado como hash se adivina rápido fuera de la app; por eso lo delicado (permisos, borrar ventas, cuenta) ya no depende del PIN sino del tipo de cuenta del aparato.
 - **La sesión se guarda en `localStorage`.** Es lo normal en apps web, y la CSP reduce mucho el riesgo, pero cualquier XSS podría leerla. Mantener la regla: nunca `innerHTML` con datos sin `esc()`.
 - **Enlaces del correo con el flujo implícito** (`#access_token=…`). Conviene pasar a PKCE (`flowType: 'pkce'`) para que el token no viaje en la dirección.
 - **Sin tope de espacio por negocio**: una cuenta en prueba podría subir muchos registros de hasta 1 MB. Vigilar el tamaño de la base en el panel de Supabase.

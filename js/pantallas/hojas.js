@@ -23,7 +23,7 @@ import { descargar } from './reportes.js';
 import { Cita, NuevaCita } from './agenda.js';
 import { ElegirRubro } from './funciones.js';
 import { Sugerencias } from './empezar.js';
-import { Cuenta, Pagar, BorrarCuenta } from './cuenta.js';
+import { Cuenta, Pagar, BorrarCuenta, ConectarAparato } from './cuenta.js';
 import { OpcionesPlan, planDesdeCobro, CUOTAS_M, APARTADO_M, Plan, AbonoPlan, ApartadoVencido } from './cuotas.js';
 import { useNube, soloUnLocal, configCobro, limitePerfiles, perfilesActivos } from '../nube.js';
 import { Cotizar, Cotizacion } from './cotizaciones.js';
@@ -57,7 +57,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { rolBorrar: RolBorrar, cuenta: Cuenta, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  const H = { rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }

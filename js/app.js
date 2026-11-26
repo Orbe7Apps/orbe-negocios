@@ -16,7 +16,7 @@ import { Cuotas } from './pantallas/cuotas.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
 import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada, quitarConfirmado } from './nube.js';
-import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion, AceptarTerminos, CuentaSuspendida } from './pantallas/cuenta.js';
+import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion, AceptarTerminos, CuentaSuspendida, PreguntaAparato } from './pantallas/cuenta.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
 import { Vender } from './pantallas/vender.js';
 import { Clientes } from './pantallas/clientes.js';
@@ -165,6 +165,7 @@ function App() {
       ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
       ${Tour}
       <${AceptarTerminos} />
+      <${PreguntaAparato} />
       <${Avisos} />
     </${Ctx.Provider}>`;
   }
@@ -212,6 +213,7 @@ function App() {
     ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
     ${Tour}
     <${AceptarTerminos} />
+      <${PreguntaAparato} />
     <${Avisos} />
   </${Ctx.Provider}>`;
 }
