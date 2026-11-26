@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 26 nov 2026 (app en la versión **v98** del service worker).
+Última actualización: 26 nov 2026 (app en la versión **v99** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 17 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v98`). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v99`). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
@@ -79,6 +79,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Cuotas y apartados**: recargo por venta, calendario de cuotas, abonos, recordatorios; al vencer un apartado pregunta qué hacer (más tiempo, escribir primero, pasar a cuotas o liberar → saldo a favor / devolver / retener).
 - Equipo: perfiles con PIN, roles y permisos (crear, borrar rol, aviso al dar permisos delicados), registro de cambios.
 - Cuentas en la nube: registro, confirmación por correo con pantalla “Tu cuenta se confirmó”, “Olvidé mi usuario o contraseña”, aceptar términos, borrar cuenta, cuenta suspendida.
+- Contraseñas: al crearla o cambiarla se pide 8 o más caracteres con letras y números. Si Supabase la rechaza (filtrada, débil o igual a la anterior) o falta confirmar el correo, el aviso sale en español junto al formulario, con “Mandar el enlace otra vez” para el correo. Prueba: `node pruebas/contrasenas.js` (simula Supabase, no toca la nube).
 - Un negocio por cuenta: al iniciar sesión entra directo con animación de bienvenida y luego la pantalla de perfiles/PIN.
 - Deshacer (7 s) al borrar gasto, producto, cliente, perfil o rol.
 - Ayudas “?” con imágenes en cada pantalla y tutorial adaptado.
@@ -89,6 +90,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 
 - **Planes:** Negocio US$25/mes o 250/año (1 sede, 4 perfiles). Empresa US$35/mes o 350/año (varias sedes, 10 perfiles). Los límites hoy los controla la app; falta que el servidor también los controle.
 - **Un solo negocio por cuenta** (índice único en Supabase). La cuenta admin no ve negocios ajenos al iniciar sesión.
+- **El panel de administración exige verificación en dos pasos** (app de autenticación): la primera vez se configura con un QR.
 - **El usuario y la contraseña son solo del dueño.** Cada aparato del equipo (caja, tablet) se conecta con un código de un solo uso (Ajustes → Cuenta y nube → Conectar un aparato, o enlace `?aparato=CODIGO`) y tiene su propia cuenta. Un aparato del equipo vende y cobra, pero el servidor no le deja cambiar permisos o perfiles ni borrar ventas, abonos o cierres. A los negocios que ya existían se les pregunta una vez por aparato “¿es tuyo o lo usa tu equipo?”. Detalle en `docs/SEGURIDAD.md`.
 - **Prueba gratis: 3 días.**
 - **Cobro solo por Binance.** Pago Móvil oculto y sus datos protegidos en el servidor. Factura desactivada (`PEDIR_FACTURA = false`): no se emite factura fiscal todavía.
@@ -134,7 +136,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 8. Otros idiomas y países cuando se decida abrir fuera de Venezuela (el código ya tiene monedas, impuestos y formas de pago de varios países).
 
 ### Del lado del dueño
-- Activar en Supabase **“Leaked password protection”** (Authentication → Settings) y la verificación en dos pasos (MFA) en la cuenta admin.
+- En Supabase → Authentication → Sign In / Providers → Email: contraseña mínima de 8 con letras y números (*Letters and digits*) y “Confirm email”. “Leaked password protection” es solo del plan Pro (el proyecto está en el gratis): mientras tanto la app revisa por su cuenta las contraseñas filtradas y traduce los rechazos de Supabase. El panel admin ya exige verificación en dos pasos.
 - Hablar con un contador: IVA, IGTF e imprenta digital.
 - Formalizar Orbe Apps → seguir `docs/al-formalizar.md` (RIF y razón social en términos, factura, emisor en el panel, Pago Móvil, PDF de presentación).
 - Dominio propio (p. ej. orbenegocios.com): mover la app y enviar los correos desde ahí.
@@ -144,11 +146,12 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 
 - Servidor local: `python3 -m http.server 8765` en la raíz del repositorio.
 - `pruebas/barrido.js` (Playwright): recorre los 12 rubros en teléfono y PC con la demo, abre todas las pantallas, los temas de Ajustes y las hojas principales, y hace una venta. Anota errores de consola, textos raros (`undefined`, `NaN`) y desbordes. Uso: `node pruebas/barrido.js "Ferretería,Barbería" tel,pc`. Tarda unos 10 min por cada 6 rubros; conviene partirlo en dos mitades.
+- `pruebas/contrasenas.js`: avisos de contraseña y de correo sin confirmar, con respuestas de Supabase simuladas. `PC=1` para computadora.
 - Último resultado (25 nov 2026): 12 rubros × teléfono y PC, **sin problemas**.
 - Cuentas de prueba en la nube: usar correos `@orbeprueba.dev` y borrarlas al terminar.
 
 ## 10. Estado de la nube (26 nov 2026)
 
 - Usuarios reales: 2 (el dueño y **Avenor**, primer cliente real; su prueba termina el 28 nov). 1 cuenta admin. 0 suspendidas.
-- Migraciones aplicadas: 001 a 010 (esquema, privado y cobro, usuarios, reservas, legal, cobro solo Binance, un negocio por cuenta, suspender, seguridad, aparatos del equipo). Función del servidor `aparato` (Edge Function, `supabase/functions/aparato`): da de alta los aparatos del equipo.
+- Migraciones aplicadas: 001 a 011 (esquema, privado y cobro, usuarios, reservas, legal, cobro solo Binance, un negocio por cuenta, suspender, seguridad, aparatos del equipo, panel admin con verificación en dos pasos). Función del servidor `aparato` (Edge Function, `supabase/functions/aparato`): da de alta los aparatos del equipo.
 - Seguridad: RLS en todas las tablas; `puede_escribir` exige suscripción al día y cuenta no suspendida; datos de cobro con permisos por columna (el admin los lee con `admin_config()`). Límite real de intentos al entrar, topes en el link de reservas, historial privado de cambios (30 días) y CSP en las páginas. Auditoría completa y reglas en `docs/SEGURIDAD.md`.

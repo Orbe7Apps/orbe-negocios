@@ -34,9 +34,10 @@ También se agregó `<meta name="referrer" content="strict-origin-when-cross-ori
 
 ## Lo que hay que hacer a mano (no se puede desde el código)
 
-1. **Supabase → Authentication → Providers → Email → activar “Leaked password protection”** (rechaza contraseñas filtradas, revisando contra HaveIBeenPwned). Es la única alerta de seguridad que queda en el asesor de Supabase.
-2. En la misma sección: contraseña mínima de **8 caracteres** con letras y números, y **confirmar correo** obligatorio.
-3. **Activar MFA (TOTP)** en las cuentas de `admins_orbe`. Cuando todos los administradores lo tengan, se puede exigir en el servidor cambiando `privado.es_admin_orbe()` para pedir `auth.jwt()->>'aal' = 'aal2'`.
+1. **“Leaked password protection” de Supabase es solo del plan Pro** (el proyecto está en el gratis). Mientras tanto la app revisa las contraseñas filtradas por su cuenta (ver más abajo). Si se pasa a Pro: Authentication → Sign In / Providers → Email → activarla.
+2. En la misma sección: contraseña mínima de **8 caracteres** con letras y números (*Password Requirements: Letters and digits*), y **confirmar correo** obligatorio.
+   La app ya lo acompaña (v97): pide lo mismo antes de enviar y traduce los rechazos de Supabase (`weak_password` con `pwned`, `characters` o `length`; `same_password`; `email_not_confirmed`) en `explicar()` y `errorNube()` de `js/nube.js`. Los avisos salen junto al formulario (`AvisoCuenta` en `js/pantallas/cuenta.js`).
+3. ~~Activar MFA en las cuentas de administrador~~ Hecho: el panel lo exige (migración 011); la primera vez se configura con un QR.
 4. Authentication → URL Configuration: dejar en *Redirect URLs* solo `https://orbe7apps.github.io/orbe-negocios/` (y `admin.html`).
 5. GitHub: proteger la rama `main` (revisión antes de unir) y activar *secret scanning* y *Dependabot alerts*. Quien pueda subir código a `main` controla la app de todos.
 6. Respaldos: revisar que el plan de Supabase tenga copias diarias (o hacer un `pg_dump` semanal).
@@ -54,6 +55,11 @@ Ahora:
 - **Desconectar:** el dueño ve sus aparatos (con su último cambio) y los desconecta; la cuenta del aparato se borra al instante.
 
 Pendiente de esta parte: los empleados todavía comparten la cuenta del aparato entre ellos (se distinguen por PIN dentro de la app). Si algún día hace falta saber en el servidor qué persona hizo cada cambio, se puede dar una cuenta por persona con el mismo sistema de códigos.
+
+## Contraseñas filtradas y verificación en dos pasos (26-11-2026)
+
+- **Contraseñas filtradas:** el proyecto está en el plan gratis de Supabase y su protección propia es solo del plan Pro. La app revisa la contraseña nueva (al crear la cuenta y al cambiarla) contra la lista pública de HaveIBeenPwned con *k-anonimato*: solo viaja el comienzo de la huella SHA-1, nunca la contraseña. Si el servicio no responde, no se frena a nadie. Quien use la API directo se la salta; si se pasa a Pro, activar también la de Supabase.
+- **Panel de administración con dos pasos (TOTP):** `supabase/011_admin_dos_pasos.sql`. El servidor no entrega datos de administración sin el código de la app de autenticación (sesión `aal2`); probado contra el servidor real con una cuenta temporal. La primera vez el panel muestra el QR para configurar Google Authenticator o similar; después pide solo el código. **Si el administrador pierde el teléfono:** borrar su factor en el panel SQL de Supabase (`delete from auth.mfa_factors where user_id = '…'`) y volver a configurarlo.
 
 ## Límites del diseño actual (para la siguiente etapa)
 

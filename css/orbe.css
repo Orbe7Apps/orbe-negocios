@@ -969,6 +969,10 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .aviso-plan.ambar { background: var(--amber-soft); color: var(--amber-text); }
 .aviso-plan.rojo { background: var(--out-soft); color: var(--out-text); }
 .aviso-plan b { flex: none; }
+.aviso-cuenta { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 12px 14px; border-radius: 16px; font-size: 14px; text-align: left; }
+.aviso-cuenta > svg { flex: none; margin-top: 1px; }
+.aviso-cuenta.ambar { background: var(--amber-soft); color: var(--amber-text); }
+.aviso-cuenta.rojo { background: var(--out-soft); color: var(--out-text); }
 
 /* Contraseña con “Ver” y pantalla de contraseña nueva */
 .clave-caja { position: relative; display: block; }
