@@ -25,7 +25,7 @@ Este documento es la fuente única de verdad: qué es la app, cómo está hecha,
 | Panel de administración | https://orbe7apps.github.io/orbe-negocios/admin.html (instalable como “Orbe Admin”; también en Más → Panel de administración, solo para cuentas admin en el perfil dueño) |
 | Términos / Privacidad | `terminos.html` / `privacidad.html` |
 | Página pública de reservas | `reservar.html?n=<id del negocio>` |
-| Repositorio | `Orbe7Apps/orbe-negocios` (antes `gllm57/orbe-negocios`; GitHub redirige). GitHub Pages publica la rama principal. |
+| Repositorio | `Orbe7Apps/orbe-negocios` (antes `gllm57/orbe-negocios`; GitHub redirige). GitHub Pages publica la rama principal, que es `claude/nice-davinci-3ovhvv`. Los cambios de cualquier otra rama se publican solo al fusionarse en ella. |
 | Supabase | proyecto `cwjmstctrxrcisfbknam` (https://cwjmstctrxrcisfbknam.supabase.co) |
 
 Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `?prueba` es para los scripts de prueba.
