@@ -18,6 +18,7 @@ import { Factura } from './factura.js';
 import { verQ, FRACCIONES } from '../carrito.js';
 import { imprimir, lineasRecibo, lineasZ, ajustesImpresora } from '../impresora.js';
 import { Orden, NuevaOrden, AbonoOrden, CancelarOrden } from './ordenes.js';
+import { Armar } from './personalizados.js';
 import { buscar, parecidos } from '../buscar.js';
 import { descargar } from './reportes.js';
 import { Cita, NuevaCita } from './agenda.js';
@@ -57,7 +58,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo }[hoja.t];
+  const H = { rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo, armar: Armar }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
@@ -472,6 +473,9 @@ function Producto({ d, cerrar }) {
   // En una tienda, un servicio (mano de obra, instalación, revisión…) no lleva existencia.
   const [svc, setSvc] = useState(p0 ? T.inv && p0.q == null : !!d.svc);
   const inv = T.inv && !svc;
+  // Personalizados: el producto que se arma a la medida (per), una pieza que lleva (pz) o un extra (ex).
+  const [rolP, setRolP] = useState(p0 ? (p0.per ? 'per' : p0.pz ? 'pz' : p0.ex ? 'ex' : '') : d.rolP || '');
+  const conPer = T.mod('personalizados') || !!rolP, esPer = rolP === 'per';
   const [vars, setVars] = useState(() => (p0 && p0.vars ? p0.vars : []).map(v => ({ id: v.id, n: v.n, q: v.q != null ? String(v.q).replace('.', ',') : '', p: v.p ? String(v.p).replace('.', ',') : '', cod: v.cod || '' })));
   const ponVar = (i, o) => setVars(vs => vs.map((v, k) => k === i ? Object.assign({}, v, o) : v));
   const nuevaVar = n => ({ id: 'v' + Math.random().toString(36).slice(2, 8), n: n || '', q: '', p: '', cod: '' });
@@ -485,7 +489,7 @@ function Producto({ d, cerrar }) {
   const atable = D.dual && P.id !== 'VE', usd = numero(f.usd);
   const p = enDolar && atable ? D.bonito(usd * D.tasa) : numero(f.p), co = numero(f.c);
   const guardar = c => {
-    if (!f.n.trim() || !p) { avisar('Escribe el nombre y el precio'); return; }
+    if (!f.n.trim() || (!p && !esPer)) { avisar('Escribe el nombre y el precio'); return; }
     const cod = f.cod.trim();
     const otroCon = cod && listaProductos().find(x => mismoCodigo(x.cod, cod) && (!p0 || x.id !== p0.id));
     if (otroCon) { avisar('Ese código ya lo tiene ' + otroCon.n); return; }
@@ -493,7 +497,7 @@ function Producto({ d, cerrar }) {
     const codRep = varsOk.find(v => v.cod && (mismoCodigo(v.cod, cod) || varsOk.some(w => w !== v && mismoCodigo(w.cod, v.cod)) || listaProductos().some(x => (!p0 || x.id !== p0.id) && (mismoCodigo(x.cod, v.cod) || (x.vars || []).some(w => mismoCodigo(w.cod, v.cod))))));
     if (codRep) { avisar('El código de ' + codRep.n + ' ya lo tiene otro producto o variante'); return; }
     const cant = x => u ? Math.round(numero(x) * 1000) / 1000 : Math.round(numero(x));
-    guardarProducto({ id: p0 ? p0.id : undefined, n: f.n.trim(), ab: iniciales2(f.n.trim()), p, c: co, q: inv ? (varsOk.length ? varsOk.reduce((a2, v) => a2 + (v.q || 0), 0) : cant(f.q)) : null, min: inv ? cant(f.min) : 0, u: inv && u ? u : undefined, vars: inv && varsOk.length ? varsOk : undefined, dur: T.inv ? 0 : f.dur, cod, usd: enDolar && atable ? usd : 0, imp: imp === 'gen' ? undefined : imp, foto, gar: gar || 0, g: grupoNuevo && grupoNuevo.trim() ? guardarGrupo({ n: grupoNuevo.trim() }) : grupo });
+    guardarProducto({ id: p0 ? p0.id : undefined, n: f.n.trim(), ab: iniciales2(f.n.trim()), p, c: co, per: esPer ? 1 : undefined, pz: rolP === 'pz' ? 1 : undefined, ex: rolP === 'ex' ? 1 : undefined, q: inv && !esPer ? (varsOk.length ? varsOk.reduce((a2, v) => a2 + (v.q || 0), 0) : cant(f.q)) : null, min: inv ? cant(f.min) : 0, u: inv && u ? u : undefined, vars: inv && varsOk.length ? varsOk : undefined, dur: T.inv ? 0 : f.dur, cod, usd: enDolar && atable ? usd : 0, imp: imp === 'gen' ? undefined : imp, foto, gar: gar || 0, g: grupoNuevo && grupoNuevo.trim() ? guardarGrupo({ n: grupoNuevo.trim() }) : grupo });
     // Si se creó desde el escáner, se vuelve a él con el producto ya reconocido.
     c(() => { avisar('Guardado: ' + f.n.trim()); if (d.escaner && cod) abrir('escaner', Object.assign({}, d.escaner, { mostrar: cod })); });
   };
@@ -507,10 +511,12 @@ function Producto({ d, cerrar }) {
       ${atable && html`<${Interruptor} on=${enDolar} onCambio=${setEnDolar} titulo="Precio atado al dólar" sub=${'Se recalcula solo con el ' + nombreTasa(P, S.tasa).toLowerCase()} />`}
       ${enDolar && atable && html`<label class="campo entra"><span>Precio en dólares</span><input class="num" type="text" inputmode="decimal" value=${f.usd} placeholder="0" onInput=${e => pon({ usd: e.target.value })} /></label>${usd > 0 && html`<span class="sub num">Hoy son ${D.m(p)} (US$ 1 = ${D.m(D.tasa)})</span>`}`}
       <div class="rejilla-2" style="gap:10px">${enDolar && atable ? html`<div class="campo"><span>Precio</span><b class="num" style="min-height:52px;display:flex;align-items:center;font-size:18px">${D.m(p)}</b></div>` : html`<label class="campo"><span>Precio</span><input type="text" inputmode="decimal" value=${f.p} placeholder="0" onInput=${e => pon({ p: e.target.value })} /></label>`}<label class="campo"><span>Costo</span><input type="text" inputmode="decimal" value=${f.c} placeholder="0" onInput=${e => pon({ c: e.target.value })} /></label></div>
-      ${p > 0 && html`<span class="sub entra">Ganas <b class="in num">${D.m(p - co)}</b> por cada uno (${Math.round((p - co) / p * 100)} %)</span>`}
-      ${inv && (T.mod('medidas') || u) && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }, { v: 'medio', n: 'Medio' }, { v: 'cuarto', n: 'Cuarto' }]} valor=${u} onCambio=${setU} chico />${FRACCIONES[u] ? html`<span class="sub faint entra" style="font-size:12px">Precio por unidad entera. Al vender, cada toque suma ${u === 'cuarto' ? 'un cuarto' : 'medio'}.</span>` : u && html`<span class="sub faint entra" style="font-size:12px">Precio por ${u}. Al vender escribes cuánto lleva.</span>`}</div>`}
+      ${p > 0 && !esPer && html`<span class="sub entra">Ganas <b class="in num">${D.m(p - co)}</b> por cada uno (${Math.round((p - co) / p * 100)} %)</span>`}
+      ${conPer && html`<div class="campo"><span>En personalizados</span><${Chips} opciones=${[{ v: '', n: 'No' }, { v: 'pz', n: 'Es una pieza' }, { v: 'ex', n: 'Es un extra' }, { v: 'per', n: 'Se arma a la medida' }]} valor=${rolP} onCambio=${setRolP} chico />
+        ${rolP && html`<span class="sub faint entra" key=${rolP} style="font-size:12px;line-height:1.4">${rolP === 'pz' ? 'Sale en el paso 1 al armar, con su existencia. Ej.: torta base de 1 kg. Se vende por unidad.' : rolP === 'ex' ? 'Sale en el paso 2 y suma su precio. Ej.: relleno, fondant, letrero. Si lleva existencia, también se descuenta.' : 'Al tocarlo en Pedido se arma en 3 pasos: piezas, extras y precio. El precio se sugiere solo; el de aquí es opcional (mínimo).'}</span>`}</div>`}
+      ${inv && !esPer && (T.mod('medidas') || u) && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }, { v: 'medio', n: 'Medio' }, { v: 'cuarto', n: 'Cuarto' }]} valor=${u} onCambio=${setU} chico />${FRACCIONES[u] ? html`<span class="sub faint entra" style="font-size:12px">Precio por unidad entera. Al vender, cada toque suma ${u === 'cuarto' ? 'un cuarto' : 'medio'}.</span>` : u && html`<span class="sub faint entra" style="font-size:12px">Precio por ${u}. Al vender escribes cuánto lleva.</span>`}</div>`}
       ${inv && vars.length > 0 ? html`<span class="sub">Tienes ${vars.reduce((a2, v) => a2 + numero(v.q), 0)}${u && !FRACCIONES[u] ? ' ' + u : ''} en total (la suma de las variantes).</span>`
-      : inv ? html`<div class="rejilla-2" style="gap:10px"><label class="campo"><span>Cantidad${u && !FRACCIONES[u] ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avisar al quedar</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
+      : inv && !esPer ? html`<div class="rejilla-2" style="gap:10px"><label class="campo"><span>Cantidad${u && !FRACCIONES[u] ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avisar al quedar</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
         : T.inv ? null : html`<div class="campo"><span>Dura</span><${Chips} opciones=${[{ v: 30, n: '30 min' }, { v: 45, n: '45 min' }, { v: 60, n: '1 hora' }, { v: 120, n: '2 horas' }]} valor=${f.dur} onCambio=${v => pon({ dur: v })} /></div>`}
       <${MasOpciones} abierto=${masOp} onCambio=${setMasOp} resumen=${resumenMas}>
         ${T.inv && (T.mod('servicios') || svc) && html`<${Interruptor} on=${svc} onCambio=${setSvc} titulo="Es un servicio" sub="No se cuenta en inventario" />`}

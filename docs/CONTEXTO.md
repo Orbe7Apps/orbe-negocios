@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 26 nov 2026 (app en la versión **v97** del service worker).
+Última actualización: 26 nov 2026 (app en la versión **v99** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -36,8 +36,8 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Estado** en un objeto `S` guardado en IndexedDB. Se cambia con `cambiar()`; cada cambio importante deja rastro con `nota(s, que)` en el registro (quién hizo qué).
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
-- **Rubros y funciones**: `js/rubros.js` define 12 rubros y 16 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v97`). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Rubros y funciones**: `js/rubros.js` define 12 rubros y 17 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v99`). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
@@ -67,7 +67,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 
 12 rubros: Bodega o minimarket, Ferretería, Electrodomésticos, Ropa y calzado, Farmacia, Restaurante o comida rápida, Panadería o cafetería, Barbería, Salón de belleza, Taller o servicio técnico, Venta en línea, Independiente.
 
-16 funciones (Ajustes → Funciones, cada rubro trae las suyas encendidas): inventario, servicios, venta por peso o medida (también “Medio” y “Cuarto”: entero o por partes, cada toque suma ½ o ¼), variantes (tallas/colores), garantía y serial, escáner con cámara, factura del proveedor con foto (OCR), cuidar precios, agenda de citas, comisiones, cotizaciones, órdenes de trabajo, **cuotas y apartados** (encendido en electro), fiado, promociones, caja con fondo y turnos.
+17 funciones (Ajustes → Funciones, cada rubro trae las suyas encendidas): inventario, servicios, venta por peso o medida (también “Medio” y “Cuarto”: entero o por partes, cada toque suma ½ o ¼), **personalizados** (encendido en panadería), variantes (tallas/colores), garantía y serial, escáner con cámara, factura del proveedor con foto (OCR), cuidar precios, agenda de citas, comisiones, cotizaciones, órdenes de trabajo, **cuotas y apartados** (encendido en electro), fiado, promociones, caja con fondo y turnos.
 
 ## 5. Lo que ya está hecho (resumen)
 
@@ -75,6 +75,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - Clientes con **cédula o RIF obligatoria al agregarlos** (campo `doc`; se escribe “V-12345678”, no deja repetirla; a los clientes viejos se les puede completar al editarlos), deudas y abonos; inventario con mínimos; gastos y cuentas por pagar; caja con turnos y cierre; reportes con gráficos, CSV y PDF.
 - Agenda con horario por profesional, link público de reservas, recordatorios por WhatsApp (con un toque, opción “A” gratuita).
 - Órdenes de trabajo con anticipo y PDF; cotizaciones que se convierten en venta.
+- **Personalizados** (`js/pantallas/personalizados.js`): un producto marcado “Se arma a la medida” (p. ej. Torta personalizada) se arma en Pedido en 3 pasos: piezas del inventario con cantidad (productos “Es una pieza”, se venden por unidad), extras con precio (“Es un extra”, normalmente servicios) y precio sugerido = piezas + extras, editable. Plantillas guardadas en el mismo producto (`pl`). “Ahora mismo” entra al pedido como una línea con sus piezas (`pz`), que bajan del inventario al cobrar; “Es un encargo” crea un Pedido en Órdenes: las piezas quedan apartadas (`apartadas()`, no se venden por error) y bajan al entregar. Las tortas se dibujan por pisos. Pensado para reusar en otros rubros (arreglos, combos, regalos, muebles a la medida).
 - **Cuotas y apartados**: recargo por venta, calendario de cuotas, abonos, recordatorios; al vencer un apartado pregunta qué hacer (más tiempo, escribir primero, pasar a cuotas o liberar → saldo a favor / devolver / retener).
 - Equipo: perfiles con PIN, roles y permisos (crear, borrar rol, aviso al dar permisos delicados), registro de cambios.
 - Cuentas en la nube: registro, confirmación por correo con pantalla “Tu cuenta se confirmó”, “Olvidé mi usuario o contraseña”, aceptar términos, borrar cuenta, cuenta suspendida.

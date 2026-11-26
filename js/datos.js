@@ -269,6 +269,10 @@ export function crearNegocio(cfg, conEjemplo) {
     const p = { id: 'p' + i, ab: x[0], n: x[1], p: D.precio(x[2]), c: D.precio(x[3]), q: esSrv ? null : Math.round(x[4] * k), min: Math.round(x[5] * k), dur: x[6] || 0, pop: x[7], cod: esSrv ? '' : '759' + String(1234000 + i * 37) };
     if (ex.u) p.u = ex.u;
     if (ex.gar) p.gar = ex.gar;
+    // Personalizados: el producto que se arma (per), sus piezas (pz) y sus extras (ex).
+    if (ex.per) p.per = 1;
+    if (ex.pz) p.pz = 1;
+    if (ex.ex) p.ex = 1;
     if (ex.vars) { p.vars = ex.vars.map((n, j) => ({ id: 'v' + j, n, q: Math.round([4, 7, 5, 3, 6, 2][j % 6] * k) })); p.q = p.vars.reduce((a, v) => a + v.q, 0); }
     return p;
   });
@@ -477,7 +481,22 @@ const stockMas = (productos, lineas, signo) => {
     return n;
   });
 };
-const porLinea = items => items.reduce((o, it) => { const k = claveItem(it); o[k] = (o[k] || 0) + it.q; return o; }, {});
+// Un personalizado (torta de varios pisos, arreglo…) baja del inventario las piezas que lleva, no la línea.
+const conPiezas = (o, it, q) => { (it.pz || []).forEach(z => { o[z.pid] = redQ((o[z.pid] || 0) + z.q * q); }); return o; };
+const porLinea = items => items.reduce((o, it) => { if (it.pz) return conPiezas(o, it, it.q); const k = claveItem(it); o[k] = (o[k] || 0) + it.q; return o; }, {});
+// Piezas apartadas: las que llevan los encargos que todavía no se entregan. No se venden por error.
+export function apartadas() {
+  const o = {};
+  S.ordenes.filter(x => x.estado !== 'entregada' && x.estado !== 'cancelada').forEach(x => (x.items || []).forEach(it => { if (it.pz) conPiezas(o, it, it.q); }));
+  return o;
+}
+// Plantillas de un personalizado (“3 pisos clásica”): se guardan en el mismo producto.
+export function guardarPlantilla(pid, pl) {
+  cambiar(s => ({ productos: s.productos.map(p => p.id === pid ? Object.assign({}, p, { pl: (p.pl || []).filter(x => x.n !== pl.n).concat([pl]).slice(-12) }) : p) }));
+}
+export function borrarPlantilla(pid, n) {
+  cambiar(s => ({ productos: s.productos.map(p => p.id === pid ? Object.assign({}, p, { pl: (p.pl || []).filter(x => x.n !== n) }) : p) }));
+}
 // Registro de cambios: quién hizo qué y cuándo (anulaciones, devoluciones, borrados, cambios del negocio).
 const nota = (s, que) => ({ registro: (s.registro || []).concat([{ t: Date.now(), por: s.ajustes.perfil || '', que }]).slice(-500) });
 
@@ -496,7 +515,7 @@ export function vender({ items, pagos, cli, suc, fiado, total: conImpuesto, igtf
 export function anularVenta(vid, motivo) {
   const v = S.ventas.find(x => x.id === vid);
   if (!v || v.anulada || v.dev) return false;
-  const quedan = {}; v.items.forEach(it => { const k = claveItem(it), q = it.q - ((v.devuelto || {})[k] || 0); if (q > 0) quedan[k] = (quedan[k] || 0) + q; });
+  const quedan = {}; v.items.forEach(it => { const k = claveItem(it), q = it.q - ((v.devuelto || {})[k] || 0); if (q > 0) { if (it.pz) conPiezas(quedan, it, q); else quedan[k] = (quedan[k] || 0) + q; } });
   cambiar(s => Object.assign({
     ventas: s.ventas.map(x => x.id === vid ? Object.assign({}, x, { anulada: { t: Date.now(), por: s.ajustes.perfil || '', motivo } }) : x),
     productos: stockMas(s.productos, quedan, 1)
@@ -518,7 +537,7 @@ export function devolver(vid, lineas, pagos, motivo, monto) {
   const devuelto = Object.assign({}, v.devuelto); Object.keys(lineas).forEach(k => { if (lineas[k] > 0) devuelto[k] = (devuelto[k] || 0) + lineas[k]; });
   cambiar(s => Object.assign({
     ventas: s.ventas.map(x => x.id === vid ? Object.assign({}, x, { devuelto }) : x).concat([dev]),
-    productos: stockMas(s.productos, lineas, 1)
+    productos: stockMas(s.productos, v.items.reduce((o, it) => { const k = claveItem(it), q = lineas[k] || 0; if (q > 0) { if (it.pz) conPiezas(o, it, q); else o[k] = (o[k] || 0) + q; } return o; }, {}), 1)
   }, nota(s, 'Devolución de la venta #' + v.n + ' (' + motivo + ')')));
   return dev;
 }

@@ -2,7 +2,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { bajoMinimo, bajoMeta, resumen, inicioDia, listaProductos, promosVigentes } from '../datos.js';
+import { bajoMinimo, bajoMeta, resumen, inicioDia, listaProductos, promosVigentes, apartadas } from '../datos.js';
 import { verQ, FRACCIONES } from '../carrito.js';
 import { BarrasH, Reparto, color } from '../graficos.js';
 import { Chips, Icono, TONOS, avisar, FotoProd } from '../ui.js';
@@ -15,6 +15,9 @@ export function Inventario() {
   // Permisos: cambiar productos, reponer y ver costos o ganancias.
   const pp = puede('productos'), vg = puede('ganancias');
   const editarP = d => pp ? abrir('producto', d) : avisar('Tu perfil no puede cambiar productos');
+  // Personalizados: qué papel tiene cada producto (se arma, pieza o extra) y lo apartado para encargos.
+  const conPer = T.mod('personalizados'), ap = conPer ? apartadas() : {};
+  const PillPer = p => !conPer ? null : p.per ? html`<span class="pildora mini t-vio">Se arma</span>` : p.pz ? html`<span class="pildora mini t-vio" style="margin-left:0">Pieza</span>` : p.ex ? html`<span class="pildora mini t-vio">Extra</span>` : null;
   const [filtro, setFiltro] = useState('Todo');
   const [q, setQ] = useState('');
   const [grupo, setGrupo] = useState('');
@@ -64,6 +67,7 @@ export function Inventario() {
       <span class="crece" style="display:flex;flex-direction:column;gap:6px">
         <span class="fila" style="gap:8px"><b class="crece corta" style="font-size:14px;font-weight:600">${p.n}</b>${vg && p.c > 0 && p.p < p.c * 1.05 ? html`<span class="pildora t-ros">Sin ganancia</span>` : null}<b class="num" style=${{ fontSize: '13px', color: e[2] }}>${verQ(p.q, p.u && !FRACCIONES[p.u] ? p.u : 'und')}</b></span>
         <span class="barra-prog"><i style=${{ width: Math.min(100, Math.round(p.q / Math.max(1, p.min * 2) * 100)) + '%', background: e[2] }}></i></span>
+        ${conPer && (p.pz || p.ex || ap[p.id]) ? html`<span class="fila" style="gap:6px">${PillPer(p)}${ap[p.id] ? html`<span class="pildora mini t-amb" style="margin-left:0">${ap[p.id]} apartada${ap[p.id] > 1 ? 's' : ''} para encargos</span>` : null}</span>` : null}
         ${p.vars && p.vars.length ? html`<span class="sub num" style="font-size:11px">${p.vars.map(v => v.n + ' ' + verQ(v.q || 0)).join(' · ')}</span>` : null}
         <span class="sub faint num" style="font-size:11px">${vg ? 'Costo ' + D.m(p.c) + ' · ' : ''}Precio ${D.m(p.p)}${p.u && !FRACCIONES[p.u] ? ' / ' + p.u : p.u ? ' · por ' + p.u : ''}${vg ? ' · Ganas ' + (p.p ? Math.round((p.p - p.c) / p.p * 100) : 0) + ' %' : ''}</span>
       </span>
@@ -77,7 +81,7 @@ export function Inventario() {
   const servs = listaProductos().filter(p => p.q == null);
   const Pestañas = html`<div class="segmento ancho entra" role="tablist" aria-label="Qué ver">${[['Todo', 'Productos ' + conStock.length], ['Por reponer', 'Por reponer ' + bajos.length]].concat(servs.length || (pp && T.mod('servicios')) ? [['Servicios', 'Servicios' + (servs.length ? ' ' + servs.length : '')]] : []).map(o => html`<button type="button" role="tab" aria-selected=${filtro === o[0] ? 'true' : 'false'} class=${filtro === o[0] ? 'on' : ''} onClick=${() => setFiltro(o[0])}>${o[1]}</button>`)}</div>`;
   const Resumen = vg && conStock.length ? html`<div class="resumen-inv entra"><span><b class="num">${D.m(valor)}</b> en estantes</span><span><b class="num in">${Math.round(margen * 100)} %</b> de ganancia</span>${bajos.length ? html`<span><b class="num amber">${bajos.length}</b> por reponer</span>` : null}</div>` : null;
-  const ListaServicios = html`<div class="pila" data-tour="productos">${servicios.length ? html`<section class="tarjeta" style="padding:4px 14px"><div class="lista">${servicios.map(p => html`<button type="button" key=${p.id} class="item toca" style="color:var(--ink)" onClick=${() => editarP({ pid: p.id })}>${FotoProd(p, 34, html`<span class="ic" style=${Object.assign({ width: '34px', height: '34px', fontSize: '11px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`)}<span class="crece corta" style="font-size:14px;font-weight:600">${p.n}</span><b class="num">${D.m(p.p)}</b></button>`)}</div></section>`
+  const ListaServicios = html`<div class="pila" data-tour="productos">${servicios.length ? html`<section class="tarjeta" style="padding:4px 14px"><div class="lista">${servicios.map(p => html`<button type="button" key=${p.id} class="item toca" style="color:var(--ink)" onClick=${() => editarP({ pid: p.id })}>${FotoProd(p, 34, html`<span class="ic" style=${Object.assign({ width: '34px', height: '34px', fontSize: '11px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`)}<span class="crece corta" style="font-size:14px;font-weight:600">${p.n}${PillPer(p)}</span><b class="num">${p.per && conPer ? 'Variable' : D.m(p.p)}</b></button>`)}</div></section>`
     : html`<p class="vacio">Agrega lo que cobras sin ser un producto: instalación, revisión, envío… También al vender, con “+ Servicio o cargo”.</p>`}
     ${pp && html`<button type="button" class="btn2 acento toca" style="align-self:flex-start" onClick=${() => editarP({ svc: true })}>+ Servicio</button>`}</div>`;
 
