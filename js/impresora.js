@@ -2,6 +2,7 @@
 // Dos caminos: la impresión del sistema (AirPrint, Wi-Fi o USB: sirve en iPhone, Android y computadora)
 // o una impresora Bluetooth directa con comandos ESC/POS (Chrome en Android y computadora), que además abre el cajón.
 import { leer } from './datos.js';
+import { esc, imgSegura } from './seguro.js';
 
 // Caracteres por línea en letra normal.
 export const ANCHO = { 58: 32, 80: 48 };
@@ -87,12 +88,12 @@ export function lineasZ(z, { S, P, D }) {
 }
 
 // ---------- impresión del sistema ----------
-const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 export function imprimirSistema(lineas, { ancho = 80, logo = '' } = {}) {
-  const txt = aTexto(lineas, ancho);
+  const txt = aTexto(lineas, ancho), img0 = imgSegura(logo);
+  ancho = ancho === 58 ? 58 : 80;
   const z = document.createElement('div'); z.className = 'zona-imprimir ticket-imp';
   z.innerHTML = `<style>@page { size: ${ancho}mm auto; margin: 0; }</style>
-    <div class="ticket-papel" style="width:${ancho === 58 ? 48 : 72}mm">${logo ? `<img src="${logo}" alt="" class="ticket-logo">` : ''}
+    <div class="ticket-papel" style="width:${ancho === 58 ? 48 : 72}mm">${img0 ? `<img src="${esc(img0)}" alt="" class="ticket-logo">` : ''}
     ${txt.map(l => `<div class="${(l.g ? 'tg ' : '') + (l.n ? 'tn' : '')}">${esc(l.t) || '&nbsp;'}</div>`).join('')}</div>`;
   document.querySelectorAll('.zona-imprimir').forEach(x => x.remove());
   document.body.appendChild(z); document.documentElement.classList.add('imprimiendo');

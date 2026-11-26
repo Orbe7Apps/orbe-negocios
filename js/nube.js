@@ -118,6 +118,8 @@ export async function entrarUsuario(usuario, clave) {
   const c = await cliente();
   const { data, error } = await c.rpc('correo_para_entrar', { u: x, clave });
   if (error) throw new Error(explicar(error));
+  // El servidor responde vacío (sin error) cuando no coinciden: así cada intento fallido queda contado.
+  if (!data) throw new Error('El usuario o la contraseña no coinciden');
   return entrarCuenta(data, clave);
 }
 // Ponerle usuario a la cuenta (las cuentas creadas antes de que existiera).

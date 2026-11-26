@@ -4,6 +4,7 @@ import { numeroOrden, anticipoDe, ESTADOS_ORDEN, numeroCot, estadoCot, ESTADOS_C
 import { totales } from './pantallas/vender.js';
 import { iniciales } from './ui.js';
 import { telInternacional } from './paises.js';
+import { esc, imgSegura } from './seguro.js';
 
 const BASE = new URL('./lib/', import.meta.url).href;
 let cargando = null;
@@ -168,18 +169,17 @@ export function descargar(blob, nombre) {
 }
 
 // Imprimir: se arma la hoja en la página y se abre el diálogo de impresión del aparato.
-const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 export function imprimirOrden(o, ctx) {
-  const x = datosOrden(o, ctx);
+  const x = datosOrden(o, ctx), logo = imgSegura(x.logo);
   const z = document.createElement('div'); z.className = 'zona-imprimir';
   z.innerHTML = `<style>@page { size: ${x.papel === 'letter' ? 'letter' : 'A4'}; margin: 14mm; }</style>
-    <div class="imp-cab">${x.logo ? `<img src="${x.logo}" alt="" class="imp-logo">` : `<span class="imp-logo imp-inic">${esc(x.inic)}</span>`}
+    <div class="imp-cab">${logo ? `<img src="${esc(logo)}" alt="" class="imp-logo">` : `<span class="imp-logo imp-inic">${esc(x.inic)}</span>`}
       <div class="imp-neg"><b>${esc(x.negocio)}</b><span>${esc(x.datosNeg)}</span></div>
       <div class="imp-num"><b>${esc(x.titulo)}</b><strong>${esc(x.numero)}</strong><span>${esc(x.etqFecha)} ${esc(x.recibida)} · ${esc(x.estado)}</span></div></div>
     <div class="imp-dos"><div><small>CLIENTE</small><b>${esc(x.cliente)}</b><span>${esc(x.telCli)}</span></div><div><small>${esc(x.cajaDer)}</small><b>${esc(x.entrega)}</b><span>${x.resp ? (o.cot ? esc(x.resp) : 'Responsable: ' + esc(x.resp)) : ''}</span></div></div>
     ${x.que || x.det ? `<div class="imp-que"><small>${esc(x.queTit)}</small>${x.que ? `<b>${esc(x.que)}</b>` : ''}${x.det ? `<span>${esc(x.det)}</span>` : ''}</div>` : ''}
     <table><thead><tr><th>${o.cot ? 'Producto o servicio' : 'Trabajo o producto'}</th><th>Cant.</th><th>Precio</th><th>Total</th></tr></thead><tbody>
-      ${x.items.map(it => `<tr><td>${esc(it.n)}</td><td>${it.q}</td><td>${esc(it.p)}</td><td>${esc(it.t)}</td></tr>`).join('') || '<tr><td colspan="4">Sin trabajos anotados todavía</td></tr>'}</tbody></table>
+      ${x.items.map(it => `<tr><td>${esc(it.n)}</td><td>${esc(it.q)}</td><td>${esc(it.p)}</td><td>${esc(it.t)}</td></tr>`).join('') || '<tr><td colspan="4">Sin trabajos anotados todavía</td></tr>'}</tbody></table>
     <div class="imp-tot"><div><span>Total</span><span>${esc(x.total)}</span></div>${x.impTxt ? `<div style="font-size:8.5pt;justify-content:flex-end">${esc(x.impTxt)}</div>` : ''}${x.totalOtra ? `<div><span>En ${esc(x.tasa)}</span><span>${esc(x.totalOtra)}</span></div>` : ''}${x.anticipo ? `<div><span>Anticipo</span><span>-${esc(x.anticipo)}</span></div>` : ''}<div class="imp-saldo"><span>${x.anticipo ? 'Saldo' : 'A pagar'}</span><span>${esc(x.saldo)}</span></div></div>
     ${x.cond ? `<p class="imp-cond">${esc(x.cond)}</p>` : ''}
     <div class="imp-firmas"><span>Firma del cliente</span><span>${esc(x.firmaDer)}</span></div>
