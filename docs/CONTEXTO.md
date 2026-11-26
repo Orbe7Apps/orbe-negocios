@@ -71,8 +71,8 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 
 ## 5. Lo que ya está hecho (resumen)
 
-- Vender y cobrar en $ y Bs con tasa BCV, pago mixto, vuelto, fiado, recibo por WhatsApp, impresora térmica, escáner.
-- Clientes, deudas y abonos; inventario con mínimos; gastos y cuentas por pagar; caja con turnos y cierre; reportes con gráficos, CSV y PDF.
+- Vender y cobrar en $ y Bs con tasa BCV (formas de pago en Venezuela: Pago Móvil, **Punto de venta**, efectivo $ y Bs, USDT, Zelle, Binance Pay; Punto de venta se agregó solo una vez a los negocios que ya existían), pago mixto, vuelto, fiado, recibo por WhatsApp, impresora térmica, escáner.
+- Clientes con **cédula o RIF obligatoria al agregarlos** (campo `doc`; se escribe “V-12345678”, no deja repetirla; a los clientes viejos se les puede completar al editarlos), deudas y abonos; inventario con mínimos; gastos y cuentas por pagar; caja con turnos y cierre; reportes con gráficos, CSV y PDF.
 - Agenda con horario por profesional, link público de reservas, recordatorios por WhatsApp (con un toque, opción “A” gratuita).
 - Órdenes de trabajo con anticipo y PDF; cotizaciones que se convierten en venta.
 - **Cuotas y apartados**: recargo por venta, calendario de cuotas, abonos, recordatorios; al vencer un apartado pregunta qué hacer (más tiempo, escribir primero, pasar a cuotas o liberar → saldo a favor / devolver / retener).

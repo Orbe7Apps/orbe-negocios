@@ -19,7 +19,7 @@ export const numero = t => {
 export const esEfectivo = m => /Efectivo/.test(m);
 
 // Formas que normalmente se pagan en la otra moneda: en Venezuela, bolívares; en Argentina, dólares.
-const enOtra = (P, m) => P.id === 'VE' ? /Bs|Pago Móvil/.test(m) : P.usd2 ? /USDT|US\$|Efectivo \$|Zelle|Binance/.test(m) : false;
+const enOtra = (P, m) => P.id === 'VE' ? /Bs|Pago Móvil|Punto de venta/.test(m) : P.usd2 ? /USDT|US\$|Efectivo \$|Zelle|Binance/.test(m) : false;
 
 // ajuste(m): recargo que se suma al pagar con esa forma (p. ej. IGTF 3 % en divisas), solo para mostrar el monto final.
 export function usePagos(total, metodos, inicial, ajuste) {
