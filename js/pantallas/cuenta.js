@@ -6,7 +6,7 @@ import { cambiarNegocio, leer, empezarDeNuevo, borrarTodoLocal, exportar } from 
 import { descargar, ventasCSV } from './reportes.js';
 import { Hoja, Icono, avisar, hace, LogoOrbe, Interruptor, Bienvenida, marcarBienvenida } from '../ui.js';
 import { numero } from './pagos.js';
-import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos, negocioPropio, quitarConfirmado, esAparato, entrarConCodigo, codigoGuardado, codigoOk, nombreSugerido, pasarAEquipo, tipoAparatoGuardado, marcarAparatoDueno, sesionEsDelDueno, misAparatos, codigoAparato, desconectarAparato, enlaceAparato } from '../nube.js';
+import { useNube, iniciarNube, olvidarNegocioLocal, verificandoCuenta, estadoNube, crearCuenta, entrarCuenta, entrarUsuario, ponerUsuario, usuarioOk, olvideClave, nuevaClave, reenviarConfirmacion, terminarRecuperar, cerrarSesion, misNegocios, subirNegocio, bajarNegocio, sincronizar, configCobro, misPagos, reportarPago, estadoPlan, borrarMiCuenta, faltaAceptar, aceptarTerminos, negocioPropio, quitarConfirmado, esAparato, entrarConCodigo, codigoGuardado, codigoOk, nombreSugerido, pasarAEquipo, tipoAparatoGuardado, marcarAparatoDueno, sesionEsDelDueno, misAparatos, codigoAparato, desconectarAparato, enlaceAparato } from '../nube.js';
 
 // Campo de contraseña con “Ver” para revisar lo que se escribió.
 export function CampoClave({ titulo, valor, onCambio, nueva, onEnter }) {
@@ -23,24 +23,38 @@ export function CampoUsuario({ valor, onCambio, crear, onEnter }) {
 }
 export const CampoCorreoDueno = ({ valor, onCambio, crear }) => html`<label class="campo"><span>${crear ? 'Correo del dueño (solo para recuperar la contraseña)' : 'Correo del dueño'}</span><input type="email" inputmode="email" autocomplete="email" autocapitalize="off" value=${valor} placeholder="tu@correo.com" onInput=${e => onCambio(e.target.value)} /></label>`;
 // Revisa los datos de una cuenta nueva.
-const cuentaMala = f => !correoOk(f.correo) ? 'Escribe un correo válido' : !usuarioOk(f.usuario) ? 'El usuario lleva de 3 a 30 letras o números, sin espacios' : claveMala(f.clave, f.clave2) || (!f.acepto ? 'Para crear la cuenta acepta los Términos de uso y la Política de privacidad' : '');
+const cuentaMala = f => { const m = !correoOk(f.correo) ? 'Escribe un correo válido' : !usuarioOk(f.usuario) ? 'El usuario lleva de 3 a 30 letras o números, sin espacios' : ''; if (m) throw new Error(m); claveMalaError(f.clave, f.clave2); if (!f.acepto) throw new Error('Para crear la cuenta acepta los Términos de uso y la Política de privacidad'); };
 // Casilla para aceptar los términos (con enlaces que abren aparte).
 export const AceptoLegal = ({ on, onCambio }) => html`<label class="fila acepto-legal" style="gap:10px;align-items:flex-start;cursor:pointer">
   <input type="checkbox" checked=${on} onChange=${e => onCambio(e.target.checked)} style="width:22px;height:22px;margin:1px 0 0;accent-color:var(--accent);flex:none" />
   <span class="sub" style="line-height:1.45;color:var(--ink)">Acepto los <a href="terminos.html" target="_blank" rel="noopener">Términos de uso</a> y la <a href="privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>. Orbe no emite facturas fiscales.</span></label>`;
 // Revisa la contraseña nueva: largo y que las dos coincidan.
-export const claveMala = (a, b) => a.length < 8 ? 'La contraseña debe tener al menos 8 caracteres' : a !== b ? 'Las contraseñas no coinciden: escríbelas igual' : '';
+// Revisa la contraseña nueva: al menos 8 caracteres, con letras y números, y que las dos coincidan.
+// (Supabase pide lo mismo y además rechaza las contraseñas filtradas; ese aviso llega del servidor.)
+export const claveMala = (a, b) => a.length < 8 ? 'La contraseña debe tener al menos 8 caracteres' : !/\p{L}/u.test(a) || !/\d/.test(a) ? 'La contraseña debe tener letras y números' : a !== b ? 'Las contraseñas no coinciden: escríbelas igual' : '';
+// Error de contraseña o de correo sin confirmar: se muestra junto al formulario, no en un aviso que se va solo.
+const errorClave = m => Object.assign(new Error(m), { tipo: 'clave' });
+const claveMalaError = (a, b) => { const m = claveMala(a, b); if (m) throw errorClave(m); };
+export function AvisoCuenta({ er, onReenviar, ocupado }) {
+  if (!er) return null;
+  if (er.tipo === 'confirmar') return html`<div class="aviso-cuenta ambar entra" role="alert"><${Icono} n="campana" t=${18} />
+    <span class="crece"><b>Falta confirmar tu correo</b><br /><span class="sub" style="color:var(--ink);line-height:1.45">Abre el enlace que te mandamos${er.correo ? html` a <b>${er.correo}</b>` : ''} (búscalo también en Spam o Promociones) y vuelve a intentar.</span>
+    ${er.correo && onReenviar && html`<br /><button type="button" class=${'olvide-pin toca' + (ocupado ? ' apagado' : '')} style="padding-left:0;margin-top:2px" onClick=${() => onReenviar(er.correo)}>Mandar el enlace otra vez</button>`}</span></div>`;
+  return html`<div class="aviso-cuenta rojo entra" role="alert"><${Icono} n="alerta" t=${18} /><span class="crece sub" style="color:var(--ink);line-height:1.45">${er.message}</span></div>`;
+}
+
 
 // Formulario de correo y contraseña (crear, entrar u olvidé).
-function FormCuenta({ modo, setModo, f, pon }) {
+function FormCuenta({ modo, setModo, f, pon, er, onReenviar, ocupado }) {
   return html`<div class="pila" style="gap:12px">
     <div class="segmento" style="width:100%">${[['crear', 'Crear cuenta'], ['entrar', 'Ya tengo cuenta']].map(o => html`<button type="button" style="flex:1" class=${modo === o[0] || (modo === 'olvido' && o[0] === 'entrar') ? 'on' : ''} onClick=${() => setModo(o[0])}>${o[1]}</button>`)}</div>
     ${modo === 'crear' && html`<${CampoCorreoDueno} valor=${f.correo} crear onCambio=${v => pon({ correo: v })} />`}
     ${modo !== 'olvido' && html`<${CampoUsuario} valor=${f.usuario} crear=${modo === 'crear'} onCambio=${v => pon({ usuario: v })} />`}
     ${modo === 'olvido' && html`<${CampoCorreoDueno} valor=${f.correo} onCambio=${v => pon({ correo: v })} />`}
-    ${modo !== 'olvido' && html`<${CampoClave} titulo=${'Contraseña' + (modo === 'crear' ? ' (al menos 8 caracteres)' : '')} valor=${f.clave} nueva=${modo === 'crear'} onCambio=${v => pon({ clave: v })} />`}
+    ${modo !== 'olvido' && html`<${CampoClave} titulo=${'Contraseña' + (modo === 'crear' ? ' (8 o más, con letras y números)' : '')} valor=${f.clave} nueva=${modo === 'crear'} onCambio=${v => pon({ clave: v })} />`}
     ${modo === 'crear' && html`<${CampoClave} titulo="Repite la contraseña" valor=${f.clave2} nueva onCambio=${v => pon({ clave2: v })} />`}
     ${modo === 'crear' && f.clave2 && f.clave !== f.clave2 && html`<span class="sub" style="color:var(--out-text);margin-top:-4px">Las contraseñas no coinciden</span>`}
+    <${AvisoCuenta} er=${modo !== 'olvido' && er} onReenviar=${onReenviar} ocupado=${ocupado} />
     ${modo === 'crear' && html`<${AceptoLegal} on=${!!f.acepto} onCambio=${v => pon({ acepto: v })} />`}
     ${modo === 'entrar' && html`<button type="button" class="olvide-pin toca" style="align-self:flex-start;padding-left:0" onClick=${() => setModo('olvido')}>Olvidé mi usuario o contraseña</button>`}
     ${modo === 'olvido' && html`<span class="sub" style="line-height:1.45">Escribe el correo del dueño y te mandamos un enlace. Al abrirlo verás tu usuario y, si quieres, pones una contraseña nueva.</span>`}
@@ -58,13 +72,14 @@ export function Cuenta({ d, cerrar }) {
   const [f, setF] = useState({ correo: '', usuario: '', clave: '', clave2: '' });
   const [paso, setPaso] = useState(N.sesion ? 'unir' : 'form'); // form · confirmar · unir · listo
   const [cuenta, setCuenta] = useState(null); // negocios que ya tiene la cuenta
-  const [ocupado, setOcupado] = useState(false);
-  const pon = o => setF(x => Object.assign({}, x, o));
+  const [ocupado, setOcupado] = useState(false), [er, setEr] = useState(null);
+  const pon = o => { setEr(null); setF(x => Object.assign({}, x, o)); };
   useEffect(() => { if (paso === 'unir') misNegocios().then(setCuenta).catch(er => avisar(er.message)); }, [paso]);
-  const hacer = async fn => { setOcupado(true); try { await fn(); } catch (er) { avisar(er.message); } finally { setOcupado(false); } };
+  const hacer = async fn => { setOcupado(true); setEr(null); try { await fn(); } catch (e) { if (e.tipo) setEr(e); else avisar(e.message); } finally { setOcupado(false); } };
+  const reenviar = correo => hacer(async () => { await reenviarConfirmacion(correo); avisar('Listo: te mandamos el enlace otra vez'); });
   const enviar = () => hacer(async () => {
     if (modo === 'olvido') { if (!correoOk(f.correo)) throw new Error('Escribe un correo válido'); await olvideClave(f.correo); avisar('Listo: revisa el correo del dueño'); setModo('entrar'); return; }
-    if (modo === 'crear') { const m = cuentaMala(f); if (m) throw new Error(m); const r = await crearCuenta(f.correo, f.clave, f.usuario); if (r.confirmar) { setPaso('confirmar'); return; } }
+    if (modo === 'crear') { cuentaMala(f); const r = await crearCuenta(f.correo, f.clave, f.usuario); if (r.confirmar) { setPaso('confirmar'); return; } }
     else await entrarUsuario(f.usuario, f.clave);
     setPaso('unir');
   });
@@ -75,7 +90,8 @@ export function Cuenta({ d, cerrar }) {
   return html`<${Hoja} titulo=${paso === 'confirmar' ? 'Confirma tu correo' : 'Guarda tu negocio en la nube'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: paso === 'confirmar' ? html`
       <div class="pila" style="align-items:center;text-align:center;gap:10px;padding:10px 0"><span class="vacio-ic" style="width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-text)"><${Icono} n="campana" t=${28} /></span>
-        <b style="font-size:17px">Revisa tu correo</b><span class="sub" style="line-height:1.5;max-width:320px">Te mandamos un enlace a <b>${f.correo}</b>. Tócalo para confirmar y vuelve aquí: inicia sesión y tu negocio queda guardado. Mientras tanto, puedes seguir usando Orbe normal.</span></div>`
+        <b style="font-size:17px">Revisa tu correo</b><span class="sub" style="line-height:1.5;max-width:320px">Te mandamos un enlace a <b>${f.correo}</b>. Tócalo para confirmar y vuelve aquí: inicia sesión y tu negocio queda guardado. Mientras tanto, puedes seguir usando Orbe normal.</span>
+        <button type="button" class=${'olvide-pin toca' + (ocupado ? ' apagado' : '')} onClick=${() => reenviar(f.correo)}>¿No te llegó? Mandarlo otra vez</button></div>`
     : paso === 'unir' ? html`
       ${cuenta == null ? html`<p class="vacio">Revisando tu cuenta…</p>`
       : yaUnido ? html`<p class="vacio">Este negocio ya está en tu cuenta.</p>`
@@ -87,7 +103,7 @@ export function Cuenta({ d, cerrar }) {
         ${cuenta.length > 0 && html`<span class="titulo-funciones">O usar uno que ya está en tu cuenta</span>${cuenta.map(g => html`<button type="button" key=${g.id} class=${'guia-btn toca' + (ocupado ? ' apagado' : '')} onClick=${() => bajar(c, g)}><${Icono} n="descarga" t=${18} /><span class="crece"><b>${g.nombre}</b><br /><span class="sub" style="font-weight:500">${datoNegocio(g)} · reemplaza lo de este aparato (se guarda una copia)</span></span></button>`)}`}`}`
     : html`
       ${d.inicio && html`<div class="pila" style="gap:8px">${[['escudo', 'Si pierdes o cambias el teléfono, no pierdes nada'], ['movil', 'Úsalo en varios aparatos con los mismos datos'], ['wifi', 'Sigue funcionando sin internet: se guarda al volver la conexión']].map(x => html`<span class="fila" style="gap:10px;font-size:14px"><span class="ic t-ver" style="width:30px;height:30px;border-radius:10px"><${Icono} n=${x[0]} t=${15} /></span>${x[1]}</span>`)}</div>`}
-      <${FormCuenta} modo=${modo} setModo=${setModo} f=${f} pon=${pon} />`,
+      <${FormCuenta} modo=${modo} setModo=${v => { setEr(null); setModo(v); }} f=${f} pon=${pon} er=${er} onReenviar=${reenviar} ocupado=${ocupado} />`,
     pie: paso === 'form' ? html`<button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${enviar}>${ocupado ? 'Un momento…' : modo === 'crear' ? 'Crear cuenta' : modo === 'olvido' ? 'Mandar el enlace' : 'Iniciar sesión'}</button>
         <button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => omitir(c)}>Ahora no</button>`
       : html`<button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => paso === 'confirmar' ? (setModo('entrar'), setPaso('form')) : c()}>${paso === 'confirmar' ? 'Ya lo confirmé: iniciar sesión' : 'Listo'}</button>`
@@ -98,21 +114,23 @@ export function Cuenta({ d, cerrar }) {
 // Pantalla completa: aparece sola, antes que todo lo demás, también en el panel de administración.
 export function ClaveNueva() {
   const N = useNube();
-  const [f, setF] = useState({ a: '', b: '' }), [ocupado, setOcupado] = useState(false);
+  const [f, setF0] = useState({ a: '', b: '' }), [ocupado, setOcupado] = useState(false), [er, setEr] = useState(null);
+  const setF = fn => { setEr(null); setF0(fn); };
   const guardar = async () => {
-    const m = claveMala(f.a, f.b); if (m) { avisar(m); return; }
-    setOcupado(true);
+    const m = claveMala(f.a, f.b); if (m) { setEr(errorClave(m)); return; }
+    setOcupado(true); setEr(null);
     try { await nuevaClave(f.a); terminarRecuperar(); avisar('Listo: tu contraseña quedó cambiada'); }
-    catch (er) { avisar(er.message); } finally { setOcupado(false); }
+    catch (e) { if (e.tipo) setEr(e); else avisar(e.message); } finally { setOcupado(false); }
   };
   return html`<div class="clave-nueva entra">
     <div class="tarjeta pila" style="gap:16px;padding:26px;max-width:420px;width:100%">
       <${LogoOrbe} t=${44} />
       ${N.usuario && html`<div class="tarjeta pila" style="box-shadow:none;background:var(--accent-soft);gap:2px;padding:14px 16px"><span class="sub">Tu usuario es</span><b class="num" style="font-size:22px;color:var(--accent-text);letter-spacing:.01em">${N.usuario}</b><span class="sub faint" style="font-size:12px">Anótalo: con él entras tú.</span></div>`}
       <span style="display:flex;flex-direction:column;gap:4px"><b style="font-size:21px">${N.usuario ? '¿Quieres una contraseña nueva?' : 'Pon tu contraseña nueva'}</b><span class="sub">Escríbela dos veces para no equivocarte</span></span>
-      <${CampoClave} titulo="Contraseña nueva (al menos 8 caracteres)" valor=${f.a} nueva onCambio=${v => setF(x => Object.assign({}, x, { a: v }))} />
+      <${CampoClave} titulo="Contraseña nueva (8 o más, con letras y números)" valor=${f.a} nueva onCambio=${v => setF(x => Object.assign({}, x, { a: v }))} />
       <${CampoClave} titulo="Repite la contraseña" valor=${f.b} nueva onCambio=${v => setF(x => Object.assign({}, x, { b: v }))} onEnter=${guardar} />
-      ${f.b && f.a !== f.b && html`<span class="sub" style="color:var(--out-text);margin-top:-6px">Las contraseñas no coinciden</span>`}
+      ${f.b && f.a !== f.b && !er && html`<span class="sub" style="color:var(--out-text);margin-top:-6px">Las contraseñas no coinciden</span>`}
+      <${AvisoCuenta} er=${er} />
       <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${guardar}>${ocupado ? 'Guardando…' : 'Guardar contraseña'}</button>
       <button type="button" class="olvide-pin toca" onClick=${terminarRecuperar}>${N.usuario ? 'Mantener mi contraseña actual' : 'Ahora no'}</button>
     </div></div>`;
@@ -276,13 +294,14 @@ export function CrearCuentaInicio({ volver, entrar, listo }) {
   const N = useNube();
   const [f, setF] = useState({ correo: '', usuario: '', clave: '', clave2: '' });
   const [paso, setPaso] = useState('form'); // form · confirmar
-  const [ocupado, setOcupado] = useState(false);
-  const pon = o => setF(x => Object.assign({}, x, o));
-  const hacer = async fn => { setOcupado(true); try { await fn(); } catch (er) { avisar(er.message); } finally { setOcupado(false); } };
+  const [ocupado, setOcupado] = useState(false), [er, setEr] = useState(null);
+  const pon = o => { setEr(null); setF(x => Object.assign({}, x, o)); };
+  const hacer = async fn => { setOcupado(true); setEr(null); try { await fn(); } catch (e) { if (e.tipo) setEr(e); else avisar(e.message); } finally { setOcupado(false); } };
+  const reenviar = correo => hacer(async () => { await reenviarConfirmacion(correo); avisar('Listo: te mandamos el enlace otra vez'); });
   // Si confirmó el correo con el enlace (o ya entró), se sigue solo.
   useEffect(() => { if (N.sesion) listo(); }, [N.sesion]);
   const crear = () => hacer(async () => {
-    const m = cuentaMala(f); if (m) throw new Error(m);
+    cuentaMala(f);
     const r = await crearCuenta(f.correo, f.clave, f.usuario);
     if (r.confirmar) setPaso('confirmar'); else listo();
   });
@@ -292,7 +311,9 @@ export function CrearCuentaInicio({ volver, entrar, listo }) {
     <span class="vacio-ic" style="width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-text)"><${Icono} n="campana" t=${28} /></span>
     <h1 style="font-size:26px">Confirma tu correo</h1>
     <span class="sub" style="line-height:1.5;font-size:15px">Te mandamos un enlace a <b>${f.correo}</b>. Ábrelo y toca el enlace: después vuelve aquí y toca el botón de abajo. Si no lo ves, busca en Spam o Promociones.</span>
+    <${AvisoCuenta} er=${er} />
     <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${yaConfirme}>${ocupado ? 'Un momento…' : 'Ya lo confirmé: seguir'}</button>
+    <button type="button" class=${'olvide-pin toca' + (ocupado ? ' apagado' : '')} onClick=${() => reenviar(f.correo)}>¿No te llegó? Mandarlo otra vez</button>
     <button type="button" class="olvide-pin toca" onClick=${entrar}>¿Ese correo ya tenía cuenta? Inicia sesión</button>
   </div>`;
   return html`<div class="pila entra" style="gap:16px">
@@ -301,9 +322,10 @@ export function CrearCuentaInicio({ volver, entrar, listo }) {
     <span class="sub" style="line-height:1.45;font-size:15px">Tu negocio queda guardado en la nube. Entras con tu <b>usuario</b> y tu contraseña (no se la des a nadie); el correo es para recuperarla. Tu equipo entra con un código de aparato que les das tú.</span>
     <${CampoCorreoDueno} valor=${f.correo} crear onCambio=${v => pon({ correo: v })} />
     <${CampoUsuario} valor=${f.usuario} crear onCambio=${v => pon({ usuario: v })} />
-    <${CampoClave} titulo="Contraseña (al menos 8 caracteres)" valor=${f.clave} nueva onCambio=${v => pon({ clave: v })} />
+    <${CampoClave} titulo="Contraseña (8 o más, con letras y números)" valor=${f.clave} nueva onCambio=${v => pon({ clave: v })} />
     <${CampoClave} titulo="Repite la contraseña" valor=${f.clave2} nueva onCambio=${v => pon({ clave2: v })} onEnter=${crear} />
-    ${f.clave2 && f.clave !== f.clave2 && html`<span class="sub" style="color:var(--out-text);margin-top:-6px">Las contraseñas no coinciden</span>`}
+    ${f.clave2 && f.clave !== f.clave2 && !er && html`<span class="sub" style="color:var(--out-text);margin-top:-6px">Las contraseñas no coinciden</span>`}
+    <${AvisoCuenta} er=${er} />
     <${AceptoLegal} on=${!!f.acepto} onCambio=${v => pon({ acepto: v })} />
     <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${crear}>${ocupado ? 'Un momento…' : 'Crear cuenta'}</button>
     <button type="button" class="olvide-pin toca" onClick=${entrar}>Ya tengo cuenta: iniciar sesión</button>
@@ -316,9 +338,10 @@ export function EntrarInicio({ volver, crear }) {
   const [modo, setModo] = useState(codigoGuardado() ? 'codigo' : 'entrar');
   const [f, setF] = useState({ correo: '', usuario: '', clave: '', codigo: codigoGuardado(), nombre: nombreSugerido() });
   const [lista, setLista] = useState(null);
-  const [ocupado, setOcupado] = useState(false);
-  const pon = o => setF(x => Object.assign({}, x, o));
-  const hacer = async fn => { setOcupado(true); try { await fn(); } catch (er) { avisar(er.message); } finally { setOcupado(false); } };
+  const [ocupado, setOcupado] = useState(false), [er, setEr] = useState(null);
+  const pon = o => { setEr(null); setF(x => Object.assign({}, x, o)); };
+  const hacer = async fn => { setOcupado(true); setEr(null); try { await fn(); } catch (e) { if (e.tipo) setEr(e); else avisar(e.message); } finally { setOcupado(false); } };
+  const reenviar = correo => hacer(async () => { await reenviarConfirmacion(correo); avisar('Listo: te mandamos el enlace otra vez'); });
   // Con la sesión ya abierta (por ejemplo, al volver del enlace del correo) se muestran sus negocios directo.
   // Cada cuenta tiene un solo negocio: si ya lo tiene, se abre directo (sin pantalla para elegir).
   const [abriendo, setAbriendo] = useState('');
@@ -360,6 +383,7 @@ export function EntrarInicio({ volver, crear }) {
     : html`<span class="sub" style="line-height:1.45">Con tu cuenta abres tu negocio en este aparato, con todas tus ventas, productos y clientes.</span>
       ${modo !== 'olvido' ? html`<${CampoUsuario} valor=${f.usuario} onCambio=${v => pon({ usuario: v })} />` : html`<${CampoCorreoDueno} valor=${f.correo} onCambio=${v => pon({ correo: v })} />`}
       ${modo !== 'olvido' && html`<${CampoClave} titulo="Contraseña" valor=${f.clave} onCambio=${v => pon({ clave: v })} onEnter=${enviar} />`}
+      <${AvisoCuenta} er=${modo !== 'olvido' && er} onReenviar=${reenviar} ocupado=${ocupado} />
       ${modo === 'olvido' && html`<span class="sub" style="line-height:1.45">Escribe el correo del dueño y te mandamos un enlace. Al abrirlo verás tu usuario y, si quieres, pones una contraseña nueva.</span>`}
       <button type="button" class=${'btn toca' + (ocupado ? ' apagado' : '')} onClick=${enviar}>${ocupado ? 'Un momento…' : modo === 'olvido' ? 'Mandar el enlace' : 'Entrar'}</button>
       <button type="button" class="olvide-pin toca" onClick=${() => setModo(modo === 'olvido' ? 'entrar' : 'olvido')}>${modo === 'olvido' ? 'Volver' : 'Olvidé mi usuario o contraseña'}</button>

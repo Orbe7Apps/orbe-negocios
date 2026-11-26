@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 26 nov 2026 (app en la versión **v91** del service worker).
+Última actualización: 26 nov 2026 (app en la versión **v95** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -78,6 +78,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Cuotas y apartados**: recargo por venta, calendario de cuotas, abonos, recordatorios; al vencer un apartado pregunta qué hacer (más tiempo, escribir primero, pasar a cuotas o liberar → saldo a favor / devolver / retener).
 - Equipo: perfiles con PIN, roles y permisos (crear, borrar rol, aviso al dar permisos delicados), registro de cambios.
 - Cuentas en la nube: registro, confirmación por correo con pantalla “Tu cuenta se confirmó”, “Olvidé mi usuario o contraseña”, aceptar términos, borrar cuenta, cuenta suspendida.
+- Contraseñas: al crearla o cambiarla se pide 8 o más caracteres con letras y números. Si Supabase la rechaza (filtrada, débil o igual a la anterior) o falta confirmar el correo, el aviso sale en español junto al formulario, con “Mandar el enlace otra vez” para el correo. Prueba: `node pruebas/contrasenas.js` (simula Supabase, no toca la nube).
 - Un negocio por cuenta: al iniciar sesión entra directo con animación de bienvenida y luego la pantalla de perfiles/PIN.
 - Deshacer (7 s) al borrar gasto, producto, cliente, perfil o rol.
 - Ayudas “?” con imágenes en cada pantalla y tutorial adaptado.
@@ -132,7 +133,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 8. Otros idiomas y países cuando se decida abrir fuera de Venezuela (el código ya tiene monedas, impuestos y formas de pago de varios países).
 
 ### Del lado del dueño
-- Activar en Supabase **“Leaked password protection”** (Authentication → Settings) y la verificación en dos pasos (MFA) en la cuenta admin.
+- Activar en Supabase **“Leaked password protection”**, contraseña mínima de 8 con letras y números, y “Confirm email” (Authentication → Providers → Email), y la verificación en dos pasos (MFA) en la cuenta admin. La app ya muestra los avisos de estos rechazos.
 - Hablar con un contador: IVA, IGTF e imprenta digital.
 - Formalizar Orbe Apps → seguir `docs/al-formalizar.md` (RIF y razón social en términos, factura, emisor en el panel, Pago Móvil, PDF de presentación).
 - Dominio propio (p. ej. orbenegocios.com): mover la app y enviar los correos desde ahí.
@@ -142,6 +143,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 
 - Servidor local: `python3 -m http.server 8765` en la raíz del repositorio.
 - `pruebas/barrido.js` (Playwright): recorre los 12 rubros en teléfono y PC con la demo, abre todas las pantallas, los temas de Ajustes y las hojas principales, y hace una venta. Anota errores de consola, textos raros (`undefined`, `NaN`) y desbordes. Uso: `node pruebas/barrido.js "Ferretería,Barbería" tel,pc`. Tarda unos 10 min por cada 6 rubros; conviene partirlo en dos mitades.
+- `pruebas/contrasenas.js`: avisos de contraseña y de correo sin confirmar, con respuestas de Supabase simuladas. `PC=1` para computadora.
 - Último resultado (25 nov 2026): 12 rubros × teléfono y PC, **sin problemas**.
 - Cuentas de prueba en la nube: usar correos `@orbeprueba.dev` y borrarlas al terminar.
 
