@@ -4,7 +4,7 @@ import { useApp } from '../ctx.js';
 import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer, borrarRol, perfilesConRol } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { paisActivo, telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
-import { ponerAyudaHoja, Hoja, Icono, Interruptor, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd, avisarDeshacer } from '../ui.js';
+import { ponerAyudaHoja, Hoja, Icono, Interruptor, Atajo, MasOpciones, Pista, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd, avisarDeshacer } from '../ui.js';
 import { Monto, Linea } from '../graficos.js';
 import { usePagos, conSimbolo, numero, esEfectivo } from './pagos.js';
 import { infoTasas } from './tasas.js';
@@ -78,6 +78,7 @@ function Cobrar({ d, cerrar }) {
   // Quién atendió (barbería, salón, taller…): para la comisión de cada uno.
   const conPro = T.mod('comisiones'), pros = conPro ? S.perfiles.filter(p => !p.inactivo && !p.borrado) : [];
   const [pro, setPro] = useState(d.pro || (pros.some(p => p.id === S.ajustes.perfil) ? S.ajustes.perfil : (pros[0] || {}).id || ''));
+  const verAtendio = conPro && pros.length > 1, [verPro, setVerPro] = useState(false);
   const total = D.redondo(d.tt.total - anticipo);
   const fp = usePagos(total, metodos, undefined, m => P.id === 'VE' && S.negocio.igtf && esDivisa(m) ? 1.03 : 1);
   const [recibe, setRecibe] = useState(0);
@@ -143,8 +144,14 @@ function Cobrar({ d, cerrar }) {
   return html`<${Hoja} titulo=${d.titulo || (T.vender === 'Pedido' ? 'Cobrar pedido' : 'Cobrar')} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 6px"><b class="num" style="font-size:40px;letter-spacing:-0.02em">${D.m(totalCobrar)}</b>${anticipo > 0 && html`<span class="sub num">Total ${D.m(total + anticipo)} · ya adelantó ${D.m(anticipo)}</span>`}${D.dual && html`<span class="sub num">${D.s(totalCobrar)}${S.negocio.euro ? ' · ' + D.e(totalCobrar) : ''}</span>`}${d.tt.txt && html`<span class="sub faint num">${d.tt.txt}: ${D.m(d.tt.imp)}</span>`}${igtf > 0 && html`<span class="sub num entra" style="color:var(--amber-text)">Incluye IGTF 3 % por pago en divisas: ${D.m(igtf)}</span>`}
-        ${D.dual && html`<button type="button" class="enlace-tasa toca" onClick=${() => c(() => abrir('tasa', { volver: d }))}>${nombreTasa(P, S.tasa)} ${P.id === 'VE' ? 'Bs' : P.s} ${fmt2(D.tasa)}${S.negocio.euro ? ' · € ' + (P.id === 'VE' ? 'Bs ' : P.s + ' ') + fmt2(D.tasaEur) : ''} · ver o cambiar</button>`}</div>
-      ${fp.vista({ desliza: tel, calido: v => v === fiadoN || v === 'Saldo a favor', ayuda: 'Ej.: una parte por ' + (S.negocio.pays[0] || '') + ' y otra por ' + (S.negocio.pays[S.negocio.pays.length - 1] || '') + (puede('fiado') ? ', o una parte fiada' : '') })}
+        ${D.dual && html`<button type="button" class="enlace-tasa toca" onClick=${() => c(() => abrir('tasa', { volver: d }))}>${nombreTasa(P, S.tasa)} ${P.id === 'VE' ? 'Bs' : P.s} ${fmt2(D.tasa)}${S.negocio.euro ? ' · € ' + (P.id === 'VE' ? 'Bs ' : P.s + ' ') + fmt2(D.tasaEur) : ''} · cambiar</button>`}</div>
+      ${fp.vista({ desliza: tel, calido: v => v === fiadoN || v === 'Saldo a favor', sinInterruptor: true })}
+      ${(metodos.length > 1 || verAtendio || !pideCli) && html`<div class="atajos">
+        ${metodos.length > 1 && html`<${Atajo} n="dividir" t="Dividir pago" on=${fp.varias} onClick=${() => fp.setVarias(!fp.varias)} />`}
+        ${verAtendio && html`<${Atajo} n="persona" t=${'Atendió: ' + ((pros.find(x => x.id === pro) || {}).n || '').split(' ')[0]} on=${verPro} onClick=${() => setVerPro(!verPro)} />`}
+        ${!pideCli && html`<${Atajo} n="clienteMas" t="Cliente" onClick=${() => setVerCli(true)} />`}
+      </div>`}
+      ${metodos.length > 1 && !fp.varias && html`<${Pista} id="dividir-pago"><span><b>Nuevo:</b> toca “Dividir pago” si te pagan con dos formas${puede('fiado') ? ' o dejan una parte fiada' : ''}.</span></${Pista}>`}
       ${efectivo && html`<div class="campo entra"><span>¿Con cuánto te paga?</span>
         <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">${opcionesPago.map(o => html`<button type="button" class=${'chip toca' + (Math.abs(o.v - dado) < 0.005 ? ' on' : '')} style="justify-content:center;padding:0 4px;color:var(--ink)" onClick=${() => setRecibe(o.v)}>${o.ver}</button>`)}</div>
       </div>`}
@@ -156,12 +163,12 @@ function Cobrar({ d, cerrar }) {
         </div>
       </div>`}
       ${conPlan && html`<${OpcionesPlan} tipo=${enCuotas > 0 ? 'cuotas' : 'apartado'} monto=${enCuotas > 0 ? enCuotas : apartar} total=${total} op=${op} setOp=${setOp} onInicial=${x => { const mm = enCuotas > 0 ? CUOTAS_M : APARTADO_M; if (!x) { fp.preparar(null); fp.setM(mm); return; } const v = D.redondo(total * x / 100); fp.preparar([[S.negocio.pays[0], v], [mm, D.redondo(total - v)]]); }} />`}
-      ${conPro && pros.length > 1 && html`<div class="campo"><span>¿Quién atendió?</span><div class="chips">${pros.map((x, i) => html`<button type="button" key=${x.id} class=${'chip chico toca' + (pro === x.id ? ' on' : '')} aria-pressed=${pro === x.id ? 'true' : 'false'} onClick=${() => setPro(x.id)}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:22px;height:22px;font-size:9px;margin-left:-4px">${iniciales(x.n)}</span>${x.n.split(' ')[0]}</button>`)}</div></div>`}
+      ${verAtendio && verPro && html`<div class="campo entra"><span>Atendió</span><div class="chips">${pros.map((x, i) => html`<button type="button" key=${x.id} class=${'chip chico toca' + (pro === x.id ? ' on' : '')} aria-pressed=${pro === x.id ? 'true' : 'false'} onClick=${() => { setPro(x.id); setVerPro(false); }}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:22px;height:22px;font-size:9px;margin-left:-4px">${iniciales(x.n)}</span>${x.n.split(' ')[0]}</button>`)}</div></div>`}
       ${pideCli ? html`<div class="campo entra"><span>${fiado ? '¿A quién se lo anotas?' + (parteFiada < total - 0.001 ? ' (' + D.m(parteFiada) + ')' : '') : comoSaldo ? '¿De quién es el saldo a favor?' : 'Cliente'}</span>
         <div class="chips">${clientes.map((x, i) => html`<button type="button" class=${'chip toca' + (cli === x.id ? ' on calido' : '')} style="padding-left:6px;color:var(--ink)" onClick=${() => setCli(cli === x.id ? '' : x.id)}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:28px;height:28px;font-size:11px">${iniciales(x.n)}</span>${x.n.split(' ')[0]}${x.saldo > 0 ? html`<span class="sub in" style="font-size:11px">+${D.m(x.saldo)}</span>` : null}</button>`)}
         <button type="button" class="chip toca" style="border:1.5px dashed var(--line);background:transparent" onClick=${() => c(() => abrir('nuevoCliente', { volver: d }))}>+ Nuevo</button></div>
         ${saldoCli > 0 && !usaSaldo && html`<span class="sub in">${cliObj.n.split(' ')[0]} tiene ${D.m(saldoCli)} a favor: elige “Saldo a favor” para usarlo.</span>`}
-      </div>` : html`<button type="button" class="btn2 chico toca" style="align-self:flex-start" onClick=${() => setVerCli(true)}><${Icono} n="personas" t=${15} />Anotar a un cliente</button>`}`,
+      </div>` : null}`,
     pie: html`<button type="button" class=${'btn toca' + (fiado && parteFiada >= total - 0.001 ? ' ambar' : '') + (fp.ok ? '' : ' apagado')} onClick=${() => listo(c)}>${textoBoton}</button>`
   })} />`;
 }
@@ -272,7 +279,7 @@ function Devolver({ d, cerrar }) {
         ${mx ? html`<span class="fila" style="gap:6px"><button type="button" class="icono-btn chico toca" aria-label=${'Uno menos de ' + it.n} onClick=${() => pon(it, -1)}><${Icono} n="menos1" t=${14} g=${2.6} /></button><b class="num" style="min-width:26px;text-align:center">${x}</b><button type="button" class="icono-btn chico toca" aria-label=${'Uno más de ' + it.n} onClick=${() => pon(it, 1)}><${Icono} n="mas1" t=${14} g=${2.6} /></button></span>` : null}
       </div>`; })}</div></div>
       ${aDeuda > 0 && html`<span class="sub">${enDinero ? D.m(aDeuda) + ' se restan de lo que debe (fue fiado).' : 'Fue fiado: lo devuelto se resta de lo que debe.'}</span>`}
-      ${(enDinero > 0 || !monto) && fiadoDe(vv) < vv.total && fp.vista({ titulo: '¿Cómo le devuelves el dinero?', desliza: tel, ayuda: 'Ej.: una parte en efectivo y otra por transferencia' })}
+      ${(enDinero > 0 || !monto) && fiadoDe(vv) < vv.total && fp.vista({ titulo: '¿Cómo le devuelves el dinero?', desliza: tel, ayuda: 'Ej.: mitad efectivo, mitad transferencia' })}
       <div class="campo"><span>¿Por qué?</span><${Chips} opciones=${MOTIVOS_DEV} valor=${motivo} onCambio=${setMotivo} chico /></div>`,
     pie: html`<button type="button" class=${'btn toca' + (monto ? '' : ' apagado')} onClick=${() => listo(c)}>${monto ? 'Devolver ' + D.m(monto) : 'Elige qué devuelven'}</button>`
   })} />`;
@@ -303,9 +310,9 @@ function Gasto({ d, cerrar }) {
       <label class="campo"><span>Monto (${P.id === 'VE' ? 'dólares' : P.cur})</span><input class="grande num" type="text" inputmode="decimal" placeholder="0" value=${monto} onInput=${e => setMonto(e.target.value)} /></label>
       <div class="campo"><span>¿En qué?</span><${Chips} opciones=${conSimbolo(CATS)} valor=${cat} onCambio=${setCat} /></div>
       <label class="campo"><span>Nota (opcional)</span><input type="text" placeholder=${cat} value=${n} onInput=${e => setN(e.target.value)} /></label>
-      <${Interruptor} on=${despues} onCambio=${setDespues} titulo="Lo pago después" sub="Va a “Por pagar” y Orbe te avisa antes de que venza" />
+      <${Interruptor} on=${despues} onCambio=${setDespues} titulo="Lo pago después" sub="Orbe te avisa antes de que venza" />
       ${despues ? html`<div class="entra">${g0 && g0.vence && !vence ? html`<span class="sub" style="display:block;margin-bottom:8px">Vence el ${fechaCorta(g0.vence)}. Para cambiarlo, elige:</span>` : null}<${Chips} opciones=${VENCE} valor=${vence} onCambio=${setVence} calido=${() => true} /></div>`
-        : fp.vista({ titulo: '¿Cómo lo pagaste?', desliza: tel, ayuda: 'Ej.: una parte en efectivo y otra por ' + (S.negocio.pays[0] || 'transferencia') })}`,
+        : fp.vista({ titulo: '¿Cómo lo pagaste?', desliza: tel, ayuda: 'Ej.: mitad efectivo, mitad ' + (S.negocio.pays[0] || 'transferencia') })}`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>${g0 ? 'Guardar cambios' : 'Guardar gasto'}</button>${g0 ? Pie2('Borrar gasto', () => borrar(c), 'rojo') : null}`
   })} />`;
 }
@@ -471,6 +478,9 @@ function Producto({ d, cerrar }) {
   const gen = S.negocio.taxGen != null ? S.negocio.taxGen : P.tax[1];
   const opcionesImp = [{ v: 'gen', n: 'General ' + gen + ' %' }].concat((P.red || []).filter(r => r > 0).map(r => ({ v: r, n: r + ' %' })), [{ v: 0, n: 'Exento' }]);
   const pon = o => setF(x => Object.assign({}, x, o));
+  // Lo poco usado va plegado en “Más opciones”; se abre solo si el producto ya usa algo de ahí.
+  const [masOp, setMasOp] = useState(!!(svc || grupo || imp !== 'gen' || vars.length || f.cod || gar));
+  const resumenMas = [T.inv && (T.mod('servicios') || svc) && 'servicio', 'grupo', S.negocio.taxOn && P.tax[0], inv && !u && (T.mod('variantes') || vars.length) && 'variantes', inv && 'código', (T.mod('garantia') || gar > 0) && 'garantía', foto && 'foto'].filter(Boolean).join(' · ').replace(/^./, x => x.toUpperCase());
   // Argentina: el precio se puede atar al dólar y se recalcula solo cuando cambia la tasa.
   const atable = D.dual && P.id !== 'VE', usd = numero(f.usd);
   const p = enDolar && atable ? D.bonito(usd * D.tasa) : numero(f.p), co = numero(f.c);
@@ -490,23 +500,20 @@ function Producto({ d, cerrar }) {
   const borrar = c => c(() => abrir('confirmar', { deshacer: 'Producto borrado', titulo: '¿Borrar ' + p0.n + '?', texto: 'Ya no sale para vender ni en el inventario. Las ventas que tuvo se quedan en los reportes.', boton: 'Sí, borrar', si: () => { borrarProducto(p0.id); avisar('Borrado: ' + p0.n); } }));
   return html`<${Hoja} titulo=${(p0 ? 'Editar ' : 'Nuevo ') + (inv ? 'producto' : 'servicio')} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
-      <div class="foto-producto">
-        <label class=${'foto-cuadro toca' + (foto ? ' con-foto' : '') + (latido ? ' cambio' : '')} aria-label=${foto ? 'Cambiar la foto' : 'Poner una foto'}>${foto ? html`<img key=${foto.length} src=${foto} alt="" draggable="false" />` : html`<${Icono} n="camara" t=${24} /><small>Foto</small>`}<input type="file" accept="image/*" hidden onChange=${elegirFoto} /></label>
-        <span class="crece" style="display:flex;flex-direction:column;gap:8px;min-width:0">
-          <span class="sub" style="line-height:1.4">${foto ? 'Así lo reconoces rápido al vender y en el inventario.' : 'Con foto lo encuentras más rápido al vender.'}</span>
-          <span class="chips">${tel && html`<label class="btn2 chico acento toca" style="cursor:pointer"><${Icono} n="camara" t=${14} />${foto ? 'Otra foto' : 'Tomar foto'}<input type="file" accept="image/*" capture="environment" hidden onChange=${elegirFoto} /></label>`}<label class=${'btn2 chico toca' + (tel ? '' : ' acento')} style="cursor:pointer"><${Icono} n="subir" t=${14} />${tel ? 'Galería' : foto ? 'Cambiar foto' : 'Subir foto'}<input type="file" accept="image/*" hidden onChange=${elegirFoto} /></label>${foto && html`<button type="button" class="btn2 chico toca" onClick=${() => setFoto('')}>Quitar</button>`}</span>
-        </span>
+      <div class="fila" style="gap:10px;align-items:flex-end">
+        <label class=${'foto-cuadro mini toca' + (foto ? ' con-foto' : '') + (latido ? ' cambio' : '')} aria-label=${foto ? 'Cambiar la foto' : 'Poner una foto'}>${foto ? html`<img key=${foto.length} src=${foto} alt="" draggable="false" />` : html`<${Icono} n="camara" t=${20} /><small>Foto</small>`}<input type="file" accept="image/*" hidden onChange=${elegirFoto} /></label>
+        <label class="campo crece" style="min-width:0"><span>Nombre</span><input type="text" value=${f.n} placeholder=${T.inv ? 'Ej.: Arroz 1 kg' : 'Ej.: Corte de cabello'} onInput=${e => pon({ n: e.target.value })} /></label>
       </div>
-      <label class="campo"><span>Nombre</span><input type="text" value=${f.n} placeholder=${T.inv ? 'Ej.: Arroz 1 kg' : 'Ej.: Corte de cabello'} onInput=${e => pon({ n: e.target.value })} /></label>
       ${atable && html`<${Interruptor} on=${enDolar} onCambio=${setEnDolar} titulo="Precio atado al dólar" sub=${'Se recalcula solo con el ' + nombreTasa(P, S.tasa).toLowerCase()} />`}
       ${enDolar && atable && html`<label class="campo entra"><span>Precio en dólares</span><input class="num" type="text" inputmode="decimal" value=${f.usd} placeholder="0" onInput=${e => pon({ usd: e.target.value })} /></label>${usd > 0 && html`<span class="sub num">Hoy son ${D.m(p)} (US$ 1 = ${D.m(D.tasa)})</span>`}`}
-      <div class="rejilla-2" style="gap:10px">${enDolar && atable ? html`<div class="campo"><span>Precio</span><b class="num" style="min-height:52px;display:flex;align-items:center;font-size:18px">${D.m(p)}</b></div>` : html`<label class="campo"><span>Precio</span><input type="text" inputmode="decimal" value=${f.p} placeholder="0" onInput=${e => pon({ p: e.target.value })} /></label>`}<label class="campo"><span>Te cuesta</span><input type="text" inputmode="decimal" value=${f.c} placeholder="0" onInput=${e => pon({ c: e.target.value })} /></label></div>
+      <div class="rejilla-2" style="gap:10px">${enDolar && atable ? html`<div class="campo"><span>Precio</span><b class="num" style="min-height:52px;display:flex;align-items:center;font-size:18px">${D.m(p)}</b></div>` : html`<label class="campo"><span>Precio</span><input type="text" inputmode="decimal" value=${f.p} placeholder="0" onInput=${e => pon({ p: e.target.value })} /></label>`}<label class="campo"><span>Costo</span><input type="text" inputmode="decimal" value=${f.c} placeholder="0" onInput=${e => pon({ c: e.target.value })} /></label></div>
       ${p > 0 && html`<span class="sub entra">Ganas <b class="in num">${D.m(p - co)}</b> por cada uno (${Math.round((p - co) / p * 100)} %)</span>`}
-      ${T.inv && (T.mod('servicios') || svc) && html`<${Interruptor} on=${svc} onCambio=${setSvc} titulo="Es un servicio" sub="Mano de obra, instalación, revisión, envío… No lleva existencia." />`}
-      ${inv && (T.mod('medidas') || u) && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }]} valor=${u} onCambio=${setU} chico />${u && html`<span class="sub faint entra" style="font-size:12px">El precio es por ${u}. Al vender se escribe cuánto lleva (o cuánto quiere gastar). Lee las etiquetas de balanza que empiezan con 2.</span>`}</div>`}
+      ${inv && (T.mod('medidas') || u) && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }]} valor=${u} onCambio=${setU} chico />${u && html`<span class="sub faint entra" style="font-size:12px">Precio por ${u}. Al vender escribes cuánto lleva.</span>`}</div>`}
       ${inv && vars.length > 0 ? html`<span class="sub">Tienes ${vars.reduce((a2, v) => a2 + numero(v.q), 0)}${u ? ' ' + u : ''} en total (la suma de las variantes).</span>`
-      : inv ? html`<div class="rejilla-2" style="gap:10px"><label class="campo"><span>Tienes${u ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avísame con menos de</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
+      : inv ? html`<div class="rejilla-2" style="gap:10px"><label class="campo"><span>Cantidad${u ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avisar al quedar</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
         : T.inv ? null : html`<div class="campo"><span>Dura</span><${Chips} opciones=${[{ v: 30, n: '30 min' }, { v: 45, n: '45 min' }, { v: 60, n: '1 hora' }, { v: 120, n: '2 horas' }]} valor=${f.dur} onCambio=${v => pon({ dur: v })} /></div>`}
+      <${MasOpciones} abierto=${masOp} onCambio=${setMasOp} resumen=${resumenMas}>
+        ${T.inv && (T.mod('servicios') || svc) && html`<${Interruptor} on=${svc} onCambio=${setSvc} titulo="Es un servicio" sub="No se cuenta en inventario" />`}
       <div class="campo"><span>Grupo</span><div class="chips">
         <button type="button" class=${'chip chico toca' + (!grupo && grupoNuevo == null ? ' on' : '')} onClick=${() => { setGrupo(''); setGrupoNuevo(null); }}>Sin grupo</button>
         ${S.grupos.map(g => html`<button type="button" key=${g.id} class=${'chip chico toca' + (grupo === g.id && grupoNuevo == null ? ' on' : '')} onClick=${() => { setGrupo(g.id); setGrupoNuevo(null); }}><i class="punto-grupo" style=${{ background: colorGrupo(g) }}></i>${g.n}</button>`)}
@@ -524,9 +531,11 @@ function Producto({ d, cerrar }) {
         </div>`)}</div>` : null}
         <div class="chips"><button type="button" class="chip chico toca" onClick=${() => setVars(vars.concat([nuevaVar()]))}>+ Variante</button>
           ${!vars.length && [['S', 'M', 'L', 'XL'], ['Chico', 'Mediano', 'Grande']].map(g => html`<button type="button" class="chip chico toca" onClick=${() => setVars(g.map(nuevaVar))}>${g.join(' · ')}</button>`)}</div>
-        ${vars.length > 0 && html`<span class="sub faint" style="font-size:12px">Sin precio, la variante usa el del producto. Al vender se elige cuál.</span>`}</div>`}
-      ${inv && html`<label class="campo"><span>Código de barras (opcional)</span><input class="num" type="text" inputmode="numeric" autocomplete="off" value=${f.cod} placeholder="Pásalo por el lector o escríbelo" onInput=${e => pon({ cod: e.target.value })} /></label>`}
-      ${(T.mod('garantia') || gar > 0) && html`<div class="campo"><span>Garantía</span><${Chips} opciones=${[{ v: 0, n: 'Sin garantía' }, { v: 3, n: '3 meses' }, { v: 6, n: '6 meses' }, { v: 12, n: '1 año' }, { v: 24, n: '2 años' }]} valor=${gar} onCambio=${setGar} chico />${gar > 0 && html`<span class="sub faint entra" style="font-size:12px">Sale en el recibo con la fecha en que vence. Al vender puedes anotar el número de serie.</span>`}</div>`}`,
+        ${vars.length > 0 && html`<span class="sub faint" style="font-size:12px">Sin precio, usa el del producto.</span>`}</div>`}
+      ${inv && html`<label class="campo"><span>Código de barras (opcional)</span><input class="num" type="text" inputmode="numeric" autocomplete="off" value=${f.cod} placeholder="Escanéalo o escríbelo" onInput=${e => pon({ cod: e.target.value })} /></label>`}
+      ${(T.mod('garantia') || gar > 0) && html`<div class="campo"><span>Garantía</span><${Chips} opciones=${[{ v: 0, n: 'Sin garantía' }, { v: 3, n: '3 meses' }, { v: 6, n: '6 meses' }, { v: 12, n: '1 año' }, { v: 24, n: '2 años' }]} valor=${gar} onCambio=${setGar} chico />${gar > 0 && html`<span class="sub faint entra" style="font-size:12px">Sale en el recibo con su fecha de vencimiento.</span>`}</div>`}
+        ${foto && html`<button type="button" class="btn2 chico toca" style="align-self:flex-start" onClick=${() => setFoto('')}>Quitar la foto</button>`}
+      </${MasOpciones}>`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar</button>${p0 ? Pie2('Borrar ' + (T.inv ? 'producto' : 'servicio'), () => borrar(c), 'rojo') : null}`
   })} />`;
 }
@@ -584,7 +593,7 @@ function NuevoCliente({ d, cerrar }) {
       <label class="campo"><span>${nDoc}</span><input type="text" autocapitalize="characters" autocomplete="off" spellcheck="false" value=${f.doc} placeholder=${ve ? (f.tipo === 'empresa' ? 'J-12345678-9' : 'V-12345678') : ''} onInput=${e => setF(Object.assign({}, f, { doc: e.target.value }))} onBlur=${e => setF(Object.assign({}, f, { doc: docLimpio(e.target.value) }))} /></label>
       <label class="campo"><span>WhatsApp</span><input type="tel" inputmode="tel" value=${f.tel} placeholder="0414-555-1234" onInput=${e => setF(Object.assign({}, f, { tel: e.target.value }))} /></label>
       ${S.negocio.escala === 'empresa' && html`<div class="campo"><span>Es</span><${Chips} opciones=${[{ v: 'persona', n: 'Persona' }, { v: 'empresa', n: 'Empresa' }]} valor=${f.tipo} onCambio=${v => setF(Object.assign({}, f, { tipo: v }))} /></div>`}
-      <${Interruptor} on=${f.consent} onCambio=${v => setF(Object.assign({}, f, { consent: v }))} titulo="Aceptó que guardemos sus datos" sub="Nombre, identificación y teléfono, para recibos y recordatorios. En muchos países hay que pedirlo." />`,
+      <${Interruptor} on=${f.consent} onCambio=${v => setF(Object.assign({}, f, { consent: v }))} titulo="Aceptó que guardemos sus datos" sub="Para enviarle recibos y recordatorios." />`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar</button>${c0 ? html`<div class="rejilla-2">${Pie2('Exportar sus datos', () => exportarCliente(c0))}${Pie2('Borrar cliente', () => borrar(c), 'rojo')}</div>` : null}`
   })} />`;
 }
@@ -705,7 +714,7 @@ function Perfil({ d, cerrar }) {
       ${T.mod('comisiones') && admin && html`<div class="campo"><span>Comisión por lo que atiende</span><${Chips} opciones=${[0, 30, 40, 50, 60].map(v => ({ v, n: v ? v + ' %' : 'Sin comisión' }))} valor=${f.com} onCambio=${v => pon({ com: v })} chico /></div>`}
       ${esDueno || !admin ? esDueno && html`<div class="tarjeta fila" style="background:var(--accent-soft);box-shadow:none"><${Icono} n="escudo" t=${18} c="var(--accent)" /><span class="sub" style="color:var(--ink)">Es el dueño: siempre puede todo y nadie le puede quitar permisos.</span></div>`
         : html`<div class="campo"><span>Rol</span><${Chips} opciones=${rolesPosibles.map(r => ({ v: r.id, n: r.n }))} valor=${f.rol} onCambio=${v => pon({ rol: v })} /></div>
-          ${rolActual && html`<span class="sub faint entra" key=${f.rol}>Puede: ${Object.keys(rolActual.p).filter(k => rolActual.p[k]).length} de ${PERMISOS.length} permisos. Los cambias en “Qué puede hacer cada rol”.</span>`}`}
+          ${rolActual && html`<span class="sub faint entra" key=${f.rol}>Tiene ${Object.keys(rolActual.p).filter(k => rolActual.p[k]).length} de ${PERMISOS.length} permisos.</span>`}`}
       ${p0 ? html`<div class="tarjeta fila" style="background:var(--fill2);box-shadow:none;gap:12px">
           <span class="simb-c" style=${{ '--c': p0.pin ? 'var(--in)' : 'var(--amber)', width: '36px', height: '36px' }}><${Icono} n="candado" t=${17} /></span>
           <span class="crece" style="display:flex;flex-direction:column;gap:2px"><b style="font-size:14px">${p0.pin ? 'Entra con PIN' : 'Sin PIN'}</b><span class="sub">${p0.pin ? '••••' : 'Cualquiera puede entrar con este perfil'}</span></span>
@@ -827,7 +836,7 @@ function Negocio({ d, cerrar }) {
       <div class="logo-grande">
         <label class="toca" style="cursor:pointer" aria-label="Elegir el logo"><span class=${'logo-envuelto' + (latido ? ' cambio' : '')}><${MarcaNegocio} n=${{ nombre: f.nombre || n.nombre, logo: f.logo }} t=${72} /></span><input type="file" accept="image/*" hidden onChange=${elegirLogo} /></label>
         <span class="crece" style="display:flex;flex-direction:column;gap:8px;min-width:0">
-          <span class="sub" style="line-height:1.4">${f.logo ? 'Sale arriba en la app y en tus recibos.' : 'Pon el logo de tu ' + (f.escala === 'empresa' ? 'empresa' : 'negocio') + ': sale arriba en la app y en tus recibos.'}</span>
+          <span class="sub" style="line-height:1.4">${f.logo ? 'Sale arriba en la app y en tus recibos.' : 'Sale arriba en la app y en tus recibos.'}</span>
           <span class="chips"><label class="btn2 chico acento toca" style="cursor:pointer"><${Icono} n="subir" t=${14} />${f.logo ? 'Cambiar logo' : 'Subir logo'}<input type="file" accept="image/*" hidden onChange=${elegirLogo} /></label>${f.logo && html`<button type="button" class="btn2 chico toca" onClick=${() => pon({ logo: '' })}>Quitar</button>`}</span>
         </span>
       </div>
@@ -837,7 +846,7 @@ function Negocio({ d, cerrar }) {
         <label class="campo"><span>Correo del dueño (para avisos)</span><input type="email" inputmode="email" value=${f.correo} placeholder="tu@correo.com" autocomplete="email" onInput=${e => pon({ correo: e.target.value })} /></label>
         <label class="campo"><span>Dirección (opcional)</span><input type="text" value=${f.dir} placeholder="Av. Bolívar 12" autocomplete="street-address" onInput=${e => pon({ dir: e.target.value })} /></label>
       </div>
-      <span class="sub faint" style="margin-top:-6px;font-size:12px">Salen en tus recibos y en las órdenes impresas o en PDF.</span>
+      <span class="sub faint" style="margin-top:-6px;font-size:12px">Salen en tus recibos y órdenes.</span>
       <div class="campo"><span>Tamaño</span><div class="segmento" style="width:100%">${[['negocio', 'Negocio'], ['empresa', 'Empresa']].map(o => html`<button type="button" style="flex:1" class=${f.escala === o[0] ? 'on' : ''} onClick=${() => { if (o[0] === 'negocio' && n.sucursales.length > 1) { avisar('Tienes ' + n.sucursales.length + ' locales: un negocio tiene uno solo'); return; } if (o[0] === 'empresa' && soloUnLocal(N.plan)) { avisar('Para ser empresa con varias sedes, cámbiate al plan Empresa en Más → Mi suscripción'); return; } pon({ escala: o[0] }); }}>${o[1]}</button>`)}</div></div>
       <div class="rejilla-2" style="gap:10px">
         <label class="campo"><span>Razón social${f.escala === 'empresa' ? '' : ' (opcional)'}</span><input type="text" value=${f.razon} placeholder=${f.nombre + (P2.suf ? ' ' + P2.suf : '')} onInput=${e => pon({ razon: e.target.value })} /></label>
@@ -894,7 +903,7 @@ function Tasa({ d, cerrar }) {
     for (const k of ks) { const v = await leerTasa(P.id, k === 'principal' ? fuente : k); if (v) { n++; if (k === 'principal') setValor(String(v).replace('.', ',')); else if (k === 'euro') setEuro(String(v).replace('.', ',')); else setOtras(o => Object.assign({}, o, { [k]: String(v).replace('.', ',') })); } }
     setLeyendo(''); avisar(n ? n + (n === 1 ? ' tasa leída' : ' tasas leídas') + '. Toca Guardar' : 'No se pudo leer. Prueba más tarde o escríbelas a mano');
   };
-  const ESTADO = { hoy: ['Leída hoy', 'var(--in-text)'], 'a mano': ['A mano', 'var(--accent-text)'], vieja: ['Sin actualizar', 'var(--amber-text)'], estimada: ['Sin leer todavía', 'var(--amber-text)'] };
+  const ESTADO = { hoy: ['Leída hoy', 'var(--in-text)'], 'a mano': ['A mano', 'var(--accent-text)'], vieja: ['Sin actualizar', 'var(--amber-text)'], estimada: ['Falta actualizar', 'var(--amber-text)'] };
   // Historial de la tasa principal: últimos 30 días.
   const hist = (S.historialTasas || []).filter(h => h.f === (S.tasa.fuente || 'oficial')).slice(-30);
   const cambio = hist.length > 1 ? (hist[hist.length - 1].v / hist[hist.length - 2].v - 1) * 100 : 0;
@@ -914,9 +923,9 @@ function Tasa({ d, cerrar }) {
       ${P.id === 'AR' && editar && html`<div class="campo"><span>¿Qué dólar muestras?</span><${Chips} opciones=${FUENTES_AR} valor=${fuente} onCambio=${v => { setFuente(v); setModo('auto'); leerYa('principal', v); }} chico /></div>`}
       ${(() => {
         // Cada tasa en su tarjeta: nombre, para qué sirve, estado y el número (con “Leer” si se puede leer de internet).
-        const PARA = { paralela: 'Si cobras algún pago a la tasa paralela.', usdt: 'Si cobras en USDT a una tasa distinta.', propia: 'Una tasa tuya para ciertos pagos.' };
+        const PARA = { paralela: 'Para pagos a la tasa paralela.', usdt: 'Para pagos en USDT.', propia: 'Una tasa que pones tú.' };
         const principal = { k: 'principal', n: (resumenTasas[0] || {}).n || 'Tasa principal', val: valor, set: v => { setValor(v); if (conFuente) setModo('manual'); }, auto: conFuente,
-          para: 'Con esta tasa se calculan tus precios en ' + (ve ? 'bolívares' : P.cur) + '.', chip: conFuente ? (modo === 'manual' ? ['Escrita a mano', 't-vio'] : ['Automática', 't-ver']) : ['La escribes tú', 't-vio'], ph: D.tasa ? nf.format(D.tasa) : '0,00' };
+          para: 'Con ella se calculan tus precios en ' + (ve ? 'bolívares' : P.cur) + '.', chip: conFuente ? (modo === 'manual' ? ['Escrita a mano', 't-vio'] : ['Automática', 't-ver']) : ['La escribes tú', 't-vio'], ph: D.tasa ? nf.format(D.tasa) : '0,00' };
         const opcionales = (S.negocio.euro ? [{ k: 'euro', n: 'Euro', val: euro, set: setEuro, auto: conFuente, para: 'Para cobrar en euros: cuánto vale 1 €.', ph: D.tasaEur ? nf.format(D.tasaEur) : 'Sin usar' }] : [])
           .concat(extras.map(x => ({ k: x.k, n: x.k === 'propia' ? 'Tasa propia' : x.n, val: otras[x.k], set: v => setOtras(o => Object.assign({}, o, { [x.k]: v })), auto: x.auto, para: PARA[x.k] || 'Para cobrar algún pago a otra tasa.', ph: 'Sin usar' })));
         const Tarjeta = x => html`<div class="tasa-tarjeta" key=${x.k}>
@@ -934,7 +943,7 @@ function Tasa({ d, cerrar }) {
           ${Tarjeta(principal)}
           ${editar && conFuente && modo === 'manual' && html`<button type="button" class="btn2 chico toca entra" style="align-self:flex-start" onClick=${() => { setModo('auto'); leerYa('principal'); }}>Volver a la tasa automática</button>`}
           ${opcionales.length > 0 && html`<span class="titulo-funciones" style="padding-top:8px">Otras tasas (opcional)</span>
-            <span class="sub" style="line-height:1.45;margin-top:-4px">Úsalas solo si cobras algún pago a otra tasa. Si no, déjalas vacías.</span>
+            <span class="sub" style="line-height:1.45;margin-top:-4px">Solo si cobras algún pago a otra tasa.</span>
             ${opcionales.map(Tarjeta)}`}
           ${editar && extras.length > 0 && usaOtras && html`<div class="campo" style="margin-top:6px"><span>¿Con qué tasa cobras cada forma de pago?</span>
             <div class="pila" style="gap:6px">${S.negocio.pays.map(m => html`<div class="pago-linea" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
@@ -972,7 +981,7 @@ function Copias({ d, cerrar }) {
   };
   const cuando = t => t ? fechaCorta(t) + ' · ' + hora(t) : 'Fecha desconocida';
   return html`<${Hoja} titulo="Restaurar una copia" onCerrar=${cerrar} contenido=${c => ({
-    cuerpo: html`<span class="sub" style="line-height:1.45;margin-top:-6px">Orbe guarda una copia cada día en este aparato (las últimas 7). También puedes subir una copia que descargaste.</span>
+    cuerpo: html`<span class="sub" style="line-height:1.45;margin-top:-6px">Una copia por día, las últimas 7. También puedes subir una que descargaste.</span>
       <div class="lista">${lista === null ? html`<p class="vacio">Buscando copias…</p>` : lista.length ? lista.map((x, i) => html`<button type="button" key=${x.k} class="item toca entra" style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => leerCopia(x.k).then(datos => datos ? preguntar(c, datos, 'la copia del ' + cuando(x.t)) : avisar('No se pudo leer esa copia'))}>
         <span class="simb-c" style="--c:var(--c1);width:34px;height:34px"><${Icono} n="guardar" t=${16} /></span>
         <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px;font-weight:600">${cuando(x.t)}</b><span class="sub faint">${x.nombre} · ${x.negocio || 'sin negocio'} · ${x.ventas} ${x.ventas === 1 ? "venta" : "ventas"}</span></span>
@@ -1049,7 +1058,7 @@ function Conciliar({ d, cerrar }) {
   };
   const Fila = x => html`<div class="item"><span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><b class="corta" style="font-size:14px;font-weight:600">#${x.v.n} · ${x.p.m}${x.p.ref ? ' · Ref ' + x.p.ref : ''}</b><span class="sub faint">${fechaCorta(x.v.t)} ${hora(x.v.t)}</span></span>
     <b class="num">${D.m(x.p.v)}</b>${x.p.ok ? html`<span class="pildora t-ver">✓</span>` : x.p.ref ? html`<span class="pildora t-amb">Por ver</span>` : html`<span class="pildora">Sin ref</span>`}</div>`;
-  return html`<${Hoja} titulo="Conciliar con el banco" onCerrar=${cerrar} contenido=${c => ({
+  return html`<${Hoja} titulo="Revisar pagos con el banco" onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`<span class="sub" style="margin-top:-6px;line-height:1.45">Descarga el estado de cuenta de tu banco (CSV o TXT) y súbelo aquí. Orbe busca las referencias de ${S.negocio.pays.filter(esElectronico).slice(0, 3).join(', ')} y marca los pagos que llegaron.</span>
       <${Chips} opciones=${[{ v: 1, n: 'Hoy' }, { v: 7, n: '7 días' }, { v: 30, n: '30 días' }]} valor=${dias} onCambio=${setDias} chico />
       <div class="rejilla-3">${[['Verificados', conRef.filter(x => x.p.ok).length, 'var(--in)'], ['Por verificar', conRef.filter(x => !x.p.ok).length, 'var(--amber)'], ['Sin referencia', sinRef.length, 'var(--muted)']].map(k => html`<div class="tarjeta cifra" style="background:var(--fill2);box-shadow:none;padding:12px"><span class="sub" style="font-size:11px">${k[0]}</span><b class="num" style=${{ color: k[2], fontSize: '20px' }}>${k[1]}</b></div>`)}</div>

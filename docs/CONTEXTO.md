@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 26 nov 2026 (app en la versión **v91** del service worker).
+Última actualización: 26 nov 2026 (app en la versión **v95** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 16 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v91`). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v95`). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
@@ -81,6 +81,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - Un negocio por cuenta: al iniciar sesión entra directo con animación de bienvenida y luego la pantalla de perfiles/PIN.
 - Deshacer (7 s) al borrar gasto, producto, cliente, perfil o rol.
 - Ayudas “?” con imágenes en cada pantalla y tutorial adaptado.
+- **Textos claros (enfoque “lo esencial primero”, 26 nov):** textos de una línea con palabras de mostrador; opciones secundarias como botones con ícono (`Atajo` en `js/ui.js`, p. ej. Cobrar → Dividir pago / Atendió / Cliente); lo poco usado plegado en “Más opciones” (`MasOpciones`, p. ej. Nuevo producto); pistas que salen una sola vez por aparato (`Pista`, guardada en `localStorage`); Funciones en cuadrícula con nombre corto (`c` en `MODULOS`) y “mantén presionado” para ver qué hace. Maqueta: https://claude.ai/artifact/YUrbGvkrh2GuyuAZ5hEpge
 - Panel admin: negocios, activar planes, aprobar pagos, historial mensual con CSV para el contador, suspender/reactivar cuentas, datos de cobro.
 
 ## 6. Decisiones de negocio vigentes

@@ -168,7 +168,7 @@ export function Vender() {
     ${T.mod('cotizaciones') && n > 0 && !cotActual ? html`<div class="fila" style="gap:8px"><button type="button" class="btn2 toca" style="min-height:56px;border-radius:28px;padding:0 18px;flex:none" onClick=${cotizar}><${Icono} n="doc" t=${16} />Cotizar</button>${BotonCobrar}</div>` : BotonCobrar}`;
 
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonAyuda} />${prods.length > 0 && html`<span class="sub">Toca para sumar</span>`}</div>
+    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonAyuda} />${prods.length > 0 && html`<span class="sub">Toca para agregar</span>`}</div>
     <${BarraTasas} />
     <div class="fila entra" style="gap:8px"><label class="buscador crece" style="background:var(--surface)"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${prods.length ? 'Buscar entre ' + prods.length : 'Buscar'} aria-label="Buscar producto" /></label>
       ${T.mod('escaner') && html`<button type="button" class="icono-btn toca escanear-mini" aria-label="Escanear código de barras" onClick=${() => abrir('escaner', { para: 'vender', onAgregar: sumarEscaneado })}><${Icono} n="escanear" t=${20} /></button>`}</div>

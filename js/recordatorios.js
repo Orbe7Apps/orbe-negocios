@@ -82,7 +82,7 @@ export function RecordatoriosHoy() {
   if (!lista.length) return null;
   return html`<section class="tarjeta entra rec-tarjeta" data-tour="recordatorios">
     <div class="fila" style="gap:10px;margin-bottom:4px"><span class="ic t-ver"><${Icono} n="movil" t=${18} /></span>
-      <span class="crece" style="display:flex;flex-direction:column"><b style="font-size:16px">Recordatorios por enviar</b><span class="sub">Mensaje listo: tócalo y se abre WhatsApp</span></span>
+      <span class="crece" style="display:flex;flex-direction:column"><b style="font-size:16px">Recordatorios por enviar</b><span class="sub">Se envían por WhatsApp</span></span>
       <span class="pildora t-ver">${lista.length}</span></div>
     <div class="pila" style="gap:2px">${lista.slice(0, 3).map((r, i) => html`<${Fila} key=${r.k} r=${r} P=${P} i=${i} />`)}</div>
     ${lista.length > 3 && html`<button type="button" class="ver-mas toca" onClick=${() => abrir('recordatorios')}>Ver los ${lista.length}</button>`}
