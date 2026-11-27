@@ -55,7 +55,11 @@ export function Caja({ d, cerrar }) {
         <div class="cierre-digital">
           ${turnos.map(t => { const dif = Object.keys(t.dif || {}).reduce((a, k) => a + t.dif[k], 0); return html`<div class="fila" key=${t.id}><span class="pildora t-azu">Turno ${t.n}</span><span class="crece corta sub">${quien(t.por)} · ${hora(t.desde)}–${hora(t.hasta)}</span><b class=${'num ' + (Math.abs(dif) < 0.005 ? 'in' : 'out')} style="font-size:13px">${Math.abs(dif) < 0.005 ? 'Cuadró' : (dif < 0 ? 'Faltó ' : 'Sobró ') + D.m(Math.abs(dif))}</b></div>`; })}
           ${movs.filter(x => x.tipo !== 'ajuste').map(x => html`<div class="fila" key=${x.id}><span class=${'pildora ' + TONO_MOV[x.tipo]}>${NOMBRE_MOV[x.tipo]}</span><span class="crece corta sub">${hora(x.t)} · ${quien(x.por)}${x.motivo ? ' · ' + x.motivo : ''}</span><b class="num" style="font-size:13px">${x.tipo === 'retiro' ? '−' : ''}${x.pagos.map(p => enSu(p.m).ver(p.v)).join(' + ')}</b></div>`)}
-        </div></div>`}`,
+        </div></div>`}
+      ${puede('anteriores') && html`<button type="button" class="opcion-menu toca" data-guia="caja-anteriores" style="border-radius:18px;background:var(--fill);padding:10px 14px" onClick=${() => c(() => abrir('anteriores'))}>
+        <span class="ic t-vio" style="width:36px;height:36px;border-radius:11px"><${Icono} n="calendario" t=${17} g=${2.2} /></span>
+        <span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0;text-align:left"><b>Registrar días anteriores</b><span class="sub corta">Lo que anotaste en tu cuaderno, con su fecha</span></span>
+        <${Icono} n="sig" t=${16} c="var(--faint)" /></button>`}`,
     pie: html`${puede('vender') && html`<button type="button" class="btn toca" data-guia="caja-turno" onClick=${() => c(() => abrir('cierre', { turno: true }))}>Cerrar mi turno</button>`}
       ${puede('cierre') && html`<button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" data-guia="caja-dia" onClick=${() => c(() => abrir('cierre'))}>Cierre del día</button>`}`
   })} />`;

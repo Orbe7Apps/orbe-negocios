@@ -88,7 +88,8 @@ export function Ruedas({ m, onCambio }) {
 }
 
 // ---------- calendario ----------
-function Calendario({ dia, onDia, desde }) {
+// desde / hasta: primer y último día que se pueden elegir (hasta: p. ej. ayer, para registrar días anteriores).
+function Calendario({ dia, onDia, desde, hasta }) {
   const [mes, setMes] = useState(() => { const d = new Date(dia || Date.now()); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const hoy = inicioDe(Date.now()), ini = (mes.getDay() + 6) % 7, dias = new Date(mes.getFullYear(), mes.getMonth() + 1, 0).getDate();
   const otro = n => setMes(new Date(mes.getFullYear(), mes.getMonth() + n, 1));
@@ -96,7 +97,7 @@ function Calendario({ dia, onDia, desde }) {
   for (let k = 0; k < ini; k++) celdas.push(html`<span key=${'v' + k}></span>`);
   for (let k = 1; k <= dias; k++) {
     const t = new Date(mes.getFullYear(), mes.getMonth(), k).getTime();
-    celdas.push(html`<button type="button" key=${t} class=${'cal-dia toca' + (t === hoy ? ' hoy' : '') + (dia && t === inicioDe(dia) ? ' on' : '')} disabled=${desde != null && t < desde} aria-label=${textoDia(t)} onClick=${() => onDia(t)}>${k}</button>`);
+    celdas.push(html`<button type="button" key=${t} class=${'cal-dia toca' + (t === hoy ? ' hoy' : '') + (dia && t === inicioDe(dia) ? ' on' : '')} disabled=${(desde != null && t < desde) || (hasta != null && t > hasta)} aria-label=${textoDia(t)} onClick=${() => onDia(t)}>${k}</button>`);
   }
   return html`<div class="pila" style="gap:10px">
     <div class="cal-mes"><button type="button" class="icono-btn toca" aria-label="Mes anterior" onClick=${() => otro(-1)}><${Icono} n="atras" t=${18} /></button>
@@ -115,14 +116,14 @@ const Boton = ({ ic, etiqueta, texto, onClick, vacio, guia }) => html`<button ty
 
 // ---------- fecha (y hora, si conHora) ----------
 // valor: milisegundos (0 = sin fecha). desde: primer día que se puede elegir. vacio: texto cuando no hay fecha.
-export function CampoFecha({ valor, onCambio, etiqueta, titulo, conHora, desde, vacio = 'Elegir día', horaBase = 17 * 60, quitar, guia }) {
+export function CampoFecha({ valor, onCambio, etiqueta, titulo, conHora, desde, hasta, vacio = 'Elegir día', horaBase = 17 * 60, quitar, guia }) {
   const [abierto, setAbierto] = useState(false);
   const [dia, setDia] = useState(0), [min, setMin] = useState(horaBase);
   const abrir = () => { setDia(valor ? inicioDe(valor) : 0); setMin(valor && conHora ? new Date(valor).getHours() * 60 + new Date(valor).getMinutes() : horaBase); setAbierto(true); };
   const listo = cerrar => { if (!dia) return; onCambio(dia + (conHora ? min * 60000 : 0)); cerrar(); };
   useCapa(abierto ? html`<${Capa} titulo=${titulo || (conHora ? '¿Qué día y a qué hora?' : '¿Qué día?')} onCerrar=${() => setAbierto(false)}
     pie=${cerrar => html`<button type="button" class=${'btn toca' + (dia ? '' : ' apagado')} onClick=${() => listo(cerrar)}>${dia ? 'Listo · ' + diaCorto(dia) + (conHora ? ', ' + hora12(min) : '') : 'Toca un día'}</button>`}>${cerrar => html`
-    <${Calendario} dia=${dia} desde=${desde} onDia=${t => { setDia(t); if (conHora) setTimeout(() => { const r = document.querySelector('.capa .ruedas'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 80); }} />
+    <${Calendario} dia=${dia} desde=${desde} hasta=${hasta} onDia=${t => { setDia(t); if (conHora) setTimeout(() => { const r = document.querySelector('.capa .ruedas'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 80); }} />
     ${conHora && html`<span class="titulo-funciones">¿A qué hora?</span><${Ruedas} m=${min} onCambio=${setMin} />`}
     ${quitar && valor ? html`<button type="button" class="enlace-tasa toca" style="align-self:center;padding:8px 12px" onClick=${() => { onCambio(0); cerrar(); }}>Quitar fecha</button>` : null}`}
   </${Capa}>` : null);
