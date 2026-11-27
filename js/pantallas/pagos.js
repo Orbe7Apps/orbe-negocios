@@ -29,7 +29,7 @@ export function usePagos(total, metodos, inicial, ajuste) {
   // Pedir el número de referencia de los pagos electrónicos (para conciliar con el banco).
   const pideRef = mm => !!S.negocio.pedirRef && esElectronico(mm);
   const otra = x => (P.id === 'VE' ? 'Bs ' : 'US$ ') + new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
-  const nombreTasaDe = mm => { const k = (S.negocio.tasaPago || {})[mm]; const x = k && (TASAS_EXTRA[P.id] || []).find(t => t.k === k); return x ? 'tasa ' + x.n.toLowerCase() : ''; };
+  const nombreTasaDe = mm => { const k = (S.negocio.tasaPago || {})[mm]; if (k === 'euro') return P.id === 'VE' ? 'tasa BCV euro' : 'tasa del euro'; const x = k && (TASAS_EXTRA[P.id] || []).find(t => t.k === k); return x ? 'tasa ' + x.n.toLowerCase() : ''; };
   const [varias, setVariasRaw] = useState(false);
   const [filas, setFilas] = useState([]);
   const tol = D.dec ? 0.01 : 1;
