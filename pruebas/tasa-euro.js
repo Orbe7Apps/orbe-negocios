@@ -1,4 +1,4 @@
-// Prueba de la tasa BCV euro por forma de pago: sin “Aceptar euros”, se elige “Tasa BCV euro” para Pago Móvil
+// Prueba de la tasa BCV euro por forma de pago: sin “Aceptar euros”, se elige la ficha “BCV €” de Pago Móvil
 // en la hoja de tasas, se guarda y se revisa que al cobrar Pago Móvil use esa tasa. PC=1 para computadora.
 // Uso: node pruebas/tasa-euro.js   (capturas en pruebas/capturas/tasa-euro/)
 const { chromium, devices } = require('playwright');
@@ -15,16 +15,14 @@ const PC = process.env.PC === '1';
   // Sin aceptar euros, para probar que la tasa del euro se puede usar igual.
   await p.evaluate(() => window.__abrir('tasa', {})); await p.waitForTimeout(900);
   const hoja = p.locator('.hoja').first();
-  if (!(await hoja.getByText('Euro BCV').count())) mal('no sale la tarjeta “Euro BCV”');
   await foto('hoja-tasas');
-  const det = hoja.locator('details.avanzado summary', { hasText: 'Cobrar alguna forma de pago a otra tasa' });
-  if (await det.count()) { await det.click(); await p.waitForTimeout(400); }
-  const sel = hoja.locator('select[aria-label="Tasa para Pago Móvil"]');
-  if (!(await sel.count())) { mal('no sale el selector de Pago Móvil'); await foto('sin-selector'); await b.close(); process.exit(1); }
-  const opciones = await sel.locator('option').allInnerTexts();
-  console.log('opciones: ' + opciones.join(' / '));
-  if (!opciones.includes('Tasa BCV euro')) mal('falta la opción “Tasa BCV euro”');
-  await sel.selectOption('euro'); await p.waitForTimeout(600);
+  // Hoja nueva: cada forma en Bs tiene fichas “BCV $ / BCV € / Otra”.
+  const ficha = hoja.locator('button[aria-label="BCV € para Pago Móvil"]');
+  if (!(await ficha.count())) { mal('no sale la ficha “BCV €” de Pago Móvil'); await foto('sin-ficha'); await b.close(); process.exit(1); }
+  await ficha.click(); await p.waitForTimeout(600);
+  if ((await ficha.getAttribute('aria-pressed')) !== 'true') mal('la ficha “BCV €” no quedó elegida');
+  // La tarjeta “Euro BCV” aparece arriba (en uso) y al tocarla se escribe a mano.
+  await hoja.locator('.tasa-uso-t', { hasText: 'Euro BCV' }).click(); await p.waitForTimeout(400);
   await hoja.locator('input[aria-label="Tasa Euro BCV"]').fill('600'); await p.waitForTimeout(200);
   await foto('elegida');
   await p.locator('.hoja-pie button', { hasText: 'Guardar' }).click(); await p.waitForTimeout(1200);

@@ -2,6 +2,7 @@
 // y vacaciones o días libres. La agenda (y el link de reservas) solo ofrecen las horas en que la persona trabaja.
 import { html } from './lib/preact-htm.js';
 import { Interruptor } from './ui.js';
+import { CampoFecha, CampoHora } from './elegir.js';
 
 export const DIAS_SEM = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DIAS_LARGO = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
@@ -45,20 +46,18 @@ export function EditorHorario({ h, onCambio }) {
   return html`<div class="pila" style="gap:12px">
     <div class="campo"><span>Días que trabaja</span><div class="chips">${orden.map(x => { const on = h.dias.includes(x); return html`<button type="button" key=${x} class=${'chip chico toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ dias: on ? h.dias.filter(y => y !== x) : h.dias.concat([x]) })}>${DIAS_SEM[x]}</button>`; })}</div></div>
     <div class="rejilla-2" style="gap:10px">
-      <label class="campo"><span>Desde</span><input type="time" value=${aHora(h.ini)} step="1800" onInput=${e => e.target.value && pon({ ini: deHora(e.target.value) })} /></label>
-      <label class="campo"><span>Hasta</span><input type="time" value=${aHora(h.fin)} step="1800" onInput=${e => e.target.value && pon({ fin: deHora(e.target.value) })} /></label>
+      <${CampoHora} etiqueta="Abre" titulo="¿A qué hora abre?" valor=${h.ini} onCambio=${v => pon({ ini: v })} />
+      <${CampoHora} etiqueta="Cierra" titulo="¿A qué hora cierra?" valor=${h.fin} onCambio=${v => pon({ fin: v })} />
     </div>
     <${Interruptor} on=${!!h.alm} onCambio=${v => pon({ alm: v ? [12 * 60, 13 * 60] : null })} titulo="Hora de almuerzo" sub="La agenda no ofrece esas horas" />
     ${h.alm && html`<div class="rejilla-2 entra" style="gap:10px">
-      <label class="campo"><span>Almuerzo desde</span><input type="time" value=${aHora(h.alm[0])} step="900" onInput=${e => e.target.value && pon({ alm: [deHora(e.target.value), h.alm[1]] })} /></label>
-      <label class="campo"><span>Hasta</span><input type="time" value=${aHora(h.alm[1])} step="900" onInput=${e => e.target.value && pon({ alm: [h.alm[0], deHora(e.target.value)] })} /></label>
+      <${CampoHora} etiqueta="Almuerzo" titulo="¿A qué hora sale a almorzar?" valor=${h.alm[0]} onCambio=${v => pon({ alm: [v, h.alm[1]] })} />
+      <${CampoHora} etiqueta="Hasta" titulo="¿A qué hora vuelve?" valor=${h.alm[1]} onCambio=${v => pon({ alm: [h.alm[0], v] })} />
     </div>`}
   </div>`;
 }
 
 // Vacaciones y días libres: lista con “+ Agregar”.
-const diaInput = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const deDiaInput = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).getTime(); };
 export function EditorAusencias({ lista, onCambio }) {
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
   const pon = (i, o) => onCambio(lista.map((a, k) => k === i ? Object.assign({}, a, o) : a));
@@ -67,8 +66,8 @@ export function EditorAusencias({ lista, onCambio }) {
     ${vigentes.length === 0 && html`<span class="sub">Sin vacaciones ni días libres anotados.</span>`}
     ${lista.map((a, i) => a.hasta < hoy.getTime() ? null : html`<div key=${i} class="tarjeta pila entra" style="box-shadow:none;background:var(--fill2);gap:8px;padding:12px">
       <div class="rejilla-2" style="gap:8px">
-        <label class="campo"><span>Desde</span><input type="date" value=${diaInput(a.desde)} onInput=${e => e.target.value && pon(i, { desde: deDiaInput(e.target.value) })} /></label>
-        <label class="campo"><span>Hasta</span><input type="date" value=${diaInput(a.hasta)} onInput=${e => e.target.value && pon(i, { hasta: deDiaInput(e.target.value) })} /></label>
+        <${CampoFecha} etiqueta="Desde" titulo="¿Desde qué día?" valor=${a.desde} onCambio=${v => pon(i, { desde: v, hasta: Math.max(v, a.hasta) })} />
+        <${CampoFecha} etiqueta="Hasta" titulo="¿Hasta qué día?" valor=${a.hasta} desde=${a.desde} onCambio=${v => pon(i, { hasta: v })} />
       </div>
       <div class="fila" style="gap:8px"><input type="text" class="crece" value=${a.motivo || ''} placeholder="Motivo (opcional): vacaciones, médico…" style="min-height:44px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);padding:0 12px;font:inherit" onInput=${e => pon(i, { motivo: e.target.value })} />
         <button type="button" class="btn2 chico rojo toca" onClick=${() => onCambio(lista.filter((_, k) => k !== i))}>Quitar</button></div>

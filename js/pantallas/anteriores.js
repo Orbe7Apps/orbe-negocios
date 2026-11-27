@@ -8,6 +8,7 @@ import { dinero } from '../paises.js';
 import { Hoja, Icono, Chips, Interruptor, avisar, iniciales } from '../ui.js';
 import { usePagos, useMonto, conSimbolo, numero } from './pagos.js';
 import { normal } from '../buscar.js';
+import { CampoFecha } from '../elegir.js';
 
 const DIA = 86400000;
 const CATS = ['Mercancía', 'Alquiler', 'Servicios', 'Sueldos', 'Transporte', 'Otro'];
@@ -56,8 +57,6 @@ function Registro({ d, cerrar, dia, setDia, t, tasaTxt, setTasaTxt }) {
   const elegir = x => { setDia(inicioDia(x)); setTasaTxt(''); setVerTasa(false); };
   const ayer = hoy0 - DIA, antier = hoy0 - 2 * DIA;
   const cualChip = !dia ? '' : otro ? 'otro' : dia === ayer ? 'ayer' : dia === antier ? 'antier' : '';
-  const fechaInput = x => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(x || ''); if (!m) return; const v = new Date(+m[1], +m[2] - 1, +m[3]).getTime(); if (v >= hoy0) { avisar('Elige un día antes de hoy'); return; } elegir(v); };
-  const isoDe = x => { const z = new Date(x); return z.getFullYear() + '-' + String(z.getMonth() + 1).padStart(2, '0') + '-' + String(z.getDate()).padStart(2, '0'); };
   const f2 = x => new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
   const FilaTasa = () => D.dual && t ? html`<div class="tarjeta fila" style="box-shadow:none;background:var(--fill);gap:10px;padding:10px 14px" data-guia="ant-tasa">
       <span class="crece" style="display:flex;flex-direction:column;gap:1px"><span class="sub">Tasa ${P.id === 'VE' ? 'BCV ' : ''}del ${nDia}${t.guardada || numero(tasaTxt) > 0 ? '' : ' (no estaba guardada, revisa)'}</span><b class="num" style="font-size:15px">${P.id === 'VE' ? 'Bs ' : ''}${f2(t.prin)}</b></span>
@@ -116,7 +115,7 @@ function Registro({ d, cerrar, dia, setDia, t, tasaTxt, setTasaTxt }) {
     cuerpo = html`<div class="pila entra" key="dia" style="gap:14px">
       <b style="font-size:18px;letter-spacing:-.01em">¿De qué día es?</b>
       <${Chips} opciones=${[{ v: 'ayer', n: 'Ayer' }, { v: 'antier', n: 'Antier' }, { v: 'otro', n: 'Otro día' }]} valor=${cualChip} onCambio=${v => { setOtro(v === 'otro'); if (v === 'ayer') elegir(ayer); if (v === 'antier') elegir(antier); }} />
-      ${otro ? html`<label class="campo entra"><span>Fecha</span><input type="date" max=${isoDe(ayer)} value=${dia ? isoDe(dia) : ''} onInput=${e => fechaInput(e.target.value)} /></label>`
+      ${otro ? html`<div class="entra"><${CampoFecha} etiqueta="Fecha" titulo="¿De qué día es?" valor=${dia} hasta=${ayer} vacio="Elegir el día" onCambio=${x => x && elegir(x)} /></div>`
         : html`<div class="dias-ant" data-guia="ant-dias">${ultimos.slice(0, 7).map(x => html`<span key=${'s' + x} class="dias-ant-s">${'DLMMJVS'[new Date(x).getDay()]}</span>`)}
           ${ultimos.map(x => html`<button type="button" key=${x} class=${'dias-ant-d toca' + (dia === x ? ' on' : '')} aria-label=${nombreLargo(x)} onClick=${() => { setOtro(false); elegir(x); }}>${new Date(x).getDate()}${conAlgo[diaClave(x)] ? html`<i></i>` : null}</button>`)}
           <span class="dias-ant-d hoy">hoy</span></div>`}

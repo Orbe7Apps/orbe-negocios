@@ -5,6 +5,7 @@ import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { Icono, Chips, Interruptor, simbolo } from '../ui.js';
 import { tasaMetodo } from '../datos.js';
+import { CampoOpcion } from '../elegir.js';
 import { esElectronico, esEuro, TASAS_EXTRA } from '../paises.js';
 
 export const conSimbolo = lista => lista.map(x => ({ v: x, n: html`<span class="simb"><${Icono} n=${simbolo(x)} t=${13} g=${2.2} /></span>${x}` }));
@@ -19,7 +20,7 @@ export const numero = t => {
 export const esEfectivo = m => /Efectivo/.test(m);
 
 // Formas que normalmente se pagan en la otra moneda: en Venezuela, bolívares; en Argentina, dólares.
-const enOtra = (P, m) => P.id === 'VE' ? /Bs|Pago Móvil|Punto de venta/.test(m) : P.usd2 ? /USDT|US\$|Efectivo \$|Zelle|Binance/.test(m) : false;
+export const enOtra = (P, m) => P.id === 'VE' ? /Bs|Pago Móvil|Punto de venta/.test(m) : P.usd2 ? /USDT|US\$|Efectivo \$|Zelle|Binance/.test(m) : false;
 // Moneda en que se escribe un monto con esa forma de pago: principal ('p'), la otra ('s': Bs o US$) o euros ('e').
 export const monedaForma = (S, P, D, m) => D.dual && !!S.negocio.euro && esEuro(m) ? 'e' : D.dual && enOtra(P, m) ? 's' : 'p';
 // Nombre de la tasa con que se pasa a Bs esa forma de pago (vacío si es la principal).
@@ -151,8 +152,7 @@ export function usePagos(totalDe, metodos, inicial, ajuste, mo) {
       ${varias && html`<div class="pagos-mix entra">
         ${filas.map((f, k) => { const v = valor(f); return html`<div class="pago-fila entra" key=${k} style=${{ '--i': k }}>
           <div class="pago-linea">
-            <label class="pago-forma"><span class="simb"><${Icono} n=${simbolo(f.m)} t=${14} g=${2.2} /></span>
-              <select value=${f.m} aria-label=${'Forma de pago ' + (k + 1)} onChange=${e => pon(k, { m: e.target.value, en: !f.txt ? monedaDe(e.target.value) : f.en })}>${metodos.map(x => html`<option value=${x}>${x}</option>`)}</select></label>
+            <${CampoOpcion} compacto conSimbolo valor=${f.m} opciones=${metodos} titulo="¿Con qué paga esta parte?" aria=${'Forma de pago ' + (k + 1) + ': ' + f.m} onCambio=${v => pon(k, { m: v, en: !f.txt ? monedaDe(v) : f.en })} />
             <div class="pago-monto">
               ${D.dual && html`<button type="button" class="pago-moneda toca" aria-label=${'Moneda: ' + simMoneda(f.en) + '. Tocar para cambiar'} title="Cambiar moneda" onClick=${() => pon(k, { en: monedas[(monedas.indexOf(f.en) + 1) % monedas.length], txt: '' })}>${simMoneda(f.en)}</button>`}
               <input class="num" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value=${f.txt} aria-label=${'Monto con ' + f.m} onInput=${e => pon(k, { txt: e.target.value })} />

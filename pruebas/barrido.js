@@ -43,7 +43,7 @@ const MODOS = (process.argv[3] || 'tel,pc').split(',');
         } catch (e) { problemas.push(tag + ' no abre Ajustes/' + nRaw + ': ' + e.message.split('\n')[0]); }
       }
       // Hojas principales.
-      const hojas = [['nuevoCliente', {}], ['gasto', undefined], ['producto', {}], ['tasa', undefined], ['negocio', undefined], ['perfil', {}], ['nuevaCita', {}], ['nuevaOrden', {}], ['caja', undefined], ['cierre', undefined], ['promos', undefined], ['grupos', undefined], ['locales', undefined], ['copias', undefined], ['registro', undefined], ['sugerencias', undefined]];
+      const hojas = [['nuevoCliente', {}], ['gasto', undefined], ['producto', {}], ['tasa', undefined], ['negocio', undefined], ['perfil', {}], ['nuevaCita', {}], ['nuevaOrden', {}], ['caja', undefined], ['cierre', undefined], ['promos', undefined], ['grupos', undefined], ['locales', undefined], ['copias', undefined], ['registro', undefined], ['sugerencias', undefined], ['ventasDia', undefined]];
       for (const [k, d] of hojas) {
         await p.evaluate(([k, d]) => { if (window.__abrir) window.__abrir(k, d); }, [k, d]).catch(() => {});
         await p.waitForTimeout(500);

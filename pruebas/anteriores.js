@@ -33,6 +33,13 @@ const PC = process.env.PC === '1';
   if (await p.evaluate(() => document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) mal('se abrió el teclado solo');
   if (!/¿De qué día es\?/.test(await texto())) mal('no pregunta el día'); else bien('pregunta el día');
   await foto('dia');
+  // “Otro día” abre el calendario propio: hoy y los días que vienen están apagados.
+  await chip('Otro día');
+  await hoja().locator('.elegido').first().click(); await p.waitForTimeout(700);
+  const hoyApagado = await p.locator('.capa .cal-dia.hoy').first().isDisabled().catch(() => false);
+  if (!hoyApagado) mal('en el calendario se puede elegir hoy'); else bien('calendario: hoy apagado');
+  await foto('calendario');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(600);
   await chip('Antier');
   const t1 = await texto();
   if (!/Tasa BCV del/.test(t1)) mal('no muestra la tasa de ese día'); else bien('tasa de ese día: ' + (t1.match(/Bs [\d.,]+/) || [''])[0]);
