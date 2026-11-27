@@ -1,7 +1,7 @@
 // Todas las hojas (teléfono) o ventanas (computadora) de la app.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer, borrarRol, perfilesConRol, usaEuro, diaClave } from '../datos.js';
+import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, confirmarPago, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer, borrarRol, perfilesConRol, usaEuro, diaClave } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { paisActivo, telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
 import { ponerAyudaHoja, Hoja, Icono, Interruptor, Atajo, MasOpciones, Pista, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd, avisarDeshacer } from '../ui.js';
@@ -1198,20 +1198,33 @@ function Conciliar({ d, cerrar }) {
       const ok = conRef.filter(x => !x.p.ok && numeros.some(n => n.endsWith(x.p.ref) || x.p.ref.endsWith(n.slice(-6)))).map(x => x.clave);
       setEncontrados(ok);
       if (ok.length) verificarPagos(ok);
-      avisar(ok.length ? ok.length + ' pagos verificados' : 'Ninguna referencia coincidió');
+      avisar(ok.length ? (ok.length === 1 ? '1 pago confirmado' : ok.length + ' pagos confirmados') : 'Ninguna referencia coincidió');
     });
     e.target.value = '';
   };
-  const Fila = x => html`<div class="item"><span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><b class="corta" style="font-size:14px;font-weight:600">#${x.v.n} · ${x.p.m}${x.p.ref ? ' · Ref ' + x.p.ref : ''}</b><span class="sub faint">${fechaCorta(x.v.t)} ${hora(x.v.t)}</span></span>
-    <b class="num">${D.m(x.p.v)}</b>${x.p.ok ? html`<span class="pildora t-ver">✓</span>` : x.p.ref ? html`<span class="pildora t-amb">Por ver</span>` : html`<span class="pildora">Sin ref</span>`}</div>`;
-  return html`<${Hoja} titulo="Revisar pagos con el banco" onCerrar=${cerrar} contenido=${c => ({
-    cuerpo: html`<span class="sub" style="margin-top:-6px;line-height:1.45">Descarga el estado de cuenta de tu banco (CSV o TXT) y súbelo aquí. Orbe busca las referencias de ${S.negocio.pays.filter(esElectronico).slice(0, 3).join(', ')} y marca los pagos que llegaron.</span>
+  const pendientes = pagos.filter(x => !x.p.ok), listos = pagos.filter(x => x.p.ok);
+  // Confirmar a mano: se abre la fila, se escribe (o revisa) la referencia y se confirma.
+  const [abierto, setAbierto] = useState(null);
+  const [refs, setRefs] = useState({});
+  const refDe = x => refs[x.clave] !== undefined ? refs[x.clave] : (x.p.ref || '');
+  const confirmar = x => {
+    const r = refDe(x).replace(/\s+/g, '');
+    if (!r) { avisar('Escribe el número de referencia'); return; }
+    confirmarPago(x.clave, r); setAbierto(null); avisar('Pago confirmado');
+  };
+  const Fila = x => html`<div class="pila" key=${x.clave} style="gap:8px;padding:8px 0">
+    <div class="fila" style="gap:10px"><span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><b class="corta" style="font-size:14px;font-weight:600">#${x.v.n} · ${x.p.m}${x.p.ref ? ' · Ref ' + x.p.ref : ''}</b><span class="sub faint">${fechaCorta(x.v.t)} ${hora(x.v.t)}</span></span>
+      <b class="num">${D.m(x.p.v)}</b>${x.p.ok ? html`<span class="pildora t-ver">✓ Confirmado</span>` : abierto === x.clave ? null : html`<button type="button" class="btn2 chico verde toca" onClick=${() => setAbierto(x.clave)}>Confirmar</button>`}</div>
+    ${!x.p.ok && abierto === x.clave && html`<div class="fila entra" style="gap:8px"><label class="campo crece" style="min-width:0"><input class="num" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Número de referencia" aria-label="Número de referencia" value=${refDe(x)} onInput=${e => setRefs(Object.assign({}, refs, { [x.clave]: e.target.value }))} style="min-height:44px" /></label>
+      <button type="button" class="btn2 chico lleno toca" onClick=${() => confirmar(x)}>Confirmar pago</button><button type="button" class="btn2 chico toca" aria-label="Cancelar" onClick=${() => setAbierto(null)}>✕</button></div>`}</div>`;
+  return html`<${Hoja} titulo="Pagos por confirmar" onCerrar=${cerrar} contenido=${c => ({
+    cuerpo: html`<span class="sub" style="margin-top:-6px;line-height:1.45">Cuando veas en el banco que llegó un pago, toca “Confirmar” y escribe su número de referencia. Si tienes el estado de cuenta (CSV o TXT), súbelo y Orbe confirma solo los que coincidan.</span>
       <${Chips} opciones=${[{ v: 1, n: 'Hoy' }, { v: 7, n: '7 días' }, { v: 30, n: '30 días' }]} valor=${dias} onCambio=${setDias} chico />
-      <div class="rejilla-3">${[['Verificados', conRef.filter(x => x.p.ok).length, 'var(--in)'], ['Por verificar', conRef.filter(x => !x.p.ok).length, 'var(--amber)'], ['Sin referencia', sinRef.length, 'var(--muted)']].map(k => html`<div class="tarjeta cifra" style="background:var(--fill2);box-shadow:none;padding:12px"><span class="sub" style="font-size:11px">${k[0]}</span><b class="num" style=${{ color: k[2], fontSize: '20px' }}>${k[1]}</b></div>`)}</div>
+      <div class="rejilla-3">${[['Confirmados', listos.length, 'var(--in)'], ['Por confirmar', pendientes.length, 'var(--amber)'], ['Sin referencia', sinRef.length, 'var(--muted)']].map(k => html`<div class="tarjeta cifra" style="background:var(--fill2);box-shadow:none;padding:12px"><span class="sub" style="font-size:11px">${k[0]}</span><b class="num" style=${{ color: k[2], fontSize: '20px' }}>${k[1]}</b></div>`)}</div>
       ${!S.negocio.pedirRef && html`<span class="sub" style="color:var(--amber-text)">Activa “Pedir referencia” en Formas de pago para que el cajero la anote al cobrar.</span>`}
-      <div class="lista">${conRef.filter(x => !x.p.ok).concat(conRef.filter(x => x.p.ok)).slice(0, 30).map(Fila)}${conRef.length ? null : html`<p class="vacio">No hay pagos con referencia en estos días.</p>`}</div>
+      <div class="lista">${pendientes.concat(listos).slice(0, 40).map(Fila)}${pagos.length ? null : html`<p class="vacio">No hay pagos por transferencia, Pago Móvil o punto en estos días.</p>`}</div>
       <input ref=${archivo} type="file" accept=".csv,.txt,text/csv,text/plain" hidden onChange=${leer} />`,
-    pie: html`<button type="button" class="btn toca" onClick=${() => archivo.current && archivo.current.click()}><${Icono} n="subir" t=${18} />Subir estado de cuenta</button>`
+    pie: html`<button type="button" class="btn2 toca" onClick=${() => archivo.current && archivo.current.click()}><${Icono} n="subir" t=${18} />Subir estado de cuenta</button>`
   })} />`;
 }
 
