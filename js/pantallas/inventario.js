@@ -24,9 +24,10 @@ export function Inventario() {
   const [grupo, setGrupo] = useState('');
   // Buscar (tolerante) y filtrar por grupo; con “nuevo” el producto creado entra en el grupo que se está viendo.
   const elegir = lista => { const g = filtrarGrupo(lista, S, grupo); return q.trim() ? buscar(g, q, textosProducto(S)) : g; };
-  const Buscador = html`<div class="pila" style="gap:10px">
+  // Los grupos del filtro salen según lo que se ve: solo los que tienen algo en esa pestaña.
+  const Buscador = lst => html`<div class="pila" style="gap:10px">
     <label class="buscador entra" style=${{ width: '100%', background: 'var(--surface)', maxWidth: tel ? 'none' : '420px' }}><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + listaProductos().length} aria-label="Buscar en el inventario" /></label>
-    <${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} />
+    <${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} lista=${lst} />
   </div>`;
   const NoHay = (lista, base) => q.trim() && !lista.length ? html`<p class="vacio">No encontré “${q}”. ${(() => { const s = parecidos(base, q, textosProducto(S)); return s.length ? '¿Quisiste decir ' + s.map(p => p.n).join(', ') + '?' : ''; })()}</p>` : null;
   const PillGrupo = p => { const g = grupoDe(S, p); return g ? html`<span class="pildora" style=${{ background: suaveGrupo(g, 16), color: 'var(--ink)' }}><i class="punto-grupo" style=${{ background: colorGrupo(g) }}></i>${g.n}</span>` : html`<span class="faint">—</span>`; };
@@ -49,8 +50,8 @@ export function Inventario() {
     const masPedido = top[0];
     const FraseSvc = html`<${Frase}>Ofreces <b>${listaProductos().length} ${listaProductos().length === 1 ? 'servicio' : 'servicios'}</b>.${masPedido ? html` El que más te piden: <b>${masPedido.n}</b>, ${masPedido.q} ${masPedido.q === 1 ? 'vez' : 'veces'} en 30 días.` : ' Cada uno con su precio y lo que dura.'}</${Frase}>`;
     if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} />${pp && html`<button type="button" class="btn2 chico acento toca" data-guia="agregar" onClick=${() => editarP({})}>+ Agregar</button>`}</div>
-      ${FraseSvc}${Buscador}${Lista}${Graf2}`;
-    return html`${FraseSvc}<div class="dos-uno"><div class="pila"><div class="fila"><span class="sub crece">Con su precio y lo que dura.</span>${pp && html`<button type="button" class="btn2 lleno toca" data-guia="agregar" onClick=${() => editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}>+ Servicio</button>`}</div>${Buscador}${Lista}</div>${Graf2}</div>`;
+      ${FraseSvc}${Buscador()}${Lista}${Graf2}`;
+    return html`${FraseSvc}<div class="dos-uno"><div class="pila"><div class="fila"><span class="sub crece">Con su precio y lo que dura.</span>${pp && html`<button type="button" class="btn2 lleno toca" data-guia="agregar" onClick=${() => editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}>+ Servicio</button>`}</div>${Buscador()}${Lista}</div>${Graf2}</div>`;
   }
 
   // Cuenta nueva: sin productos todavía.
@@ -89,7 +90,9 @@ export function Inventario() {
     pp && T.mod('promos') && ['porciento', 'Promos', () => abrir('promos'), promosVigentes().length, '#e8436a'], pp && T.mod('precios') && ['etiqueta', 'Precios', () => abrir('precios'), bajoMeta().length ? -1 : 0, '#e8961a']].filter(Boolean);
   const Herramientas = herr.length ? html`<div class="herramientas entra" data-tour="escanear">${herr.map(h => html`<button type="button" key=${h[1]} class="toca" onClick=${h[2]}><span style=${{ background: h[4] }}><${Icono} n=${h[0]} t=${18} c="#fff" /></span><b>${h[1]}</b>${h[3] > 0 ? html`<em>${h[3]}</em>` : h[3] < 0 ? html`<i class="punto-aviso" style="top:8px;right:14px"></i>` : null}</button>`)}</div>` : null;
   const servs = listaProductos().filter(p => p.q == null);
-  const Pestañas = html`<div class="segmento ancho entra" data-guia="pestanas" role="tablist" aria-label="Qué ver">${[['Todo', 'Productos ' + conStock.length], ['Por reponer', 'Por reponer ' + bajos.length]].concat(servs.length || (pp && T.mod('servicios')) ? [['Servicios', 'Servicios' + (servs.length ? ' ' + servs.length : '')]] : []).map(o => html`<button type="button" role="tab" aria-selected=${filtro === o[0] ? 'true' : 'false'} class=${filtro === o[0] ? 'on' : ''} onClick=${() => setFiltro(o[0])}>${o[1]}</button>`)}</div>`;
+  // Lo que tiene la pestaña abierta (para que los grupos y sus números cuadren con ella).
+  const deTab = filtro === 'Servicios' ? servs : filtro === 'Por reponer' ? bajos : conStock;
+  const Pestañas = html`<div class="segmento ancho entra" data-guia="pestanas" role="tablist" aria-label="Qué ver">${[['Todo', 'Productos ' + conStock.length], ['Por reponer', 'Por reponer ' + bajos.length]].concat(servs.length || (pp && T.mod('servicios')) ? [['Servicios', 'Servicios' + (servs.length ? ' ' + servs.length : '')]] : []).map(o => html`<button type="button" role="tab" aria-selected=${filtro === o[0] ? 'true' : 'false'} class=${filtro === o[0] ? 'on' : ''} onClick=${() => { setFiltro(o[0]); setGrupo(''); }}>${o[1]}</button>`)}</div>`;
   const Resumen = vg && conStock.length ? html`<div class="resumen-inv entra"><span><b class="num">${D.m(valor)}</b> en estantes</span><span><b class="num in">${Math.round(margen * 100)} %</b> de ganancia</span>${bajos.length ? html`<span><b class="num amber">${bajos.length}</b> por reponer</span>` : null}</div>` : null;
   const ListaServicios = html`<div class="pila" data-tour="productos">${servicios.length ? html`<section class="tarjeta" style="padding:4px 14px"><div class="lista">${servicios.map(p => html`<button type="button" key=${p.id} class="item toca" style="color:var(--ink)" onClick=${() => editarP({ pid: p.id })}>${FotoProd(p, 34, html`<span class="ic" style=${Object.assign({ width: '34px', height: '34px', fontSize: '11px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`)}<span class="crece corta" style="font-size:14px;font-weight:600">${p.n}${PillPer(p)}</span><b class="num">${p.per && conPer ? 'Variable' : D.m(p.p)}</b></button>`)}</div></section>`
     : html`<p class="vacio">Agrega lo que cobras sin ser un producto: instalación, revisión, envío… También al vender, con “+ Servicio o cargo”.</p>`}
@@ -101,7 +104,7 @@ export function Inventario() {
     <label class="buscador buscador-oscuro entra"><${Icono} n="buscar" t=${17} /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + listaProductos().length} aria-label="Buscar en el inventario" />${(pp || puede('reponer')) && html`${T.mod('escaner') && html`<button type="button" class="buscador-cam toca" aria-label="Escanear código de barras" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="escanear" t=${17} /></button>`}`}</label>
     ${Herramientas}
     ${Pestañas}
-    ${filtro !== 'Servicios' && html`<${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} />`}
+    ${(filtro !== 'Servicios' || servs.some(p => p.g)) && html`<${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} lista=${deTab} />`}
     ${filtro !== 'Servicios' && Resumen}
     ${filtro === 'Servicios' ? ListaServicios : html`${NoHay(lista, base)}${Tarjetas}${!lista.length && !q.trim() ? html`<p class="vacio">${filtro === 'Por reponer' ? 'Nada por reponer.' : grupo ? 'No hay nada en este grupo.' : 'Todavía no tienes productos.'}</p>` : null}`}`;
 
@@ -115,7 +118,7 @@ export function Inventario() {
     </div>
     <div class="pila">
         <div class="fila" style="flex-wrap:wrap;gap:12px">${Pestañas}<span style="flex:1"></span>${Herramientas}${pp && html`<button type="button" class="btn2 lleno toca" data-guia="agregar" onClick=${() => filtro === 'Servicios' ? editarP({ svc: true }) : editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}>${filtro === 'Servicios' ? '+ Servicio' : '+ Producto'}</button>`}</div>
-        ${Buscador}
+        ${Buscador(deTab)}
         ${filtro === 'Servicios' ? ListaServicios : html`<div class="tabla-caja"><table class="tabla">
           <thead><tr><th>Producto</th><th>Grupo</th><th>Código</th><th class="der">Costo</th><th class="der">Precio</th><th class="der">Tienes</th><th class="der">Mínimo</th><th>Estado</th><th></th></tr></thead>
           <tbody>${lista.map((p, i) => { const e = estado(p); return html`<tr key=${p.id} data-guia="producto" style=${{ animationDelay: i * 25 + 'ms' }}>
