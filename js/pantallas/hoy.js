@@ -15,6 +15,7 @@ import { AvisoPlan } from './cuenta.js';
 import { RecordatoriosHoy } from '../recordatorios.js';
 import { PlanesHoy } from './cuotas.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 
 const DIA = 86400000;
 
@@ -91,6 +92,13 @@ export function Hoy() {
     ${porHacer.length > nVer || verTodo ? html`<button type="button" class="ver-mas toca" onClick=${() => setVerTodo(!verTodo)}>${verTodo ? 'Ver menos' : 'Ver ' + (porHacer.length - nVer) + ' más'}</button>` : null}
   </div>`;
 
+  // La frase de arriba: el día en palabras, con lo urgente primero.
+  const yoP = S.perfiles.find(p => p.id === S.ajustes.perfil), nom = yoP ? yoP.n.split(' ')[0] : '';
+  const hh = new Date().getHours(), saludoTxt = hh < 12 ? 'Buen día' : hh < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const primero = porHacer.find(p => p.go), bajar = t => t.charAt(0).toLowerCase() + t.slice(1);
+  const FraseHoy = html`<${Frase}>${!enLinea ? html`<b class="a">Sin internet.</b> Sigue vendiendo: todo se guarda y se sube solo cuando vuelva.`
+    : html`${tel ? saludoTxt + (nom ? ', ' + nom : '') + '. ' : ''}${r.n ? html`Llevas <b class="v num">${D.m(r.total)}</b> en ${r.n} ${r.n === 1 ? 'venta' : 'ventas'}.` : 'Aún no hay ventas hoy.'}${primero ? (primero.txt.includes(':') ? html` <b>${primero.txt}</b>.` : html` Lo primero: <b>${bajar(primero.txt)}</b>.`) : r.n ? ' Todo está al día.' : ''}`}</${Frase}>`;
+
   const nVentas = tel ? 3 : 5;
   const Recientes = html`<div class="tarjeta" style="padding-bottom:6px">
     <div class="tarjeta-tit">Últimas ventas<span class="sub">${r.n} hoy</span></div>
@@ -123,9 +131,11 @@ export function Hoy() {
         <${MarcaNegocio} n=${S.negocio} lapiz=${puede('ajustes')} />
         <span class="crece"><b class="corta">${S.negocio.nombre}</b><span class="sub corta">${new Date().toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' })} · <${Bandera} id=${P.id} t=${14} /> ${E ? (suc || 'Todos los locales') : T.n}</span></span>
       </button>
+      <${BotonGuiame} k="hoy" />
       <${BotonAyuda} k="hoy" />
       <span class="pildora" style=${{ background: enLinea ? 'var(--in-soft)' : 'var(--amber-soft)', color: enLinea ? 'var(--in-text)' : 'var(--amber-text)' }}><span class="punto"></span>${enLinea ? 'En línea' : 'Sin internet'}</span>
     </header>
+    ${FraseHoy}
     ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
     <${AvisoPlan} />
     ${T.mod('cuotas') && puede('fiado') && html`<${PlanesHoy} />`}
@@ -139,6 +149,7 @@ export function Hoy() {
 
   // ---------- computadora ----------
   return html`
+    ${FraseHoy}
     ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
     <${AvisoPlan} />
     ${T.mod('cuotas') && puede('fiado') && html`<${PlanesHoy} />`}

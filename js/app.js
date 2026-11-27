@@ -15,6 +15,7 @@ import { Cotizaciones } from './pantallas/cotizaciones.js';
 import { Cuotas } from './pantallas/cuotas.js';
 import { Agenda, citasPendientesHoy } from './pantallas/agenda.js';
 import { PanelAyuda, BotonAyuda, AYUDAS } from './ayuda.js';
+import { GuiaPantallas, BotonGuiame } from './guias.js';
 import { iniciarNube, useNube, quitarAvisoEnlace, haySesionGuardada, quitarConfirmado } from './nube.js';
 import { ClaveNueva, EntrarDeNuevo, pedirCerrarSesion, AceptarTerminos, CuentaSuspendida, PreguntaAparato } from './pantallas/cuenta.js';
 import { BotonOrbe, BotonNuevo } from './pantallas/menuorbe.js';
@@ -162,6 +163,7 @@ function App() {
         <${BotonOrbe} seccion=${valida} tabs=${tabs} />
       </div>
       ${hoja && html`<${HojaActual} key=${hoja.n} hoja=${hoja} cerrar=${() => setHoja(null)} />`}
+      <${GuiaPantallas} />
       ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
       ${Tour}
       <${AceptarTerminos} />
@@ -200,7 +202,7 @@ function App() {
       </aside>
       <div class="principal">
         <div class="barra-sup">
-          <div class="crece"><h1 class="fila" style="gap:10px">${valida === 'hoy' ? saludo() : nombreSec(valida)}<${BotonAyuda} /></h1><span class="sub">${subtitulo(valida, ctx)}</span></div>
+          <div class="crece"><h1 class="fila" style="gap:10px">${valida === 'hoy' ? saludo() : nombreSec(valida)}<${BotonAyuda} /><${BotonGuiame} key=${valida} k=${valida} /></h1><span class="sub">${subtitulo(valida, ctx)}</span></div>
           <${ChipTasa} />
           <label class="buscador"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" aria-label="Buscar" placeholder="Buscar producto, cliente u orden" onKeyDown=${e => { if (e.key === 'Enter' && e.target.value.trim()) { abrir('buscar', { q: e.target.value.trim() }); } }} /><span class="tecla">/</span></label>
           ${E && (valida === 'hoy' || valida === 'vender' || valida === 'reportes') && html`<div class="segmento" role="group" aria-label="Sucursal">${[''].concat(S.negocio.sucursales).map(x => html`<button type="button" class=${suc === x ? 'on' : ''} aria-pressed=${suc === x ? 'true' : 'false'} onClick=${() => setSuc(x)}>${x || 'Todas'}</button>`)}</div>`}
@@ -210,7 +212,8 @@ function App() {
       </div>
     </div>
     ${hoja && html`<${HojaActual} key=${hoja.n} hoja=${hoja} cerrar=${() => setHoja(null)} />`}
-    ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
+    <${GuiaPantallas} />
+      ${ayuda && html`<${PanelAyuda} key=${ayuda.n} k=${ayuda.k} cerrar=${() => setAyuda(null)} />`}
     ${Tour}
     <${AceptarTerminos} />
       <${PreguntaAparato} />

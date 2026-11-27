@@ -2,6 +2,7 @@
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 import { Icono, avisar, TONOS, hora, FotoProd } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { estadoNube, estadoPlan } from '../nube.js';
@@ -143,7 +144,7 @@ export function Vender() {
   const enCarrito = p => Object.keys(cart.q).filter(k => k === p.id || k.startsWith(p.id + '~')).reduce((a, k) => a + (porPeso(p) ? 1 : cart.q[k]), 0);
   // Sin productos todavía: la guía para agregarlos (o cobrar un cargo suelto con “+ Servicio o cargo”).
   const Grilla = !prods.length ? html`<${CatalogoVacio} donde="vender" />` : html`<div class="productos">${visibles.map((p, i) => { const c = enCarrito(p); return html`
-    <button type="button" key=${p.id} data-pid=${p.id} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
+    <button type="button" key=${p.id} data-pid=${p.id} data-directo=${!esArmable(p) && !(Array.isArray(p.vars) && p.vars.length) && !porPeso(p) ? '1' : undefined} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
       ${c ? html`<span class="cant" key=${c}>${verQ(c)}</span>` : null}
       ${FotoProd(p, 36) || html`<span class="ic" style=${Object.assign({ width: '36px', height: '36px', fontSize: '13px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`}
       ${esArmable(p) && html`<span class="armar-chip">Armar</span>`}<b>${p.n}</b><small class="num">${esArmable(p) ? 'Precio variable' : D.m(p.p)}${porPeso(p) ? ' / ' + p.u : fraccion(p) ? ' · por ' + p.u : ''}${p.dur ? ' · ' + (p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min') : ''}${p.vars && p.vars.length ? ' · ' + p.vars.length + ' opciones' : ''}</small>
@@ -178,8 +179,16 @@ export function Vender() {
   const Boton = html`${cotActual && html`<div class="aviso-plan ambar entra"><${Icono} n="doc" t=${16} /><span class="crece">Vendiendo la cotización ${numeroCot(cotActual)}</span><button type="button" class="btn2 chico toca" onClick=${vaciar}>Quitar</button></div>`}
     ${T.mod('cotizaciones') && n > 0 && !cotActual ? html`<div class="fila" style="gap:8px"><button type="button" class="btn2 toca" style="min-height:56px;border-radius:28px;padding:0 18px;flex:none" onClick=${cotizar}><${Icono} n="doc" t=${16} />Cotizar</button>${BotonCobrar}</div>` : BotonCobrar}`;
 
+  // La frase de arriba: cuánto llevas hoy o, con algo en la venta, cuánto va esta.
+  const hoyR = resumen(inicioDia(Date.now()), Date.now() + 1, suc), cosa = T.inv ? 'producto' : 'servicio';
+  const FraseVender = html`<${Frase}>${!prods.length ? html`Agrega tu primer ${cosa} y aquí lo ${T.inv ? 'vendes' : 'cobras'} con un toque.`
+    : n ? html`En esta venta: <b>${items.length} ${items.length === 1 ? cosa : cosa + 's'}</b> por <b class="v num">${D.m(total)}</b>${D.dual ? html` <span class="num">(${D.s(total)})</span>` : ''}.`
+    : hoyR.n ? html`Hoy llevas <b class="v num">${D.m(hoyR.total)}</b> en ${hoyR.n} ${hoyR.n === 1 ? 'venta' : 'ventas'}. Toca lo que se lleva para empezar otra.`
+    : html`Aún no hay ventas hoy. Toca lo que se lleva para empezar.`}</${Frase}>`;
+
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonAyuda} />${prods.length > 0 && html`<span class="sub">Toca para agregar</span>`}</div>
+    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonGuiame} k="vender" /><${BotonAyuda} /></div>
+    ${FraseVender}
     <${BarraTasas} />
     <div class="fila entra" style="gap:8px"><label class="buscador crece" style="background:var(--surface)"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${prods.length ? 'Buscar entre ' + prods.length : 'Buscar'} aria-label="Buscar producto" /></label>
       ${T.mod('escaner') && html`<button type="button" class="icono-btn toca escanear-mini" aria-label="Escanear código de barras" onClick=${() => abrir('escaner', { para: 'vender', onAgregar: sumarEscaneado })}><${Icono} n="escanear" t=${20} /></button>`}</div>
@@ -211,6 +220,7 @@ export function Vender() {
 
   return html`<div class="caja-pc">
     <div class="pila" style="gap:14px;min-width:0">
+      ${FraseVender}
       <label class="buscador" data-tour="lector" style="width:100%;min-height:54px;border-radius:18px;background:var(--surface);border:1.5px solid var(--line)">
         <${Icono} n="codigo" t=${22} c="var(--accent)" />
         <input ref=${lector} type="text" value=${q} onInput=${e => setQ(e.target.value)} onKeyDown=${buscar} placeholder="Pasa el lector de códigos o escribe el nombre y pulsa Enter" aria-label="Código o nombre" style="font-size:16px" />

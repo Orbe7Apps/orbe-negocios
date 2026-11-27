@@ -1,0 +1,93 @@
+// Guías en vivo de cada pantalla (“Guíame”) y la frase que resume cada pantalla.
+// La guía oscurece todo menos lo que hay que tocar (motor de js/guia.js), avanza cuando la persona lo toca
+// y se arma con lo que este negocio tiene encendido y lo que este perfil puede hacer.
+// Nunca enfoca un campo: ilumina y la persona toca.
+import { html, useState, useEffect, useRef } from './lib/preact-htm.js';
+import { useApp } from './ctx.js';
+import { GuiaVivo, usePortal, vecesGuia, contarGuia, terminarGuia } from './guia.js';
+import { resumen, inicioDia, listaProductos } from './datos.js';
+
+const DIA = 86400000;
+// Cada guía se invita sola en su pantalla las 2 primeras visitas; después vive en el “?”.
+const VECES_INVITA = 2;
+const clave = k => 'pant-' + k;
+
+// ---------- pasos de cada pantalla ----------
+// Paso: { sel, titulo, texto (texto o función), toca (se cumple tocando lo iluminado), fin }
+const PASOS = {
+  hoy: x => {
+    const { D, T, puede } = x, hoy0 = inicioDia(Date.now()), r = resumen(hoy0, hoy0 + DIA, x.suc);
+    return [
+      { sel: '.frase-viva', titulo: 'Cómo vas hoy', texto: 'Esta frase resume tu día. Cambia sola cuando vendes, cobras o algo necesita tu atención.' },
+      { sel: '[data-tour=resumen]', titulo: T.vender === 'Cobrar' ? 'Lo cobrado hoy' : 'Lo vendido hoy', texto: (r.n ? 'Llevas ' + D.m(r.total) + ' en ' + r.n + (r.n === 1 ? ' venta' : ' ventas') + '.' : 'Aquí verás lo de hoy en cuanto vendas.') + ' Toca las cifras para ver el detalle.' },
+      D.dual && { sel: '.hero-tasa', titulo: 'La tasa del día', texto: 'Todo lo que ves en Bs sale de esta tasa. Se actualiza sola; si hace falta, tócala para cambiarla.' },
+      { sel: '[data-tour=pendientes]', titulo: 'Para hacer hoy', texto: 'Lo urgente va de primero. Toca un aviso y te lleva directo a resolverlo.' },
+      { sel: '[data-tour=boton-orbe]', titulo: 'El botón Orbe', texto: 'Desde cualquier pantalla: ' + ['una venta', puede('gastos') && 'un gasto', 'un cliente'].filter(Boolean).join(', ') + ' y más, con un toque.' },
+      { fin: true, titulo: '¡Listo!', texto: puede('vender') ? 'Empieza el día aquí. Cuando llegue un cliente, ve a ' + (x.tel ? 'Vender' : 'Caja') + '.' : 'Empieza el día aquí. Lo que necesites está abajo.' }
+    ];
+  },
+  vender: x => {
+    const { T, D, puede } = x, hay = listaProductos().length > 0, cosa = T.inv ? 'producto' : 'servicio';
+    if (!hay) return [
+      { sel: '.frase-viva', titulo: 'Para vender', texto: 'Primero agrega lo que vendes. Cada ' + cosa + ' aparece aquí como un botón.' },
+      { fin: true, titulo: 'Agrega tu primer ' + cosa, texto: 'Ve a ' + (T.inv ? 'Inventario' : 'Servicios') + ' y toca “+”. La guía de “Nuevo producto” te acompaña.' }
+    ];
+    const fiar = T.mod('fiado') && puede('fiado');
+    return [
+      { sel: '.frase-viva', titulo: 'Así vas hoy', texto: 'Esta frase cambia con cada venta y te dice cuánto llevas.' },
+      { sel: () => document.querySelector('.productos .prod[data-directo]:not(.agotado)') ? '.productos .prod[data-directo]:not(.agotado)' : '.productos .prod:not(.agotado)', titulo: 'Toca lo que se lleva', texto: 'Un toque suma uno. Si lleva dos, toca otra vez. Lo que se vende por kilo o metro te pregunta cuánto.', toca: true },
+      { sel: '[data-tour=cobrar]', titulo: 'Ahora, cobrar', texto: 'El botón te dice el total. Tócalo.', toca: true },
+      { sel: '[data-guia=formas]', titulo: '¿Cómo te pagó?', texto: 'Toca la forma de pago.' + (D.dual ? ' Debajo ves el monto en Bs con la tasa de esa forma.' : '') + ' Con efectivo, te calcula el vuelto.' + (fiar ? ' Con fiado, te pregunta a quién.' : ''), toca: true },
+      { sel: '[data-guia=cobrar-listo]', titulo: 'Cobra', texto: 'Toca el botón. “Dividir pago” y “Cliente” están justo arriba, por si hacen falta.', toca: true },
+      { sel: '[data-guia=recibo]', titulo: 'El recibo', texto: 'Si lo pide, mándaselo por WhatsApp o imprímelo. Si no, cierra con la ✕.' },
+      { fin: true, titulo: '¡Ya sabes vender!', texto: 'La venta se sumó a Hoy' + (T.inv ? ' y bajó del inventario.' : '.') }
+    ];
+  }
+};
+// El selector de un paso puede depender de lo que hay en pantalla en ese momento.
+const selDe = p => typeof p.sel === 'function' ? p.sel() : p.sel;
+export const tieneGuia = k => !!PASOS[k];
+export const empezarGuia = k => window.dispatchEvent(new CustomEvent('orbe-guiame', { detail: k }));
+
+// ---------- la guía que corre sobre la pantalla ----------
+export function GuiaPantallas() {
+  const app = useApp();
+  const [g, setG] = useState(null); // { k, pasos, i, ok }
+  const gR = useRef(null); gR.current = g;
+  useEffect(() => {
+    const f = e => { const k = e.detail; if (!PASOS[k]) return; const pasos = PASOS[k](app).filter(Boolean); setG({ k, pasos, i: 0, ok: false }); };
+    window.addEventListener('orbe-guiame', f);
+    return () => window.removeEventListener('orbe-guiame', f);
+  });
+  const sig = () => { const x = gR.current; if (!x) return; if (x.i >= x.pasos.length - 1) { terminarGuia(clave(x.k)); setG(null); return; } setG(Object.assign({}, x, { i: x.i + 1, ok: false })); };
+  // Un paso “toca” se cumple cuando la persona toca lo iluminado (el toque sigue su camino normal).
+  useEffect(() => {
+    if (!g) return;
+    const p = Object.assign({}, g.pasos[g.i]); p.sel = selDe(p);
+    if (!p.toca) return;
+    let listo = false, faltaDesde = 0;
+    const toque = e => { if (listo) return; const el = e.target && e.target.closest && e.target.closest(p.sel); if (el) { listo = true; setTimeout(sig, 550); } };
+    document.addEventListener('click', toque, true);
+    // Si lo que hay que tocar no aparece (se cerró una hoja, no hay productos…), se puede seguir con “Siguiente”.
+    const reloj = setInterval(() => { if (document.querySelector(p.sel)) { faltaDesde = 0; return; } if (!faltaDesde) faltaDesde = Date.now(); else if (Date.now() - faltaDesde > 1600) { setG(x => x && x.i === g.i ? Object.assign({}, x, { ok: true }) : x); } }, 400);
+    return () => { document.removeEventListener('click', toque, true); clearInterval(reloj); };
+  }, [g && g.k, g && g.i]);
+  const vista = g ? g.pasos.map((p, k) => Object.assign({}, p, { sel: selDe(p), texto: typeof p.texto === 'function' ? p.texto(app) : p.texto, espera: p.toca, ok: k === g.i ? g.ok : false })) : null;
+  usePortal(g ? html`<${GuiaVivo} pasos=${vista} i=${g.i} onSig=${sig} onSalir=${() => setG(null)} />` : null);
+  return null;
+}
+
+// ---------- botón “Guíame” ----------
+// Sale las primeras visitas a la pantalla; después la guía sigue en el “?”.
+export function BotonGuiame({ k }) {
+  const [ver] = useState(() => tieneGuia(k) && vecesGuia(clave(k)) < VECES_INVITA);
+  useEffect(() => { if (tieneGuia(k)) contarGuia(clave(k)); }, [k]);
+  if (!ver) return null;
+  return html`<button type="button" class="guiame toca" onClick=${e => { e.stopPropagation(); empezarGuia(k); }}><i class="guiame-pulso"></i>Guíame</button>`;
+}
+
+// ---------- la frase de cada pantalla ----------
+// Una sola idea, con los números del momento; lo urgente primero.
+export function Frase({ children }) {
+  return html`<p class="frase-viva entra" aria-live="polite">${children}</p>`;
+}
