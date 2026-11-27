@@ -4,7 +4,7 @@ import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { vender, crearPlanCuotas, crearApartado, abonarPlan, cuentaPlan, numeroPlan, FRECUENCIAS, ACUERDOS_APARTADO, calendarioCuotas, entregarApartado, liberarApartado, apartadoACuotas, masTiempoApartado, posponerApartado, recordadoPlan, abonosDePlan, pagosDeAbono } from '../datos.js';
 import { Hoja, Icono, avisar } from '../ui.js';
-import { usePagos, numero } from './pagos.js';
+import { usePagos, useMonto, numero } from './pagos.js';
 import { enlaceWA } from '../ordenpdf.js';
 import { buscar } from '../buscar.js';
 import { BotonAyuda } from '../ayuda.js';
@@ -182,9 +182,10 @@ export function AbonoPlan({ d, cerrar }) {
   const p = (S.planes || []).find(x => x.id === d.pid);
   const c = p ? cuentaPlan(p) : null;
   const sug = c ? (p.tipo === 'cuotas' ? (c.atrasado > 0.004 ? c.atrasado : c.proxima ? c.proxima.queda : c.falta) : c.falta) : 0;
-  const [txt, setTxt] = useState(sug > 0 ? String(D.redondo(sug)).replace('.', ',') : '');
-  const v = c ? Math.min(D.redondo(numero(txt)), D.redondo(c.falta)) : 0;
-  const fp = usePagos(v, S.negocio.pays);
+  // Si la forma de pago es en Bs (Pago Móvil, Punto de venta), el pago se escribe en Bs.
+  const mo = useMonto(sug > 0 ? String(D.redondo(sug)).replace('.', ',') : '', 'p', S.negocio.pays[0]);
+  const fp = usePagos(m => c ? Math.min(mo.total(m), D.redondo(c.falta)) : 0, S.negocio.pays, undefined, undefined, mo);
+  const v = fp.total;
   if (!p) return null;
   const listo = cc => {
     if (!(v > 0)) { avisar('Escribe cuánto paga'); return; }
@@ -194,8 +195,8 @@ export function AbonoPlan({ d, cerrar }) {
   };
   return html`<${Hoja} titulo=${'Pago a ' + numeroPlan(p)} onCerrar=${cerrar} contenido=${cc => ({
     cuerpo: html`<div class="fila"><b class="crece corta" style="font-size:16px">${queEs(p)}</b><span class="amber num" style="font-weight:600">Falta ${D.m(c.falta)}</span></div>
-      ${p.tipo === 'cuotas' && (c.atrasado > 0.004 || c.proxima) && html`<div class="chips">${[c.atrasado > 0.004 ? ['Lo atrasado', c.atrasado] : null, c.proxima && !(c.atrasado > 0.004) ? ['La cuota ' + (c.proxima.i + 1), c.proxima.queda] : null, ['Todo', c.falta]].filter(Boolean).map(o => html`<button type="button" class=${'chip chico toca' + (Math.abs(v - o[1]) < 0.01 ? ' on' : '')} onClick=${() => setTxt(String(D.redondo(o[1])).replace('.', ','))}>${o[0]} · ${D.m(o[1])}</button>`)}</div>`}
-      <label class="campo"><span>¿Cuánto paga?</span><input class="grande num" type="text" inputmode="decimal" value=${txt} onInput=${e => setTxt(e.target.value)} /></label>
+      ${p.tipo === 'cuotas' && (c.atrasado > 0.004 || c.proxima) && html`<div class="chips">${[c.atrasado > 0.004 ? ['Lo atrasado', c.atrasado] : null, c.proxima && !(c.atrasado > 0.004) ? ['La cuota ' + (c.proxima.i + 1), c.proxima.queda] : null, ['Todo', c.falta]].filter(Boolean).map(o => html`<button type="button" class=${'chip chico toca' + (Math.abs(v - o[1]) < 0.01 ? ' on' : '')} onClick=${() => mo.poner(D.redondo(o[1]), fp.m)}>${o[0]} · ${D.m(o[1])}</button>`)}</div>`}
+      ${mo.campo(fp.m, { titulo: '¿Cuánto paga?' })}
       ${fp.vista({ titulo: '¿Cómo pagó?', desliza: tel })}`,
     pie: html`<button type="button" class=${'btn toca' + (v > 0 && fp.ok ? '' : ' apagado')} onClick=${() => listo(cc)}>Anotar pago de ${D.m(v)}</button>`
   })} />`;

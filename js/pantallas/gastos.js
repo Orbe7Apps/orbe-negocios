@@ -9,6 +9,9 @@ import { venceTxt } from './hoy.js';
 
 const COLOR_CAT = { 'Mercancía': '#5b4cff', 'Alquiler': '#e08a00', 'Servicios': '#8a3ffc', 'Sueldos': '#0e9aa7', 'Transporte': '#12a37a', 'Otro': '#6b7b86' };
 
+// Gasto que se escribió en Bs: se muestra lo que se pagó, tal cual.
+export const bsDe = g => 'Bs ' + new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(g.otra);
+
 export function inicioMes() { const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); return d.getTime(); }
 
 export function BloqueGastos({ compacto }) {
@@ -40,7 +43,7 @@ export function BloqueGastos({ compacto }) {
     <div class="lista">${!recientes.length ? html`<p class="vacio" style="padding:12px 0">Todavía no anotas gastos.</p>` : null}${recientes.slice(0, compacto ? 4 : 12).map((g, i) => html`<button type="button" class="item toca entra" key=${g.id} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => abrir('gasto', { gid: g.id })}>
       <span class="simb-c" style=${{ '--c': COLOR_CAT[g.cat] || 'var(--c4)', width: '32px', height: '32px' }}><${Icono} n=${simbolo(g.cat)} t=${16} /></span>
       <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="corta" style="font-size:14px">${g.n}</span><span class="sub faint corta">${fechaCorta(g.t)} · ${g.cat} · ${g.m}</span></span>
-      <b class="num out" style="font-size:14px">−${D.m(g.v)}</b>
+      <span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none"><b class="num out" style="font-size:14px">−${D.m(g.v)}</b>${g.otra ? html`<span class="sub faint num">${bsDe(g)}</span>` : null}</span>
     </button>`)}</div>
   </section>`;
 
