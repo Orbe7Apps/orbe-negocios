@@ -9,7 +9,10 @@ const ARCHIVOS = ['./', 'index.html', 'manifest.webmanifest', 'css/orbe.css', 'j
 // así la versión nueva no queda armada con archivos viejos.
 // La versión nueva NO se activa sola: espera a que la app se abra otra vez (la app se lo pide mientras se ve la
 // pantalla de carga). Así la app nunca se recarga con la persona ya en los perfiles o vendiendo.
-self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS.map(u => new Request(u, { cache: 'reload' }))))); });
+// Excepción: si la versión en uso es de antes de la v109, su app no sabe pedir el cambio y se quedaría vieja para
+// siempre; en ese caso la nueva se activa sola (esa app vieja ya se recarga sola al cambiar).
+const vieja = ks => ks.some(k => { const m = /^orbe-negocios-v(\d+)$/.exec(k); return m && Number(m[1]) < 109; });
+self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS.map(u => new Request(u, { cache: 'reload' })))).then(() => caches.keys()).then(ks => { if (vieja(ks)) return self.skipWaiting(); })); });
 self.addEventListener('message', e => { if (e.data === 'activar') self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
