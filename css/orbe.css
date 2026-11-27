@@ -1204,3 +1204,65 @@ h1 .guiame { vertical-align: middle; margin-left: 4px; }
 @keyframes esAvanza { 0%, 15% { left: 22px; } 40%, 55% { left: 105px; } 80%, 100% { left: 188px; } }
 @keyframes esPop { 0%, 10% { transform: scale(0); opacity: 1; } 30%, 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .escena * { animation: none !important; } .es-llena { width: var(--w); } }
+
+/* ---------- elegir fecha, hora u opción (js/elegir.js) ---------- */
+.capa-velo { z-index: 70; }
+.hoja.capa { z-index: 71; max-height: 88vh; max-height: calc(var(--alto-visible, 100dvh) * .88); }
+.elegido { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 54px; padding: 7px 14px 7px 8px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--fill2); color: var(--ink); text-align: left; font: inherit; transition: border-color .2s ease; }
+.elegido:active { border-color: var(--accent); }
+.elegido-ic { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-text); }
+.elegido-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.elegido-tx small { font-size: 12px; color: var(--muted); }
+.elegido-tx b { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.elegido.compacto { min-height: 48px; padding: 0 10px; gap: 8px; border-radius: 14px; font-size: 14px; font-weight: 600; }
+.elegido .simb, .ficha-opc .simb, .opc-fila .simb { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-text); }
+.cal-mes { display: flex; align-items: center; gap: 8px; }
+.cal-mes b { flex: 1; text-align: center; font-size: 17px; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.cal-ds { font-size: 12px; font-weight: 600; color: var(--muted); padding: 2px 0; }
+.cal-dia { justify-self: center; width: 42px; max-width: 100%; height: 40px; border-radius: 50%; border: 0; background: none; color: var(--ink); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; transition: background .25s var(--spring), color .25s ease; }
+.cal-dia.hoy { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cal-dia.on { background: var(--accent); color: var(--accent-ink); }
+.cal-dia:disabled { opacity: .3; }
+.ruedas { position: relative; display: flex; justify-content: center; gap: 4px; height: 240px; user-select: none; -webkit-user-select: none; flex: none; }
+.ruedas::before { content: ""; position: absolute; left: 0; right: 0; top: 96px; height: 48px; border-radius: 14px; background: var(--accent-soft); pointer-events: none; }
+.ruedas::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(var(--surface), transparent 32%, transparent 68%, var(--surface)); }
+.rueda { position: relative; height: 240px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; padding: 96px 0; overscroll-behavior: contain; touch-action: pan-y; }
+.rueda::-webkit-scrollbar { display: none; }
+.rueda > div { height: 48px; display: grid; place-items: center; scroll-snap-align: center; font-size: 22px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; transition: transform .15s ease, color .15s ease; cursor: pointer; }
+.rueda > div.on { color: var(--ink); font-weight: 700; transform: scale(1.45); }
+.rueda > div.c1 { transform: scale(1.05); }
+.ruedas-dos { display: grid; place-items: center; width: 10px; font-size: 30px; font-weight: 700; z-index: 1; }
+.fichas-opc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ficha-opc { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 12px; border-radius: 16px; border: 1.5px solid transparent; background: var(--fill); color: var(--ink); text-align: left; font: inherit; transition: border-color .25s ease, background .25s ease; }
+.ficha-opc b, .opc-fila b { font-size: 14px; font-weight: 600; display: block; }
+.ficha-opc .sub, .opc-fila .sub { font-size: 12px; }
+.ficha-opc.on { border-color: var(--accent); background: var(--accent-soft); }
+.opc-lista { display: flex; flex-direction: column; gap: 2px; }
+.opc-fila { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 10px; border-radius: 14px; border: 0; background: none; color: var(--ink); text-align: left; font: inherit; }
+.opc-fila.on { background: var(--accent-soft); }
+.hoja.capa .buscador { width: 100%; min-height: 48px; }
+.hoja.capa .buscador input { font-size: 16px; }
+@media (prefers-reduced-motion: reduce) { .rueda > div, .cal-dia, .ficha-opc { transition: none; } }
+
+/* ---------- hoja de tasas: las que se usan hoy y la de cada forma ---------- */
+.tasa-uso { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 22px; background: var(--oscuro); color: #fff; }
+.tasa-uso > .sub { color: rgba(255,255,255,.72); }
+.tasa-uso-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px; }
+.tasa-uso-t { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px; border-radius: 16px; border: 1.5px solid transparent; background: rgba(255,255,255,.08); color: #fff; text-align: left; font: inherit; animation: fadeUp .4s var(--spring) both; transition: border-color .25s ease; }
+.tasa-uso-t:disabled { opacity: 1; }
+.tasa-uso-t.on { border-color: var(--accent); }
+.tasa-uso-t .n { font-size: 12px; color: rgba(255,255,255,.72); display: inline-flex; align-items: center; gap: 5px; }
+.tasa-uso-t b { font-size: 22px; letter-spacing: -0.02em; }
+.tasa-uso-t .e { font-size: 11.5px; font-weight: 600; }
+.tasa-uso-t .e.ok { color: #3ddc9f; }
+.tasa-uso-t .e.av { color: #f5c26b; }
+.tasa-uso-t .para { font-size: 11.5px; color: rgba(255,255,255,.66); line-height: 1.35; }
+.tasa-uso .pago-monto { background: rgba(255,255,255,.1); border-color: transparent; }
+.tasa-uso .pago-monto input { color: #fff; }
+.tasa-uso .btn2:not(.lleno) { background: rgba(255,255,255,.12); color: #fff; }
+.fichas-tasa { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; }
+.fichas-tasa .chip { justify-content: center; min-height: 44px; border-radius: 22px; color: var(--ink); }
+.fichas-tasa .chip.on { color: var(--accent-text); }
+.tasa-otra { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: var(--fill2); }
+.tasa-forma .simb { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-text); }

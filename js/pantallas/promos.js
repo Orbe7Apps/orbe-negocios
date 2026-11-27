@@ -7,6 +7,7 @@ import { Hoja, Icono, Chips, Interruptor, avisar, fechaCorta, avisarDeshacer } f
 import { buscar } from '../buscar.js';
 import { textosProducto, colorGrupo } from './grupos.js';
 import { numero } from './pagos.js';
+import { CampoFecha } from '../elegir.js';
 
 export const textoPromo = (x, D) => x.tipo === 'nxm' ? 'Lleva ' + x.n1 + ', paga ' + x.n2 : x.tipo === 'pct' ? x.v + ' % de descuento' : 'A ' + D.m(x.precio) + ' desde ' + x.n1 + ' unidades';
 
@@ -46,7 +47,6 @@ export function Promo({ d, cerrar }) {
     guardarPromo(datos); c(() => { avisar('Promoción guardada'); abrir('promos'); });
   };
   const Num = (k, min, txt) => html`<div class="fila" style="gap:8px"><span class="sub crece">${txt}</span><button type="button" class="icono-btn chico toca" aria-label="Menos" onClick=${() => pon({ [k]: Math.max(min, f[k] - 1) })}><${Icono} n="menos1" t=${14} g=${2.6} /></button><b class="num" style="min-width:28px;text-align:center;font-size:18px">${f[k]}</b><button type="button" class="icono-btn chico toca" aria-label="Más" onClick=${() => pon({ [k]: f[k] + 1 })}><${Icono} n="mas1" t=${14} g=${2.6} /></button></div>`;
-  const aLocal = t => { if (!t) return ''; const x = new Date(t), p2 = n => String(n).padStart(2, '0'); return x.getFullYear() + '-' + p2(x.getMonth() + 1) + '-' + p2(x.getDate()); };
   return html`<${Hoja} titulo=${x0 ? 'Editar promoción' : 'Nueva promoción'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       <div class="campo"><span>Tipo</span><${Chips} opciones=${[{ v: 'nxm', n: 'Lleva y paga menos' }, { v: 'pct', n: 'Porcentaje' }, { v: 'desde', n: 'Precio por mayor' }]} valor=${f.tipo} onCambio=${v => pon({ tipo: v, n1: v === 'desde' ? 6 : 2, n2: 1 })} chico /></div>
@@ -58,7 +58,7 @@ export function Promo({ d, cerrar }) {
         : html`<label class="buscador" style="width:100%;background:var(--fill2)"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} placeholder=${'Buscar entre ' + prods.length} aria-label="Buscar productos para la promoción" onInput=${e => setQ(e.target.value)} /></label>
           <div class="lista">${visibles.slice(0, 40).map(p => { const on = f.pids.includes(p.id); return html`<button type="button" key=${p.id} class="item toca" role="checkbox" aria-checked=${on ? 'true' : 'false'} style="color:var(--ink)" onClick=${() => toca(p)}><span class=${'casilla' + (on ? ' on' : '')}>${on && html`<${Icono} n="check" t=${13} g=${3} />`}</span><span class="crece corta" style="font-size:14px">${p.n}</span><span class="sub num">${D.m(p.p)}</span></button>`; })}</div>`}
       <label class="campo"><span>Nombre (opcional)</span><input type="text" value=${f.n} placeholder=${nombreSug()} autocomplete="off" onInput=${e => pon({ n: e.target.value })} /></label>
-      <label class="campo"><span>Termina (opcional)</span><input type="date" value=${aLocal(f.hasta)} aria-label="Fecha de fin" onChange=${e => pon({ hasta: e.target.value ? new Date(e.target.value + 'T23:59:59').getTime() : 0 })} /></label>
+      <div class="campo"><span>Termina (opcional)</span><${CampoFecha} valor=${f.hasta} desde=${new Date().setHours(0, 0, 0, 0)} titulo="¿Hasta qué día dura?" vacio="Sin fecha de fin" quitar onCambio=${v => pon({ hasta: v ? v + 86399000 : 0 })} /></div>
       <${Interruptor} on=${f.activa} onCambio=${v => pon({ activa: v })} titulo="Activa" sub="Apágala para pausarla sin borrarla." />`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar promoción</button>${x0 && html`<button type="button" class="btn2 rojo toca" style="min-height:50px;border-radius:25px" onClick=${() => { const u = conDeshacer(() => borrarPromo(x0.id), 'Promoción borrada'); c(() => { avisarDeshacer('Promoción borrada', u && (() => { u(); avisar('Listo: la recuperaste'); })); abrir('promos'); }); }}>Borrar</button>`}`
   })} />`;

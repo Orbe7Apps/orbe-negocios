@@ -11,6 +11,7 @@ import { buscar } from '../buscar.js';
 import { textosProducto } from './grupos.js';
 import { usePagos, useMonto, numero } from './pagos.js';
 import { totales } from './vender.js';
+import { CampoFecha } from '../elegir.js';
 import { pdfOrden, compartirPDF, imprimirOrden, mensajeOrden, enlaceWA, cargarPDF } from '../ordenpdf.js';
 
 const DIA = 86400000;
@@ -211,7 +212,6 @@ export function Orden({ d, cerrar }) {
 }
 
 // ---------- crear o editar ----------
-const aLocal = t => { if (!t) return ''; const x = new Date(t), p = n => String(n).padStart(2, '0'); return x.getFullYear() + '-' + p(x.getMonth() + 1) + '-' + p(x.getDate()) + 'T' + p(x.getHours()) + ':' + p(x.getMinutes()); };
 const enDias = (dias, h = 17) => { const x = new Date(); x.setDate(x.getDate() + dias); x.setHours(h, 0, 0, 0); return x.getTime(); };
 
 export function NuevaOrden({ d, cerrar }) {
@@ -282,7 +282,7 @@ export function NuevaOrden({ d, cerrar }) {
       </div>
       <div class="campo"><span>Entrega</span>
         <div class="chips">${rapidas.map(r => { const v = enDias(r[0], r[0] === 0 ? Math.max(new Date().getHours() + 2, 17) % 24 : 17); const on = f.entrega && new Date(f.entrega).toDateString() === new Date(v).toDateString(); return html`<button type="button" class=${'chip chico toca' + (on ? ' on' : '')} onClick=${() => pon({ entrega: v })}>${r[1]}</button>`; })}<button type="button" class=${'chip chico toca' + (!f.entrega ? ' on' : '')} onClick=${() => pon({ entrega: 0 })}>Sin fecha</button></div>
-        <input type="datetime-local" value=${aLocal(f.entrega)} aria-label="Fecha y hora de entrega" onChange=${e => pon({ entrega: e.target.value ? new Date(e.target.value).getTime() : 0 })} />
+        <${CampoFecha} valor=${f.entrega} conHora desde=${new Date().setHours(0, 0, 0, 0)} etiqueta="Día y hora de entrega" titulo="¿Cuándo se entrega?" vacio="Sin fecha de entrega" onCambio=${v => pon({ entrega: v })} guia="entrega" />
       </div>
       ${perfiles.length > 1 && html`<div class="campo"><span>Responsable</span><${Chips} opciones=${perfiles.map(p => ({ v: p.id, n: p.n.split(' ')[0] }))} valor=${f.resp} onCambio=${v => pon({ resp: v })} chico desliza=${tel} /></div>`}
       ${!o0 && html`${moAnt.campo(fp.m, { titulo: 'Anticipo (opcional)', grande: false })}
