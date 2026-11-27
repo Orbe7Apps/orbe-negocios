@@ -4,6 +4,7 @@ import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
 import { Frase, BotonGuiame } from '../guias.js';
+import { Escena } from './empezar.js';
 import { ESTADOS_ORDEN, numeroOrden, anticipoDe, ordenAbierta, ordenAtrasada, nuevaOrden, editarOrden, estadoOrden, notaOrden, avisadoOrden, anticipoOrden, entregarOrden, cancelarOrden, listaProductos, listaClientes, nuevoCliente, vender } from '../datos.js';
 import { Hoja, Icono, Chips, avisar, iniciales, TONOS, hora, fechaCorta } from '../ui.js';
 import { buscar } from '../buscar.js';
@@ -77,7 +78,7 @@ export function Ordenes() {
   </div>`;
   const Buscador = html`<label class="buscador entra" style=${{ width: '100%', background: 'var(--surface)', maxWidth: tel ? 'none' : '380px' }}><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder="Buscar por cliente, número o equipo" aria-label="Buscar órdenes" /></label>`;
   const Vacio = html`<div class="tarjeta pila entra" style="align-items:center;text-align:center;padding:26px 18px">
-    <span class="ic t-vio" style="width:52px;height:52px;border-radius:16px"><${Icono} n="orden" t=${24} /></span>
+    ${S.ordenes.length ? html`<span class="ic t-vio" style="width:52px;height:52px;border-radius:16px"><${Icono} n="orden" t=${24} /></span>` : html`<${Escena} e="ordenes" />`}
     <b style="font-size:16px">${S.ordenes.length ? 'No hay órdenes aquí' : 'Todavía no tienes órdenes'}</b>
     <span class="sub" style="line-height:1.45;max-width:320px">Anota lo que te dejan para reparar o lo que te encargan, con fecha de entrega, anticipo y seguimiento.</span>
     ${pp && !S.ordenes.length && html`<button type="button" class="btn2 lleno toca" onClick=${nueva}>+ Crear la primera orden</button>`}</div>`;
@@ -85,17 +86,18 @@ export function Ordenes() {
   // La frase: lo atrasado primero, después lo listo para entregar y lo que falta cobrar.
   const listas = abiertas.filter(o => o.estado === 'lista');
   const vieja = orden(atrasadas)[0];
-  const FraseOrdenes = html`<${Frase}>${!S.ordenes.length ? 'Aquí anotas lo que te dejan o te encargan, y sigues cada orden hasta entregarla.'
+  const FraseOrdenes = !S.ordenes.length ? null : html`<${Frase}>${!S.ordenes.length ? 'Aquí anotas lo que te dejan o te encargan, y sigues cada orden hasta entregarla.'
     : atrasadas.length ? html`<b class="r">${atrasadas.length === 1 ? '1 orden atrasada' : atrasadas.length + ' órdenes atrasadas'}</b>${vieja ? html`: <b>${numeroOrden(vieja)}</b>, ${vieja.que}` : ''}.${listas.length ? html` Y <b class="v">${listas.length} ${listas.length === 1 ? 'lista' : 'listas'}</b> para entregar.` : ''}`
     : abiertas.length ? html`Tienes <b>${abiertas.length} ${abiertas.length === 1 ? 'orden abierta' : 'órdenes abiertas'}</b>${listas.length ? html`; <b class="v">${listas.length} ${listas.length === 1 ? 'está lista' : 'están listas'}</b> para entregar` : ''}.${porCobrar > 0 ? html` Falta cobrar <b class="num">${D.m(porCobrar)}</b>.` : ''}`
     : 'No hay órdenes abiertas. Todo entregado.'}</${Frase}>`;
   if (tel) return html`
     <div class="fila entra"><h1 class="titulo crece">Órdenes</h1><${BotonGuiame} k="ordenes" /><${BotonAyuda} />${pp && html`<button type="button" class="btn2 chico lleno toca" data-tour="nueva-orden" onClick=${nueva}>+ Nueva orden</button>`}</div>
-    ${FraseOrdenes}${Cifras}${Buscador}
-    <div data-guia="filtros"><${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} desliza chico /></div>
+    ${S.ordenes.length > 0 && html`${FraseOrdenes}${Cifras}${Buscador}
+    <div data-guia="filtros"><${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} desliza chico /></div>`}
     <div class="pila" data-tour="ordenes">${filtrada.length ? filtrada.map((o, i) => html`<${TarjetaOrden} key=${o.id} o=${o} i=${i} />`) : Vacio}</div>`;
 
-  // Computadora: tablero por estado; las tarjetas se arrastran de una columna a otra.
+  // Computadora: tablero por estado; las tarjetas se arrastran de una columna a otra. Sin órdenes todavía, la escena que enseña.
+  if (!S.ordenes.length) return html`<div style="max-width:560px;margin:24px auto 0">${Vacio}</div>`;
   const semana = ahora - 7 * DIA;
   const columnas = ESTADOS_ORDEN.map(e => ({ e, lista: e.k === 'entregada' ? buscadas.filter(o => o.estado === 'entregada' && (o.entregada || o.t) >= semana) : orden(buscadas.filter(o => o.estado === e.k)) }));
   const soltar = (ev, k) => {

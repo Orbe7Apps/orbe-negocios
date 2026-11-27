@@ -4,6 +4,7 @@ import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
 import { Frase, BotonGuiame } from '../guias.js';
+import { Escena } from './empezar.js';
 import { nuevaCotizacion, marcarCotizacion, borrarCotizacion, numeroCot, estadoCot, ESTADOS_COT, nuevoCliente } from '../datos.js';
 import { Hoja, Icono, Chips, avisar, fechaCorta } from '../ui.js';
 import { buscar } from '../buscar.js';
@@ -110,19 +111,19 @@ export function Cotizaciones() {
   const opciones = [['pendiente', 'Esperando'], ['aceptada', 'Vendidas'], ['vencida', 'Vencidas'], ['rechazada', 'No aceptadas']].map(o => ({ v: o[0], n: o[1] + ' ' + cuenta(o[0]) }));
   // La frase: lo que espera respuesta y lo que vence pronto.
   const pronto = pendientes.filter(c => c.vence && c.vence - Date.now() < 2 * 86400000).sort((a, b) => a.vence - b.vence)[0];
-  const FraseCot = html`<${Frase}>${!todas.length ? 'Cotiza desde Vender, mándala por WhatsApp y, si acepta, se vuelve venta con un toque.'
+  const FraseCot = !todas.length ? null : html`<${Frase}>${!todas.length ? 'Cotiza desde Vender, mándala por WhatsApp y, si acepta, se vuelve venta con un toque.'
     : pendientes.length ? html`<b>${pendientes.length} ${pendientes.length === 1 ? 'cotización espera' : 'cotizaciones esperan'}</b> respuesta, por <b class="num">${D.m(pendientes.reduce((a, c) => a + totalDe(c), 0))}</b>.${pronto ? html` La de <b>${cliDe(S, pronto).n.split(' ')[0]}</b> vence ${fechaCorta(pronto.vence)}: recuérdale.` : ''}`
     : hechas ? html`Ninguna espera respuesta. Se vendieron <b class="v">${Math.round(aceptadas.length / hechas * 100)} %</b> de las que cotizaste.` : 'Ninguna espera respuesta.'}</${Frase}>`;
   const Nueva = html`<button type="button" class="btn2 chico lleno toca" data-guia="nueva-cot" onClick=${() => { ir('vender'); avisar('Agrega los productos y toca “Cotizar”'); }}>+ Nueva cotización</button>`;
   return html`
-    <div class="fila entra" data-tour="cotizaciones"><h1 class="titulo crece">Cotizaciones</h1><${BotonGuiame} k="cotizaciones" /><${BotonAyuda} />${Nueva}</div>
+    ${tel ? html`<div class="fila entra" data-tour="cotizaciones"><h1 class="titulo crece">Cotizaciones</h1><${BotonGuiame} k="cotizaciones" /><${BotonAyuda} />${Nueva}</div>` : todas.length ? html`<div class="fila entra" data-tour="cotizaciones"><span class="crece"></span>${Nueva}</div>` : null}
     ${FraseCot}
-    <div class="rejilla-2" style="gap:10px">
+    ${todas.length > 0 && html`    <div class="rejilla-2" style="gap:10px">
       <div class="tarjeta cifra entra"><span class="sub">Esperando respuesta</span><span class="v num" style="font-size:22px">${D.m(pendientes.reduce((a, c) => a + totalDe(c), 0))}</span><span class="sub faint">${pendientes.length} ${pendientes.length === 1 ? 'cotización' : 'cotizaciones'}</span></div>
       <div class="tarjeta cifra entra" style="--i:1"><span class="sub">Se vendieron</span><span class="v num" style="font-size:22px">${hechas ? Math.round(aceptadas.length / hechas * 100) + ' %' : '—'}</span><span class="sub faint">${aceptadas.length} de ${hechas} respondidas</span></div>
     </div>
     <label class="buscador entra" style=${{ width: '100%', background: 'var(--surface)', maxWidth: tel ? 'none' : '380px' }}><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder="Buscar cliente, número o producto" aria-label="Buscar cotización" /></label>
-    <div data-guia="filtros"><${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} desliza chico /></div>
+    <div data-guia="filtros"><${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} desliza chico /></div>`}
     <div class="pila">${lista.length ? lista.map((c, i) => { const cl = cliDe(S, c), est = estadoCot(c); return html`
       <button type="button" key=${c.id} data-guia="cotizacion" class="tarjeta fila toca entra" style=${{ '--i': i, gap: '12px', textAlign: 'left', color: 'var(--ink)', border: 0, font: 'inherit', width: '100%' }} onClick=${() => abrir('cotizacion', { cid: c.id })}>
         <span class="ic t-azu"><${Icono} n="doc" t=${18} /></span>
@@ -130,7 +131,7 @@ export function Cotizaciones() {
         <b class="num">${D.m(totalDe(c))}</b>
       </button>`; })
       : html`<div class="tarjeta pila entra" style="align-items:center;text-align:center;padding:26px 18px">
-          <span class="ic t-azu" style="width:52px;height:52px;border-radius:16px"><${Icono} n="doc" t=${24} /></span>
+          ${todas.length ? html`<span class="ic t-azu" style="width:52px;height:52px;border-radius:16px"><${Icono} n="doc" t=${24} /></span>` : html`<${Escena} e="cotizaciones" />`}
           <b style="font-size:16px">${todas.length ? 'No hay cotizaciones aquí' : 'Todavía no tienes cotizaciones'}</b>
           <span class="sub" style="line-height:1.45;max-width:340px">En Vender agrega lo que el cliente quiere y toca “Cotizar”. Se la mandas en PDF por WhatsApp y, si acepta, la conviertes en venta con un toque.</span>
           ${!todas.length && Nueva}</div>`}</div>`;

@@ -181,7 +181,7 @@ export function Vender() {
 
   // La frase de arriba: cuánto llevas hoy o, con algo en la venta, cuánto va esta.
   const hoyR = resumen(inicioDia(Date.now()), Date.now() + 1, suc), cosa = T.inv ? 'producto' : 'servicio';
-  const FraseVender = html`<${Frase}>${!prods.length ? html`Agrega tu primer ${cosa} y aquí lo ${T.inv ? 'vendes' : 'cobras'} con un toque.`
+  const FraseVender = !prods.length ? null : html`<${Frase}>${!prods.length ? html`Agrega tu primer ${cosa} y aquí lo ${T.inv ? 'vendes' : 'cobras'} con un toque.`
     : n ? html`En esta venta: <b>${items.length} ${items.length === 1 ? cosa : cosa + 's'}</b> por <b class="v num">${D.m(total)}</b>${D.dual ? html` <span class="num">(${D.s(total)})</span>` : ''}.`
     : hoyR.n ? html`Hoy llevas <b class="v num">${D.m(hoyR.total)}</b> en ${hoyR.n} ${hoyR.n === 1 ? 'venta' : 'ventas'}. Toca lo que se lleva para empezar otra.`
     : html`Aún no hay ventas hoy. Toca lo que se lleva para empezar.`}</${Frase}>`;

@@ -124,6 +124,31 @@ const PASOS = {
     hay('[data-guia=plan]') && { sel: '[data-guia=plan]', titulo: 'Cada plan', texto: 'La barra muestra cuánto ha pagado. Tócalo para anotar un pago, ver su calendario o recordarle.' },
     { fin: true, titulo: '¡Listo!', texto: 'Para crear uno, al cobrar elige “En cuotas” o “Apartado”.' }
   ],
+  reportes: x => !hay('[data-guia=cifras]') ? [
+    { fin: true, titulo: 'Aquí verás cómo te va', texto: 'Cuando empieces a vender: cuánto vendes cada día, lo que más se vende y tu ganancia real.' }
+  ] : [
+    { sel: '.frase-viva', titulo: 'Cómo te va', texto: 'Esta frase te dice cuánto vendiste, cómo vas contra antes y cuánto te queda de verdad.' },
+    { sel: '[data-guia=periodo]', titulo: 'Elige el período', texto: '7 días, 30 días o este mes. Todo lo de abajo cambia.' },
+    { sel: '[data-guia=cifras]', titulo: 'Lo que importa', texto: 'Ventas, ganancia, gastos y lo que de verdad te queda. La flecha compara con el período anterior.' },
+    hay('[data-guia=resultado]') && { sel: '[data-guia=resultado]', titulo: 'A dónde se va', texto: 'De lo que vendes: lo que costó, lo que gastaste y lo que te queda.' },
+    x.D.dual && hay('[data-guia=moneda]') && { sel: '[data-guia=moneda]', titulo: 'En otra moneda', texto: 'Cada venta se convierte con la tasa de su día: así la inflación no engaña.' },
+    { sel: '[data-guia=exportar]', titulo: 'Llévatelo', texto: 'Descarga las ventas en Excel o guarda el reporte en PDF.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Míralo una vez por semana. Más abajo están tu mejor día y tu mejor hora.' }
+  ],
+  equipo: x => [
+    { sel: '.frase-viva', titulo: 'Tu equipo', texto: 'Esta frase te dice quién va vendiendo más y si a alguien le falta el PIN.' },
+    { sel: '[data-guia=personas]', titulo: 'Cada persona', texto: 'Tócala para cambiar su rol o su PIN. Con PIN, cada venta dice quién la hizo.' },
+    { sel: x.tel ? '[data-guia=roles]' : '[data-tour=equipo]', titulo: 'Qué puede hacer cada rol', texto: 'Toca un permiso para darlo o quitarlo. El dueño siempre puede todo.' },
+    { sel: '[data-guia=nuevo-perfil]', titulo: 'Agregar a alguien', texto: 'Su nombre, su rol y su PIN.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Dar un permiso delicado, como anular ventas, pide confirmación y queda en el registro.' }
+  ],
+  mas: x => [
+    { sel: '[data-guia=buscar-ajuste]', titulo: '¿Qué quieres cambiar?', texto: 'Escribe una palabra, como “impresora”, “pago móvil” o “PIN”, y aparece dónde está.' },
+    x.tel ? hay('[data-tour=mas-acciones]') && { sel: '[data-tour=mas-acciones]', titulo: 'Por temas', texto: 'Todo está ordenado por temas: dinero, tu negocio, ventas y cobro, y la app.' }
+      : { sel: '.ajustes-temas', titulo: 'Por temas', texto: 'Toca un tema a la izquierda y cámbialo a la derecha.' },
+    hay('[data-tour=funciones]') && { sel: '[data-tour=funciones]', titulo: 'Funciones', texto: 'Enciende solo lo que usas. Lo apagado desaparece de la app, sin borrar tus datos.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Si no encuentras algo, búscalo arriba con tus palabras.' }
+  ],
   cierre: () => [
     { sel: '[data-guia=cierre-resumen]', titulo: 'Lo de hoy', texto: 'Lo vendido, con el fiado y los gastos del día.' },
     hay('[data-guia=cierre-contar]') && { sel: '[data-guia=cierre-contar]', titulo: 'Cuenta el efectivo', texto: 'Escribe lo que contaste o usa + y −. Si prefieres, cuenta billete por billete.' },
@@ -135,6 +160,12 @@ const PASOS = {
 };
 // En los negocios de servicios, Inventario se llama Servicios (y su “?” pregunta por “servicios”).
 PASOS.servicios = PASOS.inventario;
+// Al empezar, se saltan los pasos cuyo lugar no está en pantalla (una frase que no sale con la pantalla vacía…).
+// Lo que viene después de un paso “toca” aparece más tarde (una hoja que se abre), así que se deja.
+function presentes(pasos) {
+  let despues = false;
+  return pasos.filter(p => { if (despues || p.fin || p.toca) { if (p.toca) despues = true; return true; } return hay(selDe(p)); });
+}
 // ¿Está en pantalla? (para saltar lo que este negocio o este momento no tiene)
 function hay(s) { return !!document.querySelector(s); }
 // El selector de un paso puede depender de lo que hay en pantalla en ese momento.
@@ -148,7 +179,7 @@ export function GuiaPantallas() {
   const [g, setG] = useState(null); // { k, pasos, i, ok }
   const gR = useRef(null); gR.current = g;
   useEffect(() => {
-    const f = e => { const k = e.detail; if (!PASOS[k]) return; const pasos = PASOS[k](app).filter(Boolean); setG({ k, pasos, i: 0, ok: false }); };
+    const f = e => { const k = e.detail; if (!PASOS[k]) return; const pasos = presentes(PASOS[k](app).filter(Boolean)); setG({ k, pasos, i: 0, ok: false }); };
     window.addEventListener('orbe-guiame', f);
     return () => window.removeEventListener('orbe-guiame', f);
   });

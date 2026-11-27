@@ -61,15 +61,23 @@ const PC = process.env.PC === '1';
       if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en Clientes');
       else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir('clientes'); }
       // Inventario (o Servicios) y Gastos.
-      for (const sec of ['inventario', 'gastos', 'agenda', 'ordenes', 'cotizaciones', 'cuotas']) {
+      for (const sec of ['inventario', 'gastos', 'agenda', 'ordenes', 'cotizaciones', 'cuotas', 'reportes', 'equipo', 'mas']) {
         await p.evaluate(h => { location.hash = '#' + h; }, sec); await p.waitForTimeout(1200);
         if (!(await p.evaluate(h => !!document.querySelector('[data-sec="' + h + '"]'), sec))) { console.log(tag + ' · ' + sec + ': no está en este perfil'); continue; }
         const fs = await p.locator('.frase-viva').first().innerText().catch(() => '');
         console.log(tag + ' · frase de ' + sec + ': ' + fs);
-        if (!fs || /undefined|NaN|\[object/.test(fs)) mal('frase de ' + sec + ' rara: ' + fs);
+        if (sec !== 'mas' && (!fs && !(await p.locator('.escena').count()) || /undefined|NaN|\[object/.test(fs))) mal('frase de ' + sec + ' rara: ' + fs);
         if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en ' + sec);
         else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir(sec); }
       }
+      // Buscador de Ajustes: “impresora” y “pago móvil” deben dar con su tema.
+      await p.evaluate(() => { location.hash = '#mas'; }); await p.waitForTimeout(900);
+      for (const [w, esp] of [['impresora', 'Impresora'], ['pago movil', 'Formas de pago'], ['pin', 'perfil']]) {
+        await p.fill('[data-guia=buscar-ajuste] input', w); await p.waitForTimeout(400);
+        const txt = await p.locator(PC ? '.ajustes-temas' : '.menu-lista').first().innerText().catch(() => '');
+        if (!txt.toLowerCase().includes(esp.toLowerCase())) mal('buscar “' + w + '” en Ajustes no da “' + esp + '”: ' + txt.slice(0, 80).replace(/\n/g, ' · '));
+      }
+      await p.fill('[data-guia=buscar-ajuste] input', ''); await p.waitForTimeout(300);
       // Caja y cierre del día (si el negocio usa caja).
       if (await p.evaluate(() => !!window.__abrir)) {
         await p.evaluate(() => window.__abrir('caja')); await p.waitForTimeout(900);

@@ -4,6 +4,7 @@ import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
 import { Frase, BotonGuiame } from '../guias.js';
+import { Escena } from './empezar.js';
 import { inicioDia, listaProductos, guardarCita, estadoCita, citaActiva, ESTADOS_CITA } from '../datos.js';
 import { Hoja, Icono, avisar, hora, iniciales } from '../ui.js';
 import { totales } from './vender.js';
@@ -80,14 +81,14 @@ export function Agenda() {
     <span class="pildora">${D.m(estimado)}</span>
   </div>`;
   const Vacio = html`<div class="tarjeta pila entra" style="align-items:center;text-align:center;box-shadow:none;background:var(--fill2)">
-    <span class="ic t-azu"><${Icono} n="calendario" t=${18} /></span><b>No hay citas ${nombreDia(dia) === 'Hoy' ? 'hoy' : 'este día'}</b>
+    ${S.citas.length ? html`<span class="ic t-azu"><${Icono} n="calendario" t=${18} /></span>` : html`<${Escena} e="agenda" />`}<b>No hay citas ${nombreDia(dia) === 'Hoy' ? 'hoy' : 'este día'}</b>
     <button type="button" class="btn2 chico acento toca" onClick=${() => nueva()}>+ Agendar una cita</button></div>`;
 
   // La frase: la próxima cita de hoy, o cuántas hay el día que se ve.
   const esHoy = dia === inicioDia(Date.now()), ahora = Date.now();
   const proxima = esHoy ? activas.filter(c => citaActiva(c) && c.t + c.dur * 60000 > ahora).sort((a, b) => a.t - b.t)[0] : null;
   const nDia = esHoy ? 'hoy' : nombreDia(dia) === 'Mañana' ? 'mañana' : 'el ' + fechaLarga(dia).split(',')[0];
-  const FraseAgenda = html`<${Frase}>${!activas.length ? html`No hay citas ${nDia}. Toca “+” para agendar una.`
+  const FraseAgenda = !activas.length ? null : html`<${Frase}>${!activas.length ? ''
     : html`Tienes <b>${activas.length} ${activas.length === 1 ? 'cita' : 'citas'}</b> ${nDia}${estimado > 0 ? html`, unos <b class="v num">${D.m(estimado)}</b> si vienen todos` : ''}.${proxima ? html` ${proxima.t <= ahora ? 'Ahora' : 'La próxima'}: <b>${(proxima.nom || 'Cliente').split(' ')[0]}</b>${proxima.t <= ahora ? '' : ' a las ' + hora(proxima.t)}.` : esHoy ? ' Ya no quedan por atender.' : ''}`}</${Frase}>`;
   if (tel) return html`
     <div class="fila entra"><h1 class="titulo crece">Agenda</h1><${BotonGuiame} k="agenda" /><${BotonAyuda} /><button type="button" data-guia="nueva-cita" class="icono-btn toca boton-agregar" aria-label="Nueva cita" onClick=${() => nueva({ pro })}><${Icono} n="mas1" t=${20} g=${2.6} /></button></div>
@@ -99,6 +100,7 @@ export function Agenda() {
 
   // Computadora: una columna por profesional.
   const cols = pros.length ? pros : [{ id: '', n: 'Citas' }];
+  if (!S.citas.length) return html`<div class="pila" style="gap:14px;max-width:560px;margin:24px auto 0">${Vacio}</div>`;
   return html`<div class="pila" style="gap:14px">
     ${FraseAgenda}
     <div class="fila" style="gap:12px">${Dias}<span style="flex:1"></span><button type="button" class="btn2 lleno toca" data-guia="nueva-cita" onClick=${() => nueva()}>+ Cita</button></div>

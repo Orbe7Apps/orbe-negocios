@@ -2,6 +2,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 import { resumen, serieDias, gastosEntre, inicioDia, leer, gastoAlt, gastoEur, vigentes } from '../datos.js';
 import { Barras, Linea, Reparto, BarrasH, Monto, color } from '../graficos.js';
 import { Icono, Chips, avisar, fechaCorta, iniciales, TONOS } from '../ui.js';
@@ -77,8 +78,8 @@ export function Reportes() {
     { l: 'Te queda', v: Math.max(0, real), tip: 'Ganancia real · ' + fm(real), segs: [{ v: Math.max(0, real), c: 'var(--c2)' }] }
   ];
   const nombreArchivo = 'orbe-ventas-' + new Date(desde).toISOString().slice(0, 10) + '.csv';
-  const Moneda = D.dual ? html`<div class="segmento" role="group" aria-label="Moneda de los reportes">${[['p', P.id === 'VE' ? '$' : P.s], ['s', simb2]].concat(S.negocio.euro ? [['e', '€']] : []).map(o => html`<button type="button" class=${mon === o[0] ? 'on' : ''} aria-pressed=${mon === o[0] ? 'true' : 'false'} onClick=${() => setMon(o[0])}>${o[1]}</button>`)}</div>` : null;
-  const Acciones = html`<div class="chips">
+  const Moneda = D.dual ? html`<div class="segmento" data-guia="moneda" role="group" aria-label="Moneda de los reportes">${[['p', P.id === 'VE' ? '$' : P.s], ['s', simb2]].concat(S.negocio.euro ? [['e', '€']] : []).map(o => html`<button type="button" class=${mon === o[0] ? 'on' : ''} aria-pressed=${mon === o[0] ? 'true' : 'false'} onClick=${() => setMon(o[0])}>${o[1]}</button>`)}</div>` : null;
+  const Acciones = html`<div class="chips" data-guia="exportar">
     <button type="button" class="btn2 chico toca" onClick=${() => { descargar(nombreArchivo, ventasCSV(desde, hasta), 'text/csv;charset=utf-8'); avisar('Excel descargado'); }}><${Icono} n="descarga" t=${15} />Excel</button>
     <button type="button" class="btn2 chico toca" onClick=${() => window.print()}><${Icono} n="doc" t=${15} />PDF</button>
   </div>`;
@@ -94,7 +95,7 @@ export function Reportes() {
     linea: html`<section class="tarjeta entra llena" style="--i:4"><div class="tarjeta-tit">Ventas por día<span class="sub">${r.n} ${r.n === 1 ? 'venta' : 'ventas'} · ticket ${D.m(r.ticket)}</span></div>
       ${(alt || enEur) && html`<span class="sub" style="display:block;margin:-6px 0 8px">En ${enEur ? 'euros' : simb2}, con la tasa de cada día</span>`}
       <${Linea} key=${dias + suc + mon} datos=${serie.map(d => ({ l: fechaCorta(d.t), v: alt ? d.totalAlt : enEur ? d.totalEur : d.total, tip: fm(alt ? d.totalAlt : enEur ? d.totalEur : d.total) }))} alto=${tel ? 170 : 220} id=${'rep' + dias} etiquetas=${tel ? 4 : 7} llenar=${!tel} /></section>`,
-    resultado: html`<section class="tarjeta entra llena" style="--i:5"><div class="tarjeta-tit">De lo que vendes, te queda<b class="num in" style="font-size:14px">${r.total ? Math.round(real / r.total * 100) : 0} %</b></div>
+    resultado: html`<section class="tarjeta entra llena" data-guia="resultado" style="--i:5"><div class="tarjeta-tit">De lo que vendes, te queda<b class="num in" style="font-size:14px">${r.total ? Math.round(real / r.total * 100) : 0} %</b></div>
       <${Barras} key=${'res' + dias + suc + mon} datos=${resultado} alto=${tel ? 150 : 200} hueco=${tel ? 14 : 22} llenar=${!tel} />
       ${!alt && !enEur && r.ganReposicion < r.ganancia - 0.01 && html`<span class="sub" style="display:block;margin-top:10px;line-height:1.45;color:var(--amber-text)">Si repones lo vendido a lo que cuesta hoy, la ganancia bruta sería ${D.m(r.ganReposicion)} (${D.m(r.ganancia - r.ganReposicion)} menos).</span>`}</section>`,
     pagos: html`<section class="tarjeta entra" style="--i:6"><div class="tarjeta-tit">Formas de pago</div>
@@ -114,17 +115,22 @@ export function Reportes() {
       <${BarrasH} datos=${S.negocio.sucursales.map((s, i) => ({ n: s, v: r.porSuc[s] || 0, txt: D.m(r.porSuc[s] || 0), c: color(i) }))} /></section>` : null
   };
 
+  // La frase: cuánto vendiste, cómo vas contra antes y cuánto te queda de verdad.
+  const DIAS_L = { Dom: 'domingo', Lun: 'lunes', Mar: 'martes', 'Mié': 'miércoles', Jue: 'jueves', Vie: 'viernes', 'Sáb': 'sábado' };
+  const FraseRep = html`<${Frase}>${per === 'mes' ? 'Este mes' : 'En ' + dias + ' días'} vendiste <b class="num">${fm(tot(r))}</b>${ant.total && cambio ? html` (<b class=${cambio > 0 ? 'v' : 'r'}>${cambio > 0 ? '+' : '−'}${Math.abs(cambio)} %</b> que antes)` : ''} y te ${real >= 0 ? 'quedan' : 'faltan'} <b class=${'num ' + (real >= 0 ? 'v' : 'r')}>${fm(Math.abs(real))}</b> después de costos y gastos.${mejor.v > 0 ? ' Tu mejor día es el ' + DIAS_L[mejor.l] + '.' : ''}</${Frase}>`;
   // Cuenta nueva: todavía no hay nada que medir.
-  if (!S.ventas.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Reportes</h1><${BotonAyuda} /></div>` : null}<${Vacio} i="grafico" t="Aquí verás cómo te va" s="Cuando empieces a vender: cuánto vendes cada día, lo que más se vende, tu ganancia real después de gastos y tus mejores horas.">${S.productos.length ? html`<button type="button" class="btn2 lleno toca" onClick=${() => ir('vender')}>Hacer una venta</button>` : null}</${Vacio}>`;
+  if (!S.ventas.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Reportes</h1><${BotonGuiame} k="reportes" /><${BotonAyuda} /></div>` : null}<${Vacio} i="grafico" e="reportes" t="Aquí verás cómo te va" s="Cuando empieces a vender: cuánto vendes cada día, lo que más se vende, tu ganancia real después de gastos y tus mejores horas.">${S.productos.length ? html`<button type="button" class="btn2 lleno toca" onClick=${() => ir('vender')}>Hacer una venta</button>` : null}</${Vacio}>`;
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Reportes</h1><${BotonAyuda} />${Acciones}</div>
-    <div class="fila" style="gap:8px;flex-wrap:wrap"><${Chips} opciones=${PERIODOS} valor=${per} onCambio=${setPer} chico /><span style="flex:1"></span>${Moneda}</div>
-    <div class="rejilla-2">${Cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[5]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} key=${mon} v=${k[1]} f=${fm} clase="v" /><span class="faint" style=${{ fontSize: '11px', color: k[4] }}>${k[2]}</span></div>`)}</div>
+    <div class="fila entra"><h1 class="titulo crece">Reportes</h1><${BotonGuiame} k="reportes" /><${BotonAyuda} /></div>
+    ${FraseRep}
+    <div class="fila" style="gap:8px;flex-wrap:wrap"><span data-guia="periodo"><${Chips} opciones=${PERIODOS} valor=${per} onCambio=${setPer} chico /></span><span style="flex:1"></span>${Moneda}${Acciones}</div>
+    <div class="rejilla-2" data-guia="cifras">${Cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[5]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} key=${mon} v=${k[1]} f=${fm} clase="v" /><span class="faint" style=${{ fontSize: '11px', color: k[4] }}>${k[2]}</span></div>`)}</div>
     ${bloques.linea}${bloques.resultado}${bloques.pagos}${bloques.productos}${bloques.semana}${bloques.comisiones}${bloques.horas}${bloques.sucursales}`;
 
   return html`
-    <div class="fila"><${Chips} opciones=${PERIODOS} valor=${per} onCambio=${setPer} chico /><span style="flex:1"></span>${Moneda}${Acciones}</div>
-    <div class="cifras">${Cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[5]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} key=${mon} v=${k[1]} f=${fm} clase="v" /><span class="sub" style=${{ color: k[4] || 'var(--faint)' }}>${k[2]}</span></div>`)}</div>
+    ${FraseRep}
+    <div class="fila"><span data-guia="periodo"><${Chips} opciones=${PERIODOS} valor=${per} onCambio=${setPer} chico /></span><span style="flex:1"></span>${Moneda}${Acciones}</div>
+    <div class="cifras" data-guia="cifras">${Cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[5]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} key=${mon} v=${k[1]} f=${fm} clase="v" /><span class="sub" style=${{ color: k[4] || 'var(--faint)' }}>${k[2]}</span></div>`)}</div>
     <div class="dos-uno">${bloques.linea}${bloques.resultado}</div>
     <div class="tres estira">${bloques.pagos}${bloques.productos}${bloques.semana}</div>
     ${bloques.comisiones && html`<div class="mitades">${bloques.comisiones}${bloques.horas}</div>`}${!bloques.comisiones && bloques.horas}
