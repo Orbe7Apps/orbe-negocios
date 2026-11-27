@@ -30,7 +30,7 @@ export function FiltroGrupos({ valor, onCambio, lista, crear }) {
   const sinGrupo = cuenta('sin');
   return html`<div class=${'chips grupos-filtro' + (tel ? ' desliza' : '')} role="group" aria-label="Grupos">
     <button type="button" class=${'chip chico toca' + (!valor ? ' on' : '')} aria-pressed=${!valor ? 'true' : 'false'} onClick=${() => onCambio('')}>Todo <span class="faint num">${prods.length}</span></button>
-    ${S.grupos.map(g => html`<button type="button" key=${g.id} class=${'chip chico toca' + (valor === g.id ? ' on' : '')} aria-pressed=${valor === g.id ? 'true' : 'false'} onClick=${() => onCambio(valor === g.id ? '' : g.id)}><i class="punto-grupo" style=${{ background: colorGrupo(g) }}></i>${g.n} <span class="faint num">${cuenta(g.id)}</span></button>`)}
+    ${S.grupos.filter(g => valor === g.id || cuenta(g.id) > 0).map(g => html`<button type="button" key=${g.id} class=${'chip chico toca' + (valor === g.id ? ' on' : '')} aria-pressed=${valor === g.id ? 'true' : 'false'} onClick=${() => onCambio(valor === g.id ? '' : g.id)}><i class="punto-grupo" style=${{ background: colorGrupo(g) }}></i>${g.n} <span class="faint num">${cuenta(g.id)}</span></button>`)}
     ${sinGrupo > 0 && html`<button type="button" class=${'chip chico toca' + (valor === 'sin' ? ' on' : '')} onClick=${() => onCambio(valor === 'sin' ? '' : 'sin')}>Sin grupo <span class="faint num">${sinGrupo}</span></button>`}
     ${puede('productos') && crear !== false && html`<button type="button" class="chip chico toca" style="border:1.5px dashed var(--line);background:transparent" aria-label="Organizar grupos" onClick=${() => abrir('grupos')}><${Icono} n="lapiz" t=${13} />Grupos</button>`}
   </div>`;
