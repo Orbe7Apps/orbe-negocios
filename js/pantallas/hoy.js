@@ -77,7 +77,8 @@ export function Hoy() {
     if (espera.length) pendientes.unshift({ i: 'personas', t: 't-amb', txt: espera.length + (espera.length === 1 ? ' cliente esperando' : ' clientes esperando'), sub: espera.map(c => c.nom.split(' ')[0]).join(', '), go: () => abrir('cita', { cid: espera[0].id }) });
     if (prox) pendientes.unshift({ i: 'calendario', t: 't-azu', txt: 'Próxima cita: ' + prox.nom.split(' ')[0] + ' a las ' + hora(prox.t), sub: 'Toca para avisarle o cobrar', go: () => abrir('cita', { cid: prox.id }) });
   }
-  const recientes = leer().ventas.filter(v => !suc || v.suc === suc).slice(-6).reverse();
+  // Las de días anteriores registradas después no salen como “últimas”: se ordenan por la hora de la venta.
+  const recientes = leer().ventas.filter(v => !suc || v.suc === suc).slice(-40).sort((a, b) => a.t - b.t).slice(-6).reverse();
 
   // Lo urgente primero; lo que no se puede tocar (como “Día cerrado”) va al final.
   const porHacer = pendientes.filter(p => p.go).concat(pendientes.filter(p => !p.go));
