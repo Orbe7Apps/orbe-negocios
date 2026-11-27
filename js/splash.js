@@ -6,7 +6,10 @@
   if (tema === 'oscuro') document.documentElement.setAttribute('data-theme', 'dark');
   if (d && d.nombre) { var n = document.getElementById('sp-negocio'); n.textContent = d.nombre; n.hidden = false; }
   var el = document.getElementById('splash'), t0 = Date.now(), listo = false;
-  var rapido = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Recarga para estrenar una versión nueva: la pantalla de carga sigue quieta donde iba, sin volver a empezar.
+  var sigue = false; try { sigue = sessionStorage.getItem('orbe-sigue') === '1'; sessionStorage.removeItem('orbe-sigue'); } catch (e) {}
+  if (sigue) el.classList.add('sigue');
+  var rapido = sigue || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   window.__listo = function () {
     if (listo) return; listo = true;
     setTimeout(function () { el.classList.add('sale'); setTimeout(function () { el.remove(); }, 500); }, Math.max(0, (rapido ? 250 : 1500) - (Date.now() - t0)));

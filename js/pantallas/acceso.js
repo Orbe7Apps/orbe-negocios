@@ -1,6 +1,6 @@
 // ¿Quién está usando Orbe? Cada persona entra con su perfil y su PIN.
 // El PIN se marca en un teclado en pantalla: el teclado del teléfono nunca se abre solo.
-import { html, useState, useEffect } from '../lib/preact-htm.js';
+import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useDatos, entrar, pinValido, pedirPinNuevo, cambiarPin } from '../datos.js';
 import { enlaceWA } from '../ordenpdf.js';
 import { pais } from '../paises.js';
@@ -12,22 +12,31 @@ import { CampoClave, CampoUsuario } from './cuenta.js';
 export function Teclado({ largo = 4, onListo, error }) {
   const [v, setV] = useState('');
   const [mal, setMal] = useState(false);
+  // Lo marcado vive también en una referencia: dos toques muy seguidos (antes de que la pantalla se redibuje) cuentan los dos.
+  const ref = useRef(''), revisando = useRef(false);
+  const poner = nv => { ref.current = nv; setV(nv); };
   const toca = d => {
-    if (v.length >= largo) return;
-    const nv = v + d; setV(nv);
-    if (nv.length === largo) setTimeout(() => { if (!onListo(nv)) { setMal(true); setTimeout(() => { setMal(false); setV(''); }, 450); } }, 120);
+    if (revisando.current || ref.current.length >= largo) return;
+    const nv = ref.current + d; poner(nv);
+    if (navigator.vibrate) try { navigator.vibrate(8); } catch (e) {}
+    if (nv.length === largo) { revisando.current = true; setTimeout(() => { if (!onListo(nv)) { setMal(true); setTimeout(() => { setMal(false); poner(''); revisando.current = false; }, 450); } else revisando.current = false; }, 90); }
   };
-  const borra = () => setV(v.slice(0, -1));
+  const borra = () => { if (!revisando.current) poner(ref.current.slice(0, -1)); };
   useEffect(() => {
     // En la computadora también se puede escribir con el teclado físico (solo cuando la persona teclea).
     const k = e => { if (/^\d$/.test(e.key)) toca(e.key); else if (e.key === 'Backspace') borra(); };
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
   });
+  // Responde al apoyar el dedo (no al levantarlo): se siente al instante. El clic queda para teclado y lectores de pantalla.
+  const tecla = d => ({
+    onPointerDown: e => { if (e.button > 0) return; e.preventDefault(); d === '<' ? borra() : toca(d); },
+    onClick: e => { if (e.detail === 0) d === '<' ? borra() : toca(d); }
+  });
   return html`<div class="pila" style="align-items:center;gap:22px">
     <div class=${'puntos-pin' + (mal ? ' mal' : '')} role="status" aria-label=${v.length + ' de ' + largo + ' números'}>${Array.from({ length: largo }, (_, i) => html`<i class=${i < v.length ? 'on' : ''}></i>`)}</div>
     ${error && html`<span class="sub out">${error}</span>`}
-    <div class="teclado">${['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '<'].map(d => d === '' ? html`<span></span>` : html`<button type="button" class="toca" aria-label=${d === '<' ? 'Borrar' : d} onClick=${() => d === '<' ? borra() : toca(d)}>${d === '<' ? html`<${Icono} n="atras" t=${22} />` : d}</button>`)}</div>
+    <div class="teclado">${['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '<'].map(d => d === '' ? html`<span></span>` : html`<button type="button" class="toca" aria-label=${d === '<' ? 'Borrar' : d} ...${tecla(d)}>${d === '<' ? html`<${Icono} n="atras" t=${24} />` : d}</button>`)}</div>
   </div>`;
 }
 
@@ -66,7 +75,7 @@ export function Acceso({ tel }) {
     if (pin !== nuevoPin.primero) { avisar('No coinciden: márcalo otra vez'); setNuevoPin({ p: nuevoPin.p, primero: '' }); return false; }
     cambiarPin(nuevoPin.p.id, pin); entrar(nuevoPin.p.id); avisar('Listo: desde ahora entras con tu PIN'); return true;
   };
-  const caja = contenido => html`<div style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column;padding:calc(56px + var(--sa-top)) 22px calc(24px + var(--sa-bottom))' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
+  const caja = (contenido, compacto) => html`<div style=${tel ? 'min-height:100dvh;display:flex;flex-direction:column;padding:calc(' + (compacto ? 16 : 56) + 'px + var(--sa-top)) 22px calc(' + (compacto ? 16 : 24) + 'px + var(--sa-bottom))' : 'min-height:100vh;display:grid;place-items:center;padding:32px 16px'}>
     <div class=${tel ? 'pila' : 'tarjeta pila'} style=${tel ? 'flex:1;gap:18px' : 'width:min(480px,100%);padding:32px;gap:18px;border-radius:28px'}>${contenido}</div></div>`;
 
   // Intentos: a los 5 errores, espera de 30 s (y más si sigue fallando).
@@ -105,7 +114,7 @@ export function Acceso({ tel }) {
       <h1 style="font-size:24px">${nuevoPin.primero ? 'Repite tu PIN' : 'Crea tu PIN de dueño'}</h1>
       <span class="sub" style="line-height:1.45;max-width:320px">${nuevoPin.primero ? 'Márcalo otra vez para confirmar.' : '4 números que solo sepas tú. Con él entras cada vez que abras Orbe.'}</span>
     </div>
-    <div class="entra" style="--i:2;margin-top:8px" key=${nuevoPin.primero ? 'b' : 'a'}><${Teclado} onListo=${marcarNuevo} /></div>`);
+    <div class="entra" style="--i:2;margin-top:8px" key=${nuevoPin.primero ? 'b' : 'a'}><${Teclado} onListo=${marcarNuevo} /></div>`, true);
 
   if (conClave) return caja(html`
     <button type="button" class="icono-btn toca" aria-label="Volver" onClick=${() => setConClave(null)}><${Icono} n="atras" /></button>
@@ -127,7 +136,7 @@ export function Acceso({ tel }) {
     </div>
     <div class="entra" style="--i:2;margin-top:8px"><${Teclado} onListo=${probar} error=${espera ? 'Demasiados intentos. Espera ' + espera + ' s' : fallos ? 'Ese no es tu PIN' + (fallos >= 3 && fallos < 5 ? ' · te quedan ' + (5 - fallos) + ' intentos' : '') : ''} /></div>
     ${elegido.rol !== 'dueno' ? html`<button type="button" class="olvide-pin toca" style="align-self:center" onClick=${() => { pedirPinNuevo(elegido.id); setOlvido(true); }}>Olvidé mi PIN</button>`
-      : html`<span class="sub faint" style="text-align:center">¿Olvidaste tu PIN de dueño? Inicia sesión con tu correo para ponerte uno nuevo (Ajustes → Cuenta).</span>`}`);
+      : html`<span class="sub faint" style="text-align:center">¿Olvidaste tu PIN de dueño? Inicia sesión con tu correo para ponerte uno nuevo (Ajustes → Cuenta).</span>`}`, true);
 
   return caja(html`
     ${bienv && html`<${Bienvenida} b=${Object.assign({}, bienv, { logo: bienv.logo || S.negocio.logo || '' })} listo=${() => setBienv(null)} />`}
