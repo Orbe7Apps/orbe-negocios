@@ -38,8 +38,8 @@ export function VentasDia({ cerrar }) {
       </div>
 
       ${pagos.length > 0 && html`<div class="cierre-seccion"><span class="cierre-tit">Cómo te pagaron</span>
-        <ul class="lista-orbe">${pagos.map((s, k) => html`<li key=${s.n} class="entra" style=${{ '--i': k, '--c': s.c, gridTemplateRows: 'auto' }}>
-          <span class="simbolo" style="grid-row:auto"><${Icono} n=${simbolo(s.n)} t=${16} g=${2} /></span>
+        <ul class="lista-orbe">${pagos.map((s, k) => html`<li key=${s.n} class="entra" style=${{ '--i': k, '--c': s.c }}>
+          <span class="simbolo"><${Icono} n=${simbolo(s.n)} t=${16} g=${2} /></span>
           <b class="crece corta">${s.n}</b>
           <span class="faint num pct">${r.total ? Math.round(s.v / r.total * 100) : 0} %</span>
           <b class="num">${D.m(s.v)}</b>

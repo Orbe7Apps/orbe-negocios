@@ -282,13 +282,11 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 14px; min-width
 .logo-orbe .g, .logo-orbe circle { transition: none; }
 .reparto { display: flex; flex-direction: column; gap: 14px; }
 .lista-orbe { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.lista-orbe li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; grid-template-rows: auto 4px; column-gap: 10px; row-gap: 6px; align-items: center; padding: 9px 0; font-size: 14px; }
+.lista-orbe li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; column-gap: 10px; align-items: center; padding: 9px 0; font-size: 14px; }
 .lista-orbe li:first-child { border-top: 0; }
-.lista-orbe .simbolo { grid-row: 1 / 3; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); }
+.lista-orbe .simbolo { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); }
 .lista-orbe b { font-weight: 600; }
 .lista-orbe .pct { font-size: 12px; min-width: 38px; text-align: right; }
-.lista-orbe .pista { grid-column: 2 / 5; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--c) 14%, transparent); overflow: hidden; }
-.lista-orbe .pista i { display: block; height: 100%; border-radius: 2px; background: var(--c); transform-origin: left; animation: creceX 1.08s var(--spring) both; }
 .delta { margin-left: 8px; font-size: 11px; font-weight: 700; }
 .delta.g { color: var(--in); } .delta.b { color: var(--out); }
 .chip .simb { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; margin-left: -6px; background: color-mix(in srgb, var(--c, var(--accent)) 18%, transparent); color: var(--c, var(--accent)); }
@@ -801,7 +799,7 @@ html.en-recorrido .nav-tel { background: var(--oscuro); }
 /* iPhone con iOS 15 o anterior: sin color-mix, fondos suaves de respaldo */
 @supports not (color: color-mix(in srgb, red 50%, transparent)) {
   .barra-sup { background: var(--bg); }
-  .lista-orbe .simbolo, .lista-orbe .pista, .chip .simb, .simb-c { background: var(--fill2); }
+  .lista-orbe .simbolo, .chip .simb, .simb-c { background: var(--fill2); }
   .oferta-tour { background: var(--surface); }
   .bandera { box-shadow: 0 0 0 1px var(--line); }
   .orbe-crear button span { box-shadow: 0 6px 14px rgba(0,0,0,.18); }
