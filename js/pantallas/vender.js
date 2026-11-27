@@ -214,6 +214,7 @@ export function Vender() {
       </section>
       <section class="tarjeta entra" style="--i:4;padding-bottom:6px"><div class="tarjeta-tit">Últimas ventas<span class="sub">toca para ver el recibo</span></div>
         <div class="lista">${ultimas.length ? ultimas.map((v, i) => html`<${FilaVenta} key=${v.id} v=${v} i=${i} />`) : html`<p class="vacio">Aquí aparecen las ventas de hoy.</p>`}</div>
+        ${r.n > 0 && html`<button type="button" class="ver-mas toca" onClick=${() => abrir('ventasDia')}>Ver todas las ventas de hoy</button>`}
       </section>
     </div>`;
   }

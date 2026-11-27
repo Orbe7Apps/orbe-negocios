@@ -239,8 +239,20 @@ function subtitulo(s, { S, E, suc, T }) {
   }[s];
 }
 
+// Versión nueva ya bajada en una visita anterior: se activa ahora, mientras se ve la pantalla de carga, y se recarga
+// antes de dibujar nada. Así la app se ve cargar una sola vez (antes se recargaba sola ya mostrando los perfiles).
+let pidioActivar = false;
+const versionLista = () => {
+  if (!('serviceWorker' in navigator) || location.protocol !== 'https:' || !navigator.serviceWorker.controller) return Promise.resolve();
+  return navigator.serviceWorker.getRegistration().then(reg => {
+    if (!reg || !reg.waiting) return;
+    pidioActivar = true; reg.waiting.postMessage('activar');
+    // Se espera la recarga; si el cambio no llega pronto, se abre igual con la versión que hay.
+    return new Promise(listo => setTimeout(() => { pidioActivar = false; listo(); }, 4000));
+  }).catch(() => {});
+};
 // Primero se leen los datos guardados; después se dibuja y se va la pantalla de carga.
-iniciarDatos().then(() => {
+Promise.all([iniciarDatos(), versionLista()]).then(() => {
   // Cada vez que se abre o se recarga la página, cada persona elige su perfil y pone su PIN (la demostración no).
   const S0 = leer();
   if (S0.negocio && S0.ajustes.perfil && !S0.negocio.demo && !/[?&]demo\b/.test(location.search)) salir();
@@ -264,8 +276,9 @@ if (window.visualViewport) {
 // Que el navegador no borre los datos por falta de espacio (sobre todo Safari en iPhone).
 if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(ya => ya || navigator.storage.persist()).catch(() => {});
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  // Versión nueva instalada: se recarga una sola vez para abrir la app completa de la versión nueva.
-  const habia = !!navigator.serviceWorker.controller; let recargada = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (habia && !recargada) { recargada = true; location.reload(); } });
+  // La versión nueva se baja en silencio y se estrena la próxima vez que se abra la app (ver versionLista arriba).
+  // Solo se recarga cuando la app misma pidió el cambio, todavía en la pantalla de carga.
+  let recargada = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (pidioActivar && !recargada) { recargada = true; try { sessionStorage.setItem('orbe-sigue', '1'); } catch (e) {} location.reload(); } });
   navigator.serviceWorker.register('sw.js').then(reg => { reg.update().catch(() => {}); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); }); }).catch(() => {});
 }
