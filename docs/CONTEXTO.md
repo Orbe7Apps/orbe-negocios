@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 27 nov 2026 (app en la versión **v109** del service worker).
+Última actualización: 27 nov 2026 (app en la versión **v110** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -86,6 +86,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - Contraseñas: al crearla o cambiarla se pide 8 o más caracteres con letras y números. Si Supabase la rechaza (filtrada, débil o igual a la anterior) o falta confirmar el correo, el aviso sale en español junto al formulario, con “Mandar el enlace otra vez” para el correo. Prueba: `node pruebas/contrasenas.js` (simula Supabase, no toca la nube).
 - Un negocio por cuenta: al iniciar sesión entra directo con animación de bienvenida y luego la pantalla de perfiles/PIN.
 - Teclado del PIN (v109): en el celular las teclas miden hasta 88 px (según ancho y alto de la pantalla), responden al apoyar el dedo (`pointerdown`, no al soltar), cuentan dos toques muy seguidos y vibran un poco en Android. La pantalla del PIN usa menos margen arriba para que quepa.
+- **Ventas de hoy (v110):** en “Últimas ventas” (Hoy y Caja en la PC) el botón “Ver todas las ventas de hoy” abre el desglose del día (`js/pantallas/ventasdia.js`): total, cómo pagaron, quién vendió, lo que se vendió y cada venta con quién la hizo (filtro por persona). Lo ve todo el equipo, cajeros incluidos; la ganancia solo con permiso de ganancias.
 - Deshacer (7 s) al borrar gasto, producto, cliente, perfil o rol.
 - Ayudas “?” con imágenes en cada pantalla y tutorial adaptado.
 - **Textos claros (enfoque “lo esencial primero”, 26 nov):** textos de una línea con palabras de mostrador; opciones secundarias como botones con ícono (`Atajo` en `js/ui.js`, p. ej. Cobrar → Dividir pago / Atendió / Cliente); lo poco usado plegado en “Más opciones” (`MasOpciones`, p. ej. Nuevo producto); pistas que salen una sola vez por aparato (`Pista`, guardada en `localStorage`); Funciones en cuadrícula con nombre corto (`c` en `MODULOS`) y “mantén presionado” para ver qué hace. Maqueta: https://claude.ai/artifact/YUrbGvkrh2GuyuAZ5hEpge

@@ -31,6 +31,7 @@ import { useNube, soloUnLocal, configCobro, limitePerfiles, perfilesActivos } fr
 import { Cotizar, Cotizacion } from './cotizaciones.js';
 import { horarioDe, textoHorario, EditorHorario, EditorAusencias } from '../horario.js';
 import { Recordatorios, AjustesRecHoja } from '../recordatorios.js';
+import { VentasDia } from './ventasdia.js';
 
 const CATS = ['Mercancía', 'Alquiler', 'Servicios', 'Sueldos', 'Transporte', 'Otro'];
 const VENCE = [{ v: 7, n: 'En 7 días' }, { v: 15, n: 'En 15 días' }, { v: 30, n: 'En 30 días' }];
@@ -39,11 +40,11 @@ const abrirWA = (tel, texto) => window.open('https://wa.me/' + telWA(tel) + '?te
 const Pie2 = (txt, fn, clase) => html`<button type="button" class=${'btn2 toca ' + (clase || '')} style="min-height:50px;border-radius:25px" onClick=${fn}>${txt}</button>`;
 
 // Una venta en una lista (últimas ventas, historial). Las anuladas se ven tachadas; las devoluciones, en negativo.
-export function FilaVenta({ v, i, fecha }) {
+export function FilaVenta({ v, i, fecha, quien }) {
   const { D, E, abrir } = useApp();
   const titulo = v.dev ? 'Devolución de #' + v.dev + ' · ' + v.items.map(it => -it.q + ' × ' + it.n).join(', ') : '#' + v.n + ' · ' + v.items.map(it => it.q + ' × ' + it.n).join(', ');
   return html`<button type="button" class="item toca entra" style=${{ '--i': i, color: 'var(--ink)', opacity: v.anulada ? 0.6 : 1 }} onClick=${() => abrir('recibo', { venta: v })}>
-    <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b class="corta" style="font-size:14px;font-weight:600">${titulo}</b><span class="sub faint">${fecha ? fechaCorta(v.t) + ' ' : ''}${hora(v.t)} · ${v.anulada ? 'Anulada' : v.pagos.map(p => p.m).join(' + ')}${E ? ' · ' + v.suc : ''}</span></span>
+    <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b class="corta" style="font-size:14px;font-weight:600">${titulo}</b><span class="sub faint">${fecha ? fechaCorta(v.t) + ' ' : ''}${hora(v.t)} · ${v.anulada ? 'Anulada' : v.pagos.map(p => p.m).join(' + ')}${E ? ' · ' + v.suc : ''}${quien ? ' · ' + quien : ''}</span></span>
     ${v.anulada ? html`<span class="pildora t-ros">Anulada</span>` : null}
     <b class=${'num' + (v.anulada ? ' faint' : v.dev ? ' out' : v.fiado ? ' amber' : '')} style=${{ fontSize: '14px', textDecoration: v.anulada ? 'line-through' : 'none' }}>${D.m(v.total)}</b>
   </button>`;
@@ -59,7 +60,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { productoListo: ProductoListo, rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo, armar: Armar }[hoja.t];
+  const H = { productoListo: ProductoListo, rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, ventasDia: VentasDia, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo, armar: Armar }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
