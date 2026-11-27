@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 26 nov 2026 (app en la versión **v100** del service worker).
+Última actualización: 27 nov 2026 (app en la versión **v101** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 17 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v100`). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v101`). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
@@ -55,6 +55,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 | `js/permisos.js` | Permisos por rol (con aviso en los delicados) |
 | `js/ayuda.js` | Ayudas “?” por pantalla (con imágenes en `img/ayuda/`) y guías |
 | `js/recorrido.js` | Tutorial que se adapta al rubro, funciones, permisos y aparato |
+| `js/guia.js` | Guía en vivo dentro de una hoja (`GuiaVivo`): ilumina lo que hay que tocar y avanza cuando la persona lo hace; `iluminar()` para una sola cosa |
 | `js/recordatorios.js`, `js/horario.js`, `js/reservar.js` | Recordatorios por WhatsApp, horarios, reservas públicas |
 | `js/admin.js` + `admin.html` | Panel de administración |
 | `js/pantallas/*.js` | Cada pantalla: hoy, vender, clientes, inventario, gastos, caja, reportes, agenda, órdenes, cotizaciones, cuotas, equipo, cuenta (inicio de sesión, planes, pago), funciones, mas (Ajustes)… |
@@ -84,6 +85,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - Deshacer (7 s) al borrar gasto, producto, cliente, perfil o rol.
 - Ayudas “?” con imágenes en cada pantalla y tutorial adaptado.
 - **Textos claros (enfoque “lo esencial primero”, 26 nov):** textos de una línea con palabras de mostrador; opciones secundarias como botones con ícono (`Atajo` en `js/ui.js`, p. ej. Cobrar → Dividir pago / Atendió / Cliente); lo poco usado plegado en “Más opciones” (`MasOpciones`, p. ej. Nuevo producto); pistas que salen una sola vez por aparato (`Pista`, guardada en `localStorage`); Funciones en cuadrícula con nombre corto (`c` en `MODULOS`) y “mantén presionado” para ver qué hace. Maqueta: https://claude.ai/artifact/YUrbGvkrh2GuyuAZ5hEpge
+- **Agregar productos sin abrumar (27 nov):** “Nuevo producto” pregunta primero “¿Qué vas a agregar?” (producto, por peso o por partes, servicio, se arma a la medida, pieza o extra; solo los tipos que la cuenta usa, y si hay uno solo no pregunta). Después, solo lo esencial: nombre y foto, precio (con Bs), costo opcional, cantidad y aviso. “Más opciones” es una lista de filas (grupo, impuesto, variantes, código, garantía, foto) y cada una se abre sola. **Guía en vivo** (`js/guia.js`): botón “Guíame” las 2 primeras veces por aparato y siempre en el “?” de la hoja (“Guíame paso a paso”); oscurece todo menos el campo, nunca abre el teclado, avanza cuando la persona lo llena, usa sus números y se adapta (tipo, inventario, duración, y un paso extra: garantía, variantes o código). Termina en “¡Listo!” con “Agregar otro” y “Ver dónde se vende” (ilumina el producto en Vender). Prueba: `node pruebas/producto.js` (`PC=1` para computadora). Maqueta: `/mnt/project-files/agregar-productos/` del proyecto.
 - Panel admin: negocios, activar planes, aprobar pagos, historial mensual con CSV para el contador, suspender/reactivar cuentas, datos de cobro.
 
 ## 6. Decisiones de negocio vigentes

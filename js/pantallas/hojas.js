@@ -19,6 +19,7 @@ import { verQ, FRACCIONES } from '../carrito.js';
 import { imprimir, lineasRecibo, lineasZ, ajustesImpresora } from '../impresora.js';
 import { Orden, NuevaOrden, AbonoOrden, CancelarOrden } from './ordenes.js';
 import { Armar } from './personalizados.js';
+import { GuiaVivo, usePortal, vecesGuia, contarGuia, terminarGuia, iluminar } from '../guia.js';
 import { buscar, parecidos } from '../buscar.js';
 import { descargar } from './reportes.js';
 import { Cita, NuevaCita } from './agenda.js';
@@ -58,7 +59,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo, armar: Armar }[hoja.t];
+  const H = { productoListo: ProductoListo, rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo, armar: Armar }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }
@@ -447,6 +448,29 @@ function Cierre({ d, cerrar }) {
 // ---------- producto o servicio ----------
 // Número para un campo de texto, con coma decimal (así “3,125” no se lee como tres mil).
 const coma = n => String(n == null ? '' : n).replace('.', ',');
+// Tipos de lo que se agrega. Solo salen los que la cuenta usa (y el del producto que se edita).
+function tiposProd(T, p0) {
+  const t = [T.inv && 'prod', T.inv && T.mod('medidas') && 'peso', (T.mod('servicios') || !T.inv) && 'svc', T.mod('personalizados') && 'per', T.mod('personalizados') && 'pz'].filter(Boolean);
+  const t0 = p0 && tipoDe(p0, T);
+  return t0 && !t.includes(t0) ? t.concat([t0]) : t;
+}
+function tipoDe(p, T) { return p.per ? 'per' : p.pz || p.ex ? 'pz' : !T.inv || p.q == null ? 'svc' : p.u ? 'peso' : 'prod'; }
+// Ejemplos con los productos del propio negocio.
+function ejemplosProd(S, T) {
+  const ps = (S.productos || []).filter(p => !p.borrado), de = fn => { const p = ps.find(fn); return p ? p.n : ''; };
+  return { prod: de(p => T.inv && p.q != null && !p.u && !p.per && !p.pz && !p.ex), peso: de(p => p.u && !p.per), svc: de(p => (!T.inv || p.q == null) && !p.per), per: de(p => p.per), pz: de(p => p.pz || p.ex) };
+}
+function textosTipo(T, ej) {
+  const con = (t, e) => e ? t + '. Ej.: ' + e : t;
+  return {
+    prod: { n: 'Un producto', sub: con('Se cuenta por unidad', ej.prod), ic: 'caja', tono: 'tono-vio' },
+    peso: { n: 'Por peso o por partes', sub: 'Kilo, litro, metro, medio, cuarto…', ic: 'regla', tono: 'tono-ver' },
+    svc: { n: 'Un servicio', sub: con(T.inv ? 'No se cuenta en inventario' : 'Con su precio y lo que dura', ej.svc), ic: 'llave', tono: 'tono-azu' },
+    per: { n: 'Se arma a la medida', sub: 'Ej.: ' + (ej.per || 'Torta personalizada'), ic: 'lapiz', tono: 'tono-amb' },
+    pz: { n: 'Pieza o extra para armar', sub: 'Ej.: ' + (ej.pz || 'torta base, relleno, letrero'), ic: 'capas', tono: 'tono-gris' }
+  };
+}
+
 function Producto({ d, cerrar }) {
   const { S, D, T, P, abrir, tel } = useApp();
   const p0 = S.productos.find(p => p.id === d.pid) || null;
@@ -475,7 +499,7 @@ function Producto({ d, cerrar }) {
   const inv = T.inv && !svc;
   // Personalizados: el producto que se arma a la medida (per), una pieza que lleva (pz) o un extra (ex).
   const [rolP, setRolP] = useState(p0 ? (p0.per ? 'per' : p0.pz ? 'pz' : p0.ex ? 'ex' : '') : d.rolP || '');
-  const conPer = T.mod('personalizados') || !!rolP, esPer = rolP === 'per';
+  const esPer = rolP === 'per';
   const [vars, setVars] = useState(() => (p0 && p0.vars ? p0.vars : []).map(v => ({ id: v.id, n: v.n, q: v.q != null ? String(v.q).replace('.', ',') : '', p: v.p ? String(v.p).replace('.', ',') : '', cod: v.cod || '' })));
   const ponVar = (i, o) => setVars(vs => vs.map((v, k) => k === i ? Object.assign({}, v, o) : v));
   const nuevaVar = n => ({ id: 'v' + Math.random().toString(36).slice(2, 8), n: n || '', q: '', p: '', cod: '' });
@@ -484,7 +508,20 @@ function Producto({ d, cerrar }) {
   const pon = o => setF(x => Object.assign({}, x, o));
   // Lo poco usado va plegado en “Más opciones”; se abre solo si el producto ya usa algo de ahí.
   const [masOp, setMasOp] = useState(!!(svc || grupo || imp !== 'gen' || vars.length || f.cod || gar));
-  const resumenMas = [T.inv && (T.mod('servicios') || svc) && 'servicio', 'grupo', S.negocio.taxOn && P.tax[0], inv && !u && (T.mod('variantes') || vars.length) && 'variantes', inv && 'código', (T.mod('garantia') || gar > 0) && 'garantía', foto && 'foto'].filter(Boolean).join(' · ').replace(/^./, x => x.toUpperCase());
+  // Qué es: se pregunta primero y decide qué campos salen (así la ficha queda corta).
+  const tipos = tiposProd(T, p0);
+  const tipo0 = p0 ? tipoDe(p0, T) : d.rolP ? (d.rolP === 'per' ? 'per' : 'pz') : d.svc ? 'svc' : d.cod && T.inv ? 'prod' : tipos.length === 1 ? tipos[0] : null;
+  const [tipo, setTipo] = useState(tipo0);
+  const elegir = k => {
+    setTipo(k); setSvc(k === 'svc' && T.inv);
+    setU(k === 'peso' ? (u && u !== '' ? u : 'kg') : '');
+    setRolP(k === 'per' ? 'per' : k === 'pz' ? (rolP === 'ex' ? 'ex' : 'pz') : '');
+  };
+  const ej = ejemplosProd(S, T), TP = textosTipo(T, ej);
+  // Más opciones: una fila por opción; se abre solo la que se toca.
+  const [abre, setAbre] = useState('');
+  const tocar = k => setAbre(abre === k ? '' : k);
+  const resumenMas = ['grupo', S.negocio.taxOn && P.tax[0], inv && (!u || FRACCIONES[u]) && (T.mod('variantes') || vars.length) && 'variantes', inv && 'código', (T.mod('garantia') || gar > 0) && 'garantía', foto && 'foto'].filter(Boolean).join(' · ').replace(/^./, x => x.toUpperCase());
   // Argentina: el precio se puede atar al dólar y se recalcula solo cuando cambia la tasa.
   const atable = D.dual && P.id !== 'VE', usd = numero(f.usd);
   const p = enDolar && atable ? D.bonito(usd * D.tasa) : numero(f.p), co = numero(f.c);
@@ -497,36 +534,82 @@ function Producto({ d, cerrar }) {
     const codRep = varsOk.find(v => v.cod && (mismoCodigo(v.cod, cod) || varsOk.some(w => w !== v && mismoCodigo(w.cod, v.cod)) || listaProductos().some(x => (!p0 || x.id !== p0.id) && (mismoCodigo(x.cod, v.cod) || (x.vars || []).some(w => mismoCodigo(w.cod, v.cod))))));
     if (codRep) { avisar('El código de ' + codRep.n + ' ya lo tiene otro producto o variante'); return; }
     const cant = x => u ? Math.round(numero(x) * 1000) / 1000 : Math.round(numero(x));
-    guardarProducto({ id: p0 ? p0.id : undefined, n: f.n.trim(), ab: iniciales2(f.n.trim()), p, c: co, per: esPer ? 1 : undefined, pz: rolP === 'pz' ? 1 : undefined, ex: rolP === 'ex' ? 1 : undefined, q: inv && !esPer ? (varsOk.length ? varsOk.reduce((a2, v) => a2 + (v.q || 0), 0) : cant(f.q)) : null, min: inv ? cant(f.min) : 0, u: inv && u ? u : undefined, vars: inv && varsOk.length ? varsOk : undefined, dur: T.inv ? 0 : f.dur, cod, usd: enDolar && atable ? usd : 0, imp: imp === 'gen' ? undefined : imp, foto, gar: gar || 0, g: grupoNuevo && grupoNuevo.trim() ? guardarGrupo({ n: grupoNuevo.trim() }) : grupo });
-    // Si se creó desde el escáner, se vuelve a él con el producto ya reconocido.
-    c(() => { avisar('Guardado: ' + f.n.trim()); if (d.escaner && cod) abrir('escaner', Object.assign({}, d.escaner, { mostrar: cod })); });
+    const pid = guardarProducto({ id: p0 ? p0.id : undefined, n: f.n.trim(), ab: iniciales2(f.n.trim()), p, c: co, per: esPer ? 1 : undefined, pz: rolP === 'pz' ? 1 : undefined, ex: rolP === 'ex' ? 1 : undefined, q: inv && !esPer ? (varsOk.length ? varsOk.reduce((a2, v) => a2 + (v.q || 0), 0) : cant(f.q)) : null, min: inv ? cant(f.min) : 0, u: inv && u ? u : undefined, vars: inv && varsOk.length ? varsOk : undefined, dur: T.inv ? 0 : f.dur, cod, usd: enDolar && atable ? usd : 0, imp: imp === 'gen' ? undefined : imp, foto, gar: gar || 0, g: grupoNuevo && grupoNuevo.trim() ? guardarGrupo({ n: grupoNuevo.trim() }) : grupo });
+    // Si se creó desde el escáner, se vuelve a él con el producto ya reconocido. Con la guía, termina en “¡Listo!”.
+    const conGuia = guia != null;
+    if (conGuia) terminarGuia('producto');
+    c(() => { if (conGuia) { abrir('productoListo', { pid }); return; } avisar('Guardado: ' + f.n.trim()); if (d.escaner && cod) abrir('escaner', Object.assign({}, d.escaner, { mostrar: cod })); });
   };
   const borrar = c => c(() => abrir('confirmar', { deshacer: 'Producto borrado', titulo: '¿Borrar ' + p0.n + '?', texto: 'Ya no sale para vender ni en el inventario. Las ventas que tuvo se quedan en los reportes.', boton: 'Sí, borrar', si: () => { borrarProducto(p0.id); avisar('Borrado: ' + p0.n); } }));
-  return html`<${Hoja} titulo=${(p0 ? 'Editar ' : 'Nuevo ') + (inv ? 'producto' : 'servicio')} onCerrar=${cerrar} contenido=${c => ({
-    cuerpo: html`
-      <div class="fila" style="gap:10px;align-items:flex-end">
+  // Guía en vivo: ilumina cada campo y avanza cuando la persona lo llena. Se adapta al tipo y a las funciones encendidas.
+  const [guia, setGuia] = useState(null);
+  const conTipoG = useRef(false);
+  const empezar = () => { conTipoG.current = !tipo && tipos.length > 1; setGuia(0); };
+  useEffect(() => { const f2 = e => { if (e.detail === 'producto') empezar(); }; window.addEventListener('orbe-guiame', f2); return () => window.removeEventListener('orbe-guiame', f2); });
+  const [invita] = useState(() => !p0 && vecesGuia('producto') < 2);
+  useEffect(() => { if (invita) contarGuia('producto'); }, []);
+  const extra = !tipo || tipo === 'svc' || tipo === 'per' ? null : T.mod('garantia') ? 'garantia' : inv && (!u || FRACCIONES[u]) && T.mod('variantes') ? 'variantes' : inv && T.mod('escaner') ? 'codigo' : null;
+  const base = tipos[0], nombreEj = (tipo && ej[tipo]) || ej[base] || (T.inv ? 'Arroz 1 kg' : 'Corte de cabello'), otra = D.dual ? (P.id === 'VE' ? 'los bolívares' : 'la otra moneda') : '';
+  const pasosG = guia == null ? [] : [
+    conTipoG.current && { sel: tipo ? null : '[data-guia=tipo-' + base + ']', titulo: '¿Qué vas a agregar?', texto: 'Empecemos por algo que vendes todos los días. Toca “' + TP[base].n + '”.', espera: true, toca: true, ok: !!tipo, boton: 'Toca la opción' },
+    { sel: '[data-guia=nombre]', titulo: 'El nombre', texto: 'Como lo dices en el mostrador, para encontrarlo rápido al vender. Ej.: “' + nombreEj + '”. La foto es opcional.', espera: true, ok: !!f.n.trim() },
+    esPer ? { sel: '[data-guia=precio]', titulo: 'Precio mínimo', texto: 'Es opcional: al venderlo, Orbe suma las piezas y los extras y te sugiere el precio.' }
+      : { sel: '[data-guia=precio]', titulo: 'Precio y costo', texto: 'Escribe el precio' + (otra ? '; Orbe calcula ' + otra + ' con la tasa del día' : '') + '. ' + (p > 0 && co > 0 ? 'Con ese costo ganas ' + D.m(p - co) + ' por cada uno.' : 'El costo es opcional: con él, Orbe te dice cuánto ganas.'), espera: true, ok: p > 0 },
+    tipo === 'per' && { sel: '[data-guia=tipo-info]', titulo: 'Se arma al venderlo', texto: 'Al tocarlo en ' + (T.vender || 'Vender') + ' eliges las piezas y los extras. Las piezas se agregan como “' + TP.pz.n + '”.' },
+    tipo === 'pz' && { sel: '[data-guia=tipo-info]', titulo: 'Pieza o extra', texto: 'La pieza sale en el paso 1 al armar y baja del inventario. El extra suma su precio en el paso 2.' },
+    tipo === 'peso' && { sel: '[data-guia=tipo-info]', titulo: 'Se vende por', texto: 'Elige kilo, litro o metro: el precio es por esa medida. Con “Medio” o “Cuarto”, cada toque al vender suma esa parte.' },
+    inv && !esPer && !vars.length && { sel: '[data-guia=cantidad]', titulo: 'Cantidad y aviso', texto: 'Cuánto tienes ahora. Cuando quede lo que pongas en “Avisar al quedar”, Orbe te avisa en “Para hacer hoy”.' },
+    !T.inv && tipo === 'svc' && { sel: '[data-guia=dura]', titulo: 'Lo que dura', texto: T.mod('agenda') ? 'La agenda aparta ese tiempo cuando alguien reserva este servicio.' : 'Así sabes cuánto tiempo te toma cada uno.' },
+    extra === 'garantia' && { sel: '[data-guia=op-garantia]', abre: 'garantia', titulo: 'Garantía', texto: 'Si lo que vendes tiene garantía, elige cuánto dura. Sale en el recibo con su fecha de vencimiento.' },
+    extra === 'variantes' && { sel: '[data-guia=op-variantes]', abre: 'variantes', titulo: 'Tallas y colores', texto: 'Si viene en varias tallas, colores o sabores, agrégalas aquí, cada una con su cantidad.' },
+    extra === 'codigo' && { sel: '[data-guia=op-codigo]', abre: 'codigo', titulo: 'Código de barras', texto: 'Escríbelo o pásalo por el lector: al vender lo encuentras al instante.' },
+    { sel: '[data-guia=guardar]', titulo: 'Guardar', texto: 'Toca “Guardar” y ' + (f.n.trim() ? '“' + f.n.trim() + '”' : 'lo que agregaste') + ' queda listo para vender.', espera: true, toca: true, ok: false, boton: 'Toca “Guardar”' }
+  ].filter(Boolean);
+  const pasoG = guia != null ? pasosG[guia] : null;
+  useEffect(() => { if (pasoG && pasoG.toca && pasoG.ok) setGuia(guia + 1); });
+  useEffect(() => { if (pasoG && pasoG.abre) { setMasOp(true); setAbre(pasoG.abre); } }, [guia]);
+  usePortal(pasoG ? html`<${GuiaVivo} pasos=${pasosG} i=${guia} onSig=${() => setGuia(guia + 1 < pasosG.length ? guia + 1 : null)} onSalir=${() => setGuia(null)} />` : null);
+  const OpFila = (k, ic, n, valor, hijos) => html`<div class=${'op-fila' + (abre === k ? ' abierta' : '')} data-guia=${'op-' + k}>
+    <button type="button" class="op-cab toca" aria-expanded=${abre === k ? 'true' : 'false'} onClick=${() => tocar(k)}><span class="op-ic"><${Icono} n=${ic} t=${17} /></span><b class="crece">${n}</b><span class="op-valor">${valor}</span><${Icono} n="sig" t=${15} estilo=${{ transform: abre === k ? 'rotate(90deg)' : 'none', transition: 'transform .3s var(--spring)', color: 'var(--faint)', flex: 'none' }} /></button>
+    ${abre === k && html`<div class="op-cuerpo entra">${hijos}</div>`}
+  </div>`;
+  const nombreGrupo = grupoNuevo != null ? (grupoNuevo.trim() || 'Nuevo') : grupo ? ((S.grupos.find(x => x.id === grupo) || {}).n || 'Sin grupo') : 'Sin grupo';
+  const Invita = invita && guia == null && html`<div class="guia-invita entra"><${Icono} n="info" t=${18} /><span class="crece">¿Primera vez? Te acompaño paso a paso.</span><button type="button" class="guia-invita-btn toca" onClick=${empezar}>Guíame</button></div>`;
+  const T0 = tipo && TP[tipo];
+  return html`<${Hoja} titulo=${!tipo ? '¿Qué vas a agregar?' : (p0 ? 'Editar ' : 'Nuevo ') + (tipo === 'svc' ? 'servicio' : 'producto')} onCerrar=${cerrar} contenido=${c => !tipo ? ({
+    cuerpo: html`${Invita}
+      <div class="tipos-prod">${tipos.map((k, i) => html`<button type="button" key=${k} class="tipo-prod toca entra" style=${{ '--i': i }} data-guia=${'tipo-' + k} onClick=${() => elegir(k)}>
+        <span class=${'tipo-ic ' + TP[k].tono}><${Icono} n=${TP[k].ic} t=${22} /></span><span class="crece"><b>${TP[k].n}</b><small>${TP[k].sub}</small></span><${Icono} n="sig" t=${18} estilo=${{ color: 'var(--faint)', flex: 'none' }} /></button>`)}</div>`,
+    pie: null
+  }) : ({
+    cuerpo: html`${!p0 && Invita}
+      ${tipos.length > 1 && html`<div class="tipo-actual entra"><span class=${'tipo-ic chico ' + T0.tono}><${Icono} n=${T0.ic} t=${17} /></span><b class="crece">${T0.n}</b><button type="button" class="enlace-cambiar toca" onClick=${() => { setGuia(null); setTipo(null); }}>Cambiar</button></div>`}
+      <div class="fila" style="gap:10px;align-items:flex-end" data-guia="nombre">
         <label class=${'foto-cuadro mini toca' + (foto ? ' con-foto' : '') + (latido ? ' cambio' : '')} aria-label=${foto ? 'Cambiar la foto' : 'Poner una foto'}>${foto ? html`<img key=${foto.length} src=${foto} alt="" draggable="false" />` : html`<${Icono} n="camara" t=${20} /><small>Foto</small>`}<input type="file" accept="image/*" hidden onChange=${elegirFoto} /></label>
-        <label class="campo crece" style="min-width:0"><span>Nombre</span><input type="text" value=${f.n} placeholder=${T.inv ? 'Ej.: Arroz 1 kg' : 'Ej.: Corte de cabello'} onInput=${e => pon({ n: e.target.value })} /></label>
+        <label class="campo crece" style="min-width:0"><span>Nombre</span><input type="text" value=${f.n} placeholder=${'Ej.: ' + nombreEj} onInput=${e => pon({ n: e.target.value })} /></label>
       </div>
       ${atable && html`<${Interruptor} on=${enDolar} onCambio=${setEnDolar} titulo="Precio atado al dólar" sub=${'Se recalcula solo con el ' + nombreTasa(P, S.tasa).toLowerCase()} />`}
       ${enDolar && atable && html`<label class="campo entra"><span>Precio en dólares</span><input class="num" type="text" inputmode="decimal" value=${f.usd} placeholder="0" onInput=${e => pon({ usd: e.target.value })} /></label>${usd > 0 && html`<span class="sub num">Hoy son ${D.m(p)} (US$ 1 = ${D.m(D.tasa)})</span>`}`}
-      <div class="rejilla-2" style="gap:10px">${enDolar && atable ? html`<div class="campo"><span>Precio</span><b class="num" style="min-height:52px;display:flex;align-items:center;font-size:18px">${D.m(p)}</b></div>` : html`<label class="campo"><span>Precio</span><input type="text" inputmode="decimal" value=${f.p} placeholder="0" onInput=${e => pon({ p: e.target.value })} /></label>`}<label class="campo"><span>Costo</span><input type="text" inputmode="decimal" value=${f.c} placeholder="0" onInput=${e => pon({ c: e.target.value })} /></label></div>
-      ${p > 0 && !esPer && html`<span class="sub entra">Ganas <b class="in num">${D.m(p - co)}</b> por cada uno (${Math.round((p - co) / p * 100)} %)</span>`}
-      ${conPer && html`<div class="campo"><span>En personalizados</span><${Chips} opciones=${[{ v: '', n: 'No' }, { v: 'pz', n: 'Es una pieza' }, { v: 'ex', n: 'Es un extra' }, { v: 'per', n: 'Se arma a la medida' }]} valor=${rolP} onCambio=${setRolP} chico />
-        ${rolP && html`<span class="sub faint entra" key=${rolP} style="font-size:12px;line-height:1.4">${rolP === 'pz' ? 'Sale en el paso 1 al armar, con su existencia. Ej.: torta base de 1 kg. Se vende por unidad.' : rolP === 'ex' ? 'Sale en el paso 2 y suma su precio. Ej.: relleno, fondant, letrero. Si lleva existencia, también se descuenta.' : 'Al tocarlo en Pedido se arma en 3 pasos: piezas, extras y precio. El precio se sugiere solo; el de aquí es opcional (mínimo).'}</span>`}</div>`}
-      ${inv && !esPer && (T.mod('medidas') || u) && html`<div class="campo"><span>Se vende por</span><${Chips} opciones=${[{ v: '', n: 'Unidad' }, { v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }, { v: 'medio', n: 'Medio' }, { v: 'cuarto', n: 'Cuarto' }]} valor=${u} onCambio=${setU} chico />${FRACCIONES[u] ? html`<span class="sub faint entra" style="font-size:12px">Precio por unidad entera. Al vender, cada toque suma ${u === 'cuarto' ? 'un cuarto' : 'medio'}.</span>` : u && html`<span class="sub faint entra" style="font-size:12px">Precio por ${u}. Al vender escribes cuánto lleva.</span>`}</div>`}
+      <div class="pila" style="gap:8px" data-guia="precio">
+        <div class=${esPer ? '' : 'rejilla-2'} style="gap:10px">${enDolar && atable ? html`<div class="campo"><span>Precio</span><b class="num" style="min-height:52px;display:flex;align-items:center;font-size:18px">${D.m(p)}</b></div>` : html`<label class="campo"><span>${esPer ? 'Precio mínimo (opcional)' : 'Precio' + (u && !FRACCIONES[u] ? ' por ' + u : '')}</span><input type="text" inputmode="decimal" value=${f.p} placeholder="0" onInput=${e => pon({ p: e.target.value })} /></label>`}${!esPer && html`<label class="campo"><span>Costo (opcional)</span><input type="text" inputmode="decimal" value=${f.c} placeholder="0" onInput=${e => pon({ c: e.target.value })} /></label>`}</div>
+        ${p > 0 && ((D.dual && !atable) || (!esPer && co > 0)) && html`<span class="sub entra num">${D.dual && !atable ? '= ' + D.s(p) : ''}${D.dual && !atable && !esPer && co > 0 ? ' · ' : ''}${!esPer && co > 0 && html`Ganas <b class=${p - co >= 0 ? 'in' : 'out'}>${D.m(p - co)}</b> por cada uno (${Math.round((p - co) / p * 100)} %)`}</span>`}
+      </div>
+      ${tipo === 'per' && html`<span class="sub faint entra" data-guia="tipo-info" style="font-size:13px;line-height:1.4">Al venderlo eliges piezas y extras; el precio se sugiere solo.</span>`}
+      ${tipo === 'pz' && html`<div class="campo" data-guia="tipo-info"><span>Al armar</span><${Chips} opciones=${[{ v: 'pz', n: 'Es una pieza' }, { v: 'ex', n: 'Es un extra' }]} valor=${rolP} onCambio=${setRolP} chico />
+        <span class="sub faint entra" key=${rolP} style="font-size:12px">${rolP === 'ex' ? 'Suma su precio. Ej.: relleno, fondant, letrero.' : 'Baja del inventario. Ej.: torta base de 1 kg.'}</span></div>`}
+      ${tipo === 'peso' && html`<div class="campo" data-guia="tipo-info"><span>Se vende por</span><${Chips} opciones=${[{ v: 'kg', n: 'Kilo' }, { v: 'g', n: 'Gramo' }, { v: 'l', n: 'Litro' }, { v: 'm', n: 'Metro' }, { v: 'm²', n: 'Metro²' }, { v: 'medio', n: 'Medio' }, { v: 'cuarto', n: 'Cuarto' }]} valor=${u} onCambio=${setU} chico />${FRACCIONES[u] ? html`<span class="sub faint entra" style="font-size:12px">Precio por unidad entera. Al vender, cada toque suma ${u === 'cuarto' ? 'un cuarto' : 'medio'}.</span>` : u && html`<span class="sub faint entra" style="font-size:12px">Al vender escribes cuánto lleva.</span>`}</div>`}
       ${inv && vars.length > 0 ? html`<span class="sub">Tienes ${vars.reduce((a2, v) => a2 + numero(v.q), 0)}${u && !FRACCIONES[u] ? ' ' + u : ''} en total (la suma de las variantes).</span>`
-      : inv && !esPer ? html`<div class="rejilla-2" style="gap:10px"><label class="campo"><span>Cantidad${u && !FRACCIONES[u] ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avisar al quedar</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
-        : T.inv ? null : html`<div class="campo"><span>Dura</span><${Chips} opciones=${[{ v: 30, n: '30 min' }, { v: 45, n: '45 min' }, { v: 60, n: '1 hora' }, { v: 120, n: '2 horas' }]} valor=${f.dur} onCambio=${v => pon({ dur: v })} /></div>`}
+      : inv && !esPer ? html`<div class="rejilla-2" style="gap:10px" data-guia="cantidad"><label class="campo"><span>Cantidad${u && !FRACCIONES[u] ? ' (' + u + ')' : ''}</span><input type="text" inputmode=${u ? 'decimal' : 'numeric'} value=${f.q} placeholder="0" onInput=${e => pon({ q: e.target.value })} /></label><label class="campo"><span>Avisar al quedar</span><input type="text" inputmode="numeric" value=${f.min} placeholder="0" onInput=${e => pon({ min: e.target.value })} /></label></div>`
+        : T.inv ? null : html`<div class="campo" data-guia="dura"><span>Dura</span><${Chips} opciones=${[{ v: 30, n: '30 min' }, { v: 45, n: '45 min' }, { v: 60, n: '1 hora' }, { v: 120, n: '2 horas' }]} valor=${f.dur} onCambio=${v => pon({ dur: v })} /></div>`}
       <${MasOpciones} abierto=${masOp} onCambio=${setMasOp} resumen=${resumenMas}>
-        ${T.inv && (T.mod('servicios') || svc) && html`<${Interruptor} on=${svc} onCambio=${setSvc} titulo="Es un servicio" sub="No se cuenta en inventario" />`}
-      <div class="campo"><span>Grupo</span><div class="chips">
-        <button type="button" class=${'chip chico toca' + (!grupo && grupoNuevo == null ? ' on' : '')} onClick=${() => { setGrupo(''); setGrupoNuevo(null); }}>Sin grupo</button>
-        ${S.grupos.map(g => html`<button type="button" key=${g.id} class=${'chip chico toca' + (grupo === g.id && grupoNuevo == null ? ' on' : '')} onClick=${() => { setGrupo(g.id); setGrupoNuevo(null); }}><i class="punto-grupo" style=${{ background: colorGrupo(g) }}></i>${g.n}</button>`)}
-        <button type="button" class=${'chip chico toca' + (grupoNuevo != null ? ' on' : '')} style="border:1.5px dashed var(--line)" onClick=${() => setGrupoNuevo(grupoNuevo == null ? '' : null)}>+ Nuevo</button></div>
-        ${grupoNuevo != null && html`<input class="entra" type="text" value=${grupoNuevo} placeholder="Nombre del grupo nuevo" autocomplete="off" onInput=${e => setGrupoNuevo(e.target.value)} />`}</div>
-      ${S.negocio.taxOn && html`<div class="campo"><span>${P.tax[0]} de este ${T.inv ? 'producto' : 'servicio'}</span><${Chips} opciones=${opcionesImp} valor=${imp} onCambio=${setImp} chico /></div>`}
-      ${inv && (!u || FRACCIONES[u]) && (T.mod('variantes') || vars.length > 0) && html`<div class="campo"><span>Variantes (talla, color, sabor…)</span>
+        <div class="op-lista">
+        ${OpFila('grupo', 'etiqueta', 'Grupo', nombreGrupo, html`<div class="chips">
+          <button type="button" class=${'chip chico toca' + (!grupo && grupoNuevo == null ? ' on' : '')} onClick=${() => { setGrupo(''); setGrupoNuevo(null); }}>Sin grupo</button>
+          ${S.grupos.map(g => html`<button type="button" key=${g.id} class=${'chip chico toca' + (grupo === g.id && grupoNuevo == null ? ' on' : '')} onClick=${() => { setGrupo(g.id); setGrupoNuevo(null); }}><i class="punto-grupo" style=${{ background: colorGrupo(g) }}></i>${g.n}</button>`)}
+          <button type="button" class=${'chip chico toca' + (grupoNuevo != null ? ' on' : '')} style="border:1.5px dashed var(--line)" onClick=${() => setGrupoNuevo(grupoNuevo == null ? '' : null)}>+ Nuevo</button></div>
+          ${grupoNuevo != null && html`<label class="campo entra"><input type="text" value=${grupoNuevo} placeholder="Nombre del grupo nuevo" aria-label="Nombre del grupo nuevo" autocomplete="off" onInput=${e => setGrupoNuevo(e.target.value)} /></label>`}`)}
+        ${S.negocio.taxOn && OpFila('imp', 'porciento', P.tax[0], (opcionesImp.find(o => o.v === imp) || opcionesImp[0]).n, html`<${Chips} opciones=${opcionesImp} valor=${imp} onCambio=${setImp} chico />`)}
+        ${inv && (!u || FRACCIONES[u]) && (T.mod('variantes') || vars.length > 0) && OpFila('variantes', 'capas', 'Variantes', vars.length ? vars.length + (vars.length === 1 ? ' variante' : ' variantes') : 'Ninguna', html`
         ${vars.length ? html`<div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);padding:8px 12px;gap:0">${vars.map((v, i) => html`<div class="variante-fila entra" key=${v.id}>
           <div class="fila" style="gap:6px"><input type="text" class="crece" value=${v.n} placeholder="Ej.: M · Rojo" aria-label="Nombre de la variante" autocomplete="off" onInput=${e => ponVar(i, { n: e.target.value })} /><button type="button" class="icono-btn chico toca" style="width:30px;height:30px" aria-label="Quitar variante" onClick=${() => setVars(vars.filter((_, k) => k !== i))}><${Icono} n="cerrar" t=${12} g=${2.6} /></button></div>
           <div class="variante-datos">
@@ -537,12 +620,35 @@ function Producto({ d, cerrar }) {
         </div>`)}</div>` : null}
         <div class="chips"><button type="button" class="chip chico toca" onClick=${() => setVars(vars.concat([nuevaVar()]))}>+ Variante</button>
           ${!vars.length && [['S', 'M', 'L', 'XL'], ['Chico', 'Mediano', 'Grande']].map(g => html`<button type="button" class="chip chico toca" onClick=${() => setVars(g.map(nuevaVar))}>${g.join(' · ')}</button>`)}</div>
-        ${vars.length > 0 && html`<span class="sub faint" style="font-size:12px">Sin precio, usa el del producto.</span>`}</div>`}
-      ${inv && html`<label class="campo"><span>Código de barras (opcional)</span><input class="num" type="text" inputmode="numeric" autocomplete="off" value=${f.cod} placeholder="Escanéalo o escríbelo" onInput=${e => pon({ cod: e.target.value })} /></label>`}
-      ${(T.mod('garantia') || gar > 0) && html`<div class="campo"><span>Garantía</span><${Chips} opciones=${[{ v: 0, n: 'Sin garantía' }, { v: 3, n: '3 meses' }, { v: 6, n: '6 meses' }, { v: 12, n: '1 año' }, { v: 24, n: '2 años' }]} valor=${gar} onCambio=${setGar} chico />${gar > 0 && html`<span class="sub faint entra" style="font-size:12px">Sale en el recibo con su fecha de vencimiento.</span>`}</div>`}
-        ${foto && html`<button type="button" class="btn2 chico toca" style="align-self:flex-start" onClick=${() => setFoto('')}>Quitar la foto</button>`}
+        ${vars.length > 0 && html`<span class="sub faint" style="font-size:12px">Sin precio, usa el del producto.</span>`}`)}
+        ${inv && OpFila('codigo', 'codigo', 'Código de barras', f.cod.trim() || 'Ninguno', html`<label class="campo"><input class="num" type="text" inputmode="numeric" autocomplete="off" value=${f.cod} placeholder="Escanéalo o escríbelo" aria-label="Código de barras" onInput=${e => pon({ cod: e.target.value })} /></label>`)}
+        ${(T.mod('garantia') || gar > 0) && OpFila('garantia', 'escudo', 'Garantía', gar ? (gar === 12 ? '1 año' : gar === 24 ? '2 años' : gar + ' meses') : 'Sin garantía', html`<${Chips} opciones=${[{ v: 0, n: 'Sin garantía' }, { v: 3, n: '3 meses' }, { v: 6, n: '6 meses' }, { v: 12, n: '1 año' }, { v: 24, n: '2 años' }]} valor=${gar} onCambio=${setGar} chico />${gar > 0 && html`<span class="sub faint entra" style="font-size:12px">Sale en el recibo con su fecha de vencimiento.</span>`}`)}
+        ${foto && OpFila('foto', 'camara', 'Foto', 'Puesta', html`<button type="button" class="btn2 chico toca" style="align-self:flex-start" onClick=${() => { setFoto(''); setAbre(''); }}>Quitar la foto</button>`)}
+        </div>
       </${MasOpciones}>`,
-    pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar</button>${p0 ? Pie2('Borrar ' + (T.inv ? 'producto' : 'servicio'), () => borrar(c), 'rojo') : null}`
+    pie: html`<button type="button" class="btn toca" data-guia="guardar" onClick=${() => guardar(c)}>Guardar</button>${p0 ? Pie2('Borrar ' + (tipo === 'svc' ? 'servicio' : 'producto'), () => borrar(c), 'rojo') : null}`
+  })} />`;
+}
+
+// Al terminar la guía de “Nuevo producto”: qué pasó, con sus datos, y seguir.
+function ProductoListo({ d, cerrar }) {
+  const { S, D, T, abrir, ir } = useApp();
+  const p = S.productos.find(x => x.id === d.pid);
+  if (!p) return null;
+  const donde = T.vender || 'Vender', cuenta = T.inv && p.q != null;
+  const verDonde = c => c(() => {
+    ir('vender');
+    setTimeout(() => { if (!iluminar('[data-pid="' + p.id + '"]', 'Aquí está', 'Tócalo para sumarlo ' + (T.vender === 'Pedido' ? 'al pedido' : 'a la venta') + '.')) avisar('“' + p.n + '” ya sale en ' + donde); }, 650);
+  });
+  return html`<${Hoja} titulo="¡Listo!" onCerrar=${cerrar} contenido=${c => ({
+    cuerpo: html`<div class="pila listo-prod" style="align-items:center;text-align:center;gap:10px">
+      <span class="listo-circ"><${Icono} n="check" t=${38} g=${2.4} /></span>
+      <b style="font-size:20px;letter-spacing:-.02em">Ya sabes agregar productos</b>
+      <span class="sub" style="font-size:15px;line-height:1.45;max-width:320px">“${p.n}” ya sale en ${donde}.${cuenta && p.min > 0 ? ' Cuando queden ' + p.min + ', Orbe te avisa en “Para hacer hoy”.' : ''}</span>
+      <div class="fila tarjeta" style="box-shadow:none;background:var(--fill2);gap:12px;width:100%;text-align:left;margin-top:8px">${FotoProd(p, 44, html`<span class="ic t-amb" style="width:44px;height:44px;border-radius:14px">${p.ab || iniciales(p.n)}</span>`)}
+        <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${p.n}</b><span class="sub num">${D.m(p.p)}${D.dual ? ' · ' + D.s(p.p) : ''}${cuenta ? ' · Tienes ' + verQ(p.q, p.u) : ''}</span></span></div>
+    </div>`,
+    pie: html`<button type="button" class="btn toca" onClick=${() => c(() => abrir('producto', {}))}>Agregar otro</button>${Pie2('Ver dónde se vende', () => verDonde(c))}`
   })} />`;
 }
 

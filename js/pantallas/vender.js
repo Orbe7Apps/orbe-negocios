@@ -143,7 +143,7 @@ export function Vender() {
   const enCarrito = p => Object.keys(cart.q).filter(k => k === p.id || k.startsWith(p.id + '~')).reduce((a, k) => a + (porPeso(p) ? 1 : cart.q[k]), 0);
   // Sin productos todavía: la guía para agregarlos (o cobrar un cargo suelto con “+ Servicio o cargo”).
   const Grilla = !prods.length ? html`<${CatalogoVacio} donde="vender" />` : html`<div class="productos">${visibles.map((p, i) => { const c = enCarrito(p); return html`
-    <button type="button" key=${p.id} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
+    <button type="button" key=${p.id} data-pid=${p.id} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
       ${c ? html`<span class="cant" key=${c}>${verQ(c)}</span>` : null}
       ${FotoProd(p, 36) || html`<span class="ic" style=${Object.assign({ width: '36px', height: '36px', fontSize: '13px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`}
       ${esArmable(p) && html`<span class="armar-chip">Armar</span>`}<b>${p.n}</b><small class="num">${esArmable(p) ? 'Precio variable' : D.m(p.p)}${porPeso(p) ? ' / ' + p.u : fraccion(p) ? ' · por ' + p.u : ''}${p.dur ? ' · ' + (p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min') : ''}${p.vars && p.vars.length ? ' · ' + p.vars.length + ' opciones' : ''}</small>
