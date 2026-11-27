@@ -2,6 +2,7 @@
 import { html } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 import { porPagar, gastosEntre, pagarGasto, inicioDia } from '../datos.js';
 import { Reparto, Monto, color } from '../graficos.js';
 import { Icono, avisar, fechaCorta, simbolo } from '../ui.js';
@@ -24,7 +25,7 @@ export function BloqueGastos({ compacto }) {
   const segs = Object.keys(cats).sort((a, b) => cats[b] - cats[a]).map(k => ({ n: k, v: cats[k], c: COLOR_CAT[k] || 'var(--c4)' }));
   const pagar = g => { pagarGasto(g.id); avisar('Pagado: ' + g.n); };
 
-  const PorPagar = html`<section class="tarjeta entra" style="padding-bottom:6px">
+  const PorPagar = html`<section class="tarjeta entra" data-guia="por-pagar" style="padding-bottom:6px">
     <div class="tarjeta-tit">Por pagar<b class="num amber" style="font-size:14px">${D.m(pp.reduce((a, g) => a + g.v, 0))}</b></div>
     <div class="lista">${pp.length ? pp.map((g, i) => { const d = Math.round((inicioDia(g.vence) - inicioDia(Date.now())) / 86400000); return html`<div class="item entra" key=${g.id} style=${{ '--i': i }}>
       <button type="button" class="crece toca" style="display:flex;flex-direction:column;gap:2px;border:0;background:none;padding:0;text-align:left;color:var(--ink);min-width:0" aria-label=${'Editar ' + g.n} onClick=${() => abrir('gasto', { gid: g.id })}><b style="font-size:14px;font-weight:600">${g.n}</b><span class="sub" style=${{ color: d <= 1 ? 'var(--out)' : 'var(--amber)' }}>${venceTxt(g.vence)}</span></button>
@@ -33,13 +34,13 @@ export function BloqueGastos({ compacto }) {
     </div>`; }) : html`<p class="vacio" style="padding:12px 0">No debes nada a nadie.</p>`}</div>
   </section>`;
 
-  const Mes = html`<section class="tarjeta entra" style="--i:1">
+  const Mes = html`<section class="tarjeta entra" data-guia="gastos-mes" style="--i:1">
     <div class="tarjeta-tit">Gastos del mes</div>
     ${segs.length ? html`<${Reparto} segs=${segs} f=${D.m} titulo="Gastado este mes" />` : html`<p class="vacio">Sin gastos este mes.</p>`}
   </section>`;
 
   const Recientes = html`<section class="tarjeta entra" style="--i:2;padding-bottom:6px">
-    <div class="tarjeta-tit">Gastos recientes<button type="button" class="btn2 chico rojo toca" onClick=${() => abrir('gasto')}>+ Gasto</button></div>
+    <div class="tarjeta-tit">Gastos recientes<button type="button" class="btn2 chico rojo toca" data-guia="nuevo-gasto" onClick=${() => abrir('gasto')}>+ Gasto</button></div>
     <div class="lista">${!recientes.length ? html`<p class="vacio" style="padding:12px 0">Todavía no anotas gastos.</p>` : null}${recientes.slice(0, compacto ? 4 : 12).map((g, i) => html`<button type="button" class="item toca entra" key=${g.id} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => abrir('gasto', { gid: g.id })}>
       <span class="simb-c" style=${{ '--c': COLOR_CAT[g.cat] || 'var(--c4)', width: '32px', height: '32px' }}><${Icono} n=${simbolo(g.cat)} t=${16} /></span>
       <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="corta" style="font-size:14px">${g.n}</span><span class="sub faint corta">${fechaCorta(g.t)} · ${g.cat} · ${g.m}</span></span>
@@ -57,9 +58,13 @@ export function Gastos() {
   const tot = gm.reduce((a, g) => a + g.v, 0), dias = new Date().getDate();
   const cifras = [['Gastado este mes', tot, gm.length + ' gastos', 'var(--out)', 'dinero'], ['Por pagar', pp.reduce((a, g) => a + g.v, 0), pp.length + (pp.length === 1 ? ' cuenta' : ' cuentas'), 'var(--amber)', 'calendario'],
     ['Próximo vencimiento', pp.length ? pp[0].v : 0, pp.length ? pp[0].n + ' · ' + venceTxt(pp[0].vence).toLowerCase() : 'Nada pendiente', 'var(--ink)', 'reloj'], ['Promedio por día', tot / Math.max(1, dias), 'en ' + dias + ' días del mes', 'var(--ink)', 'grafico']];
-  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Gastos</h1><${BotonAyuda} /></div>
+  // La frase: lo que vence pronto primero; luego cuánto va del mes.
+  const prox = pp[0], dProx = prox ? Math.round((inicioDia(prox.vence) - inicioDia(Date.now())) / 86400000) : 99;
+  const FraseGastos = html`<${Frase}>${prox && dProx <= 3 ? html`<b class=${dProx <= 1 ? 'r' : 'a'}>${prox.n}</b> ${venceTxt(prox.vence).toLowerCase()}: <b class="num">${D.m(prox.v)}</b>. ` : ''}${gm.length ? html`Este mes llevas <b class="r num">${D.m(tot)}</b> en ${gm.length} ${gm.length === 1 ? 'gasto' : 'gastos'}.` : 'Este mes todavía no anotas gastos.'}${!pp.length ? ' No debes nada a nadie.' : ''}</${Frase}>`;
+  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Gastos</h1><${BotonGuiame} k="gastos" /><${BotonAyuda} /></div>
+    ${FraseGastos}
     <div class="rejilla-2">${cifras.slice(0, 2).map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="sub">${k[0]}</span><${Monto} v=${k[1]} f=${D.m} clase=${'v num ' + (i ? 'amber' : 'out')} /><span class="sub faint">${k[2]}</span></div>`)}</div>
     ${b.PorPagar}${b.Recientes}${b.Mes}`;
-  return html`<div class="cifras">${cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[4]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} v=${k[1]} f=${D.m} clase="v" /><span class="sub faint corta">${k[2]}</span></div>`)}</div>
+  return html`${FraseGastos}<div class="cifras">${cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[4]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} v=${k[1]} f=${D.m} clase="v" /><span class="sub faint corta">${k[2]}</span></div>`)}</div>
     <div class="tres estira">${b.PorPagar}${b.Recientes}${b.Mes}</div>`;
 }

@@ -3,6 +3,7 @@
 import { html, useState, useEffect } from './lib/preact-htm.js';
 import { useApp } from './ctx.js';
 import { Icono } from './ui.js';
+import { tieneGuia } from './guias.js';
 
 // ---------- ayuda de cada pantalla y hoja ----------
 // q: qué es · p: pasos · c: consejos · g: guías relacionadas (ids de GUIAS)
@@ -137,7 +138,8 @@ export function BotonAyuda({ k, chico }) {
 // Panel de ayuda: sube por encima de todo (también de una hoja abierta, sin cerrarla).
 export function PanelAyuda({ k, cerrar }) {
   const app = useApp(), { T, ir, abrir } = app;
-  const [guia, setGuia] = useState(GUIAS.find(x => x.id === k) ? k : null);
+  // Si la pantalla tiene guía en vivo, primero se ofrece esa; la guía escrita queda en la lista.
+  const [guia, setGuia] = useState(GUIAS.find(x => x.id === k) && !tieneGuia(k) ? k : null);
   const [sale, setSale] = useState(false);
   const fin = despues => { setSale(true); setTimeout(() => { cerrar(); if (typeof despues === 'function') despues(); }, 260); };
   useEffect(() => {
@@ -157,7 +159,7 @@ export function PanelAyuda({ k, cerrar }) {
           <h2>${G ? G.t : a ? a.t : 'Ayuda'}</h2><button type="button" class="icono-btn chico toca" aria-label="Cerrar la ayuda" onClick=${() => fin()}><${Icono} n="cerrar" t=${16} g=${2.4} /></button></div>
       </div>
       <div class="hoja-cuerpo">
-        ${!G && a && a.guiame && html`<button type="button" class="btn toca guia-ayuda-btn" onClick=${() => fin(() => window.dispatchEvent(new CustomEvent('orbe-guiame', { detail: a.guiame })))}><${Icono} n="info" t=${18} />Guíame paso a paso</button>`}
+        ${!G && a && (a.guiame || tieneGuia(k)) && html`<button type="button" class="btn toca guia-ayuda-btn" onClick=${() => fin(() => window.dispatchEvent(new CustomEvent('orbe-guiame', { detail: a.guiame || k })))}><${Icono} n="info" t=${18} />Guíame paso a paso</button>`}
         ${G ? html`${Pasos(G.p)}${(G.ir || G.abrir) && html`<button type="button" class="btn2 lleno toca" style="align-self:flex-start" onClick=${() => llevar(G)}>Llévame ahí</button>`}`
         : a ? html`
           <p class="ayuda-que">${a.q}</p>

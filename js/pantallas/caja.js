@@ -6,6 +6,7 @@ import { monedaEfectivo } from '../paises.js';
 import { Hoja, Icono, Chips, avisar, hora } from '../ui.js';
 import { numero, esEfectivo } from './pagos.js';
 import { ajustesImpresora, abrirCajon } from '../impresora.js';
+import { Frase, BotonGuiame } from '../guias.js';
 
 // Formas de pago en efectivo del negocio (cada una se cuenta en su moneda).
 export const efectivosDe = S => S.negocio.pays.filter(esEfectivo);
@@ -27,21 +28,26 @@ export function Caja({ d, cerrar }) {
   const turnos = S.turnos.filter(x => x.hasta >= hoy0).slice().reverse();
   const quien = id => ((S.perfiles.find(p => p.id === id) || {}).n || '—').split(' ')[0];
   const pc = puede('cierre') || puede('vender');
+  // La frase de arriba: cuánto efectivo debe haber y qué toca hacer.
+  const esperado = efect.reduce((a, k) => a + (turno.esperado[k] || 0), 0);
+  const FraseCaja = html`<${Frase}>${!abierta ? (esperado > 0 ? html`Ya hay <b class="v num">${D.m(esperado)}</b> en efectivo de ventas. Abre la caja con el fondo para que el cierre <b>cuadre</b>.` : html`Abre la caja con el efectivo para dar vuelto. Así, al cerrar, sabrás si <b>cuadra</b>.`)
+    : html`Debe haber <b class="v num">${D.m(esperado)}</b> en efectivo${efect.length > 1 ? ', sumando todas las monedas' : ''}. Al terminar, cuéntalo y cierra.`}</${Frase}>`;
   return html`<${Hoja} titulo="Caja" onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
-      <div class=${'tarjeta fila ' + (abierta ? '' : 'entra')} style=${{ boxShadow: 'none', gap: '12px', background: abierta ? 'var(--in-soft)' : 'var(--amber-soft)' }}>
+      <div class="fila" style="gap:8px;align-items:flex-start"><span class="crece">${FraseCaja}</span><${BotonGuiame} k="caja" /></div>
+      <div data-guia="caja-estado" class=${'tarjeta fila ' + (abierta ? '' : 'entra')} style=${{ boxShadow: 'none', gap: '12px', background: abierta ? 'var(--in-soft)' : 'var(--amber-soft)' }}>
         <span class=${'ic ' + (abierta ? 't-ver' : 't-amb')}><${Icono} n=${abierta ? 'check' : 'candado'} t=${18} g=${2.4} /></span>
         <span class="crece" style="display:flex;flex-direction:column;gap:2px"><b style="font-size:14px">${abierta ? 'Caja abierta' : 'Caja sin fondo'}</b>
           <span class="sub">${tu.anterior ? 'Turno desde las ' + hora(tu.desde) + ' · antes cerró ' + quien(tu.anterior.por) : abierta ? 'Desde las ' + hora(inicioVisible(hoy0)) : 'Anota con cuánto efectivo empiezas el día'}</span></span>
         ${!abierta && pc && html`<button type="button" class="btn2 chico lleno toca" onClick=${() => c(() => abrir('movCaja', { tipo: 'fondo' }))}>Abrir caja</button>`}
       </div>
-      <div class="cierre-seccion"><span class="cierre-tit"><${Icono} n="billete" t=${15} />Efectivo que debe haber ahora</span>
+      <div class="cierre-seccion" data-guia="caja-efectivo"><span class="cierre-tit"><${Icono} n="billete" t=${15} />Efectivo que debe haber ahora</span>
         ${efect.map(k => { const x = turno.partes[k] || {}, e = enSu(k); const det = [x.base ? 'deja ' + D.m(x.base) : '', x.fondo ? 'fondo ' + D.m(x.fondo) : '', x.ventas ? 'ventas ' + D.m(x.ventas) : '', x.ingresos ? '+' + D.m(x.ingresos) : '', x.retiros ? 'retiros −' + D.m(x.retiros) : '', x.gastos ? 'gastos −' + D.m(x.gastos) : '', x.ajustes ? 'ajuste ' + D.m(x.ajustes) : ''].filter(Boolean);
           return html`<div class="cierre-efectivo" key=${k}><div class="fila"><b class="crece" style="font-size:15px">${k}</b><b class="num" style="font-size:17px">${e.ver(turno.esperado[k] || 0)}</b></div>
             <span class="sub num">${det.length ? det.join(' · ') : 'Sin movimientos todavía'}</span></div>`; })}
       </div>
       ${ajustesImpresora().modo === 'bluetooth' && html`<button type="button" class="btn2 toca" onClick=${() => abrirCajon().then(() => avisar('Cajón abierto')).catch(() => avisar('No se pudo abrir el cajón: revisa la impresora'))}><${Icono} n="candado" t=${15} />Abrir el cajón</button>`}
-      ${pc && html`<div class="rejilla-2" style="gap:10px">
+      ${pc && html`<div class="rejilla-2" style="gap:10px" data-guia="caja-mov">
         <button type="button" class="btn2 rojo toca" style="min-height:50px" onClick=${() => c(() => abrir('movCaja', { tipo: 'retiro' }))}><${Icono} n="menos1" t=${15} g=${2.6} />Retirar efectivo</button>
         <button type="button" class="btn2 verde toca" style="min-height:50px" onClick=${() => c(() => abrir('movCaja', { tipo: 'ingreso' }))}><${Icono} n="mas1" t=${15} g=${2.6} />Agregar efectivo</button>
       </div>`}
@@ -50,8 +56,8 @@ export function Caja({ d, cerrar }) {
           ${turnos.map(t => { const dif = Object.keys(t.dif || {}).reduce((a, k) => a + t.dif[k], 0); return html`<div class="fila" key=${t.id}><span class="pildora t-azu">Turno ${t.n}</span><span class="crece corta sub">${quien(t.por)} · ${hora(t.desde)}–${hora(t.hasta)}</span><b class=${'num ' + (Math.abs(dif) < 0.005 ? 'in' : 'out')} style="font-size:13px">${Math.abs(dif) < 0.005 ? 'Cuadró' : (dif < 0 ? 'Faltó ' : 'Sobró ') + D.m(Math.abs(dif))}</b></div>`; })}
           ${movs.filter(x => x.tipo !== 'ajuste').map(x => html`<div class="fila" key=${x.id}><span class=${'pildora ' + TONO_MOV[x.tipo]}>${NOMBRE_MOV[x.tipo]}</span><span class="crece corta sub">${hora(x.t)} · ${quien(x.por)}${x.motivo ? ' · ' + x.motivo : ''}</span><b class="num" style="font-size:13px">${x.tipo === 'retiro' ? '−' : ''}${x.pagos.map(p => enSu(p.m).ver(p.v)).join(' + ')}</b></div>`)}
         </div></div>`}`,
-    pie: html`${puede('vender') && html`<button type="button" class="btn toca" onClick=${() => c(() => abrir('cierre', { turno: true }))}>Cerrar mi turno</button>`}
-      ${puede('cierre') && html`<button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => c(() => abrir('cierre'))}>Cierre del día</button>`}`
+    pie: html`${puede('vender') && html`<button type="button" class="btn toca" data-guia="caja-turno" onClick=${() => c(() => abrir('cierre', { turno: true }))}>Cerrar mi turno</button>`}
+      ${puede('cierre') && html`<button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" data-guia="caja-dia" onClick=${() => c(() => abrir('cierre'))}>Cierre del día</button>`}`
   })} />`;
 }
 

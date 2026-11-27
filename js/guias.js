@@ -1,0 +1,154 @@
+// Guías en vivo de cada pantalla (“Guíame”) y la frase que resume cada pantalla.
+// La guía oscurece todo menos lo que hay que tocar (motor de js/guia.js), avanza cuando la persona lo toca
+// y se arma con lo que este negocio tiene encendido y lo que este perfil puede hacer.
+// Nunca enfoca un campo: ilumina y la persona toca.
+import { html, useState, useEffect, useRef } from './lib/preact-htm.js';
+import { useApp } from './ctx.js';
+import { GuiaVivo, usePortal, vecesGuia, contarGuia, terminarGuia } from './guia.js';
+import { resumen, inicioDia, listaProductos } from './datos.js';
+
+const DIA = 86400000;
+// Cada guía se invita sola en su pantalla las 2 primeras visitas; después vive en el “?”.
+const VECES_INVITA = 2;
+const clave = k => 'pant-' + k;
+
+// ---------- pasos de cada pantalla ----------
+// Paso: { sel, titulo, texto (texto o función), toca (se cumple tocando lo iluminado), fin }
+const PASOS = {
+  hoy: x => {
+    const { D, T, puede } = x, hoy0 = inicioDia(Date.now()), r = resumen(hoy0, hoy0 + DIA, x.suc);
+    return [
+      { sel: '.frase-viva', titulo: 'Cómo vas hoy', texto: 'Esta frase resume tu día. Cambia sola cuando vendes, cobras o algo necesita tu atención.' },
+      { sel: '[data-tour=resumen]', titulo: T.vender === 'Cobrar' ? 'Lo cobrado hoy' : 'Lo vendido hoy', texto: (r.n ? 'Llevas ' + D.m(r.total) + ' en ' + r.n + (r.n === 1 ? ' venta' : ' ventas') + '.' : 'Aquí verás lo de hoy en cuanto vendas.') + ' Toca las cifras para ver el detalle.' },
+      D.dual && { sel: '.hero-tasa', titulo: 'La tasa del día', texto: 'Todo lo que ves en Bs sale de esta tasa. Se actualiza sola; si hace falta, tócala para cambiarla.' },
+      { sel: '[data-tour=pendientes]', titulo: 'Para hacer hoy', texto: 'Lo urgente va de primero. Toca un aviso y te lleva directo a resolverlo.' },
+      { sel: '[data-tour=boton-orbe]', titulo: 'El botón Orbe', texto: 'Desde cualquier pantalla: ' + ['una venta', puede('gastos') && 'un gasto', 'un cliente'].filter(Boolean).join(', ') + ' y más, con un toque.' },
+      { fin: true, titulo: '¡Listo!', texto: puede('vender') ? 'Empieza el día aquí. Cuando llegue un cliente, ve a ' + (x.tel ? 'Vender' : 'Caja') + '.' : 'Empieza el día aquí. Lo que necesites está abajo.' }
+    ];
+  },
+  vender: x => {
+    const { T, D, puede } = x, hay = listaProductos().length > 0, cosa = T.inv ? 'producto' : 'servicio';
+    if (!hay) return [
+      { sel: '.frase-viva', titulo: 'Para vender', texto: 'Primero agrega lo que vendes. Cada ' + cosa + ' aparece aquí como un botón.' },
+      { fin: true, titulo: 'Agrega tu primer ' + cosa, texto: 'Ve a ' + (T.inv ? 'Inventario' : 'Servicios') + ' y toca “+”. La guía de “Nuevo producto” te acompaña.' }
+    ];
+    const fiar = T.mod('fiado') && puede('fiado');
+    return [
+      { sel: '.frase-viva', titulo: 'Así vas hoy', texto: 'Esta frase cambia con cada venta y te dice cuánto llevas.' },
+      { sel: () => document.querySelector('.productos .prod[data-directo]:not(.agotado)') ? '.productos .prod[data-directo]:not(.agotado)' : '.productos .prod:not(.agotado)', titulo: 'Toca lo que se lleva', texto: 'Un toque suma uno. Si lleva dos, toca otra vez. Lo que se vende por kilo o metro te pregunta cuánto.', toca: true },
+      { sel: '[data-tour=cobrar]', titulo: 'Ahora, cobrar', texto: 'El botón te dice el total. Tócalo.', toca: true },
+      { sel: '[data-guia=formas]', titulo: '¿Cómo te pagó?', texto: 'Toca la forma de pago.' + (D.dual ? ' Debajo ves el monto en Bs con la tasa de esa forma.' : '') + ' Con efectivo, te calcula el vuelto.' + (fiar ? ' Con fiado, te pregunta a quién.' : ''), toca: true },
+      { sel: '[data-guia=cobrar-listo]', titulo: 'Cobra', texto: 'Toca el botón. “Dividir pago” y “Cliente” están justo arriba, por si hacen falta.', toca: true },
+      { sel: '[data-guia=recibo]', titulo: 'El recibo', texto: 'Si lo pide, mándaselo por WhatsApp o imprímelo. Si no, cierra con la ✕.' },
+      { fin: true, titulo: '¡Ya sabes vender!', texto: 'La venta se sumó a Hoy' + (T.inv ? ' y bajó del inventario.' : '.') }
+    ];
+  },
+  clientes: x => {
+    const { T, puede } = x, fiado = T.mod('fiado');
+    if (!hay('[data-guia=cliente]')) return [
+      hay('[data-guia=nuevo-cliente]') && { sel: '[data-guia=nuevo-cliente]', titulo: 'Tu primer cliente', texto: 'Toca aquí y anota su nombre y teléfono. También puedes crearlo al cobrar.' },
+      { fin: true, titulo: 'Así de simple', texto: 'Con su teléfono le mandas el recibo' + (fiado ? ' y le recuerdas lo que debe' : '') + ' por WhatsApp.' }
+    ];
+    return [
+      { sel: '.frase-viva', titulo: 'Cómo van tus clientes', texto: fiado ? 'Esta frase te dice cuánto te deben y quién lleva más tiempo sin pagar.' : 'Esta frase te dice cuántos clientes tienes y cuántos volvieron este mes.' },
+      fiado && hay('[data-tour=deben]') && { sel: '[data-tour=deben]', titulo: 'Lo que te deben', texto: 'Los que más deben, de primero. En rojo, los que llevan más de 15 días.' },
+      { sel: '[data-guia=cliente]', titulo: 'Cada cliente', texto: 'Tócalo para ver lo que te ha comprado' + (fiado ? ', lo que debe' : '') + ' y su teléfono.' },
+      hay('[data-guia=recordar]') && { sel: '[data-guia=recordar]', titulo: 'Recordarle', texto: 'Se abre WhatsApp con el mensaje ya armado: cuánto debe y desde cuándo. Solo lo envías.' },
+      hay('[data-guia=abono]') && { sel: '[data-guia=abono]', titulo: 'Cuando te pague', texto: 'Toca aquí, escribe cuánto te dio y cómo. Entra a la caja de hoy y baja su deuda.' },
+      puede('clientes') && hay('[data-guia=nuevo-cliente]') && { sel: '[data-guia=nuevo-cliente]', titulo: 'Un cliente nuevo', texto: 'Nombre y teléfono' + (x.D.dual ? ', y la cédula si te la pide para la factura' : '') + '. También lo puedes crear al cobrar.' },
+      { fin: true, titulo: '¡Listo!', texto: fiado ? 'Revisa aquí una vez por semana quién te debe. Orbe te avisa en Hoy cuando alguien se atrasa.' : 'Cada venta con cliente queda en su historial.' }
+    ];
+  },
+  caja: x => {
+    const abierta = hay('[data-guia=caja-estado] .t-ver');
+    return [
+      { sel: '.hoja .frase-viva', titulo: 'Tu caja', texto: abierta ? 'Esta frase te dice cuánto efectivo debe haber ahora mismo.' : 'Esta frase te dice qué toca ahora. Lo primero: abrir la caja.' },
+      { sel: '[data-guia=caja-estado]', titulo: abierta ? 'Caja abierta' : 'Abrir la caja', texto: abierta ? 'Aquí ves desde qué hora está abierta y quién cerró el turno anterior.' : 'Al empezar el día toca “Abrir caja” y anota con cuánto efectivo empiezas, para dar vuelto.' },
+      { sel: '[data-guia=caja-efectivo]', titulo: 'Lo que debe haber', texto: 'Orbe suma el fondo y lo vendido en efectivo, y resta retiros y gastos. Debajo ves de dónde sale.' },
+      hay('[data-guia=caja-mov]') && { sel: '[data-guia=caja-mov]', titulo: 'Sacar o meter efectivo', texto: 'Si te llevas dinero o traes sencillo, anótalo aquí. No es un gasto: así la caja sigue cuadrando.' },
+      hay('[data-guia=caja-turno]') && { sel: '[data-guia=caja-turno]', titulo: 'Cerrar tu turno', texto: 'Al irte, cuentas el efectivo y dejas el fondo para quien sigue.' },
+      hay('[data-guia=caja-dia]') && { sel: '[data-guia=caja-dia]', titulo: 'Cierre del día', texto: 'Al final del día lo cuentas todo. Orbe te dice si falta o sobra, y queda guardado.' },
+      { fin: true, titulo: '¡Listo!', texto: 'Abre al empezar y cierra al terminar. Lo demás lo suma Orbe.' }
+    ];
+  },
+  inventario: x => {
+    const { T, puede } = x, cosa = T.inv ? 'producto' : 'servicio';
+    if (!hay('[data-guia=producto]')) return [
+      { fin: true, titulo: 'Agrega tu primer ' + cosa, texto: 'Toca “Agregar” y la guía de “Nuevo producto” te acompaña paso a paso.' }
+    ];
+    const herr = ['escaner', 'compras', 'promos', 'precios'].filter(m => T.mod(m)).map(m => ({ escaner: 'escanear códigos', compras: 'cargar la factura del proveedor', promos: 'hacer promociones', precios: 'subir precios de una vez' })[m]);
+    return [
+      { sel: '.frase-viva', titulo: T.inv ? 'Cómo está tu inventario' : 'Tus servicios', texto: T.inv ? 'Esta frase te dice qué se está acabando. Si nada, cuánto tienes en estantes.' : 'Esta frase te dice cuántos servicios ofreces y cuál te piden más.' },
+      T.inv && hay('[data-guia=pestanas]') && { sel: '[data-guia=pestanas]', titulo: 'Por reponer', texto: 'Toca “Por reponer” para ver solo lo que se está acabando, y anótalo en tu lista de compras.' },
+      { sel: '[data-guia=producto]', titulo: 'Cada ' + cosa, texto: T.inv ? (x.tel ? 'La barra muestra cuánto te queda: verde bien, amarillo poco, rojo agotado.' : 'En la tabla ves cuánto tienes, el mínimo y el estado. “Reponer” suma lo que llegó.') + ' Tócalo para cambiar precio o existencia.' : 'Con su precio y lo que dura. Tócalo para cambiarlo.' },
+      T.inv && hay('.resumen-inv') && { sel: '.resumen-inv', titulo: 'Tu dinero en estantes', texto: 'Lo que tienes a precio de costo y cuánto ganas en promedio en cada venta.' },
+      T.inv && herr.length && hay('[data-tour=escanear]') && { sel: '[data-tour=escanear]', titulo: 'Herramientas', texto: 'Aquí puedes ' + herr.join(', ').replace(/, ([^,]*)$/, ' y $1') + '.' },
+      puede('productos') && hay('[data-guia=agregar]') && { sel: '[data-guia=agregar]', titulo: 'Agregar', texto: 'Toca aquí para un ' + cosa + ' nuevo. Primero eliges qué es y después llenas lo esencial.' },
+      { fin: true, titulo: '¡Listo!', texto: T.inv ? 'Cada venta baja la existencia sola. Orbe te avisa en Hoy cuando algo se acaba.' : 'Lo que agregues aquí aparece en Vender como un botón.' }
+    ];
+  },
+  gastos: () => [
+    { sel: '.frase-viva', titulo: 'Tus gastos', texto: 'Esta frase te dice lo que vence pronto y cuánto llevas gastado este mes.' },
+    { sel: '[data-guia=por-pagar]', titulo: 'Lo que debes pagar', texto: 'Alquiler, luz, proveedores… con su fecha. Orbe te avisa en Hoy cuando se acerca. Al pagarlo, toca “Pagado”.' },
+    { sel: '[data-guia=nuevo-gasto]', titulo: 'Anotar un gasto', texto: 'Toca “+ Gasto”: cuánto, en qué y cómo lo pagaste. Si fue en efectivo, sale de la caja. También desde el botón Orbe.' },
+    hay('[data-guia=gastos-mes]') && !hay('[data-guia=gastos-mes] .vacio') && { sel: '[data-guia=gastos-mes]', titulo: 'En qué se va el dinero', texto: 'Tus gastos del mes por tipo, el más grande primero.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Anota cada gasto el día que pasa: así tu ganancia es la real.' }
+  ],
+  cierre: () => [
+    { sel: '[data-guia=cierre-resumen]', titulo: 'Lo de hoy', texto: 'Lo vendido, con el fiado y los gastos del día.' },
+    hay('[data-guia=cierre-contar]') && { sel: '[data-guia=cierre-contar]', titulo: 'Cuenta el efectivo', texto: 'Escribe lo que contaste o usa + y −. Si prefieres, cuenta billete por billete.' },
+    hay('[data-guia=cierre-digital]') && { sel: '[data-guia=cierre-digital]', titulo: 'Lo digital', texto: 'Tarjeta, transferencias y pagos móviles ya están confirmados: no hay que contarlos.' },
+    hay('[data-guia=cierre-resultado]') && { sel: '[data-guia=cierre-resultado]', titulo: '¿Cuadra?', texto: 'Aquí ves al momento si falta o sobra efectivo.' },
+    { sel: '[data-guia=cierre-listo]', titulo: 'Cerrar', texto: 'Cuando esté bien, tócalo. Queda guardado y firmado: después no se puede cambiar.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Hazlo todos los días: así ves a tiempo si algo falta.' }
+  ]
+};
+// ¿Está en pantalla? (para saltar lo que este negocio o este momento no tiene)
+function hay(s) { return !!document.querySelector(s); }
+// El selector de un paso puede depender de lo que hay en pantalla en ese momento.
+const selDe = p => typeof p.sel === 'function' ? p.sel() : p.sel;
+export const tieneGuia = k => !!PASOS[k];
+export const empezarGuia = k => window.dispatchEvent(new CustomEvent('orbe-guiame', { detail: k }));
+
+// ---------- la guía que corre sobre la pantalla ----------
+export function GuiaPantallas() {
+  const app = useApp();
+  const [g, setG] = useState(null); // { k, pasos, i, ok }
+  const gR = useRef(null); gR.current = g;
+  useEffect(() => {
+    const f = e => { const k = e.detail; if (!PASOS[k]) return; const pasos = PASOS[k](app).filter(Boolean); setG({ k, pasos, i: 0, ok: false }); };
+    window.addEventListener('orbe-guiame', f);
+    return () => window.removeEventListener('orbe-guiame', f);
+  });
+  const sig = () => { const x = gR.current; if (!x) return; if (x.i >= x.pasos.length - 1) { terminarGuia(clave(x.k)); setG(null); return; } setG(Object.assign({}, x, { i: x.i + 1, ok: false })); };
+  // Un paso “toca” se cumple cuando la persona toca lo iluminado (el toque sigue su camino normal).
+  useEffect(() => {
+    if (!g) return;
+    const p = Object.assign({}, g.pasos[g.i]); p.sel = selDe(p);
+    if (!p.toca) return;
+    let listo = false, faltaDesde = 0;
+    const toque = e => { if (listo) return; const el = e.target && e.target.closest && e.target.closest(p.sel); if (el) { listo = true; setTimeout(sig, 550); } };
+    document.addEventListener('click', toque, true);
+    // Si lo que hay que tocar no aparece (se cerró una hoja, no hay productos…), se puede seguir con “Siguiente”.
+    const reloj = setInterval(() => { if (document.querySelector(p.sel)) { faltaDesde = 0; return; } if (!faltaDesde) faltaDesde = Date.now(); else if (Date.now() - faltaDesde > 1600) { setG(x => x && x.i === g.i ? Object.assign({}, x, { ok: true }) : x); } }, 400);
+    return () => { document.removeEventListener('click', toque, true); clearInterval(reloj); };
+  }, [g && g.k, g && g.i]);
+  const vista = g ? g.pasos.map((p, k) => Object.assign({}, p, { sel: selDe(p), texto: typeof p.texto === 'function' ? p.texto(app) : p.texto, espera: p.toca, ok: k === g.i ? g.ok : false })) : null;
+  usePortal(g ? html`<${GuiaVivo} pasos=${vista} i=${g.i} onSig=${sig} onSalir=${() => setG(null)} />` : null);
+  return null;
+}
+
+// ---------- botón “Guíame” ----------
+// Sale las primeras visitas a la pantalla; después la guía sigue en el “?”.
+export function BotonGuiame({ k }) {
+  const [ver] = useState(() => tieneGuia(k) && vecesGuia(clave(k)) < VECES_INVITA);
+  useEffect(() => { if (tieneGuia(k)) contarGuia(clave(k)); }, [k]);
+  if (!ver) return null;
+  return html`<button type="button" class="guiame toca" onClick=${e => { e.stopPropagation(); empezarGuia(k); }}><i class="guiame-pulso"></i>Guíame</button>`;
+}
+
+// ---------- la frase de cada pantalla ----------
+// Una sola idea, con los números del momento; lo urgente primero.
+export function Frase({ children }) {
+  return html`<p class="frase-viva entra" aria-live="polite">${children}</p>`;
+}
