@@ -71,6 +71,29 @@ const PASOS = {
       { fin: true, titulo: '¡Listo!', texto: 'Abre al empezar y cierra al terminar. Lo demás lo suma Orbe.' }
     ];
   },
+  inventario: x => {
+    const { T, puede } = x, cosa = T.inv ? 'producto' : 'servicio';
+    if (!hay('[data-guia=producto]')) return [
+      { fin: true, titulo: 'Agrega tu primer ' + cosa, texto: 'Toca “Agregar” y la guía de “Nuevo producto” te acompaña paso a paso.' }
+    ];
+    const herr = ['escaner', 'compras', 'promos', 'precios'].filter(m => T.mod(m)).map(m => ({ escaner: 'escanear códigos', compras: 'cargar la factura del proveedor', promos: 'hacer promociones', precios: 'subir precios de una vez' })[m]);
+    return [
+      { sel: '.frase-viva', titulo: T.inv ? 'Cómo está tu inventario' : 'Tus servicios', texto: T.inv ? 'Esta frase te dice qué se está acabando. Si nada, cuánto tienes en estantes.' : 'Esta frase te dice cuántos servicios ofreces y cuál te piden más.' },
+      T.inv && hay('[data-guia=pestanas]') && { sel: '[data-guia=pestanas]', titulo: 'Por reponer', texto: 'Toca “Por reponer” para ver solo lo que se está acabando, y anótalo en tu lista de compras.' },
+      { sel: '[data-guia=producto]', titulo: 'Cada ' + cosa, texto: T.inv ? (x.tel ? 'La barra muestra cuánto te queda: verde bien, amarillo poco, rojo agotado.' : 'En la tabla ves cuánto tienes, el mínimo y el estado. “Reponer” suma lo que llegó.') + ' Tócalo para cambiar precio o existencia.' : 'Con su precio y lo que dura. Tócalo para cambiarlo.' },
+      T.inv && hay('.resumen-inv') && { sel: '.resumen-inv', titulo: 'Tu dinero en estantes', texto: 'Lo que tienes a precio de costo y cuánto ganas en promedio en cada venta.' },
+      T.inv && herr.length && hay('[data-tour=escanear]') && { sel: '[data-tour=escanear]', titulo: 'Herramientas', texto: 'Aquí puedes ' + herr.join(', ').replace(/, ([^,]*)$/, ' y $1') + '.' },
+      puede('productos') && hay('[data-guia=agregar]') && { sel: '[data-guia=agregar]', titulo: 'Agregar', texto: 'Toca aquí para un ' + cosa + ' nuevo. Primero eliges qué es y después llenas lo esencial.' },
+      { fin: true, titulo: '¡Listo!', texto: T.inv ? 'Cada venta baja la existencia sola. Orbe te avisa en Hoy cuando algo se acaba.' : 'Lo que agregues aquí aparece en Vender como un botón.' }
+    ];
+  },
+  gastos: () => [
+    { sel: '.frase-viva', titulo: 'Tus gastos', texto: 'Esta frase te dice lo que vence pronto y cuánto llevas gastado este mes.' },
+    { sel: '[data-guia=por-pagar]', titulo: 'Lo que debes pagar', texto: 'Alquiler, luz, proveedores… con su fecha. Orbe te avisa en Hoy cuando se acerca. Al pagarlo, toca “Pagado”.' },
+    { sel: '[data-guia=nuevo-gasto]', titulo: 'Anotar un gasto', texto: 'Toca “+ Gasto”: cuánto, en qué y cómo lo pagaste. Si fue en efectivo, sale de la caja. También desde el botón Orbe.' },
+    hay('[data-guia=gastos-mes]') && !hay('[data-guia=gastos-mes] .vacio') && { sel: '[data-guia=gastos-mes]', titulo: 'En qué se va el dinero', texto: 'Tus gastos del mes por tipo, el más grande primero.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Anota cada gasto el día que pasa: así tu ganancia es la real.' }
+  ],
   cierre: () => [
     { sel: '[data-guia=cierre-resumen]', titulo: 'Lo de hoy', texto: 'Lo vendido, con el fiado y los gastos del día.' },
     hay('[data-guia=cierre-contar]') && { sel: '[data-guia=cierre-contar]', titulo: 'Cuenta el efectivo', texto: 'Escribe lo que contaste o usa + y −. Si prefieres, cuenta billete por billete.' },

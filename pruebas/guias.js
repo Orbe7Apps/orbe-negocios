@@ -60,6 +60,16 @@ const PC = process.env.PC === '1';
       if (/undefined|NaN|\[object/.test(fc)) mal('frase de Clientes rara: ' + fc);
       if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en Clientes');
       else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir('clientes'); }
+      // Inventario (o Servicios) y Gastos.
+      for (const sec of ['inventario', 'gastos']) {
+        await p.evaluate(h => { location.hash = '#' + h; }, sec); await p.waitForTimeout(1200);
+        if (!(await p.evaluate(h => location.hash === '#' + h, sec))) { console.log(tag + ' · ' + sec + ': no está en este perfil'); continue; }
+        const fs = await p.locator('.frase-viva').first().innerText().catch(() => '');
+        console.log(tag + ' · frase de ' + sec + ': ' + fs);
+        if (!fs || /undefined|NaN|\[object/.test(fs)) mal('frase de ' + sec + ' rara: ' + fs);
+        if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en ' + sec);
+        else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir(sec); }
+      }
       // Caja y cierre del día (si el negocio usa caja).
       if (await p.evaluate(() => !!window.__abrir)) {
         await p.evaluate(() => window.__abrir('caja')); await p.waitForTimeout(900);
