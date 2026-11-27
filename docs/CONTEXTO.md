@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 27 nov 2026 (app en la versión **v109** del service worker).
+Última actualización: 27 nov 2026 (app en la versión **v110** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 17 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v109`). Desde v109 la versión nueva **no se activa sola**: se baja en silencio y se estrena la próxima vez que se abre la app, mientras se ve la pantalla de carga (app.js `versionLista` le manda `activar` al service worker y recarga una vez; la pantalla de carga sigue quieta, sin volver a empezar). Antes se recargaba sola ya mostrando los perfiles (“carga dos veces”). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v110`). Desde v109 la versión nueva **no se activa sola**: se baja en silencio y se estrena la próxima vez que se abre la app, mientras se ve la pantalla de carga (app.js `versionLista` le manda `activar` al service worker y recarga una vez; la pantalla de carga sigue quieta, sin volver a empezar). Antes se recargaba sola ya mostrando los perfiles (“carga dos veces”). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
@@ -85,6 +85,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - Cuentas en la nube: registro, confirmación por correo con pantalla “Tu cuenta se confirmó”, “Olvidé mi usuario o contraseña”, aceptar términos, borrar cuenta, cuenta suspendida.
 - Contraseñas: al crearla o cambiarla se pide 8 o más caracteres con letras y números. Si Supabase la rechaza (filtrada, débil o igual a la anterior) o falta confirmar el correo, el aviso sale en español junto al formulario, con “Mandar el enlace otra vez” para el correo. Prueba: `node pruebas/contrasenas.js` (simula Supabase, no toca la nube).
 - Un negocio por cuenta: al iniciar sesión entra directo con animación de bienvenida y luego la pantalla de perfiles/PIN.
+- **Registrar días anteriores (v110, 27 nov):** para pasar lo que el negocio anotó en su cuaderno. Hoja `anteriores` (`js/pantallas/anteriores.js`), desde Caja y desde Ajustes (Dinero; el buscador la encuentra con “cuaderno”, “libro”, “ayer”…). Se elige el día (Ayer, Antier, tira de 2 semanas con punto en los días que ya tienen algo, u “Otro día” con calendario) y se registra Venta (monto en la moneda de la forma de pago, una venta o el total del día; productos opcionales con “Bajar del inventario” apagado por defecto; lo no detallado queda como “Otros” o “Venta sin detalle”), Gasto, Abono o Fiado. Todo entra con la hora 12:00 de ese día (+1 min cada uno), la **tasa de ese día** (`tasasDelDia` lee `historialTasas`; se puede cambiar) y la marca `ant: { t, por }`; la caja y el cierre de hoy no se mueven. Funciones `ventaAnterior`, `gastoAnterior`, `abonoAnterior`, `movimientosDelDia` en `js/datos.js`; queda en el registro de cambios. Sin “Deshacer” (mueve dinero). Permiso `anteriores` (“Registrar ventas, gastos y abonos de días anteriores”, delicado): por defecto solo el dueño. Cada venta registrada después lleva su propia cadena de integridad (`dv: 'ant-<id>'`) porque la nube ordena por fecha; `sigNumero()` toma el número más alto. `useMonto`/`usePagos` usan `tasaM` del contexto si existe (la hoja pone la tasa del día elegido). Prueba: `node pruebas/anteriores.js` (`PC=1`). Maqueta: https://claude.ai/artifact/VvUWxyPVzLMo2jcdWdaLBb.
 - Teclado del PIN (v109): en el celular las teclas miden hasta 88 px (según ancho y alto de la pantalla), responden al apoyar el dedo (`pointerdown`, no al soltar), cuentan dos toques muy seguidos y vibran un poco en Android. La pantalla del PIN usa menos margen arriba para que quepa.
 - Deshacer (7 s) al borrar gasto, producto, cliente, perfil o rol.
 - Ayudas “?” con imágenes en cada pantalla y tutorial adaptado.
