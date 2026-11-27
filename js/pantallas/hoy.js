@@ -52,8 +52,8 @@ export function Hoy() {
   // Precios que se quedaron atrás: por debajo de la meta de ganancia (los que casi no dejan nada, en rojo).
   const sinGan = bajoCosto(), flojos = bajoMeta();
   if (flojos.length && puede('productos') && T.inv && T.mod('precios')) pendientes.push({ i: 'etiqueta', t: sinGan.length ? 't-ros' : 't-amb', txt: flojos.length + (flojos.length === 1 ? ' precio gana' : ' precios ganan') + ' menos de tu meta del ' + Math.round(margenMeta() * 100) + ' %', sub: sinGan.length ? sinGan.length + (sinGan.length === 1 ? ' casi no deja nada' : ' casi no dejan nada') + ': ' + sinGan.slice(0, 2).map(p => p.n).join(', ') : 'Toca para ajustarlos de un toque', go: () => abrir('precios') });
-  if (S.negocio.pedirRef && puede('ajustes')) { const n = vigentes().filter(v => v.t > Date.now() - 7 * DIA).reduce((a, v) => a + v.pagos.filter(p => p.ref && !p.ok && esElectronico(p.m)).length, 0);
-    if (n) pendientes.push({ i: 'check', t: 't-azu', txt: n + (n === 1 ? ' pago por verificar' : ' pagos por verificar') + ' con el banco', sub: 'Sube el estado de cuenta y Orbe los busca', go: () => abrir('conciliar') }); }
+  if (S.negocio.pedirRef && puede('ajustes')) { const n = vigentes().filter(v => v.t > Date.now() - 7 * DIA).reduce((a, v) => a + v.pagos.filter(p => !p.ok && p.v > 0 && esElectronico(p.m)).length, 0);
+    if (n) pendientes.push({ i: 'check', t: 't-azu', txt: n + (n === 1 ? ' pago por confirmar' : ' pagos por confirmar'), sub: 'Revisa en el banco y confírmalos con la referencia', go: () => abrir('conciliar') }); }
   // Caja sin fondo: se sugiere anotar con cuánto efectivo se empieza (no obliga).
   if (T.mod('caja') && !cierre && !cajaAbierta() && puede('vender') && S.negocio.pays.some(m => /Efectivo/.test(m))) pendientes.push({ i: 'billete', t: 't-vio', txt: 'Abre la caja', sub: 'Anota con cuánto efectivo empiezas para que el cierre cuadre', go: () => abrir('movCaja', { tipo: 'fondo' }) });
   // El cierre solo tiene sentido si hubo movimiento hoy (en una cuenta nueva sería ruido).

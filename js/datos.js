@@ -1035,6 +1035,12 @@ export function verificarPagos(claves) {
   if (!claves.length) return;
   cambiar(s => Object.assign({ ventas: s.ventas.map(v => v.pagos.some((p, k) => claves.includes(v.id + ':' + k)) ? Object.assign({}, v, { pagos: v.pagos.map((p, k) => claves.includes(v.id + ':' + k) ? Object.assign({}, p, { ok: Date.now() }) : p) }) : v) }, nota(s, 'Verificó ' + claves.length + ' pagos con el banco')));
 }
+// Confirmar un pago a mano (el dueño lo vio en el banco): guarda la referencia y lo marca como llegado. Mueve dinero: no lleva deshacer.
+export function confirmarPago(clave, ref) {
+  const r = String(ref || '').replace(/\s+/g, '').slice(0, 20);
+  if (!r) return;
+  cambiar(s => Object.assign({ ventas: s.ventas.map(v => v.pagos.some((p, k) => v.id + ':' + k === clave) ? Object.assign({}, v, { pagos: v.pagos.map((p, k) => v.id + ':' + k === clave ? Object.assign({}, p, { ref: r, ok: Date.now(), aMano: 1 }) : p) }) : v) }, nota(s, 'Confirmó un pago con la referencia ' + r)));
+}
 export async function empezarDeNuevo() {
   await apartar('antes-de-borrar');
   cambiar(() => Object.assign(vacio(), { ajustes: Object.assign({}, S.ajustes, { perfil: '' }) }));
