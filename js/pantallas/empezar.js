@@ -77,9 +77,25 @@ export function Sugerencias({ cerrar }) {
 }
 
 // Pantalla vacía con guía: qué es esto y qué hacer ahora (en lugar de una línea gris).
-export function Vacio({ i, t, s, children }) {
+// Escena: un dibujo corto y animado que enseña qué va a pasar en una pantalla vacía.
+const fila = (n, f) => Array.from({ length: n }, (_, k) => f(k));
+const ESCENAS = {
+  vender: () => html`${fila(3, k => html`<i class="es-tile es-cae" style=${{ left: 14 + k * 62 + 'px', top: '12px', '--d': k * 0.25 + 's' }}></i>`)}<i class="es-barra es-cae" style="--d:.9s"></i>`,
+  inventario: () => fila(3, k => html`<i class="es-fila" style=${{ top: 10 + k * 36 + 'px' }}><i class="es-llena" style=${{ '--w': k ? '120px' : '28px', '--c': k ? 'var(--in)' : 'var(--out)', '--d': k * 0.2 + 's' }}></i></i>`),
+  clientes: () => html`<i class="es-fila alta" style="top:12px"><i class="es-avatar"></i><i class="es-llena" style="--w:100px;--c:var(--amber);left:50px;top:19px"></i></i><i class="es-burbuja es-cae" style="--d:1s">Hola, te recuerdo…</i>`,
+  reportes: () => fila(5, k => html`<i class="es-col es-crece" style=${{ left: 22 + k * 34 + 'px', height: [40, 64, 50, 86, 72][k] + 'px', '--d': k * 0.15 + 's' }}></i>`),
+  ordenes: () => html`<i class="es-via"></i>${fila(3, k => html`<i class="es-punto" style=${{ left: [22, 105, 188][k] + 'px' }}></i>`)}<i class="es-ficha"></i><span class="es-pasos"><span>Recibida</span><span>En proceso</span><span>Lista</span></span>`,
+  agenda: () => html`${fila(3, k => html`<i class="es-hueco" style=${{ top: 10 + k * 34 + 'px' }}></i>`)}<i class="es-hueco lleno es-cae" style="top:44px;--d:.4s"></i>`,
+  cuotas: () => html`<i class="es-fila" style="top:30px"><i class="es-llena pasos" style="--w:150px;--c:var(--in)"></i></i><span class="es-pasos" style="top:76px"><span>1.ª</span><span>2.ª</span><span>3.ª</span></span>`,
+  cotizaciones: () => html`<i class="es-doc"><i></i><i></i><i></i></i><i class="es-check es-pop"></i>`
+};
+export function Escena({ e }) {
+  const f = ESCENAS[e];
+  return f ? html`<div class="escena" aria-hidden="true">${f()}</div>` : null;
+}
+export function Vacio({ i, t, s, e, children }) {
   return html`<div class="vacio-guia entra">
-    <span class="vacio-ic"><${Icono} n=${i} t=${26} /></span>
+    ${e && ESCENAS[e] ? html`<${Escena} e=${e} />` : html`<span class="vacio-ic"><${Icono} n=${i} t=${26} /></span>`}
     <b>${t}</b>${s && html`<span class="sub">${s}</span>`}
     ${children && html`<div class="chips" style="justify-content:center">${children}</div>`}
   </div>`;
@@ -89,7 +105,7 @@ export function CatalogoVacio({ donde }) {
   const { S, T, abrir, puede } = useApp();
   const pp = puede('productos'), hay = sugeridos(S, T).length, R = rubro(S.negocio.rubro);
   const cosa = T.inv ? 'productos' : 'servicios';
-  return html`<${Vacio} i=${T.inv ? 'caja' : 'lista'} t=${'Todavía no tienes ' + cosa} s=${donde === 'vender' ? 'Agrégalos y aquí aparecen para tocar y cobrar.' : 'Empieza con lo típico de ' + (R ? R.n.toLowerCase() : 'tu negocio') + ' y cambia los precios a tu gusto.'}>
+  return html`<${Vacio} i=${T.inv ? 'caja' : 'lista'} e=${donde === 'vender' ? 'vender' : 'inventario'} t=${'Todavía no tienes ' + cosa} s=${donde === 'vender' ? 'Agrégalos y aquí aparecen para tocar y cobrar.' : 'Empieza con lo típico de ' + (R ? R.n.toLowerCase() : 'tu negocio') + ' y cambia los precios a tu gusto.'}>
     ${pp && hay > 0 && html`<button type="button" class="btn2 lleno toca" onClick=${() => abrir('sugerencias')}><${Icono} n="rayo" t=${15} />Agregar lo típico</button>`}
     ${pp && html`<button type="button" class="btn2 toca" onClick=${() => abrir('producto', T.inv ? {} : { svc: true })}>+ ${T.inv ? 'Producto' : 'Servicio'}</button>`}
     ${pp && T.inv && T.mod('escaner') && html`<button type="button" class="btn2 toca" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="escanear" t=${15} />Escanear</button>`}

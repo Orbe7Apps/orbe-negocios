@@ -66,7 +66,7 @@ const PC = process.env.PC === '1';
         if (!(await p.evaluate(h => !!document.querySelector('[data-sec="' + h + '"]'), sec))) { console.log(tag + ' · ' + sec + ': no está en este perfil'); continue; }
         const fs = await p.locator('.frase-viva').first().innerText().catch(() => '');
         console.log(tag + ' · frase de ' + sec + ': ' + fs);
-        if (sec !== 'mas' && (!fs || /undefined|NaN|\[object/.test(fs))) mal('frase de ' + sec + ' rara: ' + fs);
+        if (sec !== 'mas' && (!fs && !(await p.locator('.escena').count()) || /undefined|NaN|\[object/.test(fs))) mal('frase de ' + sec + ' rara: ' + fs);
         if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en ' + sec);
         else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir(sec); }
       }

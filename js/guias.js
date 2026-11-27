@@ -160,6 +160,12 @@ const PASOS = {
 };
 // En los negocios de servicios, Inventario se llama Servicios (y su “?” pregunta por “servicios”).
 PASOS.servicios = PASOS.inventario;
+// Al empezar, se saltan los pasos cuyo lugar no está en pantalla (una frase que no sale con la pantalla vacía…).
+// Lo que viene después de un paso “toca” aparece más tarde (una hoja que se abre), así que se deja.
+function presentes(pasos) {
+  let despues = false;
+  return pasos.filter(p => { if (despues || p.fin || p.toca) { if (p.toca) despues = true; return true; } return hay(selDe(p)); });
+}
 // ¿Está en pantalla? (para saltar lo que este negocio o este momento no tiene)
 function hay(s) { return !!document.querySelector(s); }
 // El selector de un paso puede depender de lo que hay en pantalla en ese momento.
@@ -173,7 +179,7 @@ export function GuiaPantallas() {
   const [g, setG] = useState(null); // { k, pasos, i, ok }
   const gR = useRef(null); gR.current = g;
   useEffect(() => {
-    const f = e => { const k = e.detail; if (!PASOS[k]) return; const pasos = PASOS[k](app).filter(Boolean); setG({ k, pasos, i: 0, ok: false }); };
+    const f = e => { const k = e.detail; if (!PASOS[k]) return; const pasos = presentes(PASOS[k](app).filter(Boolean)); setG({ k, pasos, i: 0, ok: false }); };
     window.addEventListener('orbe-guiame', f);
     return () => window.removeEventListener('orbe-guiame', f);
   });

@@ -47,8 +47,8 @@ export function Clientes() {
   const FraseClientes = html`<${Frase}>${fiado && deben.length
     ? html`${deben.length === 1 ? '1 cliente te debe' : deben.length + ' clientes te deben'} <b class="a num">${D.m(tot)}</b>.${masViejo && viejo(masViejo) ? html` <b>${masViejo.n.split(' ')[0]}</b> ya lleva <b class="r">${diasDe(masViejo)} días</b>.` : ' Nadie lleva más de 15 días.'}`
     : html`Tienes <b>${todos.length} ${todos.length === 1 ? 'cliente' : 'clientes'}</b>${mesCompran ? html`; ${mesCompran} ${mesCompran === 1 ? 'compró' : 'compraron'} este mes` : ''}.${fiado ? ' Nadie te debe.' : ''}`}</${Frase}>`;
-  const Ninguno = html`<${Vacio} i="personas" t="Todavía no tienes clientes" s=${'Anótalos aquí o al cobrar, con su teléfono para mandarles el recibo' + (fiado ? ', recordarles lo que deben' : '') + ' y avisarles por WhatsApp.'}>${pc && html`<button type="button" class="btn2 lleno toca" data-guia="nuevo-cliente" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</${Vacio}>`;
-  if (!todos.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Clientes</h1><${BotonAyuda} /></div>` : null}${Ninguno}`;
+  const Ninguno = html`<${Vacio} i="personas" e="clientes" t="Todavía no tienes clientes" s=${'Anótalos aquí o al cobrar, con su teléfono para mandarles el recibo' + (fiado ? ', recordarles lo que deben' : '') + ' y avisarles por WhatsApp.'}>${pc && html`<button type="button" class="btn2 lleno toca" data-guia="nuevo-cliente" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</${Vacio}>`;
+  if (!todos.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Clientes</h1><${BotonGuiame} k="clientes" /><${BotonAyuda} /></div>` : null}${Ninguno}`;
   if (tel) return html`
     <div class="fila entra"><h1 class="titulo crece">Clientes</h1><${BotonGuiame} k="clientes" /><${BotonAyuda} />${pc && html`<button type="button" class="btn2 chico acento toca" data-guia="nuevo-cliente" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</div>
     ${FraseClientes}

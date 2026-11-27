@@ -44,7 +44,7 @@ export function Inventario() {
     const Graf = html`<section class="tarjeta entra"><div class="tarjeta-tit">Lo que más te dejan<span class="sub">30 días</span></div>
       <${BarrasH} datos=${top.slice(0, 6).map(t => ({ n: t.n, v: t.v, txt: D.m(t.v), sub: t.q + ' veces' }))} /></section>`;
     const Graf2 = top.length ? Graf : null;
-    if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
+    if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
     // La frase: cuántos servicios y cuál piden más.
     const masPedido = top[0];
     const FraseSvc = html`<${Frase}>Ofreces <b>${listaProductos().length} ${listaProductos().length === 1 ? 'servicio' : 'servicios'}</b>.${masPedido ? html` El que más te piden: <b>${masPedido.n}</b>, ${masPedido.q} ${masPedido.q === 1 ? 'vez' : 'veces'} en 30 días.` : ' Cada uno con su precio y lo que dura.'}</${Frase}>`;
@@ -54,7 +54,7 @@ export function Inventario() {
   }
 
   // Cuenta nueva: sin productos todavía.
-  if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Inventario</h1><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
+  if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Inventario</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
   const conStock = listaProductos().filter(p => p.q != null);
   // Servicios dentro de una tienda (mano de obra, instalación…): no llevan existencia.
   const servicios = elegir(listaProductos().filter(p => p.q == null));
