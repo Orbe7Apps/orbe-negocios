@@ -4,7 +4,7 @@ import { useApp } from '../ctx.js';
 import { citaActiva, resumen, serieDias, inicioDia, deudores, porPagar, bajoMinimo, bajoCosto, bajoMeta, margenMeta, cajaAbierta, cierreDeHoy, leer, diaClave, vigentes, ordenAbierta, ordenAtrasada, numeroOrden } from '../datos.js';
 import { esElectronico } from '../paises.js';
 import { Barras, Linea, Reparto, Monto, Anillo, color } from '../graficos.js';
-import { Icono, LogoOrbe, iniciales, hora, fechaCorta, Bandera, MarcaNegocio, avisar } from '../ui.js';
+import { Icono, LogoOrbe, iniciales, hora, fechaCorta, Bandera, MarcaNegocio, avisar, avisarDeshacer } from '../ui.js';
 import { nombreTasa } from '../paises.js';
 import { FilaVenta } from './hojas.js';
 import { OfertaRecorrido } from '../recorrido.js';
@@ -18,10 +18,15 @@ import { BotonAyuda } from '../ayuda.js';
 import { Frase, BotonGuiame } from '../guias.js';
 
 const DIA = 86400000;
+// Avisos de “Para hacer hoy” que se quitaron con la equis: solo los de hoy, guardados en este aparato.
+const CLAVE_OCULTOS = 'orbe-hoy-ocultos';
+function leerOcultos() { try { const o = JSON.parse(localStorage.getItem(CLAVE_OCULTOS) || 'null'); return o && Array.isArray(o.l) ? o : { d: '', l: [] }; } catch (e) { return { d: '', l: [] }; } }
+function guardarOcultos(set, o) { set(o); try { localStorage.setItem(CLAVE_OCULTOS, JSON.stringify(o)); } catch (e) { /* sin espacio */ } }
 
 export function Hoy() {
   const { S, P, T, D, E, tel, ir, abrir, suc, setSuc, enLinea, puede } = useApp();
   const [verTodo, setVerTodo] = useState(false);
+  const [ocultos, setOcultos] = useState(leerOcultos);
   // Tocar el nombre o el logo del negocio abre sus datos (con permiso de ajustes).
   const editarNegocio = () => puede('ajustes') ? abrir('negocio') : avisar('Solo quien puede cambiar los ajustes edita los datos del negocio');
   const verGan = puede('ganancias');
@@ -81,15 +86,23 @@ export function Hoy() {
   const recientes = leer().ventas.filter(v => !suc || v.suc === suc).slice(-40).sort((a, b) => a.t - b.t).slice(-6).reverse();
 
   // Lo urgente primero; lo que no se puede tocar (como “Día cerrado”) va al final.
-  const porHacer = pendientes.filter(p => p.go).concat(pendientes.filter(p => !p.go));
+  // La equis quita un aviso por hoy (en este aparato). Si el aviso cambia (otra cifra, otro cliente), vuelve a salir.
+  const ocultosHoy = ocultos.d === diaClave(Date.now()) ? ocultos.l : [];
+  const porHacer = pendientes.filter(p => p.go).concat(pendientes.filter(p => !p.go)).filter(p => !ocultosHoy.includes(p.txt));
+  const quitar = p => { const d = diaClave(Date.now()), l = ocultosHoy.concat([p.txt]); guardarOcultos(setOcultos, { d, l });
+    avisarDeshacer('Quitado de “Para hacer hoy”', () => guardarOcultos(setOcultos, { d, l: l.filter(t => t !== p.txt) })); };
   const nVer = verTodo ? porHacer.length : Math.min(porHacer.length, tel ? 4 : 5);
   const Pendientes = html`<div class="tarjeta" data-tour="pendientes" style="padding-bottom:6px">
-    <div class="tarjeta-tit">Para hacer hoy<span class="pildora t-vio">${pendientes.filter(p => p.go).length}</span></div>
-    <div class="lista">${porHacer.slice(0, nVer).map((p, k) => html`<button type="button" key=${p.txt} class="item toca entra" style=${{ '--i': k, color: 'var(--ink)', cursor: p.go ? 'pointer' : 'default' }} onClick=${p.go || undefined}>
-      <span class=${'ic ' + p.t} style="width:34px;height:34px;border-radius:11px"><${Icono} n=${p.i} t=${17} g=${2.2} /></span>
-      <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px;font-weight:600;line-height:1.35">${p.txt}</b><span class="sub faint">${p.sub}</span></span>
-      ${p.go && html`<${Icono} n="sig" t=${16} c="var(--faint)" />`}
-    </button>`)}</div>
+    <div class="tarjeta-tit">Para hacer hoy<span class="pildora t-vio">${porHacer.filter(p => p.go).length}</span></div>
+    <div class="lista">${porHacer.slice(0, nVer).map((p, k) => html`<div key=${p.txt} class="item entra" style=${{ '--i': k, gap: '6px' }}>
+      <button type="button" class="toca crece" style=${{ display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 0, padding: 0, textAlign: 'left', color: 'var(--ink)', cursor: p.go ? 'pointer' : 'default', minWidth: 0 }} onClick=${p.go || undefined}>
+        <span class=${'ic ' + p.t} style="width:34px;height:34px;border-radius:11px;flex:none"><${Icono} n=${p.i} t=${17} g=${2.2} /></span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0"><b style="font-size:14px;font-weight:600;line-height:1.35">${p.txt}</b><span class="sub faint">${p.sub}</span></span>
+        ${p.go && html`<${Icono} n="sig" t=${16} c="var(--faint)" />`}
+      </button>
+      <button type="button" class="icono-btn chico toca" style="background:none;color:var(--faint)" aria-label=${'Quitar “' + p.txt + '” por hoy'} title="Quitar por hoy" onClick=${() => quitar(p)}><${Icono} n="cerrar" t=${14} g=${2.4} /></button>
+    </div>`)}</div>
+    ${!porHacer.length && html`<p class="vacio">Nada pendiente por ahora.</p>`}
     ${porHacer.length > nVer || verTodo ? html`<button type="button" class="ver-mas toca" onClick=${() => setVerTodo(!verTodo)}>${verTodo ? 'Ver menos' : 'Ver ' + (porHacer.length - nVer) + ' más'}</button>` : null}
   </div>`;
 
