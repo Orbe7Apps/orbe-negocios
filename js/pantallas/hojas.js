@@ -6,7 +6,7 @@ import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { paisActivo, telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
 import { ponerAyudaHoja, Hoja, Icono, Interruptor, Atajo, MasOpciones, Pista, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd, avisarDeshacer } from '../ui.js';
 import { Monto, Linea } from '../graficos.js';
-import { usePagos, conSimbolo, numero, esEfectivo } from './pagos.js';
+import { usePagos, useMonto, conSimbolo, numero, esEfectivo } from './pagos.js';
 import { infoTasas } from './tasas.js';
 import { Grupos, Grupo, colorGrupo, textosProducto, iniciales2 } from './grupos.js';
 import { Escaner, mismoCodigo } from './escaner.js';
@@ -291,25 +291,31 @@ function Devolver({ d, cerrar }) {
 function Gasto({ d, cerrar }) {
   const { S, D, P, tel, abrir } = useApp();
   const g0 = d.gid ? S.gastos.find(g => g.id === d.gid) : null;
-  const [monto, setMonto] = useState(g0 ? String(g0.v).replace('.', ',') : '');
+  // El monto se escribe en la moneda de la forma de pago: con Pago Móvil, en bolívares.
+  const mo = useMonto(g0 ? String(g0.otra || g0.v).replace('.', ',') : '', g0 ? (g0.otra ? 's' : 'p') : null);
   const [n, setN] = useState(g0 && g0.n !== g0.cat ? g0.n : '');
   const [cat, setCat] = useState(g0 ? g0.cat : 'Mercancía');
-  const [despues, setDespues] = useState(g0 ? !g0.pagado : false);
+  const [despues, setDespuesRaw] = useState(g0 ? !g0.pagado : false);
   const [vence, setVence] = useState(g0 ? 0 : 7);
-  const fp = usePagos(numero(monto), S.negocio.pays, g0 && g0.pagos ? g0.pagos[0].m : g0 && g0.m);
+  // “Lo pago después” no tiene forma de pago: el monto va en la moneda principal (salvo que se cambie con el botón).
+  const fp = usePagos(m => mo.total(despues ? null : m), S.negocio.pays, g0 && g0.pagos ? g0.pagos[0].m : g0 && g0.m, undefined, mo);
+  const forma = despues ? null : fp.m;
+  const setDespues = v => { mo.seguir(v ? fp.m : null, v ? null : fp.m); setDespuesRaw(v); };
   const guardar = c => {
-    const v = numero(monto); if (!v) { avisar('Escribe el monto'); return; }
+    const v = mo.total(forma); if (!v) { avisar('Escribe el monto'); return; }
     if (!despues && !fp.ok) { avisar('Falta repartir ' + D.m(fp.falta)); return; }
     const pagos = despues ? [] : fp.pagos();
-    const g = { n: n.trim() || cat, cat, v, m: despues ? (g0 && g0.m) || S.negocio.pays[0] : pagos[0].m, pagos: despues ? null : pagos, pagado: !despues, vence: despues ? (vence ? Date.now() + vence * 86400000 : (g0 && g0.vence) || Date.now() + 7 * 86400000) : 0 };
+    // Si se escribió en Bs, se guarda tal cual con su tasa: así el gasto en Bs es exactamente lo que se pagó.
+    const orig = mo.original(forma);
+    const g = Object.assign({ n: n.trim() || cat, cat, v, m: despues ? (g0 && g0.m) || S.negocio.pays[0] : pagos[0].m, pagos: despues ? null : pagos, pagado: !despues, vence: despues ? (vence ? Date.now() + vence * 86400000 : (g0 && g0.vence) || Date.now() + 7 * 86400000) : 0 }, orig ? { otra: orig.otra, tasa: orig.tasa } : g0 && g0.otra ? { otra: undefined } : {});
     if (g0) { if (g0.pagado !== g.pagado) g.t = Date.now(); editarGasto(g0.id, g); c(() => avisar('Gasto cambiado')); return; }
     anotarGasto(g);
-    c(() => avisar(despues ? 'Anotado en “Por pagar”' : 'Gasto guardado · ' + D.m(v)));
+    c(() => avisar(despues ? 'Anotado en “Por pagar”' : 'Gasto guardado · ' + (orig && P.id === 'VE' ? 'Bs ' + new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(orig.otra) : D.m(v))));
   };
   const borrar = c => c(() => abrir('confirmar', { deshacer: 'Gasto borrado', titulo: '¿Borrar este gasto?', texto: g0.n + ' · ' + D.m(g0.v) + '. Queda anotado en el registro de cambios.', boton: 'Sí, borrar', si: () => { borrarGasto(g0.id); avisar('Gasto borrado'); } }));
   return html`<${Hoja} titulo=${g0 ? 'Editar gasto' : 'Anotar gasto'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
-      <label class="campo"><span>Monto (${P.id === 'VE' ? 'dólares' : P.cur})</span><input class="grande num" type="text" inputmode="decimal" placeholder="0" value=${monto} onInput=${e => setMonto(e.target.value)} /></label>
+      ${mo.campo(forma, { titulo: 'Monto' })}
       <div class="campo"><span>¿En qué?</span><${Chips} opciones=${conSimbolo(CATS)} valor=${cat} onCambio=${setCat} /></div>
       <label class="campo"><span>Nota (opcional)</span><input type="text" placeholder=${cat} value=${n} onInput=${e => setN(e.target.value)} /></label>
       <${Interruptor} on=${despues} onCambio=${setDespues} titulo="Lo pago después" sub="Orbe te avisa antes de que venza" />
@@ -324,9 +330,9 @@ function Abono({ d, cerrar }) {
   const { S, D, tel } = useApp();
   const c0 = deudores().find(x => x.id === d.cid) || { n: '', deuda: 0 };
   const [parte, setParte] = useState(1);
-  const [otro, setOtro] = useState('');
-  const valor = parte === 'otro' ? Math.min(D.redondo(numero(otro)), c0.deuda) : D.redondo(c0.deuda * parte);
-  const fp = usePagos(valor, S.negocio.pays);
+  const mo = useMonto('');
+  const fp = usePagos(m => parte === 'otro' ? Math.min(mo.total(m), c0.deuda) : D.redondo(c0.deuda * parte), S.negocio.pays, undefined, undefined, mo);
+  const valor = fp.total;
   const listo = c => {
     if (!valor) { avisar('Escribe cuánto paga'); return; }
     if (!fp.ok) { avisar('Falta repartir ' + D.m(fp.falta)); return; }
@@ -336,9 +342,9 @@ function Abono({ d, cerrar }) {
   return html`<${Hoja} titulo="Anotar abono" onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
       <div class="fila"><b class="crece" style="font-size:16px">${c0.n}</b><span class="amber num" style="font-weight:600">Debe ${D.m(c0.deuda)}</span></div>
-      <div class="campo"><span>¿Cuánto paga?</span><div class="rejilla-2">${[[1, 'Todo'], [0.5, 'La mitad'], [0.25, 'Una parte'], ['otro', 'Otro monto']].map(x => html`<button type="button" class=${'chip toca' + (parte === x[0] ? ' on' : '')} style="flex-direction:column;justify-content:center;gap:0;min-height:56px;color:var(--ink)" onClick=${() => setParte(x[0])}><span class="sub" style="font-weight:500">${x[1]}</span><b class="num">${x[0] === 'otro' ? (otro ? D.m(valor) : 'Escribir') : D.m(D.redondo(c0.deuda * x[0]))}</b></button>`)}</div></div>
-      ${parte === 'otro' && html`<label class="campo entra"><span>Monto que paga</span><input class="grande num" type="text" inputmode="decimal" placeholder="0" value=${otro} onInput=${e => setOtro(e.target.value)} /></label>`}
-      ${fp.vista({ titulo: '¿Cómo pagó?', desliza: tel })}`,
+      <div class="campo"><span>¿Cuánto paga?</span><div class="rejilla-2">${[[1, 'Todo'], [0.5, 'La mitad'], [0.25, 'Una parte'], ['otro', 'Otro monto']].map(x => html`<button type="button" class=${'chip toca' + (parte === x[0] ? ' on' : '')} style="flex-direction:column;justify-content:center;gap:0;min-height:56px;color:var(--ink)" onClick=${() => setParte(x[0])}><span class="sub" style="font-weight:500">${x[1]}</span><b class="num">${x[0] === 'otro' ? (mo.txt ? D.m(parte === 'otro' ? valor : Math.min(mo.total(fp.m), c0.deuda)) : 'Escribir') : D.m(D.redondo(c0.deuda * x[0]))}</b></button>`)}</div></div>
+      ${parte === 'otro' && mo.campo(fp.m, { titulo: 'Monto que paga', clase: 'entra' })}
+      ${fp.vista({ titulo: '¿Cómo pagó?', desliza: tel, equivalente: parte !== 'otro' })}`,
     pie: html`<button type="button" class=${'btn toca' + (valor && fp.ok ? '' : ' apagado')} onClick=${() => listo(c)}>Anotar abono de ${D.m(valor)}</button>`
   })} />`;
 }

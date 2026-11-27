@@ -383,6 +383,10 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 14px; min-width
 .pago-monto:focus-within { border-color: var(--accent); }
 .pago-monto input { flex: 1; min-width: 0; border: 0; background: none; font-size: 17px; font-weight: 700; padding: 0 10px; height: 46px; text-align: right; outline: none; }
 .pago-moneda { border: 0; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; height: 34px; min-width: 34px; padding: 0 7px; margin-left: 5px; flex-shrink: 0; border-radius: 10px; cursor: pointer; }
+.monto-forma { min-height: 54px; border-radius: 16px; background: var(--fill2); }
+.monto-forma input { text-align: left; height: 50px; font-size: 18px; }
+.monto-forma.grande input { font-size: 24px; }
+.monto-forma .pago-moneda { height: 38px; min-width: 40px; font-size: 14px; margin-left: 7px; }
 .pago-resto { border: 0; background: none; color: var(--accent); font-weight: 600; font-size: 12px; cursor: pointer; padding: 2px 4px; }
 .pago-cuenta { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; padding-top: 10px; }
 .pago-cuenta .barra-prog i { transition: width .45s var(--spring), background .3s ease; }
