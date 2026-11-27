@@ -587,8 +587,9 @@ export function PreguntaAparato() {
     <div class="tarjeta pila" style="max-width:440px;width:100%;gap:14px;padding:24px">
       <span class="ic t-vio" style="width:46px;height:46px;border-radius:14px"><${Icono} n="escudo" t=${22} /></span>
       ${paso === 'pregunta' ? html`
-        <b style="font-size:20px;letter-spacing:-0.02em">¿Este aparato es tuyo o lo usa tu equipo?</b>
-        <span class="sub" style="line-height:1.5">Para cuidar tu cuenta, tu contraseña queda solo en tus aparatos. Los que usa tu equipo (la caja, la tablet del local) trabajan con su propio acceso: venden y cobran normal, pero no pueden cambiar permisos, borrar ventas ni tocar tu cuenta.</span>
+        <span style="font-size:13px;font-weight:700;color:var(--accent-text)">Para el dueño de la cuenta</span>
+        <b style="font-size:20px;letter-spacing:-0.02em;margin-top:-8px">¿Este aparato es tuyo o lo usa tu equipo?</b>
+        <span class="sub" style="line-height:1.5">Solo tú, como dueño, ves esta pregunta. Para cuidar tu cuenta, tu contraseña queda solo en tus aparatos. Los que usa tu equipo (la caja, la tablet del local) trabajan con su propio acceso: venden y cobran normal, pero no pueden cambiar permisos, borrar ventas ni tocar tu cuenta.</span>
         <button type="button" class="btn toca" onClick=${mio}>Es mío, solo lo uso yo</button>
         <button type="button" class="btn2 toca" style="min-height:50px;border-radius:25px" onClick=${() => setPaso('nombre')}>Lo usa mi equipo</button>
         <button type="button" class="olvide-pin toca" onClick=${() => setCerrada(true)}>Preguntarme después</button>`
