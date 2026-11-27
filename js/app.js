@@ -251,11 +251,29 @@ const versionLista = () => {
     return new Promise(listo => setTimeout(() => { pidioActivar = false; listo(); }, 4000));
   }).catch(() => {});
 };
+// Bloqueo por ausencia: se anota cuándo se dejó de ver la app (otra app, otra pestaña, pantalla apagada o cerrada).
+// Al volver (o al abrirla otra vez) con más de 10 minutos fuera, se vuelve a elegir perfil y poner el PIN.
+const AUSENCIA = 10 * 60 * 1000, CLAVE_USO = 'orbe-ultimo-uso';
+const anotarUso = () => { try { localStorage.setItem(CLAVE_USO, String(Date.now())); } catch (e) {} };
+const pasoMucho = () => { let t = 0; try { t = Number(localStorage.getItem(CLAVE_USO)) || 0; } catch (e) {} return !t || Date.now() - t > AUSENCIA; };
+function vigilarAusencia() {
+  anotarUso();
+  // Mientras se ve, se anota cada medio minuto (por si el teléfono cierra la app sin avisar).
+  setInterval(() => { if (document.visibilityState === 'visible') anotarUso(); }, 30000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { anotarUso(); return; }
+    const S = leer();
+    if (S.negocio && S.ajustes.perfil && !S.negocio.demo && !/[?&]demo\b/.test(location.search) && pasoMucho()) salir();
+    anotarUso();
+  });
+  addEventListener('pagehide', anotarUso);
+}
 // Primero se leen los datos guardados; después se dibuja y se va la pantalla de carga.
 Promise.all([iniciarDatos(), versionLista()]).then(() => {
-  // Cada vez que se abre o se recarga la página, cada persona elige su perfil y pone su PIN (la demostración no).
+  // El PIN se pide de nuevo solo si la app estuvo cerrada o fuera de la vista más de 10 minutos (la demostración no).
   const S0 = leer();
-  if (S0.negocio && S0.ajustes.perfil && !S0.negocio.demo && !/[?&]demo\b/.test(location.search)) salir();
+  if (S0.negocio && S0.ajustes.perfil && !S0.negocio.demo && !/[?&]demo\b/.test(location.search) && pasoMucho()) salir();
+  vigilarAusencia();
   render(html`<${App} />`, document.getElementById('app'));
   iniciarNube();
   requestAnimationFrame(() => { if (window.__listo) window.__listo(); });
