@@ -138,7 +138,8 @@ export function BotonAyuda({ k, chico }) {
 // Panel de ayuda: sube por encima de todo (también de una hoja abierta, sin cerrarla).
 export function PanelAyuda({ k, cerrar }) {
   const app = useApp(), { T, ir, abrir } = app;
-  const [guia, setGuia] = useState(GUIAS.find(x => x.id === k) ? k : null);
+  // Si la pantalla tiene guía en vivo, primero se ofrece esa; la guía escrita queda en la lista.
+  const [guia, setGuia] = useState(GUIAS.find(x => x.id === k) && !tieneGuia(k) ? k : null);
   const [sale, setSale] = useState(false);
   const fin = despues => { setSale(true); setTimeout(() => { cerrar(); if (typeof despues === 'function') despues(); }, 260); };
   useEffect(() => {

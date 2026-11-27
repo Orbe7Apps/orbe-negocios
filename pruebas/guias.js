@@ -53,6 +53,31 @@ const PC = process.env.PC === '1';
       if (!(await p.locator('.guia-ayuda-btn').count())) mal('el “?” no ofrece “Guíame paso a paso”');
       else { await p.locator('.guia-ayuda-btn').click(); await p.waitForTimeout(900); const ps = await seguir('vender'); if (!ps.includes('El recibo') && !ps.some(x => /primer/.test(x))) mal('la guía de Vender no llegó al recibo'); }
       await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+      // Clientes: frase, “Guíame” y su guía (sin tocar nada que mueva dinero).
+      await p.evaluate(() => { location.hash = '#clientes'; }); await p.waitForTimeout(1200);
+      const fc = await p.locator('.frase-viva').first().innerText().catch(() => '');
+      console.log(tag + ' · frase de Clientes: ' + fc);
+      if (/undefined|NaN|\[object/.test(fc)) mal('frase de Clientes rara: ' + fc);
+      if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en Clientes');
+      else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir('clientes'); }
+      // Caja y cierre del día (si el negocio usa caja).
+      if (await p.evaluate(() => !!window.__abrir)) {
+        await p.evaluate(() => window.__abrir('caja')); await p.waitForTimeout(900);
+        if (await p.locator('.hoja .frase-viva').count()) {
+          const fk = await p.locator('.hoja .frase-viva').innerText(); console.log(tag + ' · frase de Caja: ' + fk);
+          if (/undefined|NaN|\[object/.test(fk)) mal('frase de Caja rara: ' + fk);
+          if (!(await p.locator('.hoja .guiame').count())) mal('no sale “Guíame” en Caja');
+          else { await p.locator('.hoja .guiame').click(); await p.waitForTimeout(800); await seguir('caja'); }
+          const dia = p.locator('[data-guia=caja-dia]');
+          if (await dia.count()) {
+            await dia.click(); await p.waitForTimeout(1500); await foto('cierre');
+            await p.locator('.hoja .boton-ayuda').last().click(); await p.waitForTimeout(700); await foto('cierre-ayuda');
+            if (!(await p.locator('.guia-ayuda-btn').count())) mal('el “?” del cierre no ofrece “Guíame paso a paso”');
+            else { await p.locator('.guia-ayuda-btn').click(); await p.waitForTimeout(900); await seguir('cierre'); }
+          }
+          await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+        }
+      }
       const ancho = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); if (ancho > 4) mal('se sale de lado ' + ancho + 'px');
     } catch (e) { mal('FALLÓ: ' + e.message.split('\n')[0]); await p.screenshot({ path: out + tag + '-fallo.png' }).catch(() => {}); }
     await ctx.close();

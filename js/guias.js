@@ -42,8 +42,46 @@ const PASOS = {
       { sel: '[data-guia=recibo]', titulo: 'El recibo', texto: 'Si lo pide, mándaselo por WhatsApp o imprímelo. Si no, cierra con la ✕.' },
       { fin: true, titulo: '¡Ya sabes vender!', texto: 'La venta se sumó a Hoy' + (T.inv ? ' y bajó del inventario.' : '.') }
     ];
-  }
+  },
+  clientes: x => {
+    const { T, puede } = x, fiado = T.mod('fiado');
+    if (!hay('[data-guia=cliente]')) return [
+      hay('[data-guia=nuevo-cliente]') && { sel: '[data-guia=nuevo-cliente]', titulo: 'Tu primer cliente', texto: 'Toca aquí y anota su nombre y teléfono. También puedes crearlo al cobrar.' },
+      { fin: true, titulo: 'Así de simple', texto: 'Con su teléfono le mandas el recibo' + (fiado ? ' y le recuerdas lo que debe' : '') + ' por WhatsApp.' }
+    ];
+    return [
+      { sel: '.frase-viva', titulo: 'Cómo van tus clientes', texto: fiado ? 'Esta frase te dice cuánto te deben y quién lleva más tiempo sin pagar.' : 'Esta frase te dice cuántos clientes tienes y cuántos volvieron este mes.' },
+      fiado && hay('[data-tour=deben]') && { sel: '[data-tour=deben]', titulo: 'Lo que te deben', texto: 'Los que más deben, de primero. En rojo, los que llevan más de 15 días.' },
+      { sel: '[data-guia=cliente]', titulo: 'Cada cliente', texto: 'Tócalo para ver lo que te ha comprado' + (fiado ? ', lo que debe' : '') + ' y su teléfono.' },
+      hay('[data-guia=recordar]') && { sel: '[data-guia=recordar]', titulo: 'Recordarle', texto: 'Se abre WhatsApp con el mensaje ya armado: cuánto debe y desde cuándo. Solo lo envías.' },
+      hay('[data-guia=abono]') && { sel: '[data-guia=abono]', titulo: 'Cuando te pague', texto: 'Toca aquí, escribe cuánto te dio y cómo. Entra a la caja de hoy y baja su deuda.' },
+      puede('clientes') && hay('[data-guia=nuevo-cliente]') && { sel: '[data-guia=nuevo-cliente]', titulo: 'Un cliente nuevo', texto: 'Nombre y teléfono' + (x.D.dual ? ', y la cédula si te la pide para la factura' : '') + '. También lo puedes crear al cobrar.' },
+      { fin: true, titulo: '¡Listo!', texto: fiado ? 'Revisa aquí una vez por semana quién te debe. Orbe te avisa en Hoy cuando alguien se atrasa.' : 'Cada venta con cliente queda en su historial.' }
+    ];
+  },
+  caja: x => {
+    const abierta = hay('[data-guia=caja-estado] .t-ver');
+    return [
+      { sel: '.hoja .frase-viva', titulo: 'Tu caja', texto: abierta ? 'Esta frase te dice cuánto efectivo debe haber ahora mismo.' : 'Esta frase te dice qué toca ahora. Lo primero: abrir la caja.' },
+      { sel: '[data-guia=caja-estado]', titulo: abierta ? 'Caja abierta' : 'Abrir la caja', texto: abierta ? 'Aquí ves desde qué hora está abierta y quién cerró el turno anterior.' : 'Al empezar el día toca “Abrir caja” y anota con cuánto efectivo empiezas, para dar vuelto.' },
+      { sel: '[data-guia=caja-efectivo]', titulo: 'Lo que debe haber', texto: 'Orbe suma el fondo y lo vendido en efectivo, y resta retiros y gastos. Debajo ves de dónde sale.' },
+      hay('[data-guia=caja-mov]') && { sel: '[data-guia=caja-mov]', titulo: 'Sacar o meter efectivo', texto: 'Si te llevas dinero o traes sencillo, anótalo aquí. No es un gasto: así la caja sigue cuadrando.' },
+      hay('[data-guia=caja-turno]') && { sel: '[data-guia=caja-turno]', titulo: 'Cerrar tu turno', texto: 'Al irte, cuentas el efectivo y dejas el fondo para quien sigue.' },
+      hay('[data-guia=caja-dia]') && { sel: '[data-guia=caja-dia]', titulo: 'Cierre del día', texto: 'Al final del día lo cuentas todo. Orbe te dice si falta o sobra, y queda guardado.' },
+      { fin: true, titulo: '¡Listo!', texto: 'Abre al empezar y cierra al terminar. Lo demás lo suma Orbe.' }
+    ];
+  },
+  cierre: () => [
+    { sel: '[data-guia=cierre-resumen]', titulo: 'Lo de hoy', texto: 'Lo vendido, con el fiado y los gastos del día.' },
+    hay('[data-guia=cierre-contar]') && { sel: '[data-guia=cierre-contar]', titulo: 'Cuenta el efectivo', texto: 'Escribe lo que contaste o usa + y −. Si prefieres, cuenta billete por billete.' },
+    hay('[data-guia=cierre-digital]') && { sel: '[data-guia=cierre-digital]', titulo: 'Lo digital', texto: 'Tarjeta, transferencias y pagos móviles ya están confirmados: no hay que contarlos.' },
+    hay('[data-guia=cierre-resultado]') && { sel: '[data-guia=cierre-resultado]', titulo: '¿Cuadra?', texto: 'Aquí ves al momento si falta o sobra efectivo.' },
+    { sel: '[data-guia=cierre-listo]', titulo: 'Cerrar', texto: 'Cuando esté bien, tócalo. Queda guardado y firmado: después no se puede cambiar.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Hazlo todos los días: así ves a tiempo si algo falta.' }
+  ]
 };
+// ¿Está en pantalla? (para saltar lo que este negocio o este momento no tiene)
+function hay(s) { return !!document.querySelector(s); }
 // El selector de un paso puede depender de lo que hay en pantalla en ese momento.
 const selDe = p => typeof p.sel === 'function' ? p.sel() : p.sel;
 export const tieneGuia = k => !!PASOS[k];

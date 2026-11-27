@@ -402,14 +402,14 @@ function Cierre({ d, cerrar }) {
   const cifras = [puede('ganancias') ? ['Ganancia', D.m(r.ganancia), 'var(--in)'] : ['Ventas', String(r.n), 'var(--ink)'], ['Fiado', D.m(r.fiado), 'var(--amber)'], ['Gastos', D.m(gastosHoy), 'var(--out)']];
   return html`<${Hoja} titulo=${turno ? 'Cerrar turno' : 'Cierre del día'} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
-      <div class="cierre-resumen">
+      <div class="cierre-resumen" data-guia="cierre-resumen">
         <span class="sub">${turno ? 'Vendido en este turno · desde las ' + hora(inicioVisible(desde)) : 'Vendido hoy'} · ${r.n} ${r.n === 1 ? 'venta' : 'ventas'}</span>
         <b class="num cierre-total">${D.m(r.total)}</b>
         ${D.dual && html`<span class="sub num">${D.s(r.total)}</span>`}
         <div class="cierre-cifras">${cifras.map(k => html`<div><span class="sub">${k[0]}</span><b class="num" style=${{ color: k[2] }}>${k[1]}</b></div>`)}</div>
       </div>
 
-      ${efectivos.length > 0 && html`<div class="cierre-seccion"><span class="cierre-tit"><${Icono} n="billete" t=${15} />Cuenta el efectivo</span>
+      ${efectivos.length > 0 && html`<div class="cierre-seccion" data-guia="cierre-contar"><span class="cierre-tit"><${Icono} n="billete" t=${15} />Cuenta el efectivo</span>
         ${efectivos.map(k => { const ek = esp(k), df = D.redondo(contado[k] - ek), e = enSu(k), bk = billetes[k] || {}, est = estado(df), x = caja.partes[k] || {};
           const det = [x.base ? 'dejaron ' + D.m(x.base) : '', x.fondo ? 'fondo ' + D.m(x.fondo) : '', x.ventas ? 'ventas ' + D.m(x.ventas) : '', x.ingresos ? 'ingresos ' + D.m(x.ingresos) : '', x.retiros ? 'retiros −' + D.m(x.retiros) : '', x.gastos ? 'gastos −' + D.m(x.gastos) : '', x.ajustes ? 'turnos ' + D.m(x.ajustes) : ''].filter(Boolean);
           return html`<div class="cierre-efectivo" key=${k}>
@@ -427,20 +427,20 @@ function Cierre({ d, cerrar }) {
         </div>`; })}
       </div>`}
 
-      ${digitales.length > 0 && html`<div class="cierre-seccion"><span class="cierre-tit"><${Icono} n="check" t=${15} />Digital, ya confirmado</span>
+      ${digitales.length > 0 && html`<div class="cierre-seccion" data-guia="cierre-digital"><span class="cierre-tit"><${Icono} n="check" t=${15} />Digital, ya confirmado</span>
         <div class="cierre-digital">${digitales.map(k => html`<div class="fila" key=${k}><span class="simb"><${Icono} n=${simbolo(k)} t=${13} g=${2.2} /></span><span class="crece corta">${k}</span><b class="num">${D.m(r.porPago[k])}</b></div>`)}
           <div class="fila cierre-suma"><span class="crece">Total digital</span><b class="num">${D.m(totalDigital)}</b></div></div>
       </div>`}
 
       ${metodos.length ? null : html`<p class="vacio">${turno ? 'Todavía no hay movimientos en este turno.' : 'Todavía no hay ventas hoy.'}</p>`}
-      ${efectivos.length > 0 && html`<div class=${'cierre-resultado ' + (Math.abs(dif) < 0.005 ? 'ok' : 'mal')}><${Icono} n=${Math.abs(dif) < 0.005 ? 'check' : 'alerta'} t=${18} /><span class="crece">${Math.abs(dif) < 0.005 ? 'La caja cuadra' : (dif < 0 ? 'Faltan ' : 'Sobran ') + D.m(Math.abs(dif)) + ' en efectivo'}</span></div>`}
+       ${efectivos.length > 0 && html`<div data-guia="cierre-resultado" class=${'cierre-resultado ' + (Math.abs(dif) < 0.005 ? 'ok' : 'mal')}><${Icono} n=${Math.abs(dif) < 0.005 ? 'check' : 'alerta'} t=${18} /><span class="crece">${Math.abs(dif) < 0.005 ? 'La caja cuadra' : (dif < 0 ? 'Faltan ' : 'Sobran ') + D.m(Math.abs(dif)) + ' en efectivo'}</span></div>`}
       ${turno && efectivos.length > 0 && html`<div class="cierre-seccion"><span class="cierre-tit"><${Icono} n="candado" t=${15} />Se queda en la caja para el siguiente turno</span>
         ${efectivos.map(k => { const e = enSu(k); return html`<div class="cierre-efectivo" key=${'d' + k}><div class="fila" style="gap:8px"><b class="crece" style="font-size:14px">${k}</b>
           <div class="chips">${[['Todo', contado[k]], ['El fondo', Math.min(fondoDe(k), contado[k])], ['Nada', 0]].map(o => html`<button type="button" class=${'chip chico toca' + (Math.abs((deja[k] || 0) - o[1]) < 0.005 ? ' on' : '')} onClick=${() => setDeja(Object.assign({}, deja, { [k]: D.redondo(o[1]) }))}>${o[0]}</button>`)}</div></div>
           <span class="sub num">Deja ${e.ver(deja[k] || 0)} · entrega ${e.ver(Math.max(0, contado[k] - (deja[k] || 0)))}</span></div>`; })}
       </div>`}`,
-    pie: turno ? html`<button type="button" class="btn toca" onClick=${() => { const dejaOk = {}; efectivos.forEach(k => { dejaOk[k] = Math.min(deja[k] || 0, contado[k]); }); const esperado = {}; efectivos.forEach(k => { esperado[k] = esp(k); }); const cont = {}; efectivos.forEach(k => { cont[k] = contado[k]; }); const t = cerrarTurno(cont, dejaOk, esperado); c(() => { avisar('Turno ' + t.n + ' cerrado' + (Math.abs(dif) < 0.005 ? ': todo cuadra' : ' con ' + (dif < 0 ? 'faltante' : 'sobrante') + ' de ' + D.m(Math.abs(dif)))); abrir('caja'); }); }}>Cerrar turno</button>`
-      : html`<button type="button" class="btn toca" onClick=${() => { const turnos = S.turnos.filter(x => x.hasta >= hoy0).map(x => ({ n: x.n, por: x.por, desde: x.desde, hasta: x.hasta, dif: Object.keys(x.dif || {}).reduce((a, k) => a + x.dif[k], 0) })); const movs = cajaEntre(hoy0, Date.now() + 1).partes; const z = cerrarDia(contado, { total: r.total, ganancia: r.ganancia, dif, billetes, porPago: r.porPago, turnos, caja: movs }); c(() => { avisar(dif === 0 ? 'Día cerrado. Todo cuadra' : 'Día cerrado con ' + (dif < 0 ? 'faltante' : 'sobrante') + ' de ' + D.m(Math.abs(dif))); abrir('cierreZ', { id: z.id }); }); }}>Cerrar el día</button>
+    pie: turno ? html`<button type="button" class="btn toca" data-guia="cierre-listo" onClick=${() => { const dejaOk = {}; efectivos.forEach(k => { dejaOk[k] = Math.min(deja[k] || 0, contado[k]); }); const esperado = {}; efectivos.forEach(k => { esperado[k] = esp(k); }); const cont = {}; efectivos.forEach(k => { cont[k] = contado[k]; }); const t = cerrarTurno(cont, dejaOk, esperado); c(() => { avisar('Turno ' + t.n + ' cerrado' + (Math.abs(dif) < 0.005 ? ': todo cuadra' : ' con ' + (dif < 0 ? 'faltante' : 'sobrante') + ' de ' + D.m(Math.abs(dif)))); abrir('caja'); }); }}>Cerrar turno</button>`
+      : html`<button type="button" class="btn toca" data-guia="cierre-listo" onClick=${() => { const turnos = S.turnos.filter(x => x.hasta >= hoy0).map(x => ({ n: x.n, por: x.por, desde: x.desde, hasta: x.hasta, dif: Object.keys(x.dif || {}).reduce((a, k) => a + x.dif[k], 0) })); const movs = cajaEntre(hoy0, Date.now() + 1).partes; const z = cerrarDia(contado, { total: r.total, ganancia: r.ganancia, dif, billetes, porPago: r.porPago, turnos, caja: movs }); c(() => { avisar(dif === 0 ? 'Día cerrado. Todo cuadra' : 'Día cerrado con ' + (dif < 0 ? 'faltante' : 'sobrante') + ' de ' + D.m(Math.abs(dif))); abrir('cierreZ', { id: z.id }); }); }}>Cerrar el día</button>
       ${S.cierres.length > 0 && Pie2('Cierres anteriores', () => c(() => abrir('cierres')))}`
   })} />`;
 }

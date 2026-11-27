@@ -2,6 +2,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 import { deudores } from '../datos.js';
 import { BarrasH, Monto, color } from '../graficos.js';
 import { Icono, Chips, iniciales, TONOS, hace } from '../ui.js';
@@ -28,21 +29,29 @@ export function Clientes() {
   </section>`;
 
   const Fila = (c, i) => html`<div class="tarjeta entra" key=${c.id} style=${{ '--i': i, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-    <button type="button" class="fila toca" style="border:0;background:none;padding:0;text-align:left;color:var(--ink)" onClick=${() => abrir('cliente', { cid: c.id })}>
+    <button type="button" class="fila toca" data-guia="cliente" style="border:0;background:none;padding:0;text-align:left;color:var(--ink)" onClick=${() => abrir('cliente', { cid: c.id })}>
       <span class=${'logo redondo ' + TONOS[i % 5]}>${iniciales(c.n)}</span>
       <span class="crece" style="display:flex;flex-direction:column;gap:2px"><b style="font-size:15px">${c.n}</b><span class="sub" style=${{ color: viejo(c) && c.deuda > 0 ? 'var(--out)' : '' }}>${c.deuda > 0 ? 'Debe desde ' + hace(c.desde) + (viejo(c) ? ' · vencido' : '') : c.compras ? c.compras + (c.compras === 1 ? ' compra' : ' compras') + ' · última ' + hace(c.ultima) : (c.tel || 'Sin compras todavía')}</span></span>
       ${fiado && html`<b class=${'num' + (c.deuda > 0 ? (viejo(c) ? ' out' : '') : ' faint')} style="font-size:17px">${D.m(c.deuda)}</b>`}
     </button>
     ${c.deuda > 0 && html`<div class="rejilla-2">
-      <button type="button" class="btn2 verde toca" onClick=${() => abrir('recordar', { cid: c.id })}><${Icono} n="movil" t=${16} />Recordar</button>
-      ${pc && html`<button type="button" class="btn2 toca" onClick=${() => abrir('abono', { cid: c.id })}>Anotar abono</button>`}
+      <button type="button" class="btn2 verde toca" data-guia="recordar" onClick=${() => abrir('recordar', { cid: c.id })}><${Icono} n="movil" t=${16} />Recordar</button>
+      ${pc && html`<button type="button" class="btn2 toca" data-guia="abono" onClick=${() => abrir('abono', { cid: c.id })}>Anotar abono</button>`}
     </div>`}
   </div>`;
 
-  const Ninguno = html`<${Vacio} i="personas" t="Todavía no tienes clientes" s=${'Anótalos aquí o al cobrar, con su teléfono para mandarles el recibo' + (fiado ? ', recordarles lo que deben' : '') + ' y avisarles por WhatsApp.'}>${pc && html`<button type="button" class="btn2 lleno toca" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</${Vacio}>`;
+  // La frase de arriba: quién debe y desde cuándo, o cuántos clientes compran.
+  const masViejo = deben.filter(c => c.desde).sort((a, b) => a.desde - b.desde)[0];
+  const diasDe = c => Math.max(1, Math.floor((Date.now() - c.desde) / 86400000));
+  const mesCompran = todos.filter(c => c.ultima > Date.now() - 30 * 86400000).length;
+  const FraseClientes = html`<${Frase}>${fiado && deben.length
+    ? html`${deben.length === 1 ? '1 cliente te debe' : deben.length + ' clientes te deben'} <b class="a num">${D.m(tot)}</b>.${masViejo && viejo(masViejo) ? html` <b>${masViejo.n.split(' ')[0]}</b> ya lleva <b class="r">${diasDe(masViejo)} días</b>.` : ' Nadie lleva más de 15 días.'}`
+    : html`Tienes <b>${todos.length} ${todos.length === 1 ? 'cliente' : 'clientes'}</b>${mesCompran ? html`; ${mesCompran} ${mesCompran === 1 ? 'compró' : 'compraron'} este mes` : ''}.${fiado ? ' Nadie te debe.' : ''}`}</${Frase}>`;
+  const Ninguno = html`<${Vacio} i="personas" t="Todavía no tienes clientes" s=${'Anótalos aquí o al cobrar, con su teléfono para mandarles el recibo' + (fiado ? ', recordarles lo que deben' : '') + ' y avisarles por WhatsApp.'}>${pc && html`<button type="button" class="btn2 lleno toca" data-guia="nuevo-cliente" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</${Vacio}>`;
   if (!todos.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Clientes</h1><${BotonAyuda} /></div>` : null}${Ninguno}`;
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Clientes</h1><${BotonAyuda} />${pc && html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</div>
+    <div class="fila entra"><h1 class="titulo crece">Clientes</h1><${BotonGuiame} k="clientes" /><${BotonAyuda} />${pc && html`<button type="button" class="btn2 chico acento toca" data-guia="nuevo-cliente" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</div>
+    ${FraseClientes}
     ${fiado && Resumen}
     ${opciones.length > 1 && html`<${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} chico />`}
     ${lista.length ? lista.map(Fila) : html`<p class="vacio">${filtro === 'Deben' ? 'Nadie te debe. Así da gusto.' : 'Todavía no tienes clientes.'}</p>`}`;
@@ -53,20 +62,21 @@ export function Clientes() {
   const cifras = [['Te deben', tot, deben.length + ' clientes', 'var(--amber)', 'reloj'], ['Vencido', vencido, 'más de 15 días', 'var(--out)', 'alerta'], ['Cobrado este mes', cobrado, 'en abonos', 'var(--in)', 'check'], ['Clientes', todos.length, todos.filter(c => c.ultima > Date.now() - 30 * 86400000).length + ' compraron este mes', 'var(--c1)', 'personas']];
   const cifrasV = fiado ? cifras : cifras.slice(3);
   return html`
+    ${FraseClientes}
     <div class=${fiado ? 'cifras' : 'rejilla-2'}>${cifrasV.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] }}><${Icono} n=${k[4]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span>${i === 3 ? html`<span class="v num">${k[1]}</span>` : html`<${Monto} v=${k[1]} f=${D.m} clase="v" />`}<span class="sub faint">${k[2]}</span></div>`)}</div>
     <div class=${fiado ? 'con-lado' : ''}>
       <div class="pila">
-        <div class="fila"><${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} chico /><span style="flex:1"></span>${pc && html`<button type="button" class="btn2 lleno toca" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</div>
+        <div class="fila"><${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} chico /><span style="flex:1"></span>${pc && html`<button type="button" class="btn2 lleno toca" data-guia="nuevo-cliente" onClick=${() => abrir('nuevoCliente')}>+ Cliente</button>`}</div>
         <div class="tabla-caja entra"><table class="tabla">
           <thead><tr><th>Cliente</th><th>Teléfono</th>${S.negocio.escala === 'empresa' ? html`<th>Tipo</th>` : null}${fiado ? html`<th class="der">Debe</th><th>Desde</th>` : null}<th>Compras</th><th></th></tr></thead>
           <tbody>${lista.map((c, i) => html`<tr key=${c.id} style=${{ animationDelay: i * 25 + 'ms' }}>
-            <td><button type="button" class="fila" style="border:0;background:none;padding:0;color:var(--ink);gap:10px" onClick=${() => abrir('cliente', { cid: c.id })}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:32px;height:32px;font-size:12px">${iniciales(c.n)}</span><b style="font-weight:600">${c.n}</b></button></td>
+            <td><button type="button" class="fila" data-guia="cliente" style="border:0;background:none;padding:0;color:var(--ink);gap:10px" onClick=${() => abrir('cliente', { cid: c.id })}><span class=${'logo redondo ' + TONOS[i % 5]} style="width:32px;height:32px;font-size:12px">${iniciales(c.n)}</span><b style="font-weight:600">${c.n}</b></button></td>
             <td class="muted">${c.tel || '—'}</td>
             ${S.negocio.escala === 'empresa' ? html`<td><span class=${'pildora ' + (c.tipo === 'empresa' ? 't-vio' : 't-azu')}>${c.tipo === 'empresa' ? 'Empresa' : 'Persona'}</span></td>` : null}
             ${fiado ? html`<td class=${'der num ' + (c.deuda > 0 ? (viejo(c) ? 'out' : 'amber') : 'faint')}><b>${D.m(c.deuda)}</b></td>
             <td>${c.deuda > 0 ? html`<span class=${'pildora ' + (viejo(c) ? 't-ros' : 't-amb')}>${hace(c.desde)}</span>` : html`<span class="pildora t-ver">Al día</span>`}</td>` : null}
             <td class="muted num">${c.compras}</td>
-            <td class="der">${c.deuda > 0 && html`<span class="fila" style="gap:6px;justify-content:flex-end"><button type="button" class="btn2 chico verde toca" onClick=${() => abrir('recordar', { cid: c.id })}>Recordar</button>${pc && html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('abono', { cid: c.id })}>Abono</button>`}</span>`}</td>
+            <td class="der">${c.deuda > 0 && html`<span class="fila" style="gap:6px;justify-content:flex-end"><button type="button" class="btn2 chico verde toca" data-guia="recordar" onClick=${() => abrir('recordar', { cid: c.id })}>Recordar</button>${pc && html`<button type="button" class="btn2 chico toca" data-guia="abono" onClick=${() => abrir('abono', { cid: c.id })}>Abono</button>`}</span>`}</td>
           </tr>`)}</tbody>
         </table>${lista.length ? null : html`<p class="vacio">Nada por aquí con ese filtro.</p>`}</div>
       </div>
