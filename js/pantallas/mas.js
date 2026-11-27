@@ -8,7 +8,8 @@ import { inicioMes } from './gastos.js';
 import { descargar, ventasCSV } from './reportes.js';
 import { COND_ORDEN } from '../ordenpdf.js';
 import { Funciones } from './funciones.js';
-import { BotonAyuda, CentroAyuda } from '../ayuda.js';
+import { BotonAyuda } from '../ayuda.js';
+import { tutorialesPara, hechos } from '../tutoriales.js';
 import { Frase, BotonGuiame } from '../guias.js';
 import { normal } from '../buscar.js';
 import { CuentaTema, Suscripcion, pedirCerrarSesion } from './cuenta.js';
@@ -41,7 +42,8 @@ function Impresora() {
 // Todos los ajustes como temas: en el celular, un menú por grupos donde cada tema abre su página;
 // en la computadora, la lista de temas a la izquierda y el tema elegido a la derecha.
 function useTemas() {
-  const { S, P, T, D, abrir, tel, puede, yo, rol, ir, verRecorrido } = useApp();
+  const app = useApp();
+  const { S, P, T, D, abrir, tel, puede, yo, rol, ir } = app;
   const N = useNube();
   const n = S.negocio, aj = puede('ajustes');
   const todasPays = P.pays.concat(n.euro && !P.eur ? ['Efectivo €', 'Transferencia en €'] : []);
@@ -70,6 +72,7 @@ function useTemas() {
       ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('negocio')}><${Icono} n="lapiz" t=${14} />Cambiar datos y logo</button>`)}` },
     aj && { k: 'funciones', g: 'Tu negocio', i: 'ajustes', c: 't-ver', n: 'Funciones', r: T.n + ' · ' + MODULOS.filter(m => T.mod(m.k)).length + ' encendidas', cuerpo: () => html`<${Funciones} />` },
     puede('equipo') && tel && { k: 'equipo', g: 'Tu negocio', i: 'personas', c: 't-ver', n: 'Equipo y permisos', r: S.perfiles.filter(x => !x.inactivo && !x.borrado).length + ' personas', ir: () => ir('equipo'), solo: true },
+    tel && { k: 'tutoriales', g: 'Tu negocio', i: 'gorro', c: 't-ver', n: 'Tutoriales', r: (l => l.filter(t => hechos(yo)[t.id]).length + ' de ' + l.length + ' hechos · aprende tocando')(tutorialesPara(app)), ir: () => ir('tutoriales'), solo: true },
     aj && { k: 'locales', g: 'Tu negocio', i: 'edificio', c: 't-azu', n: n.escala === 'empresa' ? 'Sedes' : 'Local', r: n.sucursales.length === 1 ? (n.escala === 'empresa' ? '1 sede' : 'Un solo local') : n.sucursales.length + ' sedes', cuerpo: () => html`
       ${n.sucursales.length > 1 ? n.sucursales.map((x, k) => Dato('Local ' + (k + 1), x)) : html`<p class="sub" style="margin:0 0 6px;line-height:1.45">${n.escala === 'empresa' ? 'Tu empresa tiene una sola sede por ahora. Agrega las demás aquí: cada una lleva su caja, sus ventas y su inventario.' : 'Un negocio tiene un solo local. Si tienes varias sedes, pasa a Empresa.'}</p>`}
       ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('locales')}>${n.sucursales.length > 1 ? 'Cambiar o agregar' : n.escala === 'empresa' ? '+ Agregar una sede' : 'Tengo varias sedes'}</button>`)}` },
@@ -106,9 +109,9 @@ function useTemas() {
     aj && { k: 'registro', g: 'La app', i: 'escudo', c: 't-vio', n: 'Registro y cierres', r: (S.registro || []).length ? 'Último: ' + hace(S.registro[S.registro.length - 1].t) : 'Quién anula, devuelve o borra', cuerpo: () => html`
       ${(S.registro || []).length ? (S.registro || []).slice(-5).reverse().map(x => Dato(x.que, hace(x.t))) : html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Aquí queda anotado quién anula ventas, hace devoluciones o borra algo.</p>`}
       ${Botones(html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('registro')}>Ver todo y revisar firmas</button>`, S.cierres.length > 0 && html`<button type="button" class="btn2 chico toca" onClick=${() => abrir('cierres')}>Cierres Z</button>`)}` },
-    { k: 'ayuda', g: 'La app', i: 'lista', c: 't-azu', n: 'Ayuda y recorrido', r: 'Guías paso a paso y recorrido guiado', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Un recorrido guiado por toda la app: qué hace cada parte y cómo se usa.</p>
-      ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${verRecorrido}>Ver el recorrido guiado</button>`, n.pasosListos && html`<button type="button" class="btn2 chico toca" onClick=${() => { cambiarNegocio({ pasosListos: false }); ir('hoy'); }}>Mostrar los primeros pasos</button>`)}
-      <div style="margin-top:18px"><${CentroAyuda} /></div>` },
+    { k: 'ayuda', g: 'La app', i: 'lista', c: 't-azu', n: 'Ayuda', r: 'Tutoriales, el “?” de cada pantalla y soporte', cuerpo: () => html`<p class="sub" style="margin:0 0 6px;line-height:1.45">Para aprender algo, abre Tutoriales: cada uno se hace tocando tus pantallas. En cada pantalla, el “?” te explica esa parte y te guía paso a paso.</p>
+      ${Botones(html`<button type="button" class="btn2 chico acento toca" onClick=${() => ir('tutoriales')}><${Icono} n="gorro" t=${15} />Ver los tutoriales</button>`, n.pasosListos && html`<button type="button" class="btn2 chico toca" onClick=${() => { cambiarNegocio({ pasosListos: false }); ir('hoy'); }}>Mostrar los primeros pasos</button>`)}
+      ${Dato('Soporte', 'orbeappsoficial@gmail.com')}` },
     N.admin && yo && yo.rol === 'dueno' && { k: 'admin', g: 'La app', i: 'escudo', c: 't-vio', n: 'Panel de administración', r: 'Solo tú lo ves · pagos, negocios y cobro', cuerpo: () => html`<p class="sub" style="margin:0 0 10px;line-height:1.5">Aquí apruebas los pagos de tus clientes, ves los negocios y cambias tus precios y datos de cobro. Solo lo ven las cuentas administradoras de Orbe.</p>
       <div class="chips"><a class="btn2 chico lleno toca" style="text-decoration:none" href="admin.html" target="_blank" rel="noopener">Abrir el panel</a></div>` },
     { k: 'legal', g: 'La app', i: 'escudo', c: 't-gris', n: 'Términos y privacidad', r: 'Qué guardamos y tus derechos', cuerpo: () => html`<p class="sub" style="margin:0 0 10px;line-height:1.5">Tus datos son tuyos: Orbe no los vende ni los usa para publicidad. Los recibos de Orbe son comprobantes no fiscales.</p>
@@ -128,10 +131,10 @@ const PALABRAS = { perfil: 'nombre pin clave mi perfil', cuenta: 'nube internet 
   equipo: 'empleado cajero cajera perfil permiso rol pin trabajador', pagos: 'pago movil zelle efectivo tarjeta transferencia binance usdt punto forma de pago', impuesto: 'iva impuesto factura',
   impresora: 'ticket recibo imprimir bluetooth cajon papel', recordatorios: 'whatsapp mensaje cobrar deuda cita aviso', reservas: 'link citas instagram agendar', horario: 'hora abrir cerrar vacaciones',
   ordenes: 'condiciones garantia orden', apariencia: 'oscuro claro tema color letra tamano', copias: 'respaldo backup excel descargar restaurar', registro: 'anular devolver borrar quien firma',
-  ayuda: 'ayuda guia recorrido tutorial', legal: 'terminos privacidad datos', borrar: 'reiniciar borrar todo empezar' };
+  ayuda: 'ayuda guia recorrido tutorial soporte', tutoriales: 'tutorial tutoriales aprender recorrido guia ensenar', legal: 'terminos privacidad datos', borrar: 'reiniciar borrar todo empezar' };
 const encontrar = (temas, q) => { const w = normal(q).split(' ').filter(Boolean); return !w.length ? temas : temas.filter(t => { const txt = normal(t.n + ' ' + (typeof t.r === 'string' ? t.r : '') + ' ' + (t.g || '') + ' ' + (PALABRAS[t.k] || '')); return w.every(x => txt.includes(x)); }); };
 const Buscador = (q, setQ, ancho) => html`<label class="buscador entra" data-guia="buscar-ajuste" style=${{ width: '100%', background: 'var(--surface)', maxWidth: ancho || 'none' }}><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder="¿Qué quieres cambiar?" aria-label="Buscar un ajuste" /></label>`;
-const Fila = (t, onClick) => html`<button type="button" key=${t.k} class="opcion-menu toca" data-tour=${TOUR[t.k]} onClick=${onClick}>
+const Fila = (t, onClick) => html`<button type="button" key=${t.k} class="opcion-menu toca" data-tema=${t.k} data-tour=${TOUR[t.k]} onClick=${onClick}>
   <span class=${'ic ' + t.c} style="width:36px;height:36px;border-radius:11px"><${Icono} n=${t.i} t=${17} g=${2.2} /></span>
   <span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><b>${t.n}</b><span class="sub corta">${t.r}</span></span>
   <${Icono} n="sig" t=${16} c="var(--faint)" /></button>`;
@@ -145,7 +148,7 @@ function Ajustes() {
   const t = temas.find(x => x.k === k) || temas[0] || todos.find(x => x.k === k) || todos[0];
   return html`<div class="fila" style="gap:12px;align-items:center;margin-bottom:12px">${Buscador(q, setQ, '380px')}</div>
   <div class="ajustes-dos">
-    <nav class="ajustes-temas" aria-label="Temas de ajustes">${!temas.length ? html`<p class="sub" style="padding:8px 6px">No encontré “${q}”. Prueba con otra palabra.</p>` : null}${GRUPOS.map(g => { const de = temas.filter(x => x.g === g); return de.length ? html`<div key=${g || 'yo'}>${g && html`<small>${g}</small>`}${de.map(x => html`<button type="button" class=${'toca' + (x.k === t.k ? ' on' : '')} data-tour=${TOUR[x.k]} aria-current=${x.k === t.k ? 'true' : 'false'} onClick=${() => setK(x.k)}><span class=${'ic ' + x.c}><${Icono} n=${x.i} t=${15} g=${2.2} /></span>${x.n}</button>`)}</div>` : null; })}</nav>
+    <nav class="ajustes-temas" aria-label="Temas de ajustes">${!temas.length ? html`<p class="sub" style="padding:8px 6px">No encontré “${q}”. Prueba con otra palabra.</p>` : null}${GRUPOS.map(g => { const de = temas.filter(x => x.g === g); return de.length ? html`<div key=${g || 'yo'}>${g && html`<small>${g}</small>`}${de.map(x => html`<button type="button" class=${'toca' + (x.k === t.k ? ' on' : '')} data-tema=${x.k} data-tour=${TOUR[x.k]} aria-current=${x.k === t.k ? 'true' : 'false'} onClick=${() => setK(x.k)}><span class=${'ic ' + x.c}><${Icono} n=${x.i} t=${15} g=${2.2} /></span>${x.n}</button>`)}</div>` : null; })}</nav>
     <section class="tarjeta ajustes-tema entra" key=${t.k}><div class="fila" style="gap:12px;margin-bottom:6px"><span class=${'ic ' + t.c}><${Icono} n=${t.i} t=${18} g=${2.2} /></span><span class="crece" style="display:flex;flex-direction:column"><b style="font-size:19px">${t.n}</b><span class="sub">${t.r}</span></span></div>${t.cuerpo()}</section>
   </div>`;
 }

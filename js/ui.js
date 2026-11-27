@@ -42,6 +42,7 @@ export const ICONOS = {
   mundo: 'M12 22a10 10 0 100-20 10 10 0 000 20zM2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20',
   tarjeta: 'M2 5h20v14H2zM2 10h20',
   porciento: 'M19 5L5 19M6.5 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM17.5 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5z',
+  gorro: 'M22 9 12 4 2 9l10 5 10-5zM6 11v5c1.7 1.6 3.8 2.5 6 2.5s4.3-.9 6-2.5v-5M22 9v6',
   escudo: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
   doc: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M8 13h8M8 17h5',
   grafico: 'M3 3v18h18M7 14l4-4 4 4 5-6',
@@ -130,7 +131,7 @@ export function Avisos() {
 // ---------- interruptor ----------
 // Botón cuadrado con ícono y una etiqueta corta (opciones secundarias de una hoja).
 export function Atajo({ n, t, on, onClick }) {
-  return html`<button type="button" class=${'atajo toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${onClick}><${Icono} n=${n} t=${22} /><span>${t}</span></button>`;
+  return html`<button type="button" class=${'atajo toca' + (on ? ' on' : '')} data-atajo=${n} aria-pressed=${on ? 'true' : 'false'} onClick=${onClick}><${Icono} n=${n} t=${22} /><span>${t}</span></button>`;
 }
 // “Más opciones”: lo poco usado de un formulario queda plegado. resumen: qué hay adentro.
 export function MasOpciones({ abierto, onCambio, resumen, children }) {
