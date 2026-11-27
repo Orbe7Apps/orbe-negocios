@@ -154,7 +154,6 @@ export function Reparto({ segs, f, total, titulo = 'Total', tam = 124, grosor = 
       <span class="crece corta"><b>${s.n}</b>${s.d != null && isFinite(s.d) ? html`<span class=${'delta ' + (s.bueno ? 'g' : 'b')}>${s.d > 0 ? '▲' : s.d < 0 ? '▼' : '='} ${Math.abs(Math.round(s.d))}%</span>` : null}</span>
       <span class="faint num pct">${pct(s.v)}</span>
       <b class="num">${f(s.v)}</b>
-      <span class="pista" aria-hidden="true"><i style=${{ width: Math.max(0.5, tot ? s.v / tot * 100 : 0).toFixed(2) + '%' }}></i></span>
     </li>`)}</ul>
   </div>`;
 }
