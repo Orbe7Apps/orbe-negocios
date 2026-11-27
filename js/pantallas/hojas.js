@@ -1,13 +1,14 @@
 // Todas las hojas (teléfono) o ventanas (computadora) de la app.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer, borrarRol, perfilesConRol, usaEuro } from '../datos.js';
+import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer, borrarRol, perfilesConRol, usaEuro, diaClave } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { paisActivo, telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
 import { ponerAyudaHoja, Hoja, Icono, Interruptor, Atajo, MasOpciones, Pista, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd, avisarDeshacer } from '../ui.js';
 import { Monto, Linea } from '../graficos.js';
-import { usePagos, useMonto, conSimbolo, numero, esEfectivo } from './pagos.js';
+import { usePagos, useMonto, conSimbolo, numero, esEfectivo, enOtra as cobraEnOtra } from './pagos.js';
 import { infoTasas } from './tasas.js';
+import { CampoOpcion } from '../elegir.js';
 import { Grupos, Grupo, colorGrupo, textosProducto, iniciales2 } from './grupos.js';
 import { Escaner, mismoCodigo } from './escaner.js';
 import { Precios } from './precios.js';
@@ -972,13 +973,15 @@ function Negocio({ d, cerrar }) {
       </div>
       <div class="campo"><span>Rubro</span><button type="button" class="btn2 toca" style="justify-content:flex-start;gap:10px;min-height:50px;border-radius:16px" onClick=${() => c(() => abrirH('rubro'))}><${Icono} n=${T.icono} t=${17} /><span class="crece" style="text-align:left">${T.n}</span><span class="acento-txt">Cambiar</span></button></div>
       ${T2.inv !== T.inv && html`<span class="sub entra" style="line-height:1.45">${T2.inv ? 'Ahora vas a llevar inventario: ponle existencia a tus productos en Inventario.' : 'Ahora vendes servicios: se deja de contar el inventario.'}</span>`}
-      <label class="campo"><span class="fila" style="gap:8px"><${Bandera} id=${f.pais} t=${18} />País y moneda</span><select value=${f.pais} onChange=${e => pon({ pais: e.target.value })}>${PAISES.filter(x => paisActivo(x.id) || x.id === n.pais).map(x => html`<option value=${x.id}>${x.n} · ${x.cur}</option>`)}</select></label>
+      <div class="campo"><span>País y moneda</span><${CampoOpcion} valor=${f.pais} titulo="País y moneda" ic="mundo" opciones=${PAISES.filter(x => paisActivo(x.id) || x.id === n.pais).map(x => ({ v: x.id, n: x.n, sub: x.cur, pre: html`<${Bandera} id=${x.id} t=${26} />` }))} onCambio=${v => pon({ pais: v })} /></div>
       ${otroPais && html`<div class="tarjeta fila entra" style="background:var(--amber-soft);box-shadow:none;gap:10px;align-items:flex-start"><${Icono} n="alerta" t=${18} c="var(--amber)" /><span class="sub" style="color:var(--ink);line-height:1.45"><b>Ojo:</b> los precios y montos guardados no se convierten. Si cambias de ${P.cur} a ${P2.cur}, el número se queda igual. Las formas de pago pasan a las de ${P2.n}.</span></div>`}`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>Guardar</button>`
   })} />`;
 }
 
 // ---------- tasas del dólar (Venezuela y Argentina) ----------
+// Arriba, solo las tasas que se usan hoy (y para qué forma sirve cada una). Debajo, cada forma de cobro en
+// bolívares con tres fichas: BCV $, BCV € u Otra (paralela, USDT o propia). Las formas en dólares, plegadas.
 function Tasa({ d, cerrar }) {
   const { S, P, D, enLinea, puede, abrir } = useApp();
   // Todos pueden ver las tasas; solo las cuentas habilitadas (“Cambiar las tasas”) pueden cambiarlas.
@@ -994,19 +997,24 @@ function Tasa({ d, cerrar }) {
   const [porPago, setPorPago] = useState(Object.assign({}, S.negocio.tasaPago));
   const [euro, setEuro] = useState(S.tasas.euro && S.tasas.euro.valor ? String(S.tasas.euro.valor).replace('.', ',') : '');
   const [leyendo, setLeyendo] = useState('');
+  const [aMano, setAMano] = useState(conFuente ? '' : 'principal');
   // La tasa del euro se puede usar aunque no se acepten euros: para cobrar en Bs alguna forma de pago a la tasa del euro.
-  const conEuroTasa = !!S.negocio.euro || conFuente, euroUsado = !!S.negocio.euro || Object.values(porPago).includes('euro');
+  const conEuroTasa = !!S.negocio.euro || conFuente;
   const nf = new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const t = numero(valor);
+  const valorDe = k => k === 'principal' ? (t || D.tasa) : k === 'euro' ? (numero(euro) || (S.negocio.euro || Object.values(porPago).includes('euro') ? D.tasaEur : 0)) : numero(otras[k]);
+  const ponDe = (k, v) => { if (k === 'principal') setValor(v); else if (k === 'euro') setEuro(v); else setOtras(o => Object.assign({}, o, { [k]: v })); };
   const leerYa = async (k, fu) => {
     if (!enLinea) { avisar('Sin internet: escríbela a mano'); return; }
     setLeyendo(k); const v = await leerTasa(P.id, k === 'principal' ? (fu || fuente) : k); setLeyendo('');
     if (!v) { avisar('No se pudo leer. Prueba más tarde o escríbela a mano'); return; }
-    if (k === 'principal') setValor(String(v).replace('.', ',')); else if (k === 'euro') setEuro(String(v).replace('.', ',')); else setOtras(o => Object.assign({}, o, { [k]: String(v).replace('.', ',') }));
+    ponDe(k, String(v).replace('.', ','));
     avisar('Leída: ' + mon + nf.format(v));
   };
   const guardar = c => {
     if (modo === 'manual' && !t) { avisar('Escribe la tasa'); return; }
+    const falta = Object.keys(porPago).find(m => porPago[m] && porPago[m] !== 'euro' && !numero(otras[porPago[m]]) && !(S.tasas[porPago[m]] || {}).valor);
+    if (falta) { avisar('Escribe la tasa ' + nomTasa(porPago[falta]).toLowerCase() + ' para ' + falta); return; }
     const leida = modo === 'auto' && t && (fuente === S.tasa.fuente || t !== S.tasa.valor);
     guardarTasa(modo === 'manual' || leida ? { modo, fuente, valor: t } : { modo, fuente, fecha: '' }, D.bonito);
     extras.forEach(x => { const v = numero(otras[x.k]); if (v && v !== (S.tasas[x.k] || {}).valor) guardarTasaExtra(x.k, { valor: v, modo: 'manual' }); });
@@ -1014,71 +1022,83 @@ function Tasa({ d, cerrar }) {
     cambiarNegocio({ tasaPago: porPago });
     c(() => avisar('Tasas guardadas'));
   };
-  // Leer de una vez todas las que tienen de dónde leerse.
+  // Leer de una vez todas las que se usan y tienen de dónde leerse.
   const leerTodas = async () => {
     if (!enLinea) { avisar('Sin internet: escríbelas a mano'); return; }
     setLeyendo('todas');
-    const ks = ['principal'].concat(extras.filter(x => x.auto).map(x => x.k), euroUsado ? ['euro'] : []);
+    const ks = ['principal'].concat(enUso.filter(k => k === 'euro' || (extras.find(x => x.k === k) || {}).auto));
     let n = 0;
-    for (const k of ks) { const v = await leerTasa(P.id, k === 'principal' ? fuente : k); if (v) { n++; if (k === 'principal') setValor(String(v).replace('.', ',')); else if (k === 'euro') setEuro(String(v).replace('.', ',')); else setOtras(o => Object.assign({}, o, { [k]: String(v).replace('.', ',') })); } }
+    for (const k of ks) { const v = await leerTasa(P.id, k === 'principal' ? fuente : k); if (v) { n++; ponDe(k, String(v).replace('.', ',')); } }
     setLeyendo(''); avisar(n ? n + (n === 1 ? ' tasa leída' : ' tasas leídas') + '. Toca Guardar' : 'No se pudo leer. Prueba más tarde o escríbelas a mano');
   };
-  const ESTADO = { hoy: ['Leída hoy', 'var(--in-text)'], 'a mano': ['A mano', 'var(--accent-text)'], vieja: ['Sin actualizar', 'var(--amber-text)'], estimada: ['Falta actualizar', 'var(--amber-text)'] };
+  const nomTasa = k => k === 'principal' || !k ? ((resumenTasas[0] || {}).n || 'Tasa principal') : k === 'euro' ? (ve ? 'Euro BCV' : 'Euro') : k === 'propia' ? 'Propia' : (extras.find(x => x.k === k) || {}).n || k;
+  // Formas que se cobran en la otra moneda (en Venezuela: bolívares) y las demás.
+  const enOtra = S.negocio.pays.filter(m => cobraEnOtra(P, m));
+  const enDolar = S.negocio.pays.filter(m => !enOtra.includes(m));
+  const deForma = m => porPago[m] || 'principal';
+  const quienes = k => S.negocio.pays.filter(m => deForma(m) === k);
+  // Tasas en uso: la principal siempre; el euro si se aceptan euros o alguna forma lo usa; las otras si alguna forma las usa.
+  const enUso = ['principal'].concat(conEuroTasa && (S.negocio.euro || quienes('euro').length) ? ['euro'] : [], extras.filter(x => quienes(x.k).length).map(x => x.k));
+  const ESTADO = { hoy: ['Leída hoy', 'ok'], 'a mano': ['Escrita a mano', 'av'], vieja: ['Sin actualizar', 'av'], estimada: ['Falta actualizar', 'av'] };
+  const estadoDe = k => {
+    if (k === 'principal') { const r = resumenTasas[0]; if (modo === 'manual' && conFuente) return ['Escrita a mano', 'av']; return r ? ESTADO[r.estado] : ['', '']; }
+    if (k === 'euro') { const e = S.tasas.euro; return numero(euro) && e && numero(euro) !== e.valor ? ['Escrita a mano', 'av'] : e && e.fecha === diaClave(Date.now()) ? ['Leída hoy', 'ok'] : e && e.valor ? ['Sin actualizar', 'av'] : ['Falta actualizar', 'av']; }
+    return numero(otras[k]) ? ['Escrita a mano', 'av'] : ['Falta escribirla', 'av'];
+  };
+  const lista = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' y ' + a[a.length - 1];
   // Historial de la tasa principal: últimos 30 días.
   const hist = (S.historialTasas || []).filter(h => h.f === (S.tasa.fuente || 'oficial')).slice(-30);
   const cambio = hist.length > 1 ? (hist[hist.length - 1].v / hist[hist.length - 2].v - 1) * 100 : 0;
   const mes = hist.length > 1 ? (hist[hist.length - 1].v / hist[0].v - 1) * 100 : 0;
-  return html`<${Hoja} titulo=${'Tasas de hoy'} onCerrar=${() => { cerrar(); if (d.volver) setTimeout(() => abrir('cobrar', d.volver), 0); }} contenido=${c => ({
+  // Campo para escribir una tasa, con “Leer” si se puede leer de internet.
+  const CampoTasa = (k, auto) => html`<div class="fila entra" style="gap:8px">
+    <div class="pago-monto crece" style="min-height:48px"><span class="pago-moneda" style="display:grid;place-items:center">${mon.trim()}</span><input class="num" type="text" inputmode="decimal" autocomplete="off" placeholder=${valorDe(k) ? nf.format(valorDe(k)) : 'Escribe la tasa'} value=${k === 'principal' ? valor : k === 'euro' ? euro : otras[k]} aria-label=${'Tasa ' + nomTasa(k)} onInput=${e => { ponDe(k, e.target.value); if (k === 'principal' && conFuente) setModo('manual'); }} /></div>
+    ${auto && html`<button type="button" class=${'btn2 chico toca' + (leyendo === k ? ' apagado' : '')} style="min-height:48px" aria-label=${'Leer de internet la tasa ' + nomTasa(k)} onClick=${() => { if (k === 'principal') setModo('auto'); leerYa(k); }}><${Icono} n="refrescar" t=${14} />${leyendo === k ? 'Leyendo…' : 'Leer'}</button>`}
+  </div>`;
+  const Tarjeta = k => { const v = valorDe(k), q = quienes(k).filter(m => k !== 'principal' || enOtra.includes(m)), est = estadoDe(k);
+    const para = k === 'principal' ? 'Tus precios' + (q.length ? ' y ' + lista(q) : '') : q.length ? lista(q) : (k === 'euro' && S.negocio.euro ? 'Cobrar en euros' : '');
+    return html`<button type="button" key=${k} class=${'tasa-uso-t toca' + (aMano === k ? ' on' : '')} disabled=${!editar} aria-label=${nomTasa(k) + ': ' + (v ? mon + nf.format(v) : 'sin tasa') + (editar ? '. Tocar para escribirla a mano' : '')} onClick=${() => setAMano(aMano === k ? '' : k)}>
+      <span class="n">${nomTasa(k)}${editar && html` <${Icono} n="lapiz" t=${11} />`}</span>
+      <b class="num">${v ? mon + nf.format(v) : '—'}</b>
+      ${est[0] && html`<span class=${'e ' + est[1]}>${est[1] === 'ok' ? '● ' : ''}${est[0]}${k === 'principal' && Math.abs(cambio) >= 0.05 ? ' · ' + (cambio > 0 ? '▲ ' : '▼ ') + Math.abs(cambio).toFixed(1).replace('.', ',') + ' %' : ''}</span>`}
+      ${para && html`<span class="para">${para}</span>`}
+    </button>`; };
+  // Fichas de cada forma: BCV $ / BCV € / Otra (y, con Otra, cuál y su número).
+  const elegir = (m, k) => {
+    setPorPago(Object.assign({}, porPago, { [m]: k === 'principal' ? undefined : k }));
+    if (k === 'euro' && !numero(euro) && !(S.tasas.euro || {}).valor && conFuente && enLinea) leerYa('euro');
+    const x = extras.find(e => e.k === k); if (x && x.auto && !numero(otras[k]) && enLinea) leerYa(k);
+  };
+  const Forma = m => { const k = deForma(m), esOtra = k !== 'principal' && k !== 'euro', v = valorDe(k);
+    if (!editar) return html`<div class="fila tasa-forma" key=${m} style="gap:10px;min-height:40px"><span class="simb"><${Icono} n=${simbolo(m)} t=${13} g=${2.2} /></span><b class="crece" style="font-size:15px">${m}</b><span class="sub num">${nomTasa(k)} · ${v ? mon + nf.format(v) : '—'}</span></div>`;
+    return html`<div class="pila tasa-forma" key=${m} style="gap:8px">
+      <div class="fila" style="gap:10px"><span class="simb"><${Icono} n=${simbolo(m)} t=${13} g=${2.2} /></span><b class="crece" style="font-size:15px">${m}</b><span class="sub num">${v ? (ve ? '$1 = ' : '1 US$ = ') + mon + nf.format(v) : ''}</span></div>
+      <div class="fichas-tasa">${[['principal', ve ? 'BCV $' : 'Principal']].concat(conEuroTasa ? [['euro', ve ? 'BCV €' : 'Euro']] : [], extras.length ? [['otra', 'Otra']] : []).map(([o, n]) => { const on = o === 'otra' ? esOtra : k === o;
+        return html`<button type="button" key=${o} class=${'chip toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} aria-label=${n + ' para ' + m} onClick=${() => elegir(m, o === 'otra' ? (esOtra ? k : extras[0].k) : o)}>${n}</button>`; })}</div>
+      ${esOtra && html`<div class="tasa-otra entra">
+        <${Chips} opciones=${extras.map(x => ({ v: x.k, n: nomTasa(x.k) }))} valor=${k} onCambio=${v2 => elegir(m, v2)} chico />
+        ${CampoTasa(k, (extras.find(x => x.k === k) || {}).auto)}
+      </div>`}
+    </div>`; };
+  const todasBCV = S.negocio.pays.every(m => deForma(m) === 'principal');
+  return html`<${Hoja} titulo=${'Tasas'} onCerrar=${() => { cerrar(); if (d.volver) setTimeout(() => abrir('cobrar', d.volver), 0); }} contenido=${c => ({
     cuerpo: html`
-      <div class="tasa-hoy">
-        <span class="sub">${resumenTasas[0] ? resumenTasas[0].n : 'Tasa'} de hoy</span>
-        <b class="num">${mon + nf.format(t || D.tasa)}</b>
-        <span class="fila" style="gap:8px;flex-wrap:wrap;justify-content:center">
-          ${resumenTasas[0] && html`<span class="pildora" style=${{ color: ESTADO[resumenTasas[0].estado][1] }}>${modo === 'manual' && conFuente ? 'A mano' : ESTADO[resumenTasas[0].estado][0]}</span>`}
-          ${Math.abs(cambio) >= 0.05 && html`<span class="pildora" style=${{ background: cambio > 0 ? 'var(--amber-soft)' : 'var(--in-soft)', color: cambio > 0 ? 'var(--amber-text)' : 'var(--in-text)' }}>${cambio > 0 ? '▲ ' : '▼ '}${Math.abs(cambio).toFixed(1).replace('.', ',')} % desde ayer</span>`}
-        </span>
+      <div class="tasa-uso" data-guia="tasas-uso">
+        <span class="sub">${enUso.length === 1 ? 'Hoy cobras con esta tasa' : 'Hoy cobras con estas ' + enUso.length + ' tasas'}</span>
+        <div class="tasa-uso-lista">${enUso.map(Tarjeta)}</div>
+        ${editar && aMano && enUso.includes(aMano) && html`<div class="pila" style="gap:6px">${CampoTasa(aMano, aMano !== 'principal' && conFuente && (aMano === 'euro' || (extras.find(x => x.k === aMano) || {}).auto))}
+          ${aMano === 'principal' && conFuente && modo === 'manual' && html`<button type="button" class="btn2 chico toca entra" style="align-self:flex-start" onClick=${() => { setModo('auto'); leerYa('principal'); }}>Volver a la tasa automática</button>`}</div>`}
         ${editar && conFuente && html`<button type="button" class=${'btn2 lleno toca' + (leyendo ? ' apagado' : '')} onClick=${() => { setModo('auto'); leerTodas(); }}><${Icono} n="refrescar" t=${15} />${leyendo === 'todas' ? 'Leyendo…' : 'Actualizar de internet'}</button>`}
       </div>
-      ${!editar && html`<div class="tarjeta fila" style="background:var(--fill2);box-shadow:none;gap:10px"><${Icono} n="candado" t=${16} c="var(--muted)" /><span class="sub" style="line-height:1.45">Puedes verlas, pero cambiarlas solo lo hacen las cuentas habilitadas.</span></div>`}
+      ${!editar && html`<div class="tarjeta fila" style="background:var(--fill2);box-shadow:none;gap:10px"><${Icono} n="candado" t=${16} c="var(--muted)" /><span class="sub" style="line-height:1.45">Puedes verlas. Cambiarlas lo hacen las cuentas habilitadas.</span></div>`}
       ${P.id === 'AR' && editar && html`<div class="campo"><span>¿Qué dólar muestras?</span><${Chips} opciones=${FUENTES_AR} valor=${fuente} onCambio=${v => { setFuente(v); setModo('auto'); leerYa('principal', v); }} chico /></div>`}
-      ${(() => {
-        // Cada tasa en su tarjeta: nombre, para qué sirve, estado y el número (con “Leer” si se puede leer de internet).
-        const PARA = { paralela: 'Para pagos a la tasa paralela.', usdt: 'Para pagos en USDT.', propia: 'Una tasa que pones tú.' };
-        const principal = { k: 'principal', n: (resumenTasas[0] || {}).n || 'Tasa principal', val: valor, set: v => { setValor(v); if (conFuente) setModo('manual'); }, auto: conFuente,
-          para: 'Con ella se calculan tus precios en ' + (ve ? 'bolívares' : P.cur) + '.', chip: conFuente ? (modo === 'manual' ? ['Escrita a mano', 't-vio'] : ['Automática', 't-ver']) : ['La escribes tú', 't-vio'], ph: D.tasa ? nf.format(D.tasa) : '0,00' };
-        const opcionales = (conEuroTasa ? [{ k: 'euro', n: ve ? 'Euro BCV' : 'Euro', val: euro, set: setEuro, auto: conFuente, para: S.negocio.euro ? 'Para cobrar en euros: cuánto vale 1 €.' : 'Para cobrar en ' + (ve ? 'Bs' : P.cur) + ' a la tasa del euro.', ph: euroUsado && D.tasaEur ? nf.format(D.tasaEur) : 'Sin usar' }] : [])
-          .concat(extras.map(x => ({ k: x.k, n: x.k === 'propia' ? 'Tasa propia' : x.n, val: otras[x.k], set: v => setOtras(o => Object.assign({}, o, { [x.k]: v })), auto: x.auto, para: PARA[x.k] || 'Para cobrar algún pago a otra tasa.', ph: 'Sin usar' })));
-        const Tarjeta = x => html`<div class="tasa-tarjeta" key=${x.k}>
-          <div class="fila" style="gap:8px"><b class="crece">${x.n}</b>${x.chip ? html`<span class=${'pildora ' + x.chip[1]}>${x.chip[0]}</span>` : !numero(x.val) ? html`<span class="pildora t-gris">Sin usar</span>` : null}</div>
-          <span class="sub">${x.para}</span>
-          ${editar ? html`<div class="fila" style="gap:8px">
-              <div class="pago-monto crece" style="min-height:46px"><span class="pago-moneda" style="display:grid;place-items:center">${mon.trim()}</span><input class="num" type="text" inputmode="decimal" autocomplete="off" placeholder=${x.ph} value=${x.val} aria-label=${'Tasa ' + x.n} onInput=${e => x.set(e.target.value)} /></div>
-              ${x.auto && x.k !== 'principal' && html`<button type="button" class=${'btn2 chico toca' + (leyendo === x.k ? ' apagado' : '')} style="min-height:46px" aria-label=${'Leer de internet la tasa ' + x.n} onClick=${() => { if (x.k === 'principal') setModo('auto'); leerYa(x.k); }}><${Icono} n="refrescar" t=${14} />${leyendo === x.k ? 'Leyendo…' : 'Leer'}</button>`}
-            </div>`
-            : html`<b class="num" style="font-size:18px">${numero(x.val) ? mon + nf.format(numero(x.val)) : x.k === 'principal' ? mon + nf.format(D.tasa) : 'Sin usar'}</b>`}
-        </div>`;
-        const usaOtras = opcionales.some(x => (x.k !== 'euro' || !S.negocio.euro) && numero(x.val)) || Object.keys(porPago).some(m => porPago[m]);
-        // Opciones de tasa para cada forma de pago: la principal, la del euro (si se puede usar) y las extra.
-        const opcTasa = [{ k: '', n: ve ? 'Tasa BCV' : 'Principal' }].concat(conEuroTasa ? [{ k: 'euro', n: ve ? 'Tasa BCV euro' : 'Euro' }] : [], extras.map(x => ({ k: x.k, n: x.k === 'propia' ? 'Tasa propia' : x.n })));
-        const elegirTasa = (m, k) => { setPorPago(Object.assign({}, porPago, { [m]: k || undefined })); if (k === 'euro' && !numero(euro) && conFuente && enLinea) leerYa('euro'); };
-        const porForma = html`<div class="pila" style="gap:6px">${S.negocio.pays.map(m => html`<div class="pago-linea" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
-              <span class="fila" style="gap:8px;font-size:14px;font-weight:600;min-width:0"><span class="simb"><${Icono} n=${simbolo(m)} t=${13} g=${2.2} /></span><span class="corta">${m}</span></span>
-              <label class="pago-forma"><select style="padding-left:14px" value=${porPago[m] || ''} aria-label=${'Tasa para ' + m} onChange=${e => elegirTasa(m, e.target.value)}>${opcTasa.map(x => html`<option value=${x.k} selected=${(porPago[m] || '') === x.k}>${x.n}</option>`)}</select></label>
-            </div>`)}</div>
-            <span class="sub faint" style="line-height:1.4">Lo normal es cobrar todo con la ${ve ? 'tasa BCV' : 'tasa principal'}.</span>`;
-        return html`<div class="pila" style="gap:10px">
-          <span class="titulo-funciones" style="padding-top:4px">Tasa principal</span>
-          ${Tarjeta(principal)}
-          ${editar && conFuente && modo === 'manual' && html`<button type="button" class="btn2 chico toca entra" style="align-self:flex-start" onClick=${() => { setModo('auto'); leerYa('principal'); }}>Volver a la tasa automática</button>`}
-          ${opcionales.length > 0 && html`<span class="titulo-funciones" style="padding-top:8px">Otras tasas (opcional)</span>
-            <span class="sub" style="line-height:1.45;margin-top:-4px">Solo si cobras algún pago a otra tasa.</span>
-            ${opcionales.map(Tarjeta)}`}
-          ${editar && opcTasa.length > 1 && (usaOtras ? html`<div class="campo" style="margin-top:6px"><span>¿Con qué tasa cobras cada forma de pago?</span>${porForma}</div>`
-            : html`<details class="avanzado"><summary>Cobrar alguna forma de pago a otra tasa</summary><div class="pila" style="gap:8px;padding-top:10px">${porForma}</div></details>`)}
-        </div>`;
-      })()}
+      ${enOtra.length > 0 && html`<span class="titulo-funciones" style="padding-top:4px">${editar ? '¿Con qué tasa cobras en ' + (ve ? 'bolívares' : P.cur) + '?' : 'Con qué tasa se cobra'}</span>
+        <div class="pila" style="gap:14px" data-guia="tasas-formas">${enOtra.map(Forma)}</div>
+        ${editar && todasBCV && html`<span class="sub faint">Lo normal: todo con ${ve ? 'BCV $' : 'la principal'}. Cambia solo la que cobres distinto.</span>`}`}
+      ${editar && enDolar.length > 0 && html`<details class="avanzado"><summary>Formas en ${ve ? 'dólares' : 'otra moneda'}</summary>
+        <div class="pila" style="gap:14px;padding-top:10px"><span class="sub">${lista(enDolar)} no se pasan a ${ve ? 'bolívares' : P.cur}: casi nunca necesitan tasa.</span>${enDolar.map(Forma)}</div></details>`}
       ${hist.length > 2 && html`<details class="avanzado">
-        <summary>Cómo ha cambiado la tasa</summary>
+        <summary>Cómo ha cambiado ${ve ? 'el dólar BCV' : 'la tasa'}</summary>
         <div style="padding-top:10px"><div class="fila" style="margin-bottom:6px"><span class="sub crece">Últimos ${hist.length} días</span><span class="sub num">${mes > 0 ? '+' : ''}${mes.toFixed(1).replace('.', ',')} % en el mes</span></div>
           <${Linea} datos=${hist.map(h => ({ l: h.dia.slice(8) + '/' + h.dia.slice(5, 7), v: h.v, tip: mon + nf.format(h.v) }))} alto=${100} id="tasa" ajustar /></div>
       </details>`}`,

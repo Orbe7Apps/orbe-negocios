@@ -53,6 +53,7 @@ export const ICONOS = {
   indep: 'M3 7h18v13H3zM8 7V5a2 2 0 012-2h4a2 2 0 012 2v2M3 13h18',
   check: 'M5 12l5 5L20 7',
   cerrar: 'M6 6l12 12M18 6L6 18',
+  abajo: 'M6 9l6 6 6-6',
   atras: 'M15 18l-6-6 6-6',
   salir: 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
   info: 'M12 22a10 10 0 100-20 10 10 0 000 20zM12 16v-5M12 8h.01',
@@ -170,13 +171,19 @@ export function Chips({ opciones, valor, onCambio, desliza, calido, chico }) {
 // Al cerrar una capa con su botón se hace “atrás” en el historial; ese “atrás” llega después y no debe cerrar
 // la capa siguiente que se abra enseguida (por ejemplo, volver de Tasas a Cobrar).
 let ignorarAtrasHasta = 0;
+// Capa encima de una hoja (calendario, rueda, fichas): “atrás” la cierra solo a ella.
+let capaEncima = null;
+export const ponerCapaEncima = f => { capaEncima = f; };
+export const quitarCapaEncima = f => { if (capaEncima === f) capaEncima = null; };
+export const saltarAtras = () => { ignorarAtrasHasta = Date.now() + 600; };
+export const cerrarCapaEncima = () => { const f = capaEncima; capaEncima = null; if (f) f(); return !!f; };
 export function useAtras(abierto, cerrar) {
   const ref = useRef(cerrar); ref.current = cerrar;
   useEffect(() => {
     if (!abierto) return;
     try { history.pushState({ capa: true }, ''); } catch (e) { return; }
     let porAtras = false;
-    const pop = () => { if (Date.now() < ignorarAtrasHasta) { ignorarAtrasHasta = 0; return; } porAtras = true; ref.current(); };
+    const pop = () => { if (Date.now() < ignorarAtrasHasta) { ignorarAtrasHasta = 0; return; } if (cerrarCapaEncima()) return; porAtras = true; ref.current(); };
     window.addEventListener('popstate', pop);
     return () => { window.removeEventListener('popstate', pop); if (!porAtras && history.state && history.state.capa) { ignorarAtrasHasta = Date.now() + 600; history.back(); } };
   }, [abierto]);

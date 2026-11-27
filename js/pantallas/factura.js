@@ -8,6 +8,7 @@ import { buscar, normal } from '../buscar.js';
 import { textosProducto, iniciales2 } from './grupos.js';
 import { leerTexto } from './escaner.js';
 import { numero } from './pagos.js';
+import { CampoOpcion } from '../elegir.js';
 
 // ---------- leer el texto de la factura ----------
 const NO_PRODUCTO = /\b(sub\s?total|total|iva|igv|itbms|impuesto|rif|nit|cuit|ruc|factura|fecha|tel[eé]fono|telf?|direcci[oó]n|cliente|vendedor|caja|cambio|efectivo|pago|gracias|descuento|base imponible|n[°º]|control)\b/i;
@@ -102,11 +103,9 @@ export function Factura({ d, cerrar }) {
         <div class="pila" style="gap:8px">${filas.map(f => { const cand = candidatos(f.txt), p = prods.find(x => x.id === f.pid); return html`<div class=${'factura-fila entra' + (f.on ? '' : ' fuera')} key=${f.i}>
           <div class="fila" style="gap:8px"><button type="button" class=${'casilla toca' + (f.on ? ' on' : '')} role="checkbox" aria-checked=${f.on ? 'true' : 'false'} aria-label="Usar esta línea" onClick=${() => pon(f.i, { on: !f.on })}>${f.on && html`<${Icono} n="check" t=${13} g=${3} />`}</button>
             <input type="text" class="crece" value=${f.txt} aria-label="Nombre en la factura" onInput=${e => pon(f.i, { txt: e.target.value })} /></div>
-          <select value=${f.pid} aria-label="Producto" onChange=${e => pon(f.i, { pid: e.target.value })}>
-            <option value="">➕ Producto nuevo</option>
-            ${cand.concat(p && !cand.includes(p) ? [p] : []).map(x => html`<option value=${x.id}>${x.n} (tienes ${x.q})</option>`)}
-            ${prods.filter(x => !cand.includes(x) && x !== p).map(x => html`<option value=${x.id}>${x.n}</option>`)}
-          </select>
+          <${CampoOpcion} valor=${f.pid} etiqueta="Va a" titulo="¿A cuál producto va?" ic="caja" aria="Producto"
+            opciones=${[{ v: '', n: 'Producto nuevo', sub: 'Se crea al guardar', ic: 'mas' }].concat(cand.concat(p && !cand.includes(p) ? [p] : []).map(x => ({ v: x.id, n: x.n, sub: 'Tienes ' + x.q + ' · parecido', ic: 'caja' })), prods.filter(x => !cand.includes(x) && x !== p).map(x => ({ v: x.id, n: x.n, sub: 'Tienes ' + x.q, ic: 'caja' })))}
+            onCambio=${v => pon(f.i, { pid: v })} />
           <div class="variante-datos" style="grid-template-columns:70px minmax(0,1fr) minmax(0,1fr)">
             <label><span>Cantidad</span><input class="num" type="text" inputmode="decimal" value=${f.q} aria-label="Cantidad" onInput=${e => pon(f.i, { q: e.target.value })} /></label>
             <label><span>Costo c/u</span><input class="num" type="text" inputmode="decimal" value=${f.costo} aria-label="Costo" onInput=${e => pon(f.i, { costo: e.target.value })} /></label>
