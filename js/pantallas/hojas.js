@@ -1,7 +1,7 @@
 // Todas las hojas (teléfono) o ventanas (computadora) de la app.
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer, borrarRol, perfilesConRol } from '../datos.js';
+import { pinValido, leer, vender, guardarAtendio, abonar, anotarGasto, editarGasto, borrarGasto, guardarProducto, borrarProducto, reponer, nuevoCliente, editarCliente, borrarCliente, cerrarDia, empezarDeNuevo, fiadoDe, pagosDeAbono, deudores, deudaDe, resumen, inicioDia, gastosEntre, guardarSucursales, guardarPerfil, cambiarPin, borrarPerfil, claveItem, numeroOrden, turnoActual, cajaEntre, cerrarTurno, inicioVisible, nuevoRol, perfilActual, anularVenta, devolver, cambiarNegocio, guardarTasa, listarCopias, leerCopia, restaurar, valido, listaProductos, listaClientes, vigentes, tasaMetodo, tasaDe, guardarTasaExtra, remarcar, quitarCeros, verificarPagos, bajoCosto, revisarIntegridad, anonimizarCliente, guardarGrupo, conDeshacer, borrarRol, perfilesConRol, usaEuro } from '../datos.js';
 import { rolDe, puedeEditarRol, PERMISOS } from '../permisos.js';
 import { paisActivo, telInternacional, PAISES, TIPOS, pais, tipo, leerTasa, nombreTasa, FUENTES_AR, TASAS_EXTRA, esDivisa, esElectronico, monedaEfectivo, billetesDe } from '../paises.js';
 import { ponerAyudaHoja, Hoja, Icono, Interruptor, Atajo, MasOpciones, Pista, Chips, avisar, iniciales, TONOS, hora, fechaCorta, hace, simbolo, Bandera, MarcaNegocio, achicarImagen, FotoProd, avisarDeshacer } from '../ui.js';
@@ -988,6 +988,8 @@ function Tasa({ d, cerrar }) {
   const [porPago, setPorPago] = useState(Object.assign({}, S.negocio.tasaPago));
   const [euro, setEuro] = useState(S.tasas.euro && S.tasas.euro.valor ? String(S.tasas.euro.valor).replace('.', ',') : '');
   const [leyendo, setLeyendo] = useState('');
+  // La tasa del euro se puede usar aunque no se acepten euros: para cobrar en Bs alguna forma de pago a la tasa del euro.
+  const conEuroTasa = !!S.negocio.euro || conFuente, euroUsado = !!S.negocio.euro || Object.values(porPago).includes('euro');
   const nf = new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const t = numero(valor);
   const leerYa = async (k, fu) => {
@@ -1010,7 +1012,7 @@ function Tasa({ d, cerrar }) {
   const leerTodas = async () => {
     if (!enLinea) { avisar('Sin internet: escríbelas a mano'); return; }
     setLeyendo('todas');
-    const ks = ['principal'].concat(extras.filter(x => x.auto).map(x => x.k), S.negocio.euro ? ['euro'] : []);
+    const ks = ['principal'].concat(extras.filter(x => x.auto).map(x => x.k), euroUsado ? ['euro'] : []);
     let n = 0;
     for (const k of ks) { const v = await leerTasa(P.id, k === 'principal' ? fuente : k); if (v) { n++; if (k === 'principal') setValor(String(v).replace('.', ',')); else if (k === 'euro') setEuro(String(v).replace('.', ',')); else setOtras(o => Object.assign({}, o, { [k]: String(v).replace('.', ',') })); } }
     setLeyendo(''); avisar(n ? n + (n === 1 ? ' tasa leída' : ' tasas leídas') + '. Toca Guardar' : 'No se pudo leer. Prueba más tarde o escríbelas a mano');
@@ -1038,7 +1040,7 @@ function Tasa({ d, cerrar }) {
         const PARA = { paralela: 'Para pagos a la tasa paralela.', usdt: 'Para pagos en USDT.', propia: 'Una tasa que pones tú.' };
         const principal = { k: 'principal', n: (resumenTasas[0] || {}).n || 'Tasa principal', val: valor, set: v => { setValor(v); if (conFuente) setModo('manual'); }, auto: conFuente,
           para: 'Con ella se calculan tus precios en ' + (ve ? 'bolívares' : P.cur) + '.', chip: conFuente ? (modo === 'manual' ? ['Escrita a mano', 't-vio'] : ['Automática', 't-ver']) : ['La escribes tú', 't-vio'], ph: D.tasa ? nf.format(D.tasa) : '0,00' };
-        const opcionales = (S.negocio.euro ? [{ k: 'euro', n: 'Euro', val: euro, set: setEuro, auto: conFuente, para: 'Para cobrar en euros: cuánto vale 1 €.', ph: D.tasaEur ? nf.format(D.tasaEur) : 'Sin usar' }] : [])
+        const opcionales = (conEuroTasa ? [{ k: 'euro', n: ve ? 'Euro BCV' : 'Euro', val: euro, set: setEuro, auto: conFuente, para: S.negocio.euro ? 'Para cobrar en euros: cuánto vale 1 €.' : 'Para cobrar en ' + (ve ? 'Bs' : P.cur) + ' a la tasa del euro.', ph: euroUsado && D.tasaEur ? nf.format(D.tasaEur) : 'Sin usar' }] : [])
           .concat(extras.map(x => ({ k: x.k, n: x.k === 'propia' ? 'Tasa propia' : x.n, val: otras[x.k], set: v => setOtras(o => Object.assign({}, o, { [x.k]: v })), auto: x.auto, para: PARA[x.k] || 'Para cobrar algún pago a otra tasa.', ph: 'Sin usar' })));
         const Tarjeta = x => html`<div class="tasa-tarjeta" key=${x.k}>
           <div class="fila" style="gap:8px"><b class="crece">${x.n}</b>${x.chip ? html`<span class=${'pildora ' + x.chip[1]}>${x.chip[0]}</span>` : !numero(x.val) ? html`<span class="pildora t-gris">Sin usar</span>` : null}</div>
@@ -1049,7 +1051,15 @@ function Tasa({ d, cerrar }) {
             </div>`
             : html`<b class="num" style="font-size:18px">${numero(x.val) ? mon + nf.format(numero(x.val)) : x.k === 'principal' ? mon + nf.format(D.tasa) : 'Sin usar'}</b>`}
         </div>`;
-        const usaOtras = opcionales.some(x => x.k !== 'euro' && numero(x.val)) || Object.keys(porPago).some(m => porPago[m]);
+        const usaOtras = opcionales.some(x => (x.k !== 'euro' || !S.negocio.euro) && numero(x.val)) || Object.keys(porPago).some(m => porPago[m]);
+        // Opciones de tasa para cada forma de pago: la principal, la del euro (si se puede usar) y las extra.
+        const opcTasa = [{ k: '', n: ve ? 'Tasa BCV' : 'Principal' }].concat(conEuroTasa ? [{ k: 'euro', n: ve ? 'Tasa BCV euro' : 'Euro' }] : [], extras.map(x => ({ k: x.k, n: x.k === 'propia' ? 'Tasa propia' : x.n })));
+        const elegirTasa = (m, k) => { setPorPago(Object.assign({}, porPago, { [m]: k || undefined })); if (k === 'euro' && !numero(euro) && conFuente && enLinea) leerYa('euro'); };
+        const porForma = html`<div class="pila" style="gap:6px">${S.negocio.pays.map(m => html`<div class="pago-linea" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+              <span class="fila" style="gap:8px;font-size:14px;font-weight:600;min-width:0"><span class="simb"><${Icono} n=${simbolo(m)} t=${13} g=${2.2} /></span><span class="corta">${m}</span></span>
+              <label class="pago-forma"><select style="padding-left:14px" value=${porPago[m] || ''} aria-label=${'Tasa para ' + m} onChange=${e => elegirTasa(m, e.target.value)}>${opcTasa.map(x => html`<option value=${x.k} selected=${(porPago[m] || '') === x.k}>${x.n}</option>`)}</select></label>
+            </div>`)}</div>
+            <span class="sub faint" style="line-height:1.4">Lo normal es cobrar todo con la ${ve ? 'tasa BCV' : 'tasa principal'}.</span>`;
         return html`<div class="pila" style="gap:10px">
           <span class="titulo-funciones" style="padding-top:4px">Tasa principal</span>
           ${Tarjeta(principal)}
@@ -1057,12 +1067,8 @@ function Tasa({ d, cerrar }) {
           ${opcionales.length > 0 && html`<span class="titulo-funciones" style="padding-top:8px">Otras tasas (opcional)</span>
             <span class="sub" style="line-height:1.45;margin-top:-4px">Solo si cobras algún pago a otra tasa.</span>
             ${opcionales.map(Tarjeta)}`}
-          ${editar && extras.length > 0 && usaOtras && html`<div class="campo" style="margin-top:6px"><span>¿Con qué tasa cobras cada forma de pago?</span>
-            <div class="pila" style="gap:6px">${S.negocio.pays.map(m => html`<div class="pago-linea" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
-              <span class="fila" style="gap:8px;font-size:14px;font-weight:600;min-width:0"><span class="simb"><${Icono} n=${simbolo(m)} t=${13} g=${2.2} /></span><span class="corta">${m}</span></span>
-              <label class="pago-forma"><select style="padding-left:14px" value=${porPago[m] || ''} aria-label=${'Tasa para ' + m} onChange=${e => setPorPago(Object.assign({}, porPago, { [m]: e.target.value || undefined }))}>${[{ k: '', n: ve ? 'Tasa BCV' : 'Principal' }].concat(extras).map(x => html`<option value=${x.k} selected=${(porPago[m] || '') === x.k}>${x.k === 'propia' ? 'Tasa propia' : x.n}</option>`)}</select></label>
-            </div>`)}</div>
-            <span class="sub faint" style="line-height:1.4">Lo normal es cobrar todo con la ${ve ? 'tasa BCV' : 'tasa principal'}.</span></div>`}
+          ${editar && opcTasa.length > 1 && (usaOtras ? html`<div class="campo" style="margin-top:6px"><span>¿Con qué tasa cobras cada forma de pago?</span>${porForma}</div>`
+            : html`<details class="avanzado"><summary>Cobrar alguna forma de pago a otra tasa</summary><div class="pila" style="gap:8px;padding-top:10px">${porForma}</div></details>`)}
         </div>`;
       })()}
       ${hist.length > 2 && html`<details class="avanzado">

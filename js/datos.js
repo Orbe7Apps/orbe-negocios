@@ -458,11 +458,15 @@ export const fiadoDe = v => v.pagos.reduce((a, p) => a + (p.m === 'Fiado' || p.m
 export function tasaDe(k) {
   const prin = S.tasa.valor || (S.negocio && S.negocio.pais === 'VE' ? TASA_VE_RESPALDO : S.negocio ? pais(S.negocio.pais).r : 1);
   if (!k || k === 'oficial') return prin;
+  // Tasa del euro (p. ej. BCV euro): si no se ha leído, se estima con el dólar.
+  if (k === 'euro') return tasaEuro();
   return (S.tasas[k] && S.tasas[k].valor) || prin;
 }
 export const tasaMetodo = m => tasaDe(((S.negocio && S.negocio.tasaPago) || {})[m]);
 // Tasa del euro (bolívares o moneda local por euro). Si no se ha leído, se estima con el dólar.
 export const tasaEuro = () => (S.tasas.euro && S.tasas.euro.valor) || tasaDe() * EUR_USD;
+// El negocio usa la tasa del euro: acepta euros o cobra alguna forma de pago con ella.
+export const usaEuro = (n = S.negocio) => !!n && (!!n.euro || Object.values(n.tasaPago || {}).includes('euro'));
 const dolarDe = (v, t) => S.negocio.pais === 'VE' ? v : v / (t || tasaDe());
 const anotarHistorial = (s, f, v) => { const dia = diaClave(Date.now()), h = (s.historialTasas || []).filter(x => !(x.dia === dia && x.f === f)); return h.concat([{ dia, f, v }]).slice(-600); };
 const juntar = pagos => pagos.map(p => p.m).join(' + ');

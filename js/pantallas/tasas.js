@@ -2,7 +2,7 @@
 // y con un toque se abren para revisarlas o cambiarlas.
 import { html } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { diaClave } from '../datos.js';
+import { diaClave, usaEuro } from '../datos.js';
 import { Icono } from '../ui.js';
 import { TASAS_EXTRA, FUENTES_AR } from '../paises.js';
 
@@ -13,7 +13,7 @@ export function infoTasas(S, P, D) {
   const estado = t => !t || !t.valor ? 'estimada' : t.modo === 'manual' ? 'a mano' : t.fecha === hoy ? 'hoy' : 'vieja';
   const principal = { k: 'principal', n: ve ? 'Dólar BCV' : P.id === 'AR' ? 'Dólar ' + ((FUENTES_AR.find(f => f.v === S.tasa.fuente) || FUENTES_AR[0]).n).toLowerCase() : 'Dólar', s: '$', v: D.tasa, cambio: cambio(S.tasa.fuente || 'oficial'), estado: estado(S.tasa), fecha: S.tasa.fecha };
   const extras = (TASAS_EXTRA[P.id] || []).filter(x => S.tasas[x.k] && S.tasas[x.k].valor).map(x => ({ k: x.k, n: x.n, s: '$', v: S.tasas[x.k].valor, cambio: cambio(x.k), estado: estado(S.tasas[x.k]), fecha: S.tasas[x.k].fecha }));
-  const euro = S.negocio.euro ? [{ k: 'euro', n: 'Euro', s: '€', v: D.tasaEur, cambio: cambio('euro'), estado: estado(S.tasas.euro), fecha: (S.tasas.euro || {}).fecha }] : [];
+  const euro = usaEuro(S.negocio) ? [{ k: 'euro', n: ve ? 'Euro BCV' : 'Euro', s: '€', v: D.tasaEur, cambio: cambio('euro'), estado: estado(S.tasas.euro), fecha: (S.tasas.euro || {}).fecha }] : [];
   return [principal].concat(euro, extras);
 }
 

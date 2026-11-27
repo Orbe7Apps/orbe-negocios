@@ -1,7 +1,7 @@
 // Orbe Negocios · arranque. Decide si es teléfono o computadora, y arma la navegación.
 import { html, render, useState, useEffect } from './lib/preact-htm.js';
 import { Ctx } from './ctx.js';
-import { iniciarDatos, useDatos, leer, cambiarNegocio, guardarTasa, guardarTasaExtra, tasaEuro, diaClave, bajoMinimo, deudores, porPagar, perfilActual, salir, guardarPerfil, ordenAtrasada } from './datos.js';
+import { iniciarDatos, useDatos, leer, cambiarNegocio, guardarTasa, guardarTasaExtra, tasaEuro, usaEuro, diaClave, bajoMinimo, deudores, porPagar, perfilActual, salir, guardarPerfil, ordenAtrasada } from './datos.js';
 import { Recorrido } from './recorrido.js';
 import { ChipTasa } from './pantallas/tasas.js';
 import { puede, rolDe } from './permisos.js';
@@ -107,11 +107,11 @@ function App() {
   useEffect(() => {
     if ((pid === 'VE' || pid === 'AR') && S.tasa.modo !== 'manual' && enLinea && S.tasa.fecha !== diaClave(Date.now())) leerTasa(pid, S.tasa.fuente).then(v => { if (v) guardarTasa({ valor: v }, dinero(pais(pid)).bonito); });
   }, [pid, S.tasa.modo, S.tasa.fuente, enLinea]);
-  // Tasa del euro: una vez al día si el negocio acepta euros y no la escribió a mano.
-  const te = S.tasas && S.tasas.euro;
+  // Tasa del euro: una vez al día si el negocio la usa (acepta euros o cobra alguna forma de pago con ella) y no la escribió a mano.
+  const te = S.tasas && S.tasas.euro, conEuro = usaEuro(S.negocio);
   useEffect(() => {
-    if ((pid === 'VE' || pid === 'AR') && S.negocio.euro && enLinea && !(te && te.modo === 'manual') && !(te && te.fecha === diaClave(Date.now()))) leerTasa(pid, 'euro').then(v => { if (v) guardarTasaExtra('euro', { valor: v, modo: 'auto' }); });
-  }, [pid, S.negocio && S.negocio.euro, enLinea, te && te.modo]);
+    if ((pid === 'VE' || pid === 'AR') && conEuro && enLinea && !(te && te.modo === 'manual') && !(te && te.fecha === diaClave(Date.now()))) leerTasa(pid, 'euro').then(v => { if (v) guardarTasaExtra('euro', { valor: v, modo: 'auto' }); });
+  }, [pid, conEuro, enLinea, te && te.modo]);
 
   // Volver del enlace “Olvidé mi contraseña”: se pide la nueva antes que nada.
   if (N.recuperar) return html`<${ClaveNueva} /><${Avisos} />`;
@@ -125,7 +125,7 @@ function App() {
   const T = tipoNegocio(S.negocio);
   const permitida = s => SECCIONES[s] && (!PERMISO_SEC[s] || pd(PERMISO_SEC[s])) && (!MODULO_SEC[s] || T.mod(MODULO_SEC[s]));
 
-  const P = pais(S.negocio.pais), D = dinero(P, S.tasa.valor, S.negocio.euro ? tasaEuro() : 0);
+  const P = pais(S.negocio.pais), D = dinero(P, S.tasa.valor, usaEuro(S.negocio) ? tasaEuro() : 0);
   // Varios locales: aparece el selector de sucursal y los gráficos por sucursal (sea negocio o empresa).
   const E = S.negocio.sucursales.length > 1;
   const valida = permitida(sec) ? sec : 'hoy';
