@@ -3,6 +3,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 import { inicioDia, listaProductos, guardarCita, estadoCita, citaActiva, ESTADOS_CITA } from '../datos.js';
 import { Hoja, Icono, avisar, hora, iniciales } from '../ui.js';
 import { totales } from './vender.js';
@@ -68,7 +69,7 @@ export function Agenda() {
   const estimado = activas.reduce((a, c) => a + serviciosDe(c).reduce((b, s) => b + s.p, 0), 0);
   const nueva = extra => abrir('nuevaCita', Object.assign({ dia }, extra || {}));
 
-  const Dias = html`<div class="chips desliza dias-agenda" role="tablist" aria-label="Día">${dias.map(t => { const n = citasDelDia(S, t).filter(citaActiva).length; return html`
+  const Dias = html`<div class="chips desliza dias-agenda" data-guia="dias" role="tablist" aria-label="Día">${dias.map(t => { const n = citasDelDia(S, t).filter(citaActiva).length; return html`
     <button type="button" key=${t} role="tab" aria-selected=${t === dia ? 'true' : 'false'} class=${'dia-chip toca' + (t === dia ? ' on' : '')} onClick=${() => setDia(t)}>
       <small>${nombreDia(t)}</small><b class="num">${new Date(t).getDate()}</b><i class=${n ? 'con' : ''} title=${n ? n + (n === 1 ? ' cita' : ' citas') : ''}>${n || ''}</i>
     </button>`; })}</div>`;
@@ -82,17 +83,25 @@ export function Agenda() {
     <span class="ic t-azu"><${Icono} n="calendario" t=${18} /></span><b>No hay citas ${nombreDia(dia) === 'Hoy' ? 'hoy' : 'este día'}</b>
     <button type="button" class="btn2 chico acento toca" onClick=${() => nueva()}>+ Agendar una cita</button></div>`;
 
+  // La frase: la próxima cita de hoy, o cuántas hay el día que se ve.
+  const esHoy = dia === inicioDia(Date.now()), ahora = Date.now();
+  const proxima = esHoy ? activas.filter(c => citaActiva(c) && c.t + c.dur * 60000 > ahora).sort((a, b) => a.t - b.t)[0] : null;
+  const nDia = esHoy ? 'hoy' : nombreDia(dia) === 'Mañana' ? 'mañana' : 'el ' + fechaLarga(dia).split(',')[0];
+  const FraseAgenda = html`<${Frase}>${!activas.length ? html`No hay citas ${nDia}. Toca “+” para agendar una.`
+    : html`Tienes <b>${activas.length} ${activas.length === 1 ? 'cita' : 'citas'}</b> ${nDia}${estimado > 0 ? html`, unos <b class="v num">${D.m(estimado)}</b> si vienen todos` : ''}.${proxima ? html` ${proxima.t <= ahora ? 'Ahora' : 'La próxima'}: <b>${(proxima.nom || 'Cliente').split(' ')[0]}</b>${proxima.t <= ahora ? '' : ' a las ' + hora(proxima.t)}.` : esHoy ? ' Ya no quedan por atender.' : ''}`}</${Frase}>`;
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Agenda</h1><${BotonAyuda} /><button type="button" class="icono-btn toca boton-agregar" aria-label="Nueva cita" onClick=${() => nueva({ pro })}><${Icono} n="mas1" t=${20} g=${2.6} /></button></div>
+    <div class="fila entra"><h1 class="titulo crece">Agenda</h1><${BotonGuiame} k="agenda" /><${BotonAyuda} /><button type="button" data-guia="nueva-cita" class="icono-btn toca boton-agregar" aria-label="Nueva cita" onClick=${() => nueva({ pro })}><${Icono} n="mas1" t=${20} g=${2.6} /></button></div>
+    ${FraseAgenda}
     ${Dias}
-    ${pros.length > 1 && html`<div class="chips desliza">${[{ id: '', n: 'Todos' }].concat(pros).map(p => html`<button type="button" key=${p.id} class=${'chip chico toca' + (pro === p.id ? ' on' : '')} onClick=${() => setPro(p.id)}>${p.id && html`<i class="punto-grupo" style=${{ background: colorPro(S, p.id) }}></i>`}${p.id ? p.n.split(' ')[0] : 'Todos'}</button>`)}</div>`}
+    ${pros.length > 1 && html`<div class="chips desliza" data-guia="pros">${[{ id: '', n: 'Todos' }].concat(pros).map(p => html`<button type="button" key=${p.id} class=${'chip chico toca' + (pro === p.id ? ' on' : '')} onClick=${() => setPro(p.id)}>${p.id && html`<i class="punto-grupo" style=${{ background: colorPro(S, p.id) }}></i>`}${p.id ? p.n.split(' ')[0] : 'Todos'}</button>`)}</div>`}
     ${Resumen}
     ${vistas.length ? html`<${ListaDia} lista=${vistas} conPro=${!pro} hoy=${dia === inicioDia(Date.now())} />` : Vacio}`;
 
   // Computadora: una columna por profesional.
   const cols = pros.length ? pros : [{ id: '', n: 'Citas' }];
   return html`<div class="pila" style="gap:14px">
-    <div class="fila" style="gap:12px">${Dias}<span style="flex:1"></span><button type="button" class="btn2 lleno toca" onClick=${() => nueva()}>+ Cita</button></div>
+    ${FraseAgenda}
+    <div class="fila" style="gap:12px">${Dias}<span style="flex:1"></span><button type="button" class="btn2 lleno toca" data-guia="nueva-cita" onClick=${() => nueva()}>+ Cita</button></div>
     ${Resumen}
     <div class="agenda-cols" style=${{ gridTemplateColumns: 'repeat(' + Math.min(cols.length, 4) + ', minmax(0, 1fr))' }}>${cols.map((p, k) => { const lista = delDia.filter(c => !p.id || c.pro === p.id); return html`
       <section class="tarjeta entra" key=${p.id} style=${{ '--i': k, padding: '14px' }}>

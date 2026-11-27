@@ -61,9 +61,9 @@ const PC = process.env.PC === '1';
       if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en Clientes');
       else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir('clientes'); }
       // Inventario (o Servicios) y Gastos.
-      for (const sec of ['inventario', 'gastos']) {
+      for (const sec of ['inventario', 'gastos', 'agenda', 'ordenes', 'cotizaciones', 'cuotas']) {
         await p.evaluate(h => { location.hash = '#' + h; }, sec); await p.waitForTimeout(1200);
-        if (!(await p.evaluate(h => location.hash === '#' + h, sec))) { console.log(tag + ' · ' + sec + ': no está en este perfil'); continue; }
+        if (!(await p.evaluate(h => !!document.querySelector('[data-sec="' + h + '"]'), sec))) { console.log(tag + ' · ' + sec + ': no está en este perfil'); continue; }
         const fs = await p.locator('.frase-viva').first().innerText().catch(() => '');
         console.log(tag + ' · frase de ' + sec + ': ' + fs);
         if (!fs || /undefined|NaN|\[object/.test(fs)) mal('frase de ' + sec + ' rara: ' + fs);

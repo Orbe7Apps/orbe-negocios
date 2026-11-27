@@ -94,6 +94,36 @@ const PASOS = {
     hay('[data-guia=gastos-mes]') && !hay('[data-guia=gastos-mes] .vacio') && { sel: '[data-guia=gastos-mes]', titulo: 'En qué se va el dinero', texto: 'Tus gastos del mes por tipo, el más grande primero.' },
     { fin: true, titulo: '¡Listo!', texto: 'Anota cada gasto el día que pasa: así tu ganancia es la real.' }
   ],
+  agenda: x => [
+    { sel: '.frase-viva', titulo: 'Tu día', texto: 'Esta frase te dice cuántas citas tienes y quién viene ahora.' },
+    { sel: '[data-guia=dias]', titulo: 'Cambia de día', texto: 'Toca un día para ver sus citas. El número dice cuántas tiene.' },
+    hay('[data-guia=pros]') && { sel: '[data-guia=pros]', titulo: 'Por persona', texto: 'Toca un nombre para ver solo sus citas. Cada uno tiene su color.' },
+    hay('.cita-fila') && { sel: () => hay('.cita-fila:not(.cerrada)') ? '.cita-fila:not(.cerrada)' : '.cita-fila', titulo: 'Cada cita', texto: 'Tócala para marcar que llegó, cobrarla al terminar (con los servicios ya puestos) o recordarle por WhatsApp.' },
+    hay('[data-guia=nueva-cita]') && { sel: '[data-guia=nueva-cita]', titulo: 'Agendar', texto: 'Toca aquí y elige el cliente, el servicio, ' + (x.S && x.S.perfiles && x.S.perfiles.length > 1 ? 'con quién ' : '') + 'y la hora.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Las citas de hoy también salen en Hoy. Si alguien no viene, márcalo: así sabes quién falta seguido.' }
+  ],
+  ordenes: x => [
+    { sel: '.frase-viva', titulo: 'Cómo van tus órdenes', texto: 'Esta frase te dice lo atrasado primero, después lo que está listo y lo que falta cobrar.' },
+    hay('[data-guia=filtros]') && { sel: '[data-guia=filtros]', titulo: 'Filtra', texto: 'Toca “Atrasadas” o “Listas” para ver solo esas.' },
+    x.tel ? hay('.orden-tarjeta') && { sel: '.orden-tarjeta', titulo: 'Cada orden', texto: 'La barra dice en qué va: Recibida, En proceso, Lista. Tócala para cambiar el estado, anotar un abono o avisarle por WhatsApp que está lista.' }
+      : hay('[data-tour=ordenes]') && { sel: '[data-tour=ordenes]', titulo: 'Una columna por paso', texto: 'Recibida, En proceso, Lista y Entregada. Arrastra una orden de una columna a otra para cambiar su estado, o tócala para ver el detalle.' },
+    hay('[data-tour=nueva-orden]') && { sel: '[data-tour=nueva-orden]', titulo: 'Una orden nueva', texto: 'Anota qué te dejan, de quién, para cuándo y si dejó anticipo.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Cuando la entregues, cobras el saldo y queda en la caja del día.' }
+  ],
+  cotizaciones: () => [
+    { sel: '.frase-viva', titulo: 'Tus cotizaciones', texto: 'Esta frase te dice cuánto espera respuesta y cuál vence pronto.' },
+    { sel: '[data-guia=filtros]', titulo: 'Por estado', texto: 'Esperando, vendidas, vencidas o no aceptadas. Toca para cambiar.' },
+    hay('[data-guia=cotizacion]') && { sel: '[data-guia=cotizacion]', titulo: 'Cada cotización', texto: 'Tócala para mandarla en PDF por WhatsApp o, si aceptó, volverla venta con un toque.' },
+    { sel: '[data-guia=nueva-cot]', titulo: 'Cotizar', texto: 'Te lleva a Vender: agrega lo que quiere y toca “Cotizar” en lugar de cobrar.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Orbe te avisa en Hoy cuando una cotización está por vencer.' }
+  ],
+  cuotas: () => [
+    { sel: '.frase-viva', titulo: 'Tus cuotas', texto: 'Esta frase te dice quién está atrasado y a cuántos te toca cobrar esta semana.' },
+    hay('[data-tour=cuotas]') && { sel: '[data-tour=cuotas]', titulo: 'Lo que falta cobrar', texto: 'Lo que te deben en total y lo que ya está atrasado.' },
+    { sel: '[data-guia=filtros]', titulo: 'Filtra', texto: 'Toca “Esta semana” para ver a quién cobrar, o “Atrasados”.' },
+    hay('[data-guia=plan]') && { sel: '[data-guia=plan]', titulo: 'Cada plan', texto: 'La barra muestra cuánto ha pagado. Tócalo para anotar un pago, ver su calendario o recordarle.' },
+    { fin: true, titulo: '¡Listo!', texto: 'Para crear uno, al cobrar elige “En cuotas” o “Apartado”.' }
+  ],
   cierre: () => [
     { sel: '[data-guia=cierre-resumen]', titulo: 'Lo de hoy', texto: 'Lo vendido, con el fiado y los gastos del día.' },
     hay('[data-guia=cierre-contar]') && { sel: '[data-guia=cierre-contar]', titulo: 'Cuenta el efectivo', texto: 'Escribe lo que contaste o usa + y −. Si prefieres, cuenta billete por billete.' },
@@ -103,6 +133,8 @@ const PASOS = {
     { fin: true, titulo: '¡Listo!', texto: 'Hazlo todos los días: así ves a tiempo si algo falta.' }
   ]
 };
+// En los negocios de servicios, Inventario se llama Servicios (y su “?” pregunta por “servicios”).
+PASOS.servicios = PASOS.inventario;
 // ¿Está en pantalla? (para saltar lo que este negocio o este momento no tiene)
 function hay(s) { return !!document.querySelector(s); }
 // El selector de un paso puede depender de lo que hay en pantalla en ese momento.

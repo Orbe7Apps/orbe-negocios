@@ -3,6 +3,7 @@
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 import { nuevaCotizacion, marcarCotizacion, borrarCotizacion, numeroCot, estadoCot, ESTADOS_COT, nuevoCliente } from '../datos.js';
 import { Hoja, Icono, Chips, avisar, fechaCorta } from '../ui.js';
 import { buscar } from '../buscar.js';
@@ -107,17 +108,23 @@ export function Cotizaciones() {
   const pendientes = todas.filter(c => estadoCot(c) === 'pendiente'), aceptadas = todas.filter(c => c.estado === 'aceptada');
   const hechas = todas.filter(c => c.estado !== 'pendiente' || estadoCot(c) === 'vencida').length;
   const opciones = [['pendiente', 'Esperando'], ['aceptada', 'Vendidas'], ['vencida', 'Vencidas'], ['rechazada', 'No aceptadas']].map(o => ({ v: o[0], n: o[1] + ' ' + cuenta(o[0]) }));
-  const Nueva = html`<button type="button" class="btn2 chico lleno toca" onClick=${() => { ir('vender'); avisar('Agrega los productos y toca “Cotizar”'); }}>+ Nueva cotización</button>`;
+  // La frase: lo que espera respuesta y lo que vence pronto.
+  const pronto = pendientes.filter(c => c.vence && c.vence - Date.now() < 2 * 86400000).sort((a, b) => a.vence - b.vence)[0];
+  const FraseCot = html`<${Frase}>${!todas.length ? 'Cotiza desde Vender, mándala por WhatsApp y, si acepta, se vuelve venta con un toque.'
+    : pendientes.length ? html`<b>${pendientes.length} ${pendientes.length === 1 ? 'cotización espera' : 'cotizaciones esperan'}</b> respuesta, por <b class="num">${D.m(pendientes.reduce((a, c) => a + totalDe(c), 0))}</b>.${pronto ? html` La de <b>${cliDe(S, pronto).n.split(' ')[0]}</b> vence ${fechaCorta(pronto.vence)}: recuérdale.` : ''}`
+    : hechas ? html`Ninguna espera respuesta. Se vendieron <b class="v">${Math.round(aceptadas.length / hechas * 100)} %</b> de las que cotizaste.` : 'Ninguna espera respuesta.'}</${Frase}>`;
+  const Nueva = html`<button type="button" class="btn2 chico lleno toca" data-guia="nueva-cot" onClick=${() => { ir('vender'); avisar('Agrega los productos y toca “Cotizar”'); }}>+ Nueva cotización</button>`;
   return html`
-    <div class="fila entra" data-tour="cotizaciones"><h1 class="titulo crece">Cotizaciones</h1><${BotonAyuda} />${Nueva}</div>
+    <div class="fila entra" data-tour="cotizaciones"><h1 class="titulo crece">Cotizaciones</h1><${BotonGuiame} k="cotizaciones" /><${BotonAyuda} />${Nueva}</div>
+    ${FraseCot}
     <div class="rejilla-2" style="gap:10px">
       <div class="tarjeta cifra entra"><span class="sub">Esperando respuesta</span><span class="v num" style="font-size:22px">${D.m(pendientes.reduce((a, c) => a + totalDe(c), 0))}</span><span class="sub faint">${pendientes.length} ${pendientes.length === 1 ? 'cotización' : 'cotizaciones'}</span></div>
       <div class="tarjeta cifra entra" style="--i:1"><span class="sub">Se vendieron</span><span class="v num" style="font-size:22px">${hechas ? Math.round(aceptadas.length / hechas * 100) + ' %' : '—'}</span><span class="sub faint">${aceptadas.length} de ${hechas} respondidas</span></div>
     </div>
     <label class="buscador entra" style=${{ width: '100%', background: 'var(--surface)', maxWidth: tel ? 'none' : '380px' }}><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder="Buscar cliente, número o producto" aria-label="Buscar cotización" /></label>
-    <${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} desliza chico />
+    <div data-guia="filtros"><${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} desliza chico /></div>
     <div class="pila">${lista.length ? lista.map((c, i) => { const cl = cliDe(S, c), est = estadoCot(c); return html`
-      <button type="button" key=${c.id} class="tarjeta fila toca entra" style=${{ '--i': i, gap: '12px', textAlign: 'left', color: 'var(--ink)', border: 0, font: 'inherit', width: '100%' }} onClick=${() => abrir('cotizacion', { cid: c.id })}>
+      <button type="button" key=${c.id} data-guia="cotizacion" class="tarjeta fila toca entra" style=${{ '--i': i, gap: '12px', textAlign: 'left', color: 'var(--ink)', border: 0, font: 'inherit', width: '100%' }} onClick=${() => abrir('cotizacion', { cid: c.id })}>
         <span class="ic t-azu"><${Icono} n="doc" t=${18} /></span>
         <span class="crece" style="display:flex;flex-direction:column;gap:2px;min-width:0"><b class="corta">${cl.n}</b><span class="sub">${numeroCot(c)} · ${c.items.length} ${c.items.length === 1 ? 'producto' : 'productos'} · ${est === 'pendiente' ? 'vale hasta ' + fechaCorta(c.vence) : ESTADOS_COT[est][0].toLowerCase()}</span></span>
         <b class="num">${D.m(totalDe(c))}</b>
