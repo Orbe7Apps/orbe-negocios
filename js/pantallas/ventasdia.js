@@ -3,8 +3,8 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { leer, resumen, inicioDia } from '../datos.js';
-import { Hoja, Chips } from '../ui.js';
-import { Reparto, color } from '../graficos.js';
+import { Hoja, Chips, Icono, simbolo } from '../ui.js';
+import { color } from '../graficos.js';
 import { FilaVenta } from './hojas.js';
 
 const DIA = 86400000;
@@ -37,7 +37,14 @@ export function VentasDia({ cerrar }) {
         <div class="cierre-cifras">${cifras.map(k => html`<div><span class="sub">${k[0]}</span><b class="num" style=${{ color: k[2] || 'var(--ink)' }}>${k[1]}</b></div>`)}</div>
       </div>
 
-      ${pagos.length > 0 && html`<div class="cierre-seccion"><${Reparto} segs=${pagos} f=${D.m} titulo="Cómo te pagaron" tam=${96} grosor=${9} hueco=${3} max=${6} /></div>`}
+      ${pagos.length > 0 && html`<div class="cierre-seccion"><span class="cierre-tit">Cómo te pagaron</span>
+        <ul class="lista-orbe">${pagos.map((s, k) => html`<li key=${s.n} class="entra" style=${{ '--i': k, '--c': s.c, gridTemplateRows: 'auto' }}>
+          <span class="simbolo" style="grid-row:auto"><${Icono} n=${simbolo(s.n)} t=${16} g=${2} /></span>
+          <b class="crece corta">${s.n}</b>
+          <span class="faint num pct">${r.total ? Math.round(s.v / r.total * 100) : 0} %</span>
+          <b class="num">${D.m(s.v)}</b>
+        </li>`)}</ul>
+      </div>`}
 
       ${personas.length > 0 && html`<div class="cierre-seccion"><span class="cierre-tit">Quién vendió</span>
         <div class="cierre-digital">${personas.map(k => html`<div class="fila" key=${'p' + k}><span class="crece corta">${nombre(k)}</span><span class="sub faint">${cuantas(k)} ${cuantas(k) === 1 ? 'venta' : 'ventas'}</span><b class="num">${D.m(r.porPersona[k])}</b></div>`)}</div>
