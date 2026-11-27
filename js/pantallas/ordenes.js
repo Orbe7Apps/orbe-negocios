@@ -7,7 +7,7 @@ import { ESTADOS_ORDEN, numeroOrden, anticipoDe, ordenAbierta, ordenAtrasada, nu
 import { Hoja, Icono, Chips, avisar, iniciales, TONOS, hora, fechaCorta } from '../ui.js';
 import { buscar } from '../buscar.js';
 import { textosProducto } from './grupos.js';
-import { usePagos, numero } from './pagos.js';
+import { usePagos, useMonto, numero } from './pagos.js';
 import { totales } from './vender.js';
 import { pdfOrden, compartirPDF, imprimirOrden, mensajeOrden, enlaceWA, cargarPDF } from '../ordenpdf.js';
 
@@ -214,9 +214,10 @@ export function NuevaOrden({ d, cerrar }) {
   const [telNuevo, setTelNuevo] = useState('');
   const [qp, setQp] = useState('');
   const [agregando, setAgregando] = useState(false);
-  const [ant, setAnt] = useState('');
-  const antV = o0 ? 0 : D.redondo(numero(ant));
-  const fp = usePagos(antV, S.negocio.pays);
+  // El anticipo se escribe en la moneda de la forma de pago (Pago Móvil → Bs).
+  const moAnt = useMonto('');
+  const fp = usePagos(m => o0 ? 0 : moAnt.total(m), S.negocio.pays, undefined, undefined, moAnt);
+  const antV = fp.total;
   const cli = S.clientes.find(c => c.id === f.cli);
   const clientes = listaClientes(), sugeridos = qc.trim() ? buscar(clientes, qc, c => [c.n, c.tel], true).slice(0, 4) : [];
   const prods = listaProductos(), hallados = qp.trim() ? buscar(prods, qp, textosProducto(S)).slice(0, 5) : [];
@@ -273,7 +274,7 @@ export function NuevaOrden({ d, cerrar }) {
         <input type="datetime-local" value=${aLocal(f.entrega)} aria-label="Fecha y hora de entrega" onChange=${e => pon({ entrega: e.target.value ? new Date(e.target.value).getTime() : 0 })} />
       </div>
       ${perfiles.length > 1 && html`<div class="campo"><span>Responsable</span><${Chips} opciones=${perfiles.map(p => ({ v: p.id, n: p.n.split(' ')[0] }))} valor=${f.resp} onCambio=${v => pon({ resp: v })} chico desliza=${tel} /></div>`}
-      ${!o0 && html`<label class="campo"><span>Anticipo (opcional)</span><input class="num" type="text" inputmode="decimal" value=${ant} placeholder="0" aria-label="Anticipo" onInput=${e => setAnt(e.target.value)} /></label>
+      ${!o0 && html`${moAnt.campo(fp.m, { titulo: 'Anticipo (opcional)', grande: false })}
         ${antV > 0 && html`<div class="entra">${fp.vista({ titulo: '¿Cómo pagó el anticipo?', desliza: tel })}</div>`}`}`,
     pie: html`<button type="button" class="btn toca" onClick=${() => guardar(c)}>${o0 ? 'Guardar cambios' : 'Guardar orden' + (total > 0 ? ' · ' + D.m(total) : '')}</button>`
   })} />`;
@@ -285,9 +286,10 @@ export function AbonoOrden({ d, cerrar }) {
   const { saldo } = useOrden();
   const o = S.ordenes.find(x => x.id === d.oid);
   const deb = o ? saldo(o) : 0;
-  const [txt, setTxt] = useState(deb > 0 ? String(D.redondo(deb)).replace('.', ',') : '');
-  const v = Math.min(D.redondo(numero(txt)), deb);
-  const fp = usePagos(v, S.negocio.pays);
+  // Lo sugerido es lo que debe; si la forma de pago es en Bs, se escribe en Bs.
+  const mo = useMonto(deb > 0 ? String(D.redondo(deb)).replace('.', ',') : '', 'p', S.negocio.pays[0]);
+  const fp = usePagos(m => Math.min(mo.total(m), deb), S.negocio.pays, undefined, undefined, mo);
+  const v = fp.total;
   if (!o) return null;
   const listo = c => {
     if (!(v > 0)) { avisar('Escribe cuánto abona'); return; }
@@ -297,7 +299,7 @@ export function AbonoOrden({ d, cerrar }) {
   };
   return html`<${Hoja} titulo=${'Abono a ' + numeroOrden(o)} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`<div class="fila"><b class="crece" style="font-size:16px">${o.que}</b><span class="amber num" style="font-weight:600">Debe ${D.m(deb)}</span></div>
-      <label class="campo"><span>¿Cuánto abona?</span><input class="grande num" type="text" inputmode="decimal" value=${txt} onInput=${e => setTxt(e.target.value)} /></label>
+      ${mo.campo(fp.m, { titulo: '¿Cuánto abona?' })}
       ${fp.vista({ titulo: '¿Cómo pagó?', desliza: tel })}`,
     pie: html`<button type="button" class=${'btn toca' + (v > 0 && fp.ok ? '' : ' apagado')} onClick=${() => listo(c)}>Anotar abono de ${D.m(v)}</button>`
   })} />`;

@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 27 nov 2026 (app en la versión **v102** del service worker).
+Última actualización: 27 nov 2026 (app en la versión **v103** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 17 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v102`). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v103`). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
@@ -74,6 +74,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 
 - Vender y cobrar en $ y Bs con tasa BCV (formas de pago en Venezuela: Pago Móvil, **Punto de venta**, efectivo $ y Bs, USDT, Zelle, Binance Pay; Punto de venta se agregó solo una vez a los negocios que ya existían), pago mixto, vuelto, fiado, recibo por WhatsApp, impresora térmica, escáner.
 - **Tasa de cada forma de pago** (Tasas de hoy, o Ajustes → Formas de pago → “Tasa de cada forma”): cada forma de cobro puede pasar a Bs con la tasa BCV del dólar (normal), la **tasa BCV del euro**, la paralela, la USDT o una propia (`S.negocio.tasaPago`). La del euro se lee de la misma fuente que la del dólar (dolarapi / pydolarve, BCV) y se usa aunque el negocio no tenga “Aceptar euros”; se lee sola una vez al día si alguna forma la usa (`usaEuro()`). Prueba: `node pruebas/tasa-euro.js` (`PC=1`).
+- **Montos en la moneda de la forma de pago (27 nov):** en gasto, abono (“Otro monto”), anticipo y abono de órdenes, y pago de cuotas o apartados, el monto se escribe en la moneda de la forma elegida: Pago Móvil, Punto de venta y Efectivo Bs en **bolívares** (con la tasa de esa forma), las demás en $. Al cambiar de forma lo escrito se convierte (Bs 1.000 → $ 1,14 → Bs 1.000), y el botón $/Bs del campo cambia la moneda a mano. Debajo sale el equivalente con la tasa. El gasto escrito en Bs guarda lo pagado tal cual (`otra`, `tasa`) y se ve en Gastos como “Bs 1.000,00”. Pieza común: `useMonto` en `js/pantallas/pagos.js`. Prueba: `node pruebas/montos-bs.js` (`PC=1`).
 - Clientes con **cédula o RIF obligatoria al agregarlos** (campo `doc`; se escribe “V-12345678”, no deja repetirla; a los clientes viejos se les puede completar al editarlos), deudas y abonos; inventario con mínimos; gastos y cuentas por pagar; caja con turnos y cierre; reportes con gráficos, CSV y PDF.
 - Agenda con horario por profesional, link público de reservas, recordatorios por WhatsApp (con un toque, opción “A” gratuita).
 - Órdenes de trabajo con anticipo y PDF; cotizaciones que se convierten en venta.
