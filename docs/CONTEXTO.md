@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 27 nov 2026 (app en la versión **v111** del service worker).
+Última actualización: 27 nov 2026 (app en la versión **v112** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 17 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v111`). Desde v109 la versión nueva **no se activa sola**: se baja en silencio y se estrena la próxima vez que se abre la app, mientras se ve la pantalla de carga (app.js `versionLista` le manda `activar` al service worker y recarga una vez; la pantalla de carga sigue quieta, sin volver a empezar). Antes se recargaba sola ya mostrando los perfiles (“carga dos veces”). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v112`). Desde v109 la versión nueva **no se activa sola**: se baja en silencio y se estrena la próxima vez que se abre la app, mientras se ve la pantalla de carga (app.js `versionLista` le manda `activar` al service worker y recarga una vez; la pantalla de carga sigue quieta, sin volver a empezar). Antes se recargaba sola ya mostrando los perfiles (“carga dos veces”). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
@@ -87,6 +87,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - Cuentas en la nube: registro, confirmación por correo con pantalla “Tu cuenta se confirmó”, “Olvidé mi usuario o contraseña”, aceptar términos, borrar cuenta, cuenta suspendida.
 - Contraseñas: al crearla o cambiarla se pide 8 o más caracteres con letras y números. Si Supabase la rechaza (filtrada, débil o igual a la anterior) o falta confirmar el correo, el aviso sale en español junto al formulario, con “Mandar el enlace otra vez” para el correo. Prueba: `node pruebas/contrasenas.js` (simula Supabase, no toca la nube).
 - Un negocio por cuenta: al iniciar sesión entra directo con animación de bienvenida y luego la pantalla de perfiles/PIN.
+- PIN por ausencia (v112, pedido del dueño): ya no se pide al recargar, salir y volver rápido. Solo se pide otra vez si la app estuvo cerrada o fuera de la vista (otra app, otra pestaña, pantalla apagada) **más de 10 minutos**. `vigilarAusencia` en `js/app.js` anota la hora en `localStorage` (`orbe-ultimo-uso`) al ocultarse y cada 30 s mientras se ve. El botón “Cambiar de perfil” sigue saliendo al instante.
 - Teclado del PIN (v109): en el celular las teclas miden hasta 88 px (según ancho y alto de la pantalla), responden al apoyar el dedo (`pointerdown`, no al soltar), cuentan dos toques muy seguidos y vibran un poco en Android. La pantalla del PIN usa menos margen arriba para que quepa.
 - **Ventas de hoy (v110):** en “Últimas ventas” (Hoy y Caja en la PC) el botón “Ver todas las ventas de hoy” abre el desglose del día (`js/pantallas/ventasdia.js`): total, cómo pagaron, quién vendió, lo que se vendió y cada venta con quién la hizo (filtro por persona). Lo ve todo el equipo, cajeros incluidos; la ganancia solo con permiso de ganancias.
 - Deshacer (7 s) al borrar gasto, producto, cliente, perfil o rol.
