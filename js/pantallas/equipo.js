@@ -3,6 +3,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 import { cambiarPermiso, resumen, inicioDia } from '../datos.js';
 import { useNube, limitePerfiles, perfilesActivos } from '../nube.js';
 import { PERMISOS, rolDe, puedeEditarRol, puedeEditarPermiso } from '../permisos.js';
@@ -32,8 +33,13 @@ export function Equipo() {
   };
   const puedeBorrar = rl => rl && !rl.fijo && rl.id !== 'dueno' && puedeEditarRol(yo, rl.id) && puede('equipo');
 
-  const Personas = html`<section class="tarjeta entra" style="padding-bottom:6px">
-    <div class="tarjeta-tit">${(n => n + ' de ' + limitePerfiles(S.negocio, N.plan) + ' perfiles')(perfilesActivos(S))}<button type="button" class="btn2 chico lleno toca" onClick=${() => abrir('perfil', {})}>+ Perfil</button></div>
+  // La frase: cuántos son, quién va vendiendo más hoy y si alguien no tiene PIN.
+  const activos = S.perfiles.filter(p => !p.borrado && !p.inactivo), sinPin = activos.filter(p => !p.pin && p.rol !== 'dueno');
+  const lider = S.perfiles.filter(p => r.porPersona[p.id]).sort((a, b) => r.porPersona[b.id] - r.porPersona[a.id])[0];
+  const FraseEquipo = html`<${Frase}>${activos.length <= 1 ? 'Por ahora trabajas sin equipo. Agrega a quien te ayuda y elige qué puede hacer.'
+    : html`Son <b>${activos.length} personas</b>.${lider && puede('ganancias') ? html` Hoy va vendiendo más <b>${lider.n.split(' ')[0]}</b>: <b class="v num">${D.m(r.porPersona[lider.id])}</b>.` : ''}${sinPin.length ? html` <b class="a">${sinPin.length === 1 ? sinPin[0].n.split(' ')[0] + ' no tiene PIN' : sinPin.length + ' no tienen PIN'}</b>: pónselo para saber quién hizo cada venta.` : ''}`}</${Frase}>`;
+  const Personas = html`<section class="tarjeta entra" data-guia="personas" style="padding-bottom:6px">
+    <div class="tarjeta-tit">${(n => n + ' de ' + limitePerfiles(S.negocio, N.plan) + ' perfiles')(perfilesActivos(S))}<button type="button" class="btn2 chico lleno toca" data-guia="nuevo-perfil" onClick=${() => abrir('perfil', {})}>+ Perfil</button></div>
     <div class="lista">${S.perfiles.map((p, i) => p.borrado ? null : (() => { const rr = rolDe(S, p), puedo = p.id === yo.id || puedeEditarRol(yo, p.rol); return html`
       <button type="button" key=${p.id} class="item toca entra" style=${{ '--i': i, color: 'var(--ink)', opacity: p.inactivo ? 0.5 : 1, cursor: puedo ? 'pointer' : 'default' }} onClick=${() => puedo ? abrir('perfil', { pid: p.id }) : avisar('Solo el dueño puede cambiar este perfil')}>
         <span class=${'logo redondo ' + TONOS[i % 5]} style="width:40px;height:40px;font-size:14px">${iniciales(p.n)}</span>
@@ -59,7 +65,7 @@ export function Equipo() {
   </section>`;
 
   const rolActual = roles.find(x => x.id === rolSel) || editables[0];
-  const PorRol = rolActual ? html`<section class="tarjeta entra" style="--i:1">
+  const PorRol = rolActual ? html`<section class="tarjeta entra" data-guia="roles" style="--i:1">
     <div class="tarjeta-tit">Qué puede hacer cada rol<button type="button" class="btn2 chico acento toca" onClick=${() => abrir('rol')}>+ Rol</button></div>
     <${Chips} opciones=${editables.map(x => ({ v: x.id, n: x.n }))} valor=${rolActual.id} onCambio=${setRolSel} desliza chico />
     <div class="lista" style="margin-top:8px">${PERMISOS.filter(visible).map(pm => { const on = !!rolActual.p[pm.k], bloq = !puedeEditarRol(yo, rolActual.id) || !puedeEditarPermiso(yo, pm.k); return html`
@@ -72,6 +78,6 @@ export function Equipo() {
     ${puedeBorrar(rolActual) && html`<button type="button" class="btn2 chico rojo toca" style="margin-top:10px" onClick=${() => abrir('rolBorrar', { rid: rolActual.id })}>Borrar el rol ${rolActual.n}</button>`}
   </section>` : null;
 
-  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Equipo</h1><${BotonAyuda} /></div>${Personas}${Ventas}${PorRol}`;
-  return html`<div class="dos-uno" style="align-items:start">${Matriz}<div class="pila">${Personas}${Ventas}</div></div>`;
+  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Equipo</h1><${BotonGuiame} k="equipo" /><${BotonAyuda} /></div>${FraseEquipo}${Personas}${Ventas}${PorRol}`;
+  return html`${FraseEquipo}<div class="dos-uno" style="align-items:start">${Matriz}<div class="pila">${Personas}${Ventas}</div></div>`;
 }

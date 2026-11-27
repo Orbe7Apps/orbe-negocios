@@ -9,6 +9,8 @@ import { descargar, ventasCSV } from './reportes.js';
 import { COND_ORDEN } from '../ordenpdf.js';
 import { Funciones } from './funciones.js';
 import { BotonAyuda, CentroAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
+import { normal } from '../buscar.js';
 import { CuentaTema, Suscripcion, pedirCerrarSesion } from './cuenta.js';
 import { AjustesRecordatorios } from '../recordatorios.js';
 import { horarioDe, textoHorario, EditorHorario } from '../horario.js';
@@ -119,6 +121,15 @@ function useTemas() {
 const GRUPOS = ['', 'Dinero', 'Tu negocio', 'Ventas y cobro', 'La app'];
 const COLOR_ZONA = { '': 't-vio', Dinero: 't-ver', 'Tu negocio': 't-azu', 'Ventas y cobro': 't-amb', 'La app': 't-gris' };
 const TOUR = { perfil: 'perfil', copias: 'copias', funciones: 'funciones', reservas: 'reservas', recordatorios: 'recordatorios-ajustes', ayuda: 'ayuda', suscripcion: 'suscripcion' };
+// Palabras con que la gente busca cada ajuste (además del nombre y la línea de abajo).
+const PALABRAS = { perfil: 'nombre pin clave mi perfil', cuenta: 'nube internet sincronizar correo sesion aparato usuario', suscripcion: 'plan pago precio orbe pagar', gastos: 'gasto pagar cuentas alquiler',
+  caja: 'efectivo fondo turno retiro', cierre: 'cerrar dia cuadre contar', reportes: 'ventas ganancia grafico', funciones: 'fiado agenda ordenes cuotas inventario encender apagar modulos cotizaciones',
+  equipo: 'empleado cajero cajera perfil permiso rol pin trabajador', pagos: 'pago movil zelle efectivo tarjeta transferencia binance usdt punto forma de pago', impuesto: 'iva impuesto factura',
+  impresora: 'ticket recibo imprimir bluetooth cajon papel', recordatorios: 'whatsapp mensaje cobrar deuda cita aviso', reservas: 'link citas instagram agendar', horario: 'hora abrir cerrar vacaciones',
+  ordenes: 'condiciones garantia orden', apariencia: 'oscuro claro tema color letra tamano', copias: 'respaldo backup excel descargar restaurar', registro: 'anular devolver borrar quien firma',
+  ayuda: 'ayuda guia recorrido tutorial', legal: 'terminos privacidad datos', borrar: 'reiniciar borrar todo empezar' };
+const encontrar = (temas, q) => { const w = normal(q).split(' ').filter(Boolean); return !w.length ? temas : temas.filter(t => { const txt = normal(t.n + ' ' + (typeof t.r === 'string' ? t.r : '') + ' ' + (t.g || '') + ' ' + (PALABRAS[t.k] || '')); return w.every(x => txt.includes(x)); }); };
+const Buscador = (q, setQ, ancho) => html`<label class="buscador entra" data-guia="buscar-ajuste" style=${{ width: '100%', background: 'var(--surface)', maxWidth: ancho || 'none' }}><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder="¿Qué quieres cambiar?" aria-label="Buscar un ajuste" /></label>`;
 const Fila = (t, onClick) => html`<button type="button" key=${t.k} class="opcion-menu toca" data-tour=${TOUR[t.k]} onClick=${onClick}>
   <span class=${'ic ' + t.c} style="width:36px;height:36px;border-radius:11px"><${Icono} n=${t.i} t=${17} g=${2.2} /></span>
   <span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><b>${t.n}</b><span class="sub corta">${t.r}</span></span>
@@ -126,11 +137,14 @@ const Fila = (t, onClick) => html`<button type="button" key=${t.k} class="opcion
 
 // Computadora: temas a la izquierda y el elegido a la derecha.
 function Ajustes() {
-  const temas = useTemas().filter(t => !t.solo);
+  const todos = useTemas().filter(t => !t.solo);
   const [k, setK] = useState('perfil');
-  const t = temas.find(x => x.k === k) || temas[0];
-  return html`<div class="ajustes-dos">
-    <nav class="ajustes-temas" aria-label="Temas de ajustes">${GRUPOS.map(g => { const de = temas.filter(x => x.g === g); return de.length ? html`<div key=${g || 'yo'}>${g && html`<small>${g}</small>`}${de.map(x => html`<button type="button" class=${'toca' + (x.k === t.k ? ' on' : '')} data-tour=${TOUR[x.k]} aria-current=${x.k === t.k ? 'true' : 'false'} onClick=${() => setK(x.k)}><span class=${'ic ' + x.c}><${Icono} n=${x.i} t=${15} g=${2.2} /></span>${x.n}</button>`)}</div>` : null; })}</nav>
+  const [q, setQ] = useState('');
+  const temas = encontrar(todos, q);
+  const t = temas.find(x => x.k === k) || temas[0] || todos.find(x => x.k === k) || todos[0];
+  return html`<div class="fila" style="gap:12px;align-items:center;margin-bottom:12px">${Buscador(q, setQ, '380px')}</div>
+  <div class="ajustes-dos">
+    <nav class="ajustes-temas" aria-label="Temas de ajustes">${!temas.length ? html`<p class="sub" style="padding:8px 6px">No encontré “${q}”. Prueba con otra palabra.</p>` : null}${GRUPOS.map(g => { const de = temas.filter(x => x.g === g); return de.length ? html`<div key=${g || 'yo'}>${g && html`<small>${g}</small>`}${de.map(x => html`<button type="button" class=${'toca' + (x.k === t.k ? ' on' : '')} data-tour=${TOUR[x.k]} aria-current=${x.k === t.k ? 'true' : 'false'} onClick=${() => setK(x.k)}><span class=${'ic ' + x.c}><${Icono} n=${x.i} t=${15} g=${2.2} /></span>${x.n}</button>`)}</div>` : null; })}</nav>
     <section class="tarjeta ajustes-tema entra" key=${t.k}><div class="fila" style="gap:12px;margin-bottom:6px"><span class=${'ic ' + t.c}><${Icono} n=${t.i} t=${18} g=${2.2} /></span><span class="crece" style="display:flex;flex-direction:column"><b style="font-size:19px">${t.n}</b><span class="sub">${t.r}</span></span></div>${t.cuerpo()}</section>
   </div>`;
 }
@@ -140,6 +154,7 @@ export function Mas() {
   const { tel } = useApp();
   const temas = useTemas();
   const [k, setK] = useState('');
+  const [q, setQ] = useState('');
   useEffect(() => { const p = document.querySelector('.app-fondo'); if (p) p.scrollTop = 0; }, [k]);
   if (!tel) return html`<${Ajustes} />`;
   const t = k && temas.find(x => x.k === k && !x.solo);
@@ -148,10 +163,11 @@ export function Mas() {
     <div class="fila entra" style="gap:12px"><span class=${'ic ' + t.c}><${Icono} n=${t.i} t=${18} g=${2.2} /></span><h1 class="titulo crece">${t.n}</h1></div>
     <section class="tarjeta entra" style="--i:1">${t.cuerpo()}</section>`;
   return html`
-    <div class="fila entra"><h1 class="titulo crece">Más</h1><${BotonAyuda} k="mas" /></div>
-    ${GRUPOS.map((g, gi) => { const de = temas.filter(x => x.g === g); return de.length ? html`<div class="pila entra" style=${{ gap: '8px', '--i': gi }} data-tour=${g === 'Dinero' ? 'mas-acciones' : undefined}>${g && html`<h2 class="grupo-menu">${g}</h2>`}
+    <div class="fila entra"><h1 class="titulo crece">Más</h1><${BotonGuiame} k="mas" /><${BotonAyuda} k="mas" /></div>
+    ${Buscador(q, setQ)}
+    ${q.trim() ? (() => { const de = encontrar(temas, q); return de.length ? html`<section class="tarjeta menu-lista entra">${de.map(x => Fila(x, () => { setQ(''); x.solo ? x.ir() : setK(x.k); }))}</section>` : html`<p class="vacio">No encontré “${q}”. Prueba con otra palabra, como “impresora” o “pago móvil”.</p>`; })() : GRUPOS.map((g, gi) => { const de = temas.filter(x => x.g === g); return de.length ? html`<div class="pila entra" style=${{ gap: '8px', '--i': gi }} data-tour=${g === 'Dinero' ? 'mas-acciones' : undefined}>${g && html`<h2 class="grupo-menu">${g}</h2>`}
       <section class="tarjeta menu-lista">${de.map(x => Fila(x, () => x.solo ? x.ir() : setK(x.k)))}</section></div>` : null; })}
-    <${BotonCerrarSesion} />`;
+    ${!q.trim() && html`<${BotonCerrarSesion} />`}`;
 }
 // Cerrar sesión, al final de Más (solo con sesión iniciada).
 function BotonCerrarSesion() {
