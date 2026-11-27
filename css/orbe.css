@@ -1152,7 +1152,16 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .guia-ok { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--in-text); background: var(--in-soft); padding: 5px 10px; border-radius: 12px; }
 .guia-sig { margin-left: auto; min-height: 40px; padding: 0 18px; border: 0; border-radius: 20px; background: var(--primary); color: var(--primary-ink); font: inherit; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; cursor: pointer; }
 .guia-sig.apagado { background: var(--fill); color: var(--faint); cursor: default; }
-@media (prefers-reduced-motion: reduce) { .guia-luz, .guia-tarjeta { transition: none; } .guia-pulso { animation: none; } }
+/* Dedo que muestra dónde tocar, tarjeta que se sacude si se toca fuera y aviso de práctica */
+.guia-dedo { position: fixed; width: 30px; height: 36px; margin: -4px 0 0 -8px; pointer-events: none; animation: guiaDedo 1.5s var(--spring) infinite; filter: drop-shadow(0 4px 8px rgba(11,10,20,.35)); }
+.guia-dedo i { position: absolute; left: 1px; top: -8px; width: 24px; height: 24px; border-radius: 50%; border: 2.5px solid #fff; opacity: 0; animation: guiaOnda 1.5s ease-out infinite; }
+@keyframes guiaDedo { 0%, 100% { transform: translate(8px, 10px); } 40%, 55% { transform: translate(0, 0); } 48% { transform: translate(0, 0) scale(.92); } }
+@keyframes guiaOnda { 0%, 40% { opacity: 0; transform: scale(.4); } 55% { opacity: .9; transform: scale(.7); } 100% { opacity: 0; transform: scale(1.7); } }
+.guia-tarjeta.sacude { animation: guiaSacude .4s ease; }
+@keyframes guiaSacude { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+.guia-tapa.sin-velo { background: transparent; }
+.guia-practica { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--amber-text); background: var(--amber-soft); border-radius: 10px; padding: 4px 9px; }
+@media (prefers-reduced-motion: reduce) { .guia-luz, .guia-tarjeta { transition: none; } .guia-pulso, .guia-dedo, .guia-dedo i { animation: none; } .guia-dedo i { display: none; } .guia-tarjeta.sacude { animation: none; } }
 .tipo-prod > .crece, .op-cab > b { flex: 1; min-width: 0; }
 
 /* Frase de cada pantalla: el momento en palabras, con los números de hoy */
@@ -1284,3 +1293,13 @@ h1 .guiame { vertical-align: middle; margin-left: 4px; }
 .ant-boton .sub { line-height: 1.3; }
 .ant-res > div { background: var(--fill); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ant-res b { font-size: 15px; }
+
+/* Tutoriales: progreso, recorrido destacado y marca de hecho */
+.tut-progreso { gap: 14px; padding: 14px; }
+.tut-anillo { transition: stroke-dashoffset .9s var(--spring); }
+.tut-estrella { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px; border: 0; border-radius: 22px; background: var(--primary); color: var(--primary-ink); font: inherit; text-align: left; cursor: pointer; }
+.tut-estrella .ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.18); flex: none; }
+.tut-estrella b { font-size: 16px; } .tut-estrella span span { font-size: 13px; opacity: .85; }
+.tut-hecho { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--in-soft); color: var(--in-text); animation: pop .4s var(--spring); }
+.tut-hecho.claro { background: rgba(255,255,255,.22); color: #fff; }
+.tut-nuevo { font-size: 11px; font-weight: 700; color: var(--accent-text); background: var(--accent-soft); padding: 2px 7px; border-radius: 8px; margin-left: 4px; vertical-align: 1px; }

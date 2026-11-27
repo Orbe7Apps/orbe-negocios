@@ -18,7 +18,8 @@ export function usePortal(vnode) {
   });
 }
 
-// pasos: [{ sel, titulo, texto, espera, ok, toca }]
+// pasos: [{ sel, titulo, texto, espera, ok, toca, practica }]
+//  practica: lo iluminado se ve pero no se toca (p. ej. “Cobrar” en un tutorial: no se cobra de verdad).
 //  espera: hace falta hacer algo para seguir (ok dice si ya se hizo). toca: el paso se cumple tocando lo iluminado (no hay “Siguiente”).
 export function GuiaVivo({ pasos, i, onSig, onSalir }) {
   const paso = pasos[i] || {};
@@ -61,7 +62,8 @@ export function GuiaVivo({ pasos, i, onSig, onSalir }) {
   }
   top = Math.min(Math.max(top, oy + 12), oy + vh - h - 12);
   // Lo de afuera no se puede tocar mientras dura la guía; lo iluminado sí.
-  const tapa = e => { e.preventDefault(); e.stopPropagation(); };
+  // Si toca fuera, la tarjeta se sacude: así se nota que hay que tocar lo iluminado.
+  const tapa = e => { e.preventDefault(); e.stopPropagation(); if (e.type !== 'pointerdown') return; const c = caja.current; if (c) { c.classList.remove('sacude'); void c.offsetWidth; c.classList.add('sacude'); } };
   const bloques = luz ? [
     { top: 0, left: 0, width: '100vw', height: Math.max(0, luz.top) + 'px' },
     { top: luz.top + luz.h + 'px', left: 0, width: '100vw', bottom: 0 },
@@ -71,17 +73,20 @@ export function GuiaVivo({ pasos, i, onSig, onSalir }) {
   const n = pasos.length, puedeSeguir = !paso.espera || paso.ok;
   return html`<div class="guia" role="dialog" aria-label=${'Guía: ' + (paso.titulo || '')}>
     ${bloques.map((b, k) => html`<div key=${k} class="guia-tapa" style=${b} onPointerDown=${tapa} onClick=${tapa}></div>`)}
+    ${luz && paso.practica && html`<div class="guia-tapa sin-velo" style=${{ top: luz.top + 'px', left: luz.left + 'px', width: luz.w + 'px', height: luz.h + 'px' }} onPointerDown=${tapa} onClick=${tapa}></div>`}
     <div class=${'guia-luz' + (luz ? '' : ' sin')} style=${luz ? { top: luz.top + 'px', left: luz.left + 'px', width: luz.w + 'px', height: luz.h + 'px' } : null}>${luz && paso.toca && !paso.ok && html`<i class="guia-pulso"></i>`}</div>
+    ${luz && paso.toca && !paso.ok && html`<span class="guia-dedo" key=${'d' + i} style=${{ left: luz.left + Math.min(luz.w / 2, 60) + 'px', top: luz.top + luz.h / 2 + 'px' }} aria-hidden="true"><i></i><svg width="30" height="36" viewBox="0 0 34 40"><path d="M12 4.5a3 3 0 0 1 6 0V18l7.4 1.6a3.6 3.6 0 0 1 2.8 4L27 33a5 5 0 0 1-5 4.4h-6.6a5 5 0 0 1-4-2l-6.2-8.3a2.6 2.6 0 0 1 3.9-3.4L12 26.5z" fill="#fff" stroke="#1a1733" stroke-width="2" stroke-linejoin="round"/></svg></span>`}
     <div class="guia-tarjeta" key=${i} ref=${caja} style=${{ top: top + 'px', left: left + 'px', width: ancho + 'px' }}>
       ${flecha && html`<span class=${'guia-flecha ' + flecha.lado} style=${{ left: flecha.x - 8 + 'px' }}></span>`}
       <div class="guia-paso">${paso.fin ? '¡Listo!' : 'Paso ' + (i + 1) + ' de ' + n}${n > 1 && html`<span class="guia-puntos">${pasos.map((_, k) => html`<i key=${k} class=${k === i ? 'on' : k < i ? 'ya' : ''}></i>`)}</span>`}</div>
       <h3>${paso.titulo}</h3>
       <p>${paso.texto}</p>
+      ${paso.practica && html`<span class="guia-practica"><${Icono} n="reloj" t=${13} />Práctica: no se guarda</span>`}
       <div class="guia-acc">
         <button type="button" class="guia-salir toca" onClick=${onSalir}>Salir</button>
         ${paso.espera && paso.ok && !paso.toca && html`<span class="guia-ok entra"><${Icono} n="check" t=${14} g=${2.6} />Bien</span>`}
         ${paso.toca && !paso.ok ? html`<span class="guia-sig apagado">${paso.boton || 'Toca lo iluminado'}</span>`
-          : html`<button type="button" class=${'guia-sig toca' + (puedeSeguir ? '' : ' apagado')} disabled=${!puedeSeguir} onClick=${onSig}>${i === n - 1 ? 'Terminar' : 'Siguiente'}</button>`}
+          : html`<button type="button" class=${'guia-sig toca' + (puedeSeguir ? '' : ' apagado')} disabled=${!puedeSeguir} onClick=${onSig}>${paso.boton || (i === n - 1 ? 'Terminar' : 'Siguiente')}</button>`}
       </div>
     </div>
   </div>`;

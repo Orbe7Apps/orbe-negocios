@@ -45,9 +45,9 @@ export function BotonOrbe({ seccion, tabs = [] }) {
     <div class=${'orbe-velo' + (abierto ? ' on' : '')} onClick=${() => setAbierto(false)} aria-hidden="true"></div>
     <div class=${'orbe-panel' + (abierto ? ' on' : '')} role="dialog" aria-label="Menú de Orbe" aria-hidden=${abierto ? 'false' : 'true'}>
       ${crear.length > 0 && html`<span class="orbe-tit">Crear</span>
-        <div class="orbe-crear">${crear.map((x, i) => html`<button type="button" key=${x[0]} class="toca" style=${{ '--d': i * 30 + 'ms', '--c': COLORES[x[0]] }} tabindex=${abierto ? 0 : -1} onClick=${hacer(x[3])}><span><${Icono} n=${x[1]} t=${22} c="#fff" /></span><b>${x[2]}</b></button>`)}</div>`}
+        <div class="orbe-crear">${crear.map((x, i) => html`<button type="button" key=${x[0]} data-crear=${x[0]} class="toca" style=${{ '--d': i * 30 + 'ms', '--c': COLORES[x[0]] }} tabindex=${abierto ? 0 : -1} onClick=${hacer(x[3])}><span><${Icono} n=${x[1]} t=${22} c="#fff" /></span><b>${x[2]}</b></button>`)}</div>`}
       ${irA.length > 0 && html`<span class="orbe-tit">Ir a</span>
-        <div class="orbe-ir">${irA.map((x, i) => html`<button type="button" key=${x[0]} class=${'toca' + (seccion === x[0] ? ' on' : '')} style=${{ '--d': 180 + i * 25 + 'ms' }} tabindex=${abierto ? 0 : -1} onClick=${hacer(() => ir(x[0]))}><${Icono} n=${x[1]} t=${17} />${x[2]}${x[3] ? html`<em>${x[3]}</em>` : null}</button>`)}</div>`}
+        <div class="orbe-ir">${irA.map((x, i) => html`<button type="button" key=${x[0]} data-ir=${x[0]} class=${'toca' + (seccion === x[0] ? ' on' : '')} style=${{ '--d': 180 + i * 25 + 'ms' }} tabindex=${abierto ? 0 : -1} onClick=${hacer(() => ir(x[0]))}><${Icono} n=${x[1]} t=${17} />${x[2]}${x[3] ? html`<em>${x[3]}</em>` : null}</button>`)}</div>`}
     </div>
     <button type="button" class=${'boton-orbe toca' + (abierto ? ' abierto' : '') + (dentro ? ' dentro' : '')} data-tour="boton-orbe" aria-label=${abierto ? 'Cerrar el menú' : 'Abrir el menú de Orbe'} aria-expanded=${abierto ? 'true' : 'false'} onClick=${() => setAbierto(!abierto)}>
       <svg viewBox="0 0 92 92" width="44" height="44" aria-hidden="true"><g class="bo-logo"><circle cx="35" cy="39.7" r="23" stroke="#8f84ff" /><circle cx="57" cy="39.7" r="23" stroke="#3ddc9f" /><circle cx="46" cy="58.7" r="23" stroke="#f0a020" /></g></svg>

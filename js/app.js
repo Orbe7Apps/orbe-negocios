@@ -2,7 +2,7 @@
 import { html, render, useState, useEffect } from './lib/preact-htm.js';
 import { Ctx } from './ctx.js';
 import { iniciarDatos, useDatos, leer, cambiarNegocio, guardarTasa, guardarTasaExtra, tasaEuro, usaEuro, diaClave, bajoMinimo, deudores, porPagar, perfilActual, salir, guardarPerfil, ordenAtrasada } from './datos.js';
-import { Recorrido } from './recorrido.js';
+import { CorrerTutorial, Tutoriales } from './tutoriales.js';
 import { ChipTasa } from './pantallas/tasas.js';
 import { puede, rolDe } from './permisos.js';
 import { pais, dinero, leerTasa } from './paises.js';
@@ -49,6 +49,7 @@ const SECCIONES = {
   gastos: { n: 'Gastos y por pagar', i: 'dinero', C: Gastos },
   reportes: { n: 'Reportes', i: 'grafico', C: Reportes },
   equipo: { n: 'Equipo', npc: 'Equipo y permisos', i: 'escudo', C: Equipo },
+  tutoriales: { n: 'Tutoriales', i: 'gorro', C: Tutoriales },
   mas: { n: 'Más', npc: 'Ajustes', i: 'mas', ipc: 'ajustes', C: Mas }
 };
 // Secciones que necesitan un permiso para verse.
@@ -74,7 +75,8 @@ function App() {
   const [ayuda, setAyuda] = useState(null);
   const [suc, setSuc] = useState('');
   const [enLinea, setEnLinea] = useState(navigator.onLine);
-  const [tour, setTour] = useState(false);
+  // Tutorial en curso (el recorrido de la primera entrada es el tutorial “recorrido”).
+  const [tour, setTour] = useState(null);
 
   useEffect(() => {
     const r = () => setTel(esTelefono());
@@ -82,7 +84,9 @@ function App() {
     const on = () => { setEnLinea(true); avisar('Conectado otra vez'); }, off = () => { setEnLinea(false); avisar('Sin internet: todo se guarda aquí'); };
     window.addEventListener('resize', r); window.addEventListener('hashchange', h);
     window.addEventListener('online', on); window.addEventListener('offline', off);
-    return () => { window.removeEventListener('resize', r); window.removeEventListener('hashchange', h); window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+    const tut = e => { setHoja(null); setAyuda(null); setTour({ id: e.detail, n: Date.now() }); }, sinHoja = () => setHoja(null);
+    window.addEventListener('orbe-tutorial', tut); window.addEventListener('orbe-cerrar-hoja', sinHoja);
+    return () => { window.removeEventListener('resize', r); window.removeEventListener('hashchange', h); window.removeEventListener('online', on); window.removeEventListener('offline', off); window.removeEventListener('orbe-tutorial', tut); window.removeEventListener('orbe-cerrar-hoja', sinHoja); };
   }, []);
   // Atrás del teléfono con una hoja abierta: se cierra la hoja (con su animación).
   useAtras(!!hoja, () => window.dispatchEvent(new Event('orbe-atras')));
@@ -136,8 +140,15 @@ function App() {
   if (/[?&]prueba\b/.test(location.search)) window.__abrir = abrir;
   const marcarTour = v => guardarPerfil({ id: yo.id, tour: v });
   const ctx = { sec: valida === 'inventario' && !T.inv ? 'servicios' : valida, ayuda: k => setAyuda({ k, n: Date.now() }), tieneAyuda: k => !!AYUDAS[k], S, P, T, D, E, tel, ir, abrir, suc: E ? suc : '', setSuc, enLinea, yo, rol: rolDe(S, yo), puede: pd, ver: permitida,
-    verRecorrido: () => { setHoja(null); setTour(true); }, omitirRecorrido: () => { marcarTour('omitido'); avisar('Lo encuentras en Ajustes → Ayuda'); } };
-  const Tour = tour ? html`<${Recorrido} onFin=${() => { setTour(false); if (!yo.tour) marcarTour(Date.now()); }} />` : null;
+    verRecorrido: () => { setHoja(null); setTour({ id: 'recorrido', n: Date.now() }); }, omitirRecorrido: () => { marcarTour('omitido'); avisar('Lo encuentras en ' + (tel ? 'Más → ' : '') + 'Tutoriales'); } };
+  // Al terminar un tutorial se vuelve a la lista (el de “Agregar un producto” sigue con la guía de la hoja).
+  const finTour = (completo, id, sigue) => {
+    setTour(null);
+    if (id === 'recorrido' && !yo.tour) marcarTour(completo ? Date.now() : 'omitido');
+    if (!completo) avisar('Lo encuentras en ' + (tel ? 'Más → ' : '') + 'Tutoriales');
+    else if (!sigue) ir('tutoriales');
+  };
+  const Tour = tour ? html`<${CorrerTutorial} key=${tour.n} id=${tour.id} onFin=${finTour} />` : null;
   const nombreSec = s => s === 'vender' ? (tel || T.vender === 'Cobrar' ? T.vender : 'Caja') : s === 'inventario' && !T.inv ? 'Servicios' : tel ? SECCIONES[s].n : (SECCIONES[s].npc || SECCIONES[s].n);
   const Pantalla = SECCIONES[valida].C;
   const cuenta = { clientes: deudores().filter(c => c.deuda > 0).length, inventario: bajoMinimo().length, gastos: porPagar().length, ordenes: S.ordenes.filter(o => ordenAtrasada(o)).length, agenda: T.mod('agenda') ? citasPendientesHoy(S) : 0 };
@@ -150,7 +161,7 @@ function App() {
     const cuarta = permitida('agenda') && (['citas', 'indep'].includes(T.id) || !T.inv) ? 'agenda' : 'inventario';
     const tabs = ['hoy', 'vender', cuarta, 'mas'].filter(permitida);
     const mitad = Math.ceil(tabs.length / 2);
-    const Tab = t => html`<button type="button" key=${t} class=${'toca' + (t === valida ? ' on' : '')} aria-current=${t === valida ? 'page' : 'false'} onClick=${() => ir(t)}>
+    const Tab = t => html`<button type="button" key=${t} data-nav=${t} class=${'toca' + (t === valida ? ' on' : '')} aria-current=${t === valida ? 'page' : 'false'} onClick=${() => ir(t)}>
             <${Icono} n=${t === 'inventario' && !T.inv ? 'lista' : SECCIONES[t].i} t=${22} /><span>${nombreSec(t)}</span></button>`;
     return html`<${Ctx.Provider} value=${ctx}>
       <div class=${'tel-raiz' + (hoja ? ' con-hoja' : '')}>
@@ -172,7 +183,7 @@ function App() {
     </${Ctx.Provider}>`;
   }
 
-  const grupos = [['Día a día', ['hoy', 'vender', 'agenda', 'ordenes', 'cotizaciones', 'cuotas', 'clientes']], ['Operación', ['inventario', 'gastos']], ['Gestión', ['reportes', 'equipo']]].map(g => [g[0], g[1].filter(permitida)]).filter(g => g[1].length);
+  const grupos = [['Día a día', ['hoy', 'vender', 'agenda', 'ordenes', 'cotizaciones', 'cuotas', 'clientes']], ['Operación', ['inventario', 'gastos']], ['Gestión', ['reportes', 'equipo', 'tutoriales']]].map(g => [g[0], g[1].filter(permitida)]).filter(g => g[1].length);
   const colores = { agenda: 'var(--c2)', clientes: 'var(--c3)', inventario: 'var(--c3)', gastos: 'var(--c5)', ordenes: 'var(--c5)', cotizaciones: 'var(--c4)' };
   return html`<${Ctx.Provider} value=${ctx}>
     <div class="marco-pc">
@@ -184,13 +195,13 @@ function App() {
         </button>
         <nav style="display:flex;flex-direction:column;gap:10px">
           ${grupos.map(g => html`<div class="grupo"><small>${g[0]}</small>
-            ${g[1].map(s => html`<button type="button" class=${'nav-btn toca' + (s === valida ? ' on' : '')} aria-current=${s === valida ? 'page' : 'false'} onClick=${() => ir(s)}>
+            ${g[1].map(s => html`<button type="button" data-nav=${s} class=${'nav-btn toca' + (s === valida ? ' on' : '')} aria-current=${s === valida ? 'page' : 'false'} onClick=${() => ir(s)}>
               <${Icono} n=${s === 'inventario' && !T.inv ? 'lista' : (SECCIONES[s].ipc || SECCIONES[s].i)} t=${18} />${nombreSec(s)}
               ${cuenta[s] ? html`<span class="cuenta" style=${{ background: colores[s] }}>${cuenta[s]}</span>` : null}
             </button>`)}</div>`)}
         </nav>
         <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
-          ${permitida('mas') && html`<button type="button" class=${'nav-btn toca' + (valida === 'mas' ? ' on' : '')} aria-current=${valida === 'mas' ? 'page' : 'false'} onClick=${() => ir('mas')}><${Icono} n="ajustes" t=${18} />Ajustes</button>`}
+          ${permitida('mas') && html`<button type="button" data-nav="mas" class=${'nav-btn toca' + (valida === 'mas' ? ' on' : '')} aria-current=${valida === 'mas' ? 'page' : 'false'} onClick=${() => ir('mas')}><${Icono} n="ajustes" t=${18} />Ajustes</button>`}
           <div class="tarjeta fila" data-tour="usuario" style="padding:10px 12px;gap:10px">
             <span class=${'logo redondo ' + TONOS[S.perfiles.indexOf(yo) % 5]} style="width:34px;height:34px;font-size:12px">${iniciales(yo.n)}</span>
             <span class="crece" style="display:flex;flex-direction:column"><b class="corta" style="font-size:13px">${yo.n}</b><span class="sub corta" style="font-size:12px">${(rolDe(S, yo) || {}).n || ''}</span></span>
@@ -235,6 +246,7 @@ function subtitulo(s, { S, E, suc, T }) {
     gastos: 'Lo que gastas y lo que debes',
     reportes: donde,
     equipo: 'Perfiles de tu equipo y lo que cada uno puede hacer',
+    tutoriales: 'Aprende tocando: cada tutorial se hace en tus pantallas',
     mas: S.negocio.nombre
   }[s];
 }

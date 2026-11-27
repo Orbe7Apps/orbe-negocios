@@ -31,6 +31,9 @@ export function totales(items, neg, P) {
 let carritoGuardado = nuevoCarrito();
 // Cotización que se está convirtiendo en venta: al cobrar queda “aceptada”.
 let cotEnVenta = null;
+// Tutoriales: se guarda la venta que había y, al terminar la práctica, se deja tal cual estaba.
+export const tomarCarrito = () => ({ cart: carritoGuardado, cot: cotEnVenta });
+export function ponerCarrito(x) { carritoGuardado = x && x.cart ? x.cart : nuevoCarrito(); cotEnVenta = x ? x.cot || null : null; window.dispatchEvent(new Event('orbe-carrito')); }
 export function cargarCotizacion(c) { carritoGuardado = JSON.parse(JSON.stringify(c.cart || nuevoCarrito())); cotEnVenta = c.id; }
 // Precios de hoy fijos en la lista (así la cotización respeta lo que se le dijo al cliente aunque el precio cambie).
 function carritoConPrecios(cart, prods) {
@@ -49,6 +52,7 @@ export function Vender() {
   const [cart, setCartRaw] = useState(carritoGuardado);
   const setCart = c => { carritoGuardado = c; setCartRaw(c); };
   const vaciar = () => { cotEnVenta = null; setCart(nuevoCarrito()); };
+  useEffect(() => { const f = () => setCartRaw(carritoGuardado); window.addEventListener('orbe-carrito', f); return () => window.removeEventListener('orbe-carrito', f); }, []);
   const [q, setQ] = useState('');
   const [grupo, setGrupo] = useState('');
   const [clase, setClase] = useState('prod');
@@ -177,7 +181,7 @@ export function Vender() {
   const BotonCobrar = html`<button type="button" data-tour="cobrar" class=${'btn toca crece' + (n ? '' : ' apagado')} onClick=${cobrar}>${n ? 'Cobrar ' + D.m(total) : 'Agrega ' + (T.inv ? 'productos' : 'servicios')}${!tel && n ? html` <span class="tecla" style="color:#fff;border-color:rgba(255,255,255,.4)">F12</span>` : null}</button>`;
   // Con cotizaciones: “Cotizar” al lado de cobrar (guarda la lista con precios para mandarla al cliente).
   const Boton = html`${cotActual && html`<div class="aviso-plan ambar entra"><${Icono} n="doc" t=${16} /><span class="crece">Vendiendo la cotización ${numeroCot(cotActual)}</span><button type="button" class="btn2 chico toca" onClick=${vaciar}>Quitar</button></div>`}
-    ${T.mod('cotizaciones') && n > 0 && !cotActual ? html`<div class="fila" style="gap:8px"><button type="button" class="btn2 toca" style="min-height:56px;border-radius:28px;padding:0 18px;flex:none" onClick=${cotizar}><${Icono} n="doc" t=${16} />Cotizar</button>${BotonCobrar}</div>` : BotonCobrar}`;
+    ${T.mod('cotizaciones') && n > 0 && !cotActual ? html`<div class="fila" style="gap:8px"><button type="button" data-guia="cotizar" class="btn2 toca" style="min-height:56px;border-radius:28px;padding:0 18px;flex:none" onClick=${cotizar}><${Icono} n="doc" t=${16} />Cotizar</button>${BotonCobrar}</div>` : BotonCobrar}`;
 
   // La frase de arriba: cuánto llevas hoy o, con algo en la venta, cuánto va esta.
   const hoyR = resumen(inicioDia(Date.now()), Date.now() + 1, suc), cosa = T.inv ? 'producto' : 'servicio';
