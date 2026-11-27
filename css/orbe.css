@@ -1095,3 +1095,56 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .armar-desglose { display: flex; flex-direction: column; gap: 7px; padding: 12px 14px; border-radius: 18px; background: var(--fill2); font-size: 14px; }
 .armar-desglose .tit { margin-top: 2px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }
 .armar-desglose .sug { padding-top: 8px; font-size: 15px; font-weight: 700; }
+
+/* ---------- Nuevo producto: primero el tipo, Más opciones por fila ---------- */
+.tipos-prod { display: flex; flex-direction: column; gap: 10px; }
+.tipo-prod { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px; border: 1.5px solid transparent; border-radius: 20px; background: var(--fill2); color: var(--ink); font: inherit; text-align: left; cursor: pointer; transition: border-color .25s ease, background .25s ease; }
+.tipo-prod b { display: block; font-size: 16px; font-weight: 600; }
+.tipo-prod small { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+.tipo-ic { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center; }
+.tipo-ic.chico { width: 32px; height: 32px; border-radius: 10px; }
+.tono-vio { background: var(--accent-soft); color: var(--accent-text); }
+.tono-ver { background: var(--in-soft); color: var(--in-text); }
+.tono-azu { background: var(--blue-soft); color: var(--blue-text); }
+.tono-amb { background: var(--amber-soft); color: var(--amber-text); }
+.tono-gris { background: var(--fill); color: var(--muted); }
+.tipo-actual { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 10px; border-radius: 16px; background: var(--fill2); }
+.tipo-actual b { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
+.enlace-cambiar { border: 0; background: none; padding: 8px 10px; min-height: 36px; color: var(--accent-text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.op-lista { display: flex; flex-direction: column; gap: 2px; }
+.op-cab { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 6px 4px; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.op-cab b { font-size: 15px; font-weight: 600; }
+.op-ic { width: 34px; height: 34px; flex: none; border-radius: 11px; background: var(--fill); color: var(--muted); display: grid; place-items: center; transition: background .25s ease, color .25s ease; }
+.op-fila.abierta .op-ic { background: var(--accent-soft); color: var(--accent-text); }
+.op-valor { font-size: 14px; color: var(--muted); max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.op-cuerpo { display: flex; flex-direction: column; gap: 10px; padding: 2px 0 10px 46px; }
+.listo-circ { width: 80px; height: 80px; border-radius: 50%; background: var(--in-soft); color: var(--in); display: grid; place-items: center; margin-top: 6px; animation: fadeUp .5s var(--bounce) both; }
+
+/* ---------- Guía en vivo ---------- */
+.guia-invita { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 18px; background: var(--accent-soft); color: var(--accent-text); }
+.guia-invita span { font-size: 14px; font-weight: 500; color: var(--ink); }
+.guia-invita-btn { flex: none; min-height: 36px; padding: 0 16px; border: 0; border-radius: 18px; background: var(--primary); color: var(--primary-ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.guia-ayuda-btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
+.guia { position: fixed; inset: 0; z-index: 150; pointer-events: none; animation: fadeIn .3s ease both; }
+.guia-tapa { position: fixed; pointer-events: auto; }
+.guia-luz { position: fixed; border-radius: 18px; box-shadow: 0 0 0 3px var(--accent), 0 0 0 200vmax rgba(11,10,20,.58); transition: top .45s var(--spring), left .45s var(--spring), width .45s var(--spring), height .45s var(--spring); pointer-events: none; }
+.guia-luz.sin { top: 50%; left: 50%; width: 0; height: 0; box-shadow: 0 0 0 200vmax rgba(11,10,20,.58); }
+.guia-pulso { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%; background: rgba(143,132,255,.35); border: 2px solid #fff; animation: guiaPulso 1.4s var(--spring) infinite; }
+@keyframes guiaPulso { 0% { transform: scale(.7); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+.guia-tarjeta { position: fixed; pointer-events: auto; background: var(--surface); color: var(--ink); border-radius: 22px; padding: 16px 16px 14px; box-shadow: 0 14px 40px rgba(11,10,20,.35); transition: top .45s var(--spring), left .45s var(--spring); animation: fadeUp .4s var(--spring) both; }
+.guia-flecha { position: absolute; width: 16px; height: 16px; background: var(--surface); transform: rotate(45deg); border-radius: 3px; }
+.guia-flecha.arriba { top: -7px; } .guia-flecha.abajo { bottom: -7px; }
+.guia-paso { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--accent-text); }
+.guia-puntos { display: flex; gap: 4px; margin-left: auto; }
+.guia-puntos i { width: 6px; height: 6px; border-radius: 3px; background: var(--line); transition: width .3s var(--spring), background .3s ease; }
+.guia-puntos i.ya { background: var(--accent); }
+.guia-puntos i.on { width: 16px; background: var(--primary); }
+.guia-tarjeta h3 { font-size: 18px; font-weight: 700; letter-spacing: -.02em; margin: 8px 0 4px; }
+.guia-tarjeta p { font-size: 14.5px; line-height: 1.45; color: var(--muted); margin: 0; }
+.guia-acc { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.guia-salir { border: 0; background: none; padding: 8px 4px; min-height: 40px; color: var(--muted); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.guia-ok { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--in-text); background: var(--in-soft); padding: 5px 10px; border-radius: 12px; }
+.guia-sig { margin-left: auto; min-height: 40px; padding: 0 18px; border: 0; border-radius: 20px; background: var(--primary); color: var(--primary-ink); font: inherit; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; cursor: pointer; }
+.guia-sig.apagado { background: var(--fill); color: var(--faint); cursor: default; }
+@media (prefers-reduced-motion: reduce) { .guia-luz, .guia-tarjeta { transition: none; } .guia-pulso { animation: none; } }
+.tipo-prod > .crece, .op-cab > b { flex: 1; min-width: 0; }
