@@ -20,6 +20,7 @@ import { verQ, FRACCIONES } from '../carrito.js';
 import { imprimir, lineasRecibo, lineasZ, ajustesImpresora } from '../impresora.js';
 import { Orden, NuevaOrden, AbonoOrden, CancelarOrden } from './ordenes.js';
 import { Armar } from './personalizados.js';
+import { Anteriores } from './anteriores.js';
 import { GuiaVivo, usePortal, vecesGuia, contarGuia, terminarGuia, iluminar } from '../guia.js';
 import { buscar, parecidos } from '../buscar.js';
 import { descargar } from './reportes.js';
@@ -61,7 +62,7 @@ function Confirmar({ d, cerrar }) {
 }
 
 export function HojaActual({ hoja, cerrar }) {
-  const H = { productoListo: ProductoListo, rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, ventasDia: VentasDia, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo, armar: Armar }[hoja.t];
+  const H = { productoListo: ProductoListo, rolBorrar: RolBorrar, cuenta: Cuenta, aparato: ConectarAparato, pagar: Pagar, borrarCuenta: BorrarCuenta, plan: Plan, abonoPlan: AbonoPlan, apartadoVencido: ApartadoVencido, cotizar: Cotizar, cotizacion: Cotizacion, recordatorios: Recordatorios, ajustesRec: AjustesRecHoja, sugerencias: Sugerencias, rubro: ElegirRubro, cita: Cita, nuevaCita: NuevaCita, cobrar: Cobrar, recibo: Recibo, ventasDia: VentasDia, anular: Anular, devolver: Devolver, gasto: Gasto, abono: Abono, recordar: Recordar, cierre: Cierre, producto: Producto, reponer: Reponer, nuevoCliente: NuevoCliente, cliente: Cliente, buscar: Buscar, borrar: Borrar, confirmar: Confirmar, locales: Locales, perfil: Perfil, rol: Rol, negocio: Negocio, tasa: Tasa, copias: Copias, registro: Registro, remarcar: Remarcar, conciliar: Conciliar, ceros: Ceros, cierres: Cierres, cierreZ: CierreZ, grupos: Grupos, grupo: Grupo, escaner: Escaner, pin: Pin, orden: Orden, nuevaOrden: NuevaOrden, abonoOrden: AbonoOrden, cancelarOrden: CancelarOrden, precios: Precios, caja: Caja, movCaja: MovCaja, variante: Variante, cantidad: Cantidad, linea: LineaVenta, descuento: Descuento, cargo: Cargo, factura: Factura, promos: Promos, promo: Promo, armar: Armar, anteriores: Anteriores }[hoja.t];
   ponerAyudaHoja(hoja.t === 'producto' && !leer().productos.length ? 'producto' : hoja.t);
   return H ? html`<${H} d=${hoja.datos} cerrar=${cerrar} />` : null;
 }

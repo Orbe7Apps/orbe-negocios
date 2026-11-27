@@ -34,22 +34,24 @@ const enTexto = (x, D, en) => { if (!(x > 0)) return ''; const r = en !== 'p' ||
 // Se usa junto con usePagos: usePagos(mo.total, metodos, inicial, ajuste, mo) y mo.campo(fp.m, { titulo }).
 // enInicial: moneda de lo que viene escrito; con mInicial (la forma elegida al abrir) se pasa a la moneda de esa forma.
 export function useMonto(inicial = '', enInicial, mInicial) {
-  const { S, P, D } = useApp();
+  const { S, P, D, tasaM: tm } = useApp();
+  // tasaM en el contexto: la tasa de cada forma de pago de otro día (al registrar días anteriores).
+  const tasaM = tm || tasaMetodo;
   const auto = mm => monedaForma(S, P, D, mm);
   const [st, setSt] = useState(() => {
     if (mInicial === undefined || !enInicial) return { txt: inicial, en: enInicial || null };
     const e1 = auto(mInicial), x = numero(inicial);
     if (e1 === enInicial || !(x > 0)) return { txt: inicial, en: null };
-    const v = enInicial === 's' ? D.deOtra(x, tasaMetodo(mInicial)) : enInicial === 'e' ? D.deEur(x) : x;
-    return { txt: enTexto(e1 === 's' ? D.aOtra(v, tasaMetodo(mInicial)) : e1 === 'e' ? D.aEur(v) : v, D, e1), en: null };
+    const v = enInicial === 's' ? D.deOtra(x, tasaM(mInicial)) : enInicial === 'e' ? D.deEur(x) : x;
+    return { txt: enTexto(e1 === 's' ? D.aOtra(v, tasaM(mInicial)) : e1 === 'e' ? D.aEur(v) : v, D, e1), en: null };
   });
   const enDe = mm => st.en || auto(mm);
-  const aPrin = (x, en, mm) => en === 's' ? D.deOtra(x, tasaMetodo(mm)) : en === 'e' ? D.deEur(x) : x;
-  const deMain = (v, en, mm) => en === 's' ? D.aOtra(v, tasaMetodo(mm)) : en === 'e' ? D.aEur(v) : v;
+  const aPrin = (x, en, mm) => en === 's' ? D.deOtra(x, tasaM(mm)) : en === 'e' ? D.deEur(x) : x;
+  const deMain = (v, en, mm) => en === 's' ? D.aOtra(v, tasaM(mm)) : en === 'e' ? D.aEur(v) : v;
   // Lo escrito, en la moneda principal (dólares en Venezuela).
   const total = mm => { const en = enDe(mm), v = aPrin(numero(st.txt), en, mm); return en === 'p' ? v : fino(v); };
   // Lo escrito en Bs (o la otra moneda), para guardarlo tal cual: { otra, tasa }.
-  const original = mm => { const en = enDe(mm), x = numero(st.txt); return en === 's' && x > 0 ? { otra: x, tasa: tasaMetodo(mm) } : null; };
+  const original = mm => { const en = enDe(mm), x = numero(st.txt); return en === 's' && x > 0 ? { otra: x, tasa: tasaM(mm) } : null; };
   // Se recuerda el valor exacto de la última conversión: Bs 1.000 → $ 1,14 → Bs 1.000 (no 998,28).
   const seguir = (de, a) => setSt(s => {
     const e0 = s.en || auto(de), e1 = auto(a), x = numero(s.txt);
@@ -66,8 +68,8 @@ export function useMonto(inicial = '', enInicial, mInicial) {
   function campo(mm, { titulo = 'Monto', grande = true, placeholder = '0', clase = '' } = {}) {
     const en = enDe(mm), x = numero(st.txt), v = aPrin(x, en, mm);
     const tasaN = en === 'e' ? 'tasa euro' : nombreTasa(S, P, mm) || (P.id === 'VE' ? 'tasa BCV' : 'tasa');
-    const eq = !(x > 0) || !D.dual ? '' : en !== 'p' ? '= ' + D.m(v) + ' · ' + tasaN + ' ' + f2(en === 'e' ? D.tasaEur : tasaMetodo(mm))
-      : auto(mm) === 's' ? '= ' + simb('s') + ' ' + f2(D.aOtra(v, tasaMetodo(mm))) : '';
+    const eq = !(x > 0) || !D.dual ? '' : en !== 'p' ? '= ' + D.m(v) + ' · ' + tasaN + ' ' + f2(en === 'e' ? D.tasaEur : tasaM(mm))
+      : auto(mm) === 's' ? '= ' + simb('s') + ' ' + f2(D.aOtra(v, tasaM(mm))) : '';
     return html`<div class=${'campo ' + clase}><span>${titulo}</span>
       <div class=${'pago-monto monto-forma' + (grande ? ' grande' : '')}>
         ${monedas.length > 1 && html`<button type="button" class="pago-moneda toca" aria-label=${'Moneda: ' + simb(en) + '. Tocar para cambiar'} title="Cambiar moneda" onClick=${() => setSt(s => ({ txt: s.txt, en: monedas[(monedas.indexOf(s.en || auto(mm)) + 1) % monedas.length] }))}>${simb(en)}</button>`}
@@ -82,7 +84,8 @@ export function useMonto(inicial = '', enInicial, mInicial) {
 // ajuste(m): recargo que se suma al pagar con esa forma (p. ej. IGTF 3 % en divisas), solo para mostrar el monto final.
 // total puede ser un número o una función de la forma de pago elegida (con useMonto: mo.total).
 export function usePagos(totalDe, metodos, inicial, ajuste, mo) {
-  const { S, P, D } = useApp();
+  const { S, P, D, tasaM: tm } = useApp();
+  const tasaM = tm || tasaMetodo;
   const [m, setMRaw] = useState(inicial && metodos.includes(inicial) ? inicial : metodos[0]);
   const setM = x => { if (mo && x !== m) mo.seguir(m, x); setMRaw(x); };
   const total = typeof totalDe === 'function' ? totalDe(m) : totalDe;
@@ -103,8 +106,8 @@ export function usePagos(totalDe, metodos, inicial, ajuste, mo) {
   const fila = mm => ({ m: mm, txt: '', en: monedaDe(mm) });
   // Pasa lo escrito en la otra moneda a la principal (y al revés para mostrar).
   // Cada forma de pago se convierte con su propia tasa (oficial, paralela, USDT o la del negocio).
-  const aPrincipal = (f, x) => f.en === 's' ? D.deOtra(x, tasaMetodo(f.m)) : f.en === 'e' ? D.deEur(x) : x;
-  const aOtra = (x, mm) => D.aOtra(x, tasaMetodo(mm));
+  const aPrincipal = (f, x) => f.en === 's' ? D.deOtra(x, tasaM(f.m)) : f.en === 'e' ? D.deEur(x) : x;
+  const aOtra = (x, mm) => D.aOtra(x, tasaM(mm));
   const valor = f => aPrincipal(f, numero(f.txt));
   const suma = filas.reduce((a, f) => a + valor(f), 0);
   const falta = varias ? D.redondo(total - suma) : 0;

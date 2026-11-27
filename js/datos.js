@@ -455,22 +455,34 @@ function ejemplo(neg, productos, D, perfiles) {
 export const fiadoDe = v => v.pagos.reduce((a, p) => a + (p.m === 'Fiado' || p.m === 'Saldo a favor' ? p.v : 0), 0);
 // ---------- tasas ----------
 // La tasa principal (la de mostrar) y las extra (paralela, USDT, propia). Cada forma de pago puede cobrarse con una.
-export function tasaDe(k) {
+export function tasaDe(k) { return tasaHoy(k); }
+// Tasas guardadas de un día anterior (la de ese día en el historial o, si falta, la última antes de ese día).
+// tasaM(m): la tasa de cada forma de pago ese día; las que no están guardadas se estiman con la relación de hoy.
+export function tasasDelDia(dia, principal) {
+  const k = diaClave(dia), out = {}, h = (S.historialTasas || []).slice().sort((a, b) => a.dia < b.dia ? -1 : 1);
+  h.forEach(x => { if (x.dia <= k) out[x.f] = x.v; });
+  const fuente = (S.tasa && S.tasa.fuente) || 'oficial', guardada = out[fuente] || out.oficial || 0;
+  const prin = principal > 0 ? principal : guardada || tasaHoy(), rel = prin / tasaHoy();
+  const de = t => !t || t === 'oficial' || t === fuente ? prin : (out[t] && !(principal > 0) ? out[t] : tasaHoy(t) * rel);
+  return { prin, guardada: !!guardada, euro: de('euro'), tasaM: m => de(((S.negocio && S.negocio.tasaPago) || {})[m]) };
+}
+function tasaHoy(k) {
   const prin = S.tasa.valor || (S.negocio && S.negocio.pais === 'VE' ? TASA_VE_RESPALDO : S.negocio ? pais(S.negocio.pais).r : 1);
   if (!k || k === 'oficial') return prin;
   // Tasa del euro (p. ej. BCV euro): si no se ha leído, se estima con el dólar.
-  if (k === 'euro') return tasaEuro();
+  if (k === 'euro') return (S.tasas.euro && S.tasas.euro.valor) || prin * EUR_USD;
   return (S.tasas[k] && S.tasas[k].valor) || prin;
 }
 export const tasaMetodo = m => tasaDe(((S.negocio && S.negocio.tasaPago) || {})[m]);
 // Tasa del euro (bolívares o moneda local por euro). Si no se ha leído, se estima con el dólar.
-export const tasaEuro = () => (S.tasas.euro && S.tasas.euro.valor) || tasaDe() * EUR_USD;
+export const tasaEuro = () => tasaHoy('euro');
 // El negocio usa la tasa del euro: acepta euros o cobra alguna forma de pago con ella.
 export const usaEuro = (n = S.negocio) => !!n && (!!n.euro || Object.values(n.tasaPago || {}).includes('euro'));
 const dolarDe = (v, t) => S.negocio.pais === 'VE' ? v : v / (t || tasaDe());
 const anotarHistorial = (s, f, v) => { const dia = diaClave(Date.now()), h = (s.historialTasas || []).filter(x => !(x.dia === dia && x.f === f)); return h.concat([{ dia, f, v }]).slice(-600); };
 const juntar = pagos => pagos.map(p => p.m).join(' + ');
-export const sigNumero = () => (S.ventas.length ? S.ventas[S.ventas.length - 1].n : 1000) + 1;
+// El número sigue al más alto: las ventas de días anteriores se ordenan por fecha y ya no quedan al final.
+export const sigNumero = () => S.ventas.reduce((a, v) => v.n > a ? v.n : a, 1000) + 1;
 // Cada línea de una venta se identifica por producto y, si tiene, por variante (talla, color…): “p12~v3”.
 export const claveItem = it => it.vid ? it.pid + '~' + it.vid : it.pid;
 const redQ = x => Math.round(x * 1000) / 1000;
@@ -779,6 +791,54 @@ export function borrarGasto(gid) {
   cambiar(s => Object.assign({ gastos: s.gastos.filter(x => x.id !== gid) }, nota(s, 'Borró el gasto “' + g.n + '”')));
 }
 export function pagarGasto(gid) { cambiar(s => ({ gastos: s.gastos.map(g => g.id === gid ? Object.assign({}, g, { pagado: true, t: Date.now() }) : g) })); }
+
+// ---------- días anteriores ----------
+// Lo que el negocio anotó en su cuaderno y se pasa después: entra con la fecha de ese día (no toca la caja de hoy),
+// con la tasa de ese día y la marca “ant” (cuándo y quién lo registró). No se deshace: mueve dinero.
+const fechaDe = dia => new Date(dia).toLocaleDateString('es', { day: 'numeric', month: 'numeric', year: '2-digit' });
+// Hora con que entra: desde las 12:00 de ese día, un minuto después de lo último que se registró ese día.
+function momentoDe(dia, lista) {
+  const d0 = inicioDia(dia), t0 = d0 + 12 * 3600000, ya = lista.filter(x => x.ant && x.t >= d0 && x.t < d0 + DIA);
+  return Math.min(d0 + DIA - 1000, ya.length ? Math.max(t0, ...ya.map(x => x.t)) + 60000 : t0);
+}
+const nota_ = (s, que) => nota(s, que);
+const esAnterior = dia => dia > 0 && inicioDia(dia) < inicioDia(Date.now());
+const marcaAnt = s => ({ t: Date.now(), por: s.ajustes.perfil || '' });
+// Venta (o fiado) de un día anterior. items: opcional; si no cubren el total, la diferencia va como “Venta sin detalle”.
+export function ventaAnterior({ dia, items, pagos, cli, fiado, nota, bajar, tasa, tasaEur }) {
+  if (!esAnterior(dia)) return null;
+  const total = r2(pagos.reduce((a, p) => a + p.v, 0)); if (!(total > 0)) return null;
+  let its = (items || []).filter(it => it.q > 0);
+  const suma = its.reduce((a, it) => a + it.q * it.p, 0);
+  if (total - suma > 0.004) its = its.concat([{ pid: 'sin-detalle', n: its.length ? 'Otros' : 'Venta sin detalle', q: 1, p: r2(total - suma), c: 0 }]);
+  const vid = id();
+  const venta = Object.assign({ id: vid, n: sigNumero(), t: momentoDe(dia, S.ventas), items: its, total, pagos, cli: cli || '', suc: S.negocio.sucursales[0], fiado: !!fiado, por: S.ajustes.perfil || '', tasa: tasa || tasaDe(), ant: marcaAnt(S), dv: 'ant-' + vid }, nota ? { nota } : {});
+  if (S.negocio.euro) venta.tasaEur = tasaEur || tasaEuro();
+  if (S.negocio.fiadoUsd && fiado) venta.pagos = pagos.map(p => p.m === 'Fiado' ? Object.assign({}, p, { fu: dolarDe(p.v, tasa) }) : p);
+  const bajan = bajar ? its.filter(it => it.pid !== 'sin-detalle') : [];
+  cambiar(s => Object.assign({ ventas: s.ventas.concat([venta]), productos: bajan.length ? stockMas(s.productos, porLinea(bajan), -1) : s.productos },
+    nota_(s, 'Registró ' + (fiado ? 'un fiado' : 'la venta #' + venta.n) + ' del ' + fechaDe(dia) + ' (día anterior)')));
+  return venta;
+}
+export function gastoAnterior(dia, g, tasa) {
+  if (!esAnterior(dia)) return null;
+  const x = Object.assign({ id: id(), t: momentoDe(dia, S.gastos), suc: S.negocio.sucursales[0], por: S.ajustes.perfil || '', tasa: tasa || tasaDe(), pagado: true, vence: 0, ant: marcaAnt(S) }, conPagos(g));
+  cambiar(s => Object.assign({ gastos: s.gastos.concat([x]) }, nota_(s, 'Registró un gasto del ' + fechaDe(dia) + ' (día anterior)')));
+  return x;
+}
+export function abonoAnterior(dia, cli, pagos, tasa) {
+  if (!esAnterior(dia)) return null;
+  const v = r2(pagos.reduce((a, p) => a + p.v, 0)); if (!(v > 0)) return null;
+  const ab = { id: id(), t: momentoDe(dia, S.abonos), cli, v, m: juntar(pagos), pagos, por: S.ajustes.perfil || '', tasa: tasa || tasaDe(), ant: marcaAnt(S) };
+  if (S.negocio.fiadoUsd) ab.fu = dolarDe(v, tasa);
+  cambiar(s => Object.assign({ abonos: s.abonos.concat([ab]) }, nota_(s, 'Registró un abono del ' + fechaDe(dia) + ' (día anterior)')));
+  return ab;
+}
+// Todo lo de un día: ventas, gastos pagados y abonos (los registrados después y los de ese día).
+export function movimientosDelDia(dia) {
+  const d0 = inicioDia(dia), en = x => x.t >= d0 && x.t < d0 + DIA;
+  return { ventas: S.ventas.filter(v => en(v) && !v.anulada), gastos: S.gastos.filter(g => g.pagado && en(g)), abonos: S.abonos.filter(en), cierre: S.cierres.find(z => z.dia === diaClave(d0)) || null };
+}
 export function guardarProducto(p) {
   // Se guarda la tasa del día en que se anotó el costo: así se sabe cuánto cuesta reponerlo hoy si el costo sigue al dólar.
   const p0 = p.id && S.productos.find(x => x.id === p.id);
