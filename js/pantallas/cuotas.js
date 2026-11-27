@@ -8,6 +8,7 @@ import { usePagos, useMonto, numero } from './pagos.js';
 import { enlaceWA } from '../ordenpdf.js';
 import { buscar } from '../buscar.js';
 import { BotonAyuda } from '../ayuda.js';
+import { Frase, BotonGuiame } from '../guias.js';
 import { esc, imgSegura } from '../seguro.js';
 
 export const CUOTAS_M = 'En cuotas', APARTADO_M = 'Apartado';
@@ -105,15 +106,19 @@ export function Cuotas() {
   const nombre = p => (S.clientes.find(c => c.id === p.cli) || {}).n || 'Cliente';
   const lista = q.trim() ? buscar(base, q, p => [nombre(p), numeroPlan(p), queEs(p)], true) : base;
   return html`<div class="pila" style="gap:14px">
-    <div class="fila entra"><h1 class="titulo crece">Cuotas</h1><${BotonAyuda} /></div>
+    <div class="fila entra"><h1 class="titulo crece">Cuotas</h1><${BotonGuiame} k="cuotas" /><${BotonAyuda} /></div>
+    <${Frase}>${!planes.length ? 'Aquí verás las ventas en cuotas y los apartados. Se crean al cobrar.'
+      : atrasados.length ? html`<b class="r">${atrasados.length === 1 ? '1 cliente atrasado' : atrasados.length + ' clientes atrasados'}</b> por <b class="num">${D.m(atrasado)}</b>.${semana.length ? html` Esta semana te toca cobrar a <b>${semana.length}</b>.` : ''}`
+      : abiertos.length ? html`Te falta cobrar <b class="num">${D.m(porCobrar)}</b> en ${abiertos.length} ${abiertos.length === 1 ? 'plan' : 'planes'}. Nadie está atrasado.${semana.length ? html` Esta semana: <b>${semana.length}</b>.` : ''}`
+      : 'Todos los planes están pagados.'}</${Frase}>
     <div class="rejilla-2" data-tour="cuotas" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="tarjeta pila" style="gap:2px"><span class="sub">Por cobrar</span><b class="num" style="font-size:24px">${D.m(porCobrar)}</b><span class="sub faint">${abiertos.length} ${abiertos.length === 1 ? 'plan abierto' : 'planes abiertos'}</span></div>
       <div class="tarjeta pila" style="gap:2px"><span class="sub">Atrasado</span><b class="num" style=${{ fontSize: '24px', color: atrasado > 0.004 ? 'var(--out)' : 'var(--ink)' }}>${D.m(atrasado)}</b><span class="sub faint">${atrasados.length} ${atrasados.length === 1 ? 'cliente' : 'clientes'}</span></div>
     </div>
     ${planes.length > 3 && html`<label class="buscador"><${Icono} n="buscar" t=${18} /><input type="search" value=${q} placeholder="Buscar cliente o producto" onInput=${e => setQ(e.target.value)} /></label>`}
-    <div class=${'chips' + (tel ? ' desliza' : '')}>${FIL.map(f => html`<button type="button" key=${f[0]} class=${'chip chico toca' + (filtro === f[0] ? ' on' : '')} onClick=${() => setFiltro(f[0])}>${f[1]}${f[2].length ? ' ' + f[2].length : ''}</button>`)}</div>
+    <div data-guia="filtros" class=${'chips' + (tel ? ' desliza' : '')}>${FIL.map(f => html`<button type="button" key=${f[0]} class=${'chip chico toca' + (filtro === f[0] ? ' on' : '')} onClick=${() => setFiltro(f[0])}>${f[1]}${f[2].length ? ' ' + f[2].length : ''}</button>`)}</div>
     ${lista.length ? html`<div class="pila" style="gap:10px">${lista.map((p, i) => { const c = cu(p), e = estadoTxt(p, c), pct = Math.min(100, Math.round(c.pagado / (p.total || 1) * 100)), rojo = e[1] === 't-ros';
-      return html`<button type="button" key=${p.id} class="tarjeta pila toca entra" style=${{ '--i': Math.min(i, 8), gap: '4px', textAlign: 'left', color: 'var(--ink)', border: 0, font: 'inherit' }} onClick=${() => abrir('plan', { pid: p.id })}>
+      return html`<button type="button" key=${p.id} data-guia="plan" class="tarjeta pila toca entra" style=${{ '--i': Math.min(i, 8), gap: '4px', textAlign: 'left', color: 'var(--ink)', border: 0, font: 'inherit' }} onClick=${() => abrir('plan', { pid: p.id })}>
         <span class="fila" style="justify-content:space-between;gap:8px"><b class="corta">${nombre(p)}</b><span class=${'pildora ' + e[1]}>${e[0]}</span></span>
         <span class="sub corta">${numeroPlan(p)} · ${queEs(p)}</span>
         <span style="height:6px;border-radius:6px;background:var(--fill);overflow:hidden;margin-top:4px"><i style=${{ display: 'block', height: '100%', width: pct + '%', borderRadius: '6px', background: rojo ? 'var(--out)' : p.tipo === 'apartado' ? 'var(--accent)' : 'var(--in)' }}></i></span>

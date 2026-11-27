@@ -155,7 +155,7 @@ function App() {
     return html`<${Ctx.Provider} value=${ctx}>
       <div class=${'tel-raiz' + (hoja ? ' con-hoja' : '')}>
         <div class="app-fondo">
-          <main class="pantalla" key=${valida}><${Pantalla} /></main>
+          <main class="pantalla" key=${valida} data-sec=${valida}><${Pantalla} /></main>
         </div>
         <nav class="nav-tel" aria-label="Secciones" style=${{ gridTemplateColumns: 'repeat(' + (tabs.length + 1) + ', minmax(0, 1fr))' }}>
           ${tabs.slice(0, mitad).map(Tab)}<span class="nav-hueco" aria-hidden="true"></span>${tabs.slice(mitad).map(Tab)}
@@ -208,7 +208,7 @@ function App() {
           ${E && (valida === 'hoy' || valida === 'vender' || valida === 'reportes') && html`<div class="segmento" role="group" aria-label="Sucursal">${[''].concat(S.negocio.sucursales).map(x => html`<button type="button" class=${suc === x ? 'on' : ''} aria-pressed=${suc === x ? 'true' : 'false'} onClick=${() => setSuc(x)}>${x || 'Todas'}</button>`)}</div>`}
           <${BotonNuevo} />
         </div>
-        <div class="contenido" key=${valida}><${Pantalla} /></div>
+        <div class="contenido" key=${valida} data-sec=${valida}><${Pantalla} /></div>
       </div>
     </div>
     ${hoja && html`<${HojaActual} key=${hoja.n} hoja=${hoja} cerrar=${() => setHoja(null)} />`}
