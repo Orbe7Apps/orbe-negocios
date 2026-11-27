@@ -104,6 +104,7 @@ export function Hoy() {
     <div class="tarjeta-tit">Últimas ventas<span class="sub">${r.n} hoy</span></div>
     <div class="lista">${recientes.slice(0, nVentas).map((v, k) => html`<${FilaVenta} key=${v.id} v=${v} i=${k} fecha />`)}</div>
     ${!recientes.length && html`<p class="vacio">Todavía no hay ventas hoy.</p>`}
+    ${r.n > 0 && html`<button type="button" class="ver-mas toca" onClick=${() => abrir('ventasDia')}>Ver todas las ventas de hoy</button>`}
   </div>`;
   // Tarjeta oscura: lo vendido, la tasa, la barra del día y tres cifras que se tocan.
   const tasaTxt = D.dual ? nombreTasa(P, S.tasa).replace('Dólar ', '') + ' ' + new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(D.tasa) : '';
