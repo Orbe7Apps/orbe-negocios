@@ -263,8 +263,12 @@ function vigilarAusencia() {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') { anotarUso(); return; }
     const S = leer();
-    if (S.negocio && S.ajustes.perfil && !S.negocio.demo && !/[?&]demo\b/.test(location.search) && pasoMucho()) salir();
+    const mucho = pasoMucho();
+    if (S.negocio && S.ajustes.perfil && !S.negocio.demo && !/[?&]demo\b/.test(location.search) && mucho) salir();
     anotarUso();
+    // El teléfono casi nunca cierra la app del todo: si estuvo más de 10 minutos fuera y hay versión nueva
+    // esperando, se estrena ahora (igual vuelve al inicio o a los perfiles, no corta nada a medias).
+    if (mucho) versionLista();
   });
   addEventListener('pagehide', anotarUso);
 }
