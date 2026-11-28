@@ -36,12 +36,13 @@ export function BarraTasas() {
 }
 
 // Computadora: chip en la barra de arriba, visible en todas las secciones.
-export function ChipTasa() {
+// chico: dentro de la frase de Vender en el celular (una píldora en lugar de la tarjeta de tasas).
+export function ChipTasa({ chico } = {}) {
   const { S, P, D, abrir } = useApp();
   if (!D.dual) return null;
   const lista = infoTasas(S, P, D), mon = P.id === 'VE' ? 'Bs' : P.s, nf = new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const vieja = lista.some(t => t.estado === 'vieja' || t.estado === 'estimada');
-  return html`<button type="button" class="chip-tasa toca" title="Ver y cambiar las tasas" onClick=${() => abrir('tasa')}>
+  return html`<button type="button" class=${'chip-tasa toca' + (chico ? ' chico' : '')} title="Ver y cambiar las tasas" aria-label="Ver y cambiar las tasas" onClick=${() => abrir('tasa')}>
     ${vieja && html`<i class="punto-aviso"></i>`}
     ${lista.slice(0, 2).map(t => html`<span key=${t.k}><span class="sub">${t.s === '€' ? '€' : t.n.replace('Dólar ', '$ ')}</span> <b class="num">${mon} ${nf.format(t.v)}</b>${flecha(t.cambio) ? html` <span class="num" style=${{ color: t.cambio > 0 ? 'var(--amber-text)' : 'var(--in-text)', fontSize: '11px' }}>${flecha(t.cambio)}</span>` : null}</span>`)}
     <${Icono} n="lapiz" t=${13} c="var(--muted)" />

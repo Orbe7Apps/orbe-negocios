@@ -107,7 +107,7 @@ export const TUTORIALES = [
   ] },
 
   { id: 'abono', g: 'Clientes', t: 'Cobrarle a quien te debe', d: '1 min', i: 'personas', req: x => x.ver('clientes') && x.T.mod('fiado') && x.puede('clientes'), pasos: x => llegar(x, 'clientes', 'Clientes').concat([
-    { sel: '[data-tour=deben]', titulo: 'Quién te debe', texto: 'El que lleva más tiempo sale de primero. En rojo, los de más de 15 días.' },
+    { sel: '[data-tour=deben]', titulo: 'Quién te debe', texto: 'Lo que te deben en total. Abajo va cada cliente, el que más debe de primero; en rojo, los de más de 15 días.' },
     { sel: '[data-guia=recordar]', titulo: 'Recordarle', texto: 'Se abre WhatsApp con el mensaje armado: cuánto debe y desde cuándo. Solo lo envías.' },
     { sel: '[data-guia=abono]', titulo: 'Cuando te pague', texto: 'Tocas aquí, escribes cuánto te dio y cómo. Entra a la caja de hoy y baja su deuda.' },
     fin('¡Listo!', 'Orbe te avisa en Hoy cuando alguien se atrasa.')

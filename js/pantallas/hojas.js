@@ -85,7 +85,9 @@ function Cobrar({ d, cerrar }) {
   const [pro, setPro] = useState(d.pro || (pros.some(p => p.id === S.ajustes.perfil) ? S.ajustes.perfil : (pros[0] || {}).id || ''));
   const verAtendio = conPro && pros.length > 1, [verPro, setVerPro] = useState(false);
   const total = D.redondo(d.tt.total - anticipo);
-  const fp = usePagos(total, metodos, undefined, m => P.id === 'VE' && S.negocio.igtf && esDivisa(m) ? 1.03 : 1);
+  // Ya viene marcada la forma con que se cobró la última venta (casi siempre se repite).
+  const ultimaForma = (() => { for (let i = S.ventas.length - 1; i >= 0 && i >= S.ventas.length - 30; i--) { const v = S.ventas[i]; if (v.anulada || !v.pagos || !v.pagos.length) continue; const m0 = v.pagos[0].m; return S.negocio.pays.includes(m0) ? m0 : undefined; } })();
+  const fp = usePagos(total, metodos, ultimaForma, m => P.id === 'VE' && S.negocio.igtf && esDivisa(m) ? 1.03 : 1);
   const [recibe, setRecibe] = useState(0);
   const [vueltoElegido, setVueltoEn] = useState(null);
   const [comoSaldo, setComoSaldo] = useState(false);
@@ -148,7 +150,7 @@ function Cobrar({ d, cerrar }) {
   const fmt2 = x => new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
   return html`<${Hoja} titulo=${d.titulo || (T.vender === 'Pedido' ? 'Cobrar pedido' : 'Cobrar')} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
-      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 6px"><b class="num" style="font-size:40px;letter-spacing:-0.02em">${D.m(totalCobrar)}</b>${anticipo > 0 && html`<span class="sub num">Total ${D.m(total + anticipo)} · ya adelantó ${D.m(anticipo)}</span>`}${D.dual && html`<span class="sub num">${D.s(totalCobrar)}${S.negocio.euro ? ' · ' + D.e(totalCobrar) : ''}</span>`}${d.tt.txt && html`<span class="sub faint num">${d.tt.txt}: ${D.m(d.tt.imp)}</span>`}${igtf > 0 && html`<span class="sub num entra" style="color:var(--amber-text)">Incluye IGTF 3 % por pago en divisas: ${D.m(igtf)}</span>`}
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 6px"><b style="font-size:40px;letter-spacing:-0.02em"><${Monto} v=${totalCobrar} f=${D.m} /></b>${anticipo > 0 && html`<span class="sub num">Total ${D.m(total + anticipo)} · ya adelantó ${D.m(anticipo)}</span>`}${D.dual && html`<span class="sub num monto-bs" key=${fp.m}>${D.s(totalCobrar)}${S.negocio.euro ? ' · ' + D.e(totalCobrar) : ''}</span>`}${d.tt.txt && html`<span class="sub faint num">${d.tt.txt}: ${D.m(d.tt.imp)}</span>`}${igtf > 0 && html`<span class="sub num entra" style="color:var(--amber-text)">Incluye IGTF 3 % por pago en divisas: ${D.m(igtf)}</span>`}
         ${D.dual && html`<button type="button" class="enlace-tasa toca" onClick=${() => c(() => abrir('tasa', { volver: d }))}>${nombreTasa(P, S.tasa)} ${P.id === 'VE' ? 'Bs' : P.s} ${fmt2(D.tasa)}${S.negocio.euro ? ' · € ' + (P.id === 'VE' ? 'Bs ' : P.s + ' ') + fmt2(D.tasaEur) : ''} · cambiar</button>`}</div>
       <div data-guia="formas">${fp.vista({ desliza: tel, calido: v => v === fiadoN || v === 'Saldo a favor', sinInterruptor: true })}</div>
       ${(metodos.length > 1 || verAtendio || !pideCli) && html`<div class="atajos">

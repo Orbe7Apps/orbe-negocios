@@ -19,13 +19,16 @@ export function Clientes() {
   const lista = filtro === 'Deben' ? deben : filtro === 'Empresas' ? todos.filter(c => c.tipo === 'empresa') : todos;
   const opciones = (fiado ? ['Deben', 'Todos'] : ['Todos']).concat(S.negocio.escala === 'empresa' && (filtro === 'Empresas' || todos.some(c => c.tipo === 'empresa')) ? ['Empresas'] : []);
   const viejo = c => c.desde && Date.now() - c.desde > 15 * 86400000;
+  // Celular: la tarjeta solo dice el total; la lista de abajo ya va del que más debe al que menos (sin repetirlos).
+  const vencidoTel = deben.filter(viejo).reduce((a, c) => a + c.deuda, 0);
 
   const Resumen = html`<section class="tarjeta entra" data-tour="deben" style="background:var(--amber-soft);box-shadow:none">
     <div class="fila" style="align-items:flex-start">
       <span class="crece" style="display:flex;flex-direction:column;gap:2px"><span class="sub">Te deben</span><${Monto} v=${tot} f=${D.m} clase="titulo amber" />${D.dual && html`<span class="sub num">${D.s(tot)}</span>`}</span>
       <span class="pildora t-amb" style="flex-shrink:0">${deben.length} ${deben.length === 1 ? 'cliente' : 'clientes'}</span>
     </div>
-    ${deben.length > 0 && html`<div style="margin-top:14px"><${BarrasH} total=${tot} datos=${deben.slice(0, 5).map((c, i) => ({ n: c.n, v: c.deuda, txt: D.m(c.deuda), c: viejo(c) ? 'var(--out)' : 'var(--amber)', sub: viejo(c) ? 'Desde ' + hace(c.desde) + ' · vencido' : 'Desde ' + hace(c.desde) }))} /></div>`}
+    ${tel && vencidoTel > 0.004 && html`<span class="sub" style="display:block;margin-top:8px">De eso, <b class="out num">${D.m(vencidoTel)}</b> lleva más de 15 días.</span>`}
+    ${deben.length > 0 && !tel && html`<div style="margin-top:14px"><${BarrasH} total=${tot} datos=${deben.slice(0, 5).map((c, i) => ({ n: c.n, v: c.deuda, txt: D.m(c.deuda), c: viejo(c) ? 'var(--out)' : 'var(--amber)', sub: viejo(c) ? 'Desde ' + hace(c.desde) + ' · vencido' : 'Desde ' + hace(c.desde) }))} /></div>`}
   </section>`;
 
   const Fila = (c, i) => html`<div class="tarjeta entra" key=${c.id} style=${{ '--i': i, display: 'flex', flexDirection: 'column', gap: '12px' }}>

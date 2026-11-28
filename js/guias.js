@@ -51,7 +51,7 @@ const PASOS = {
     ];
     return [
       { sel: '.frase-viva', titulo: 'Cómo van tus clientes', texto: fiado ? 'Esta frase te dice cuánto te deben y quién lleva más tiempo sin pagar.' : 'Esta frase te dice cuántos clientes tienes y cuántos volvieron este mes.' },
-      fiado && hay('[data-tour=deben]') && { sel: '[data-tour=deben]', titulo: 'Lo que te deben', texto: 'Los que más deben, de primero. En rojo, los que llevan más de 15 días.' },
+      fiado && hay('[data-tour=deben]') && { sel: '[data-tour=deben]', titulo: 'Lo que te deben', texto: 'Lo que te deben en total. Abajo va cada cliente, el que más debe de primero; en rojo, los que llevan más de 15 días.' },
       { sel: '[data-guia=cliente]', titulo: 'Cada cliente', texto: 'Tócalo para ver lo que te ha comprado' + (fiado ? ', lo que debe' : '') + ' y su teléfono.' },
       hay('[data-guia=recordar]') && { sel: '[data-guia=recordar]', titulo: 'Recordarle', texto: 'Se abre WhatsApp con el mensaje ya armado: cuánto debe y desde cuándo. Solo lo envías.' },
       hay('[data-guia=abono]') && { sel: '[data-guia=abono]', titulo: 'Cuando te pague', texto: 'Toca aquí, escribe cuánto te dio y cómo. Entra a la caja de hoy y baja su deuda.' },
