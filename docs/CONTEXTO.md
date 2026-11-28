@@ -1,6 +1,6 @@
 # Orbe Negocios · contexto completo del proyecto
 
-Última actualización: 28 nov 2026 (app en la versión **v125** del service worker).
+Última actualización: 28 nov 2026 (app en la versión **v126** del service worker).
 Este documento es la fuente única de verdad: qué es la app, cómo está hecha, qué se decidió y qué falta. Si algo cambia, se actualiza aquí.
 
 ---
@@ -37,7 +37,7 @@ Parámetros útiles: `?vista=telefono` / `?vista=pc` fuerzan la distribución; `
 - **Rutas** por hash (`#hoy`, `#vender`, `#clientes`…). Las secciones y sus permisos están en `SECCIONES`, `PERMISO_SEC` y `MODULO_SEC` de `js/app.js`.
 - **Hojas** (ventanas que suben desde abajo; en PC son ventanas centradas) en el mapa `H` de `js/pantallas/hojas.js`. Contexto común con `useApp()` (`js/ctx.js`).
 - **Rubros y funciones**: `js/rubros.js` define 12 rubros y 17 módulos que se encienden o apagan por negocio (`T.mod('cuotas')`).
-- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v125`). Desde v109 la versión nueva **no se activa sola**: se baja en silencio y se estrena la próxima vez que se abre la app, mientras se ve la pantalla de carga (app.js `versionLista` le manda `activar` al service worker y recarga una vez; la pantalla de carga sigue quieta, sin volver a empezar). Antes se recargaba sola ya mostrando los perfiles (“carga dos veces”). También se estrena al volver a la app tras más de 10 minutos fuera (el teléfono casi nunca la cierra del todo; v117). Y si la versión en uso es anterior a la v109 (su app no sabe pedir `activar`), la nueva se activa sola al instalarse: sin eso esos teléfonos se quedaban en la v108 (pasó el 27 nov 2026). Los archivos nuevos se agregan a `ARCHIVOS`.
+- **Service worker** (`sw.js`): guarda cada versión completa y abre siempre desde esa copia. **Cada cambio publicado debe subir `VERSION`** (hoy `orbe-negocios-v126`). Desde v109 la versión nueva **no se activa sola**: se baja en silencio y se estrena la próxima vez que se abre la app, mientras se ve la pantalla de carga (app.js `versionLista` le manda `activar` al service worker y recarga una vez; la pantalla de carga sigue quieta, sin volver a empezar). Antes se recargaba sola ya mostrando los perfiles (“carga dos veces”). También se estrena al volver a la app tras más de 10 minutos fuera (el teléfono casi nunca la cierra del todo; v117). Y si la versión en uso es anterior a la v109 (su app no sabe pedir `activar`), la nueva se activa sola al instalarse: sin eso esos teléfonos se quedaban en la v108 (pasó el 27 nov 2026). Los archivos nuevos se agregan a `ARCHIVOS`.
 - **Nube** (`js/nube.js`): Supabase Auth (correo + contraseña, o usuario), tablas por colección, cola sin conexión que sube sola, sincronización entre aparatos.
 
 ### Archivos principales
