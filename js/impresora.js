@@ -71,7 +71,7 @@ export function lineasZ(z, { S, P, D }) {
   const n = S.negocio, quien = (S.perfiles.find(p => p.id === z.por) || {}).n, pp = (z.resumen && z.resumen.porPago) || {};
   const f = new Date(z.t);
   const L = [{ t: n.nombre, c: 1, g: 1, n: 1 }];
-  if (n.fiscal) L.push({ t: (n.razon || '') + ' ' + P.fiscal[0] + ' ' + n.fiscal, c: 1 });
+  if (n.fiscal) L.push({ t: [n.razon, P.fiscal[0] + ' ' + n.fiscal].filter(Boolean).join(' '), c: 1 });
   L.push({ t: 'CIERRE Z #' + (z.n || 1), c: 1, n: 1 }, { t: f.toLocaleDateString('es') + ' ' + f.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) + (quien ? ' · ' + quien : ''), c: 1 }, { sep: '-' });
   if (z.desde) L.push({ a: 'Ventas', b: '#' + z.desde + ' a #' + z.hasta });
   if (z.anuladas) L.push({ a: 'Anuladas', b: String(z.anuladas) });
