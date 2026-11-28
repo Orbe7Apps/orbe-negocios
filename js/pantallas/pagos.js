@@ -141,10 +141,11 @@ export function usePagos(totalDe, metodos, inicial, ajuste, mo) {
 
   // calido: para marcar “Fiado” en ámbar.
   // Se llama como función (no como componente) para que los campos no pierdan lo escrito al redibujar.
+  // desliza (celular): las formas van en rejilla, todas a la vista.
   function vista({ titulo = 'Forma de pago', desliza, calido, ayuda, sinInterruptor, equivalente = !mo } = {}) {
     const pagado = Math.min(total, suma);
     return html`<div class="pila" style="gap:12px">
-      ${!varias && html`<div class="campo"><span>${titulo}</span><${Chips} opciones=${conSimbolo(metodos)} valor=${m} onCambio=${setM} desliza=${desliza} calido=${calido} /></div>`}
+      ${!varias && html`<div class="campo"><span>${titulo}</span><${Chips} opciones=${conSimbolo(metodos)} valor=${m} onCambio=${setM} rejilla=${desliza} calido=${calido} /></div>`}
       ${!varias && equivalente && conEuro && esEuro(m) && total > 0 && html`<span class="sub num entra">Con ${m}: € ${new Intl.NumberFormat(P.loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(D.aEur(total * (ajuste ? ajuste(m) : 1)))} · tasa euro</span>`}
       ${!varias && equivalente && D.dual && total > 0 && nombreTasaDe(m) && html`<span class="sub num entra">Con ${m}: ${otra(aOtra(total * (ajuste ? ajuste(m) : 1), m))} · ${nombreTasaDe(m)}</span>`}
       ${!varias && pideRef(m) && html`<label class="campo entra"><span>Referencia (opcional)</span><input class="num" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Últimos números" value=${ref} onInput=${e => setRef(e.target.value.replace(/[^\dA-Za-z]/g, ''))} /></label>`}

@@ -3,13 +3,13 @@ import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
 import { Frase, BotonGuiame } from '../guias.js';
-import { Icono, avisar, TONOS, hora, FotoProd } from '../ui.js';
+import { Icono, avisar, TONOS, hora, FotoProd, CabezaPegada, volarAlCarro } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { estadoNube, estadoPlan } from '../nube.js';
 import { resumen, inicioDia, listaProductos, sigNumero, porCodigo, promosVigentes, promoAplica, guardarProducto, marcarCotizacion, numeroCot, apartadas } from '../datos.js';
 import { nuevoCarrito, lineasDe, cuantos, porPeso, fraccion, verQ, existencia } from '../carrito.js';
 import { FilaVenta } from './hojas.js';
-import { BarraTasas } from './tasas.js';
+import { ChipTasa } from './tasas.js';
 import { FiltroGrupos, filtrarGrupo, textosProducto, grupoDe, colorGrupo, suaveGrupo, iniciales2, tonoProd } from './grupos.js';
 import { buscar as buscarEn, parecidos } from '../buscar.js';
 import { Reparto, Monto, color } from '../graficos.js';
@@ -57,6 +57,14 @@ export function Vender() {
   const [grupo, setGrupo] = useState('');
   const [clase, setClase] = useState('prod');
   const lector = useRef(null);
+  // Celular: la tarjeta del carrito queda debajo del catálogo; mientras no se ve, una barra flotante lleva el total y “Cobrar”.
+  const tarjetaCarro = useRef(null);
+  const [carroVisto, setCarroVisto] = useState(false);
+  useEffect(() => {
+    if (!tel || !tarjetaCarro.current || !window.IntersectionObserver) return;
+    const io = new IntersectionObserver(([e]) => setCarroVisto(e.isIntersecting), { rootMargin: '0px 0px -90px 0px' });
+    io.observe(tarjetaCarro.current); return () => io.disconnect();
+  }, [tel]);
   const prods = listaProductos();
   // Líneas con variante, peso, promociones y descuentos ya aplicados.
   const { items, ahorro, descGlobal, descTxt } = lineasDe(cart, prods);
@@ -148,7 +156,7 @@ export function Vender() {
   const enCarrito = p => Object.keys(cart.q).filter(k => k === p.id || k.startsWith(p.id + '~')).reduce((a, k) => a + (porPeso(p) ? 1 : cart.q[k]), 0);
   // Sin productos todavía: la guía para agregarlos (o cobrar un cargo suelto con “+ Servicio o cargo”).
   const Grilla = !prods.length ? html`<${CatalogoVacio} donde="vender" />` : html`<div class="productos">${visibles.map((p, i) => { const c = enCarrito(p); return html`
-    <button type="button" key=${p.id} data-pid=${p.id} data-directo=${!esArmable(p) && !(Array.isArray(p.vars) && p.vars.length) && !porPeso(p) ? '1' : undefined} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${() => sumar(p)} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
+    <button type="button" key=${p.id} data-pid=${p.id} data-directo=${!esArmable(p) && !(Array.isArray(p.vars) && p.vars.length) && !porPeso(p) ? '1' : undefined} class=${'prod toca entra' + (c ? ' on' : '') + (T.inv && p.q === 0 ? ' agotado' : '')} style=${{ '--i': i, color: 'var(--ink)' }} onClick=${e => { const ok = sumar(p); if (ok && tel) volarAlCarro(e.currentTarget); }} aria-label=${'Agregar ' + p.n + (T.inv && p.q === 0 ? ' (agotado)' : '')}>
       ${c ? html`<span class="cant" key=${c}>${verQ(c)}</span>` : null}
       ${FotoProd(p, 36) || html`<span class="ic" style=${Object.assign({ width: '36px', height: '36px', fontSize: '13px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`}
       ${esArmable(p) && html`<span class="armar-chip">Armar</span>`}<b>${p.n}</b><small class="num">${esArmable(p) ? 'Precio variable' : D.m(p.p)}${porPeso(p) ? ' / ' + p.u : fraccion(p) ? ' · por ' + p.u : ''}${p.dur ? ' · ' + (p.dur >= 60 ? p.dur / 60 + ' h' : p.dur + ' min') : ''}${p.vars && p.vars.length ? ' · ' + p.vars.length + ' opciones' : ''}</small>
@@ -185,21 +193,24 @@ export function Vender() {
 
   // La frase de arriba: cuánto llevas hoy o, con algo en la venta, cuánto va esta.
   const hoyR = resumen(inicioDia(Date.now()), Date.now() + 1, suc), cosa = T.inv ? 'producto' : 'servicio';
-  const FraseVender = !prods.length ? null : html`<${Frase}>${!prods.length ? html`Agrega tu primer ${cosa} y aquí lo ${T.inv ? 'vendes' : 'cobras'} con un toque.`
+  const FraseVender = !prods.length ? null : html`<${Frase}><span>${!prods.length ? html`Agrega tu primer ${cosa} y aquí lo ${T.inv ? 'vendes' : 'cobras'} con un toque.`
     : n ? html`En esta venta: <b>${items.length} ${items.length === 1 ? cosa : cosa + 's'}</b> por <b class="v num">${D.m(total)}</b>${D.dual ? html` <span class="num">(${D.s(total)})</span>` : ''}.`
     : hoyR.n ? html`Hoy llevas <b class="v num">${D.m(hoyR.total)}</b> en ${hoyR.n} ${hoyR.n === 1 ? 'venta' : 'ventas'}. Toca lo que se lleva para empezar otra.`
-    : html`Aún no hay ventas hoy. Toca lo que se lleva para empezar.`}</${Frase}>`;
+    : html`Aún no hay ventas hoy. Toca lo que se lleva para empezar.`}</span>${tel && D.dual ? html` <${ChipTasa} chico />` : null}</${Frase}>`;
 
   if (tel) return html`
     <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonGuiame} k="vender" /><${BotonAyuda} /></div>
+    <${CarroFlotante} n=${n} total=${total} cosa=${T.inv ? 'producto' : 'servicio'} visible=${!carroVisto} onVer=${() => tarjetaCarro.current && tarjetaCarro.current.scrollIntoView({ behavior: 'smooth', block: 'center' })} onCobrar=${cobrar} />
     ${FraseVender}
-    <${BarraTasas} />
+    ${Clases}
+    <${CabezaPegada}>
     <div class="fila entra" style="gap:8px"><label class="buscador crece" style="background:var(--surface)"><${Icono} n="buscar" t=${16} c="var(--muted)" /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${prods.length ? 'Buscar entre ' + prods.length : 'Buscar'} aria-label="Buscar producto" /></label>
       ${T.mod('escaner') && html`<button type="button" class="icono-btn toca escanear-mini" aria-label="Escanear código de barras" onClick=${() => abrir('escaner', { para: 'vender', onAgregar: sumarEscaneado })}><${Icono} n="escanear" t=${20} /></button>`}</div>
-    ${Clases}${(!conServ || deClase.some(p => p.g)) && html`<${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} lista=${deClase} />`}
+    ${(!conServ || deClase.some(p => p.g)) && html`<${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} lista=${deClase} />`}
+    </${CabezaPegada}>
     ${Sugerencias}
     ${Grilla}
-    <div class="tarjeta pila entra">${n ? Lineas : null}${BotonCargo}${Total}</div>
+    <div class="tarjeta pila entra carro-en-pagina" ref=${tarjetaCarro}>${n ? Lineas : null}${BotonCargo}${Total}</div>
     ${Boton}`;
 
   // Panel “Hoy en esta caja”: aprovecha el espacio debajo de los productos con lo que el cajero necesita a mano.
@@ -244,5 +255,19 @@ export function Vender() {
       <div style="padding-top:12px">${Total}</div>
       ${Boton}
     </div>
+  </div>`;
+}
+
+// Celular: barra del carrito encima de la barra de abajo. Lleva cuántos, el total (que salta al cambiar) y “Cobrar”.
+// Tocar la parte izquierda baja hasta el carrito para cambiar cantidades.
+function CarroFlotante({ n, total, cosa, visible, onVer, onCobrar }) {
+  const { D } = useApp();
+  const on = n > 0 && visible;
+  return html`<div class=${'carro-flota' + (on ? ' on' : '')} aria-hidden=${on ? 'false' : 'true'}>
+    <button type="button" class="carro-ver toca" tabindex=${on ? 0 : -1} onClick=${onVer} aria-label=${'Ver la venta: ' + n + ' ' + (n === 1 ? cosa : cosa + 's')}>
+      <span class="carro-n num" key=${'n' + n}>${n}</span>
+      <span class="carro-tot"><b class="num" key=${'t' + total}>${D.m(total)}</b>${D.dual ? html`<small class="num">${D.s(total)}</small>` : null}</span>
+    </button>
+    <button type="button" class="carro-cobrar toca" tabindex=${on ? 0 : -1} onClick=${onCobrar}>Cobrar<${Icono} n="sig" t=${16} g=${2.4} c="#fff" /></button>
   </div>`;
 }

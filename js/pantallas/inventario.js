@@ -6,7 +6,7 @@ import { Frase, BotonGuiame } from '../guias.js';
 import { bajoMinimo, bajoMeta, resumen, inicioDia, listaProductos, promosVigentes, apartadas } from '../datos.js';
 import { verQ, FRACCIONES } from '../carrito.js';
 import { BarrasH, Reparto, color } from '../graficos.js';
-import { Chips, Icono, TONOS, avisar, FotoProd } from '../ui.js';
+import { Chips, Icono, TONOS, avisar, FotoProd, CabezaPegada } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { FiltroGrupos, filtrarGrupo, textosProducto, grupoDe, colorGrupo, suaveGrupo, tonoProd } from './grupos.js';
 import { buscar, parecidos } from '../buscar.js';
@@ -72,8 +72,11 @@ export function Inventario() {
   const FraseInv = html`<${Frase}>${bajos.length
     ? html`${bajos.length === 1 ? html`<b class="a">${nombres}</b> se está acabando.` : html`<b class="a">${bajos.length} productos</b> se están acabando${bajos.length === 2 ? html`: ${nombres}` : html`, como ${nombres}`}.`}${agotados ? html` <b class="r">${agotados === 1 ? '1 ya está agotado' : agotados + ' ya están agotados'}</b>.` : ''}`
     : html`Todo tiene existencia.`}${vg && conStock.length ? html` Tienes <b class="num">${D.m(valor)}</b> en estantes.` : ''}</${Frase}>`;
+  // Celular: “+” al lado de cada producto para anotar lo que llegó sin abrir todo el formulario.
+  const pr = puede('reponer');
   const Tarjetas = html`<div class="pila" data-tour="productos">${lista.map((p, i) => { const e = estado(p); return html`
-    <button type="button" key=${p.id} data-guia="producto" class="tarjeta fila toca entra" style=${{ '--i': i, border: 0, color: 'var(--ink)', textAlign: 'left' }} onClick=${() => editarP({ pid: p.id })}>
+    <div key=${p.id} class=${'inv-fila entra' + (tel && pr ? ' con-llegaron' : '')} style=${{ '--i': i }}>
+    <button type="button" data-guia="producto" class="tarjeta fila toca" style=${{ border: 0, color: 'var(--ink)', textAlign: 'left', width: '100%' }} onClick=${() => editarP({ pid: p.id })}>
       ${FotoProd(p, 0, html`<span class="ic" style=${Object.assign({ fontSize: '12px', fontWeight: 700 }, tonoProd(S, p))}>${p.ab}</span>`)}
       <span class="crece" style="display:flex;flex-direction:column;gap:6px">
         <span class="fila" style="gap:8px"><b class="crece corta" style="font-size:14px;font-weight:600">${p.n}</b>${vg && p.c > 0 && p.p < p.c * 1.05 ? html`<span class="pildora t-ros">Sin ganancia</span>` : null}<b class="num" style=${{ fontSize: '13px', color: e[2] }}>${verQ(p.q, p.u && !FRACCIONES[p.u] ? p.u : 'und')}</b></span>
@@ -82,7 +85,9 @@ export function Inventario() {
         ${p.vars && p.vars.length ? html`<span class="sub num" style="font-size:11px">${p.vars.map(v => v.n + ' ' + verQ(v.q || 0)).join(' · ')}</span>` : null}
         <span class="sub faint num" style="font-size:11px">${vg ? 'Costo ' + D.m(p.c) + ' · ' : ''}Precio ${D.m(p.p)}${p.u && !FRACCIONES[p.u] ? ' / ' + p.u : p.u ? ' · por ' + p.u : ''}${vg ? ' · Ganas ' + (p.p ? Math.round((p.p - p.c) / p.p * 100) : 0) + ' %' : ''}</span>
       </span>
-    </button>`; })}</div>`;
+    </button>
+    ${tel && pr && html`<button type="button" class="llegaron toca" data-guia="llegaron" aria-label=${'Llegaron más de ' + p.n} onClick=${() => abrir('reponer', { pid: p.id })}><${Icono} n="mas1" t=${16} g=${2.6} /><small>Llegó</small></button>`}
+    </div>`; })}</div>`;
 
   // Herramientas en una fila: escanear, factura del proveedor, promociones y precios.
   // Solo las que el negocio tiene encendidas (Ajustes → Funciones).
@@ -101,10 +106,12 @@ export function Inventario() {
   if (tel) return html`
     <div class="fila entra" style="gap:8px"><h1 class="titulo crece">Inventario</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} />${pp && html`<button type="button" data-guia="agregar" class="icono-btn toca boton-agregar" aria-label=${filtro === 'Servicios' ? 'Agregar servicio' : 'Agregar producto'} onClick=${() => filtro === 'Servicios' ? editarP({ svc: true }) : editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}><${Icono} n="mas1" t=${20} g=${2.6} /></button>`}</div>
     ${FraseInv}
-    <label class="buscador buscador-oscuro entra"><${Icono} n="buscar" t=${17} /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + listaProductos().length} aria-label="Buscar en el inventario" />${(pp || puede('reponer')) && html`${T.mod('escaner') && html`<button type="button" class="buscador-cam toca" aria-label="Escanear código de barras" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="escanear" t=${17} /></button>`}`}</label>
     ${Herramientas}
     ${Pestañas}
+    <${CabezaPegada}>
+    <label class="buscador buscador-oscuro entra"><${Icono} n="buscar" t=${17} /><input type="search" value=${q} onInput=${e => setQ(e.target.value)} placeholder=${'Buscar entre ' + listaProductos().length} aria-label="Buscar en el inventario" />${(pp || puede('reponer')) && html`${T.mod('escaner') && html`<button type="button" class="buscador-cam toca" aria-label="Escanear código de barras" onClick=${() => abrir('escaner', { para: 'inventario' })}><${Icono} n="escanear" t=${17} /></button>`}`}</label>
     ${(filtro !== 'Servicios' || servs.some(p => p.g)) && html`<${FiltroGrupos} valor=${grupo} onCambio=${setGrupo} lista=${deTab} />`}
+    </${CabezaPegada}>
     ${filtro !== 'Servicios' && Resumen}
     ${filtro === 'Servicios' ? ListaServicios : html`${NoHay(lista, base)}${Tarjetas}${!lista.length && !q.trim() ? html`<p class="vacio">${filtro === 'Por reponer' ? 'Nada por reponer.' : grupo ? 'No hay nada en este grupo.' : 'Todavía no tienes productos.'}</p>` : null}`}`;
 

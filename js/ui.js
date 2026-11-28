@@ -158,8 +158,9 @@ export function Interruptor({ on, onCambio, titulo, sub }) {
   </button>`;
 }
 
-export function Chips({ opciones, valor, onCambio, desliza, calido, chico }) {
-  return html`<div class=${'chips' + (desliza ? ' desliza' : '')}>
+// rejilla: todas a la vista en dos columnas (formas de pago en el celular), sin fila que se desliza.
+export function Chips({ opciones, valor, onCambio, desliza, calido, chico, rejilla }) {
+  return html`<div class=${'chips' + (rejilla ? ' rejilla-chips' : desliza ? ' desliza' : '')}>
     ${opciones.map(o => { const v = typeof o === 'string' ? o : o.v, n = typeof o === 'string' ? o : o.n, on = v === valor;
       return html`<button type="button" key=${v} class=${'chip toca' + (on ? ' on' : '') + (on && calido && calido(v) ? ' calido' : '') + (chico ? ' chico' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${() => onCambio(v)}>${n}</button>`; })}
   </div>`;
@@ -294,4 +295,44 @@ export function Bienvenida({ b, cargando, listo }) {
       <span class="bienv-t3">${cargando ? 'Preparando tus ventas, productos y clientes…' : '¡Todo listo!'}</span>
     </div>
   </div>`;
+}
+
+// ---------- cabecera que se pega arriba ----------
+// Celular: el buscador y los filtros quedan a mano al bajar por la lista. Lo de arriba (frase, tasa,
+// pestañas) se va con la página; al pegarse toma fondo con desenfoque, sin cambiar de alto (nada salta).
+export function CabezaPegada({ children }) {
+  // Un solo elemento (no fragmento): así lo que viene después no se desordena al redibujar.
+  const caja = useRef(null);
+  const [pegada, setPegada] = useState(false);
+  useEffect(() => {
+    const el = caja.current, sc = el && el.closest('.app-fondo');
+    if (!el || !sc) return;
+    const mirar = () => setPegada(sc.scrollTop > 4 && el.getBoundingClientRect().top - sc.getBoundingClientRect().top <= 1);
+    sc.addEventListener('scroll', mirar, { passive: true }); mirar();
+    return () => sc.removeEventListener('scroll', mirar);
+  }, []);
+  return html`<div ref=${caja} class=${'cabeza-pegada' + (pegada ? ' pegada' : '')}>${children}</div>`;
+}
+
+// ---------- el producto vuela al carrito ----------
+// Una copia del ícono del producto sale de donde se tocó y cae en la barra del carrito.
+export function volarAlCarro(origen) {
+  if (!origen || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const ic = origen.querySelector('.ic, img') || origen, r = ic.getBoundingClientRect();
+  const copia = ic.cloneNode(true);
+  copia.classList.add('vuela-al-carro');
+  Object.assign(copia.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+  document.body.appendChild(copia);
+  // La barra aparece con el primer producto: se espera un cuadro para saber dónde quedó.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const meta = document.querySelector('.carro-flota.on .carro-n');
+    if (!meta || !copia.animate) { copia.remove(); return; }
+    const m = meta.getBoundingClientRect(), dx = m.left + m.width / 2 - (r.left + r.width / 2), dy = m.top + m.height / 2 - (r.top + r.height / 2);
+    const a = copia.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx * 0.45}px, ${dy * 0.45 - 60}px) scale(.85)`, opacity: 1, offset: 0.45 },
+      { transform: `translate(${dx}px, ${dy}px) scale(.35)`, opacity: 0.2 }
+    ], { duration: 520, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
+    a.onfinish = () => copia.remove(); a.oncancel = () => copia.remove();
+  }));
 }
