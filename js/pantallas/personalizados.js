@@ -3,8 +3,8 @@
 // Si es un encargo, pasa a Órdenes con abono y fecha: las piezas quedan apartadas y bajan del inventario al entregar.
 import { html, useState, useEffect } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
-import { Hoja, Icono, Interruptor, avisar } from '../ui.js';
-import { listaProductos, apartadas, guardarPlantilla, borrarPlantilla } from '../datos.js';
+import { Hoja, Icono, Interruptor, avisar, avisarDeshacer } from '../ui.js';
+import { listaProductos, apartadas, guardarPlantilla, borrarPlantilla, conDeshacer } from '../datos.js';
 import { numero } from './pagos.js';
 import { tonoProd } from './grupos.js';
 
@@ -133,7 +133,7 @@ export function Armar({ d, cerrar }) {
       <span class="sub" style="line-height:1.4">${tipo === 'encargo' ? 'Se crea un pedido con abono y fecha de entrega. Las piezas quedan apartadas y bajan del inventario al entregar.' : 'Va al pedido como una línea. Las piezas bajan del inventario al cobrar.'}</span></div>`}
     <${Interruptor} on=${conPl} onCambio=${setConPl} titulo="Guardar como plantilla" sub=${desde && !conPl ? 'Viene de “' + desde + '”' : 'Para armarlo igual con un toque'} />
     ${conPl && html`<label class="campo entra"><span>Nombre de la plantilla</span><input type="text" value=${nombrePl} placeholder=${plAuto()} aria-label="Nombre de la plantilla" autocomplete="off" onInput=${ev => setNombrePl(ev.target.value)} /></label>`}
-    ${desde && html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start;color:var(--out-text)" onClick=${() => { borrarPlantilla(per.id, desde); setDesde(''); avisar('Plantilla borrada'); }}>Borrar la plantilla “${desde}”</button>`}`;
+    ${desde && html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start;color:var(--out-text)" onClick=${() => { const u = conDeshacer(() => borrarPlantilla(per.id, desde), 'Plantilla borrada'); setDesde(''); avisarDeshacer('Plantilla borrada', u); }}>Borrar la plantilla “${desde}”</button>`}`;
 
   return html`<${Hoja} titulo=${per.n} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`${Pasos}<div class="armar-vista" key=${paso}>${paso === 1 ? Paso1 : paso === 2 ? Paso2 : Paso3}</div>`,

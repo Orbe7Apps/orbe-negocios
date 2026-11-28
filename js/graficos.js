@@ -158,14 +158,15 @@ export function Reparto({ segs, f, total, titulo = 'Total', tam = 124, grosor = 
   </div>`;
 }
 
-// Barras horizontales con nombre y valor. datos: [{ n, v, txt, c, sub }]
-export function BarrasH({ datos }) {
-  const max = Math.max(1e-9, ...datos.map(d => d.v));
-  return html`<div class="barras-h">
-    ${datos.map((d, i) => html`<div class="bh entra" key=${d.n} style=${{ '--i': i }}>
-      <div class="fila" style="gap:8px"><span class="crece corta" style="font-size:14px;font-weight:600">${d.n}</span><b class="num" style="font-size:14px">${d.txt}</b></div>
-      <div class="barra-prog"><i style=${{ width: Math.max(2, d.v / max * 100) + '%', background: d.c || color(i), animationDelay: (i * 40) + 'ms' }}></i></div>
-      ${d.sub && html`<small class="faint" style="font-size:12px">${d.sub}</small>`}
-    </div>`)}
-  </div>`;
+// Ranking sin barras (como pidió el dueño): círculo de color con el puesto, nombre, detalle, % del total y monto.
+// datos: [{ n, v, txt, c, sub }]; total (opcional) para mostrar qué parte del total es cada uno.
+export function BarrasH({ datos, total }) {
+  const tot = total || 0;
+  const pct = v => { const q = tot ? v / tot * 100 : 0; return (q > 0 && q < 1 ? '<1' : Math.round(q)) + ' %'; };
+  return html`<ul class="lista-orbe ranking">${datos.map((d, i) => html`<li key=${d.n} class="entra" style=${{ '--i': i, '--c': d.c || color(i) }}>
+    <span class="simbolo num">${i + 1}</span>
+    <span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><b class="corta">${d.n}</b>${d.sub && html`<small class="faint corta" style="font-size:12px">${d.sub}</small>`}</span>
+    ${tot > 0 && html`<span class="faint num pct">${pct(d.v)}</span>`}
+    <b class="num">${d.txt}</b>
+  </li>`)}</ul>`;
 }

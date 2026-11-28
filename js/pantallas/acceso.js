@@ -82,6 +82,7 @@ export function Acceso({ tel }) {
   const [fallos, setFallos] = useState(0);
   const [hasta, setHasta] = useState(0);
   const [olvido, setOlvido] = useState(false);
+  const [salir, setSalir] = useState(false); // “Cambiar de cuenta”: se pregunta aquí mismo, sin la ventana gris del teléfono
   const [, tic] = useState(0);
   useEffect(() => { if (hasta <= Date.now()) return; const r = setInterval(() => { tic(x => x + 1); if (Date.now() >= hasta) clearInterval(r); }, 500); return () => clearInterval(r); }, [hasta]);
   const espera = Math.max(0, Math.ceil((hasta - Date.now()) / 1000));
@@ -150,6 +151,10 @@ export function Acceso({ tel }) {
     <span class="sub faint" style="margin-top:auto;text-align:center">Cada persona ve solo lo que el dueño le permite.</span>
     ${!demo && html`<div class="pila" style="gap:6px;align-items:center;padding-top:6px">
       <span class="sub">¿No es tu negocio?</span>
-      <button type="button" class="btn2 chico toca" style="gap:6px" onClick=${() => { if (confirm('¿Cambiar de cuenta? Se cierra la sesión de “' + S.negocio.nombre + '” en este aparato. Después puedes entrar con otra cuenta o crear una nueva.')) cerrarSesion().then(() => avisar('Sesión cerrada')); }}><${Icono} n="salir" t=${15} />Cambiar de cuenta</button>
+      ${salir ? html`<div class="tarjeta pila entra" style="gap:10px;align-items:center;text-align:center;max-width:340px">
+        <b style="font-size:15px">¿Cambiar de cuenta?</b>
+        <span class="sub" style="line-height:1.45">Se cierra la sesión de “${S.negocio.nombre}” en este aparato. Después entras con otra cuenta o creas una nueva.</span>
+        <div class="chips" style="justify-content:center"><button type="button" class="btn2 chico toca" onClick=${() => setSalir(false)}>No, seguir aquí</button><button type="button" class="btn2 chico rojo toca" onClick=${() => cerrarSesion().then(() => avisar('Sesión cerrada'))}><${Icono} n="salir" t=${15} />Sí, cerrar sesión</button></div>
+      </div>` : html`<button type="button" class="btn2 chico toca" style="gap:6px" onClick=${() => setSalir(true)}><${Icono} n="salir" t=${15} />Cambiar de cuenta</button>`}
     </div>`}`);
 }

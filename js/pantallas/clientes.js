@@ -17,7 +17,7 @@ export function Clientes() {
   const [filtro, setFiltro] = useState(fiado && todos.some(c => c.deuda > 0) ? 'Deben' : 'Todos');
   const deben = todos.filter(c => c.deuda > 0), tot = deben.reduce((a, c) => a + c.deuda, 0);
   const lista = filtro === 'Deben' ? deben : filtro === 'Empresas' ? todos.filter(c => c.tipo === 'empresa') : todos;
-  const opciones = (fiado ? ['Deben', 'Todos'] : ['Todos']).concat(S.negocio.escala === 'empresa' ? ['Empresas'] : []);
+  const opciones = (fiado ? ['Deben', 'Todos'] : ['Todos']).concat(S.negocio.escala === 'empresa' && (filtro === 'Empresas' || todos.some(c => c.tipo === 'empresa')) ? ['Empresas'] : []);
   const viejo = c => c.desde && Date.now() - c.desde > 15 * 86400000;
 
   const Resumen = html`<section class="tarjeta entra" data-tour="deben" style="background:var(--amber-soft);box-shadow:none">
@@ -25,7 +25,7 @@ export function Clientes() {
       <span class="crece" style="display:flex;flex-direction:column;gap:2px"><span class="sub">Te deben</span><${Monto} v=${tot} f=${D.m} clase="titulo amber" />${D.dual && html`<span class="sub num">${D.s(tot)}</span>`}</span>
       <span class="pildora t-amb" style="flex-shrink:0">${deben.length} ${deben.length === 1 ? 'cliente' : 'clientes'}</span>
     </div>
-    ${deben.length > 0 && html`<div style="margin-top:14px"><${BarrasH} datos=${deben.slice(0, 5).map((c, i) => ({ n: c.n, v: c.deuda, txt: D.m(c.deuda), c: viejo(c) ? 'var(--out)' : 'var(--amber)', sub: viejo(c) ? 'Desde ' + hace(c.desde) + ' · vencido' : 'Desde ' + hace(c.desde) }))} /></div>`}
+    ${deben.length > 0 && html`<div style="margin-top:14px"><${BarrasH} total=${tot} datos=${deben.slice(0, 5).map((c, i) => ({ n: c.n, v: c.deuda, txt: D.m(c.deuda), c: viejo(c) ? 'var(--out)' : 'var(--amber)', sub: viejo(c) ? 'Desde ' + hace(c.desde) + ' · vencido' : 'Desde ' + hace(c.desde) }))} /></div>`}
   </section>`;
 
   const Fila = (c, i) => html`<div class="tarjeta entra" key=${c.id} style=${{ '--i': i, display: 'flex', flexDirection: 'column', gap: '12px' }}>

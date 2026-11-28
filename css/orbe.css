@@ -92,6 +92,10 @@ h1, h2, h3 { margin: 0; letter-spacing: -0.02em; font-weight: 700; }
 .btn2.lleno { background: var(--primary); color: #fff; }
 .icono-btn { width: 44px; height: 44px; border-radius: 22px; border: 0; background: var(--fill); display: grid; place-items: center; flex: none; }
 .icono-btn.chico { width: 36px; height: 36px; }
+/* En el teléfono los botones chicos se ven igual pero responden en 44 px o más: el área de toque crece sin moverlos. */
+html.tel .icono-btn.chico, html.tel .btn2.chico, html.tel .chip.chico, html.tel .boton-ayuda { position: relative; }
+html.tel .icono-btn.chico::after, html.tel .btn2.chico::after, html.tel .chip.chico::after { content: ''; position: absolute; inset: -5px -3px; }
+html.tel .boton-ayuda::after { content: ''; position: absolute; inset: -8px; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips.desliza { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 2px 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
@@ -268,8 +272,7 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 14px; min-width
 .leyenda .l { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .leyenda .l i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .leyenda .l .crece { flex: 1; min-width: 0; }
-.barras-h { display: flex; flex-direction: column; gap: 12px; }
-.barras-h .bh { display: flex; flex-direction: column; gap: 6px; }
+.lista-orbe.ranking .simbolo { font-size: 13px; font-weight: 700; }
 
 /* cargando */
 

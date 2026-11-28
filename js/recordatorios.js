@@ -4,7 +4,7 @@
 import { html, useState } from './lib/preact-htm.js';
 import { useApp } from './ctx.js';
 import { deudores, listaProductos, cambiarNegocio, avisadoOrden, numeroOrden, numeroCot, cotVencida, leer } from './datos.js';
-import { Hoja, Icono, Interruptor, Chips, avisar, hora } from './ui.js';
+import { Hoja, Icono, Interruptor, Chips, avisar, avisarDeshacer, hora } from './ui.js';
 import { enlaceWA, mensajeOrden } from './ordenpdf.js';
 import { totales } from './pantallas/vender.js';
 
@@ -57,12 +57,17 @@ export function recordatorios(S, T, P, D, ahora = Date.now()) {
   return out.sort((a, b) => (a.tipo === 'cita1h' ? -1 : 0) - (b.tipo === 'cita1h' ? -1 : 0) || a.cuando - b.cuando);
 }
 // Marcar como enviado (o “no hace falta”). Se guarda en el negocio para que los demás aparatos no lo repitan.
-export function marcarEnviado(r) {
+export function marcarEnviado(r, soloQuitar) {
   const n = leer().negocio, ahora = Date.now(), env = Object.assign({}, n.recEnviados || {});
   Object.keys(env).forEach(k => { if (ahora - env[k] > 60 * DIA) delete env[k]; });
   env[r.k] = ahora;
   cambiarNegocio({ recEnviados: env });
-  if (r.oid) avisadoOrden(r.oid);
+  if (r.oid && !soloQuitar) avisadoOrden(r.oid);
+}
+// La equis: quita el recordatorio sin enviarlo (no mueve dinero), con “Deshacer”.
+function quitarRec(r) {
+  marcarEnviado(r, true);
+  avisarDeshacer('Recordatorio quitado', () => { const env = Object.assign({}, leer().negocio.recEnviados || {}); delete env[r.k]; cambiarNegocio({ recEnviados: env }); });
 }
 export function enviar(r, P) { window.open(enlaceWA(r.tel, r.texto, P.id), '_blank', 'noopener'); marcarEnviado(r); }
 
@@ -70,7 +75,7 @@ const tonoDe = k => ({ cita1h: 't-ros', cita1d: 't-azu', fiado: 't-amb', orden: 
 const Fila = ({ r, P, i }) => html`<div class="rec-fila entra" style=${{ '--i': i }}>
   <span class=${'ic ' + tonoDe(r.tipo)}><${Icono} n=${(TIPOS_REC.find(t => t.k === r.tipo) || {}).i || 'campana'} t=${16} /></span>
   <span class="crece" style="display:flex;flex-direction:column;gap:1px;min-width:0"><b class="corta" style="font-size:14px">${r.quien || 'Cliente'}</b><span class="sub corta">${r.sub}</span></span>
-  <button type="button" class="icono-btn chico toca" aria-label=${'No enviar a ' + (r.quien || 'cliente')} title="Ya no hace falta" onClick=${() => { marcarEnviado(r); avisar('Listo, no se envía'); }}><${Icono} n="cerrar" t=${14} /></button>
+  <button type="button" class="icono-btn chico toca" style="background:none;color:var(--faint)" aria-label=${'No enviar a ' + (r.quien || 'cliente')} title="Ya no hace falta" onClick=${() => quitarRec(r)}><${Icono} n="cerrar" t=${14} /></button>
   <button type="button" class="btn2 chico verde toca" onClick=${() => enviar(r, P)}><${Icono} n="movil" t=${14} />Enviar</button>
 </div>`;
 

@@ -71,7 +71,9 @@ export function Ordenes() {
   const nueva = () => pp ? abrir('nuevaOrden', {}) : avisar('Tu perfil no puede crear órdenes');
   const cuenta = k => abiertas.filter(o => o.estado === k).length;
   const opciones = [{ v: 'abiertas', n: 'Abiertas ' + abiertas.length }].concat(atrasadas.length ? [{ v: 'atrasadas', n: 'Atrasadas ' + atrasadas.length }] : [],
-    ESTADOS_ORDEN.slice(0, 3).map(e => ({ v: e.k, n: e.n + (e.k === 'lista' ? 's' : e.k === 'recibida' ? 's' : '') + ' ' + cuenta(e.k) })), [{ v: 'entregada', n: 'Entregadas' }, { v: 'cancelada', n: 'Canceladas' }]);
+    ESTADOS_ORDEN.slice(0, 3).map(e => ({ v: e.k, n: e.n + (e.k === 'lista' ? 's' : e.k === 'recibida' ? 's' : '') + ' ' + cuenta(e.k), c: cuenta(e.k) })), [{ v: 'entregada', n: 'Entregadas', c: todas.filter(o => o.estado === 'entregada').length }, { v: 'cancelada', n: 'Canceladas', c: todas.filter(o => o.estado === 'cancelada').length }])
+    // Solo los filtros que tienen algo (o el que está elegido).
+    .filter(o => o.c == null || o.c > 0 || o.v === filtro);
   const filtrada = orden(buscadas.filter(o => filtro === 'abiertas' ? ordenAbierta(o) : filtro === 'atrasadas' ? ordenAtrasada(o, ahora) : o.estado === filtro));
   const Cifras = html`<div class="rejilla-2" style="gap:10px">
     <div class="tarjeta cifra entra"><span class="sub">Abiertas</span><span class="v num" style="font-size:22px">${abiertas.length}</span><span class=${'sub' + (atrasadas.length ? ' out' : ' faint')}>${atrasadas.length ? atrasadas.length + (atrasadas.length === 1 ? ' atrasada' : ' atrasadas') : 'ninguna atrasada'}</span></div>

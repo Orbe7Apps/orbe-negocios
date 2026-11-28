@@ -6,6 +6,7 @@ import { Frase, BotonGuiame } from '../guias.js';
 import { resumen, serieDias, gastosEntre, inicioDia, leer, gastoAlt, gastoEur, vigentes } from '../datos.js';
 import { Barras, Linea, Reparto, BarrasH, Monto, color } from '../graficos.js';
 import { Icono, Chips, avisar, fechaCorta, iniciales, TONOS } from '../ui.js';
+import { verQ } from '../carrito.js';
 import { Vacio } from './empezar.js';
 import { inicioMes } from './gastos.js';
 
@@ -101,7 +102,7 @@ export function Reportes() {
     pagos: html`<section class="tarjeta entra" style="--i:6"><div class="tarjeta-tit">Formas de pago</div>
       ${pagos.length ? html`<${Reparto} key=${'pg' + dias + suc} segs=${pagos} f=${D.m} titulo=${'Vendido en ' + (per === 'mes' ? 'el mes' : dias + ' días')} />` : html`<p class="vacio">Sin ventas.</p>`}</section>`,
     productos: html`<section class="tarjeta entra" style="--i:7"><div class="tarjeta-tit">Lo que más vendes<span class="sub">por ventas</span></div>
-      <${BarrasH} datos=${prods.slice(0, 6).map(p => ({ n: p.n, v: p.v, txt: D.m(p.v), sub: p.q + ' vendidos · ganas ' + D.m(p.g) }))} /></section>`,
+      <${BarrasH} total=${prods.reduce((a, p) => a + p.v, 0)} datos=${prods.slice(0, 6).map(p => ({ n: p.n, v: p.v, txt: D.m(p.v), sub: verQ(p.q) + ' vendidos · ganas ' + D.m(p.g) }))} /></section>`,
     semana: html`<section class="tarjeta entra llena" style="--i:8"><div class="tarjeta-tit">Tu mejor día<span class="sub">${mejor.l}, en promedio ${D.m(mejor.v)}</span></div>
       <${Barras} key=${'sem' + dias + suc} datos=${semana} alto=${tel ? 120 : 170} resaltar=${semana.indexOf(mejor)} llenar=${!tel} /></section>`,
     horas: html`<section class="tarjeta entra llena" style="--i:9"><div class="tarjeta-tit">Tus horas de más venta<span class="sub">${horaPico.n} es la mejor</span></div>
@@ -112,7 +113,7 @@ export function Reportes() {
         <span class="crece" style="display:flex;flex-direction:column;gap:1px"><b style="font-size:14px">${x.p.n}</b><span class="sub">${x.n} ${x.n === 1 ? "venta" : "ventas"} · ${D.m(x.v)}</span></span>
         <span style="display:flex;flex-direction:column;align-items:flex-end"><b class="num in" style="font-size:15px">${D.m(x.v * x.pct / 100)}</b><span class="sub">${x.pct} %</span></span></button>`)}</div></section>` : null,
     sucursales: E && !suc ? html`<section class="tarjeta entra" style="--i:9"><div class="tarjeta-tit">Por sucursal</div>
-      <${BarrasH} datos=${S.negocio.sucursales.map((s, i) => ({ n: s, v: r.porSuc[s] || 0, txt: D.m(r.porSuc[s] || 0), c: color(i) }))} /></section>` : null
+      <${BarrasH} total=${S.negocio.sucursales.reduce((a, s) => a + (r.porSuc[s] || 0), 0)} datos=${S.negocio.sucursales.map((s, i) => ({ n: s, v: r.porSuc[s] || 0, txt: D.m(r.porSuc[s] || 0), c: color(i) }))} /></section>` : null
   };
 
   // La frase: cuánto vendiste, cómo vas contra antes y cuánto te queda de verdad.
