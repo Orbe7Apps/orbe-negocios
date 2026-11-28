@@ -82,6 +82,11 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
 - Nada que aparezca solo para vender algo. Las guías opcionales, como la de Binance, se abren desde un menú.
 - **Antes de un cambio grande de diseño, primero una maqueta.**
 - **Textos cortos:** ninguna ayuda bajo una opción pasa de una línea; palabras del mostrador (“Costo”, “Cantidad”, “inventario”), no de sistema (“existencia”, “conciliar”). Lo poco usado va en “Más opciones”; las explicaciones largas, en el “?” de la pantalla.
+- **Sin barras de colores** en listas ni rankings (formas de pago, gastos, quién debe, lo que más vendes, sucursales): círculo de color con el símbolo o el puesto, el % y el monto (`Reparto` y `BarrasH` en `js/graficos.js`). Las barras de avance (lo que queda en inventario, en qué va una orden, cuánto pagó un plan) sí se quedan.
+- **Filtros que aplican:** las fichas de filtro solo muestran lo que tiene algo (o la que está elegida); nunca “Canceladas 0”.
+- **Nada nativo del teléfono:** ni `select`, ni `datalist`, ni calendario o reloj del sistema, ni `confirm()`/`alert()`. Se usan `js/elegir.js`, fichas de sugerencia y preguntas dentro de la misma pantalla. (Solo `admin.html` conserva lo suyo.)
+- **Equis con Deshacer** en todo lo que se puede quitar de una lista sin mover dinero (Para hacer hoy, recordatorios por enviar, plantillas).
+- **Toque cómodo:** en el teléfono los botones chicos (36 px) responden en 44 px o más sin verse más grandes.
 - **Sin líneas horizontales** separando filas en las listas (perfiles, Para hacer hoy, últimas ventas, órdenes, gastos…).
 - **Comillas:** usar “ ” en toda la app, nunca « ».
 - **Deshacer:** al borrar algo aparece un aviso con "Deshacer" por 7 s, solo en lo que no mueve dinero (gasto, producto, cliente, perfil, rol). Nunca en ventas, abonos, órdenes de trabajo ni nada que pueda servir para estafar.

@@ -43,7 +43,7 @@ export function Inventario() {
         <b class="num">${D.m(p.p)}</b>
       </button>`; })}</div>`;
     const Graf = html`<section class="tarjeta entra"><div class="tarjeta-tit">Lo que más te dejan<span class="sub">30 días</span></div>
-      <${BarrasH} datos=${top.slice(0, 6).map(t => ({ n: t.n, v: t.v, txt: D.m(t.v), sub: t.q + ' veces' }))} /></section>`;
+      <${BarrasH} total=${top.reduce((a, t) => a + t.v, 0)} datos=${top.slice(0, 6).map(t => ({ n: t.n, v: t.v, txt: D.m(t.v), sub: t.q + ' veces' }))} /></section>`;
     const Graf2 = top.length ? Graf : null;
     if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
     // La frase: cuántos servicios y cuál piden más.
@@ -132,8 +132,8 @@ export function Inventario() {
     </div>
     <div class="mitades">
       ${vg && html`<section class="tarjeta entra" style="--i:3"><div class="tarjeta-tit">Lo que más te deja<span class="sub">ganancia, 30 días</span></div>
-        <${BarrasH} datos=${top.slice().sort((a, b) => b.g - a.g).slice(0, 6).map((t, i) => ({ n: t.n, v: t.g, txt: D.m(t.g), c: color(i), sub: t.q + ' vendidos' }))} /></section>`}
+        <${BarrasH} total=${top.reduce((a, t) => a + Math.max(0, t.g), 0)} datos=${top.slice().sort((a, b) => b.g - a.g).slice(0, 6).map((t, i) => ({ n: t.n, v: t.g, txt: D.m(t.g), c: color(i), sub: verQ(t.q) + ' vendidos' }))} /></section>`}
       ${vg && html`<section class="tarjeta entra" style="--i:4"><div class="tarjeta-tit">Dónde está tu dinero<span class="sub">a costo</span></div>
-        <${BarrasH} datos=${conStock.slice().sort((a, b) => b.q * b.c - a.q * a.c).slice(0, 6).map((p, i) => ({ n: p.n, v: p.q * p.c, txt: D.m(p.q * p.c), c: color(i + 2), sub: p.q + ' und' }))} /></section>`}
+        <${BarrasH} total=${conStock.reduce((a, p) => a + p.q * p.c, 0)} datos=${conStock.slice().sort((a, b) => b.q * b.c - a.q * a.c).slice(0, 6).map((p, i) => ({ n: p.n, v: p.q * p.c, txt: D.m(p.q * p.c), c: color(i + 2), sub: p.q + ' und' }))} /></section>`}
     </div>`;
 }

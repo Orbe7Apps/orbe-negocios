@@ -23,6 +23,9 @@ export function Cotizar({ d, cerrar }) {
   const pon = o => setF(x => Object.assign({}, x, o));
   const lista = S.clientes.filter(c => !c.borrado);
   const elegido = lista.find(c => c.n.trim().toLowerCase() === f.nom.trim().toLowerCase());
+  // Sugerencias propias (en vez de la lista del teléfono): los clientes que coinciden con lo escrito.
+  const sin = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const sug = f.nom.trim().length >= 2 && !elegido ? lista.filter(x => sin(x.n).includes(sin(f.nom.trim()))).slice(0, 4) : [];
   const guardar = c => {
     if (!f.nom.trim()) { avisar('Escribe el nombre del cliente'); return; }
     let cli = elegido;
@@ -40,8 +43,8 @@ export function Cotizar({ d, cerrar }) {
         <div class="fila" style="gap:8px;padding-top:6px"><b class="crece">Total</b><b class="num" style="font-size:18px">${D.m(tt.total)}</b></div>
         ${D.dual && html`<span class="sub num" style="text-align:right">${D.s(tt.total)}</span>`}
       </div>
-      <label class="campo"><span>Cliente</span><input type="text" list="cot-clientes" value=${f.nom} placeholder="Nombre del cliente" autocomplete="off" onInput=${e => pon({ nom: e.target.value })} />
-        <datalist id="cot-clientes">${lista.map(x => html`<option value=${x.n}></option>`)}</datalist></label>
+      <label class="campo"><span>Cliente</span><input type="text" value=${f.nom} placeholder="Nombre del cliente" autocomplete="off" onInput=${e => pon({ nom: e.target.value })} /></label>
+      ${sug.length > 0 && html`<div class="chips entra" style="margin-top:-4px">${sug.map(x => html`<button type="button" key=${x.id} class="chip chico toca" onClick=${() => pon({ nom: x.n, tel: x.tel || f.tel })}><${Icono} n="personas" t=${13} />${x.n}</button>`)}</div>`}
       ${elegido ? html`<span class="sub" style="margin-top:-6px">Cliente guardado${elegido.tel ? ' · ' + elegido.tel : ''}</span>`
         : html`<label class="campo"><span>WhatsApp del cliente (opcional)</span><input type="tel" inputmode="tel" value=${f.tel} placeholder="0414-0000000" autocomplete="off" onInput=${e => pon({ tel: e.target.value })} /></label>`}
       <div class="campo"><span>¿Hasta cuándo valen estos precios?</span><${Chips} opciones=${DIAS} valor=${f.dias} onCambio=${v => pon({ dias: v })} chico /></div>
@@ -108,7 +111,7 @@ export function Cotizaciones() {
   const totalDe = c => totales(c.items, S.negocio, P).total;
   const pendientes = todas.filter(c => estadoCot(c) === 'pendiente'), aceptadas = todas.filter(c => c.estado === 'aceptada');
   const hechas = todas.filter(c => c.estado !== 'pendiente' || estadoCot(c) === 'vencida').length;
-  const opciones = [['pendiente', 'Esperando'], ['aceptada', 'Vendidas'], ['vencida', 'Vencidas'], ['rechazada', 'No aceptadas']].map(o => ({ v: o[0], n: o[1] + ' ' + cuenta(o[0]) }));
+  const opciones = [['pendiente', 'Esperando'], ['aceptada', 'Vendidas'], ['vencida', 'Vencidas'], ['rechazada', 'No aceptadas']].filter(o => o[0] === 'pendiente' || o[0] === filtro || cuenta(o[0]) > 0).map(o => ({ v: o[0], n: o[1] + ' ' + cuenta(o[0]) }));
   // La frase: lo que espera respuesta y lo que vence pronto.
   const pronto = pendientes.filter(c => c.vence && c.vence - Date.now() < 2 * 86400000).sort((a, b) => a.vence - b.vence)[0];
   const FraseCot = !todas.length ? null : html`<${Frase}>${!todas.length ? 'Cotiza desde Vender, mándala por WhatsApp y, si acepta, se vuelve venta con un toque.'
