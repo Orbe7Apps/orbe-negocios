@@ -216,7 +216,7 @@ function Recibo({ d, cerrar }) {
         ${v.anulada && html`<span class="sello">ANULADA</span>`}
         ${S.negocio.logo && html`<img src=${S.negocio.logo} alt="" style="display:block;margin:0 auto 2px;max-width:96px;max-height:56px;object-fit:contain" />`}
         <b style="text-align:center;font-size:14px">${S.negocio.nombre}</b>
-        ${S.negocio.razon && html`<span style="text-align:center;color:#625f7d">${S.negocio.razon}${S.negocio.fiscal ? ' · ' + P.fiscal[0] + ' ' + S.negocio.fiscal : ''}</span>`}
+        ${(S.negocio.razon || S.negocio.fiscal) && html`<span style="text-align:center;color:#625f7d">${[S.negocio.razon, S.negocio.fiscal ? P.fiscal[0] + ' ' + S.negocio.fiscal : ''].filter(Boolean).join(' · ')}</span>`}
         <span style="text-align:center;color:#625f7d">${v.dev ? 'Devolución' : 'Recibo'} #${v.n} · ${fechaCorta(v.t)} ${hora(v.t)}${cli ? ' · ' + cli.n : ''}</span>
         <span style="text-align:center;color:#625f7d;font-size:11px;letter-spacing:.06em">COMPROBANTE NO FISCAL</span>
         ${atendio && html`<span style="text-align:center;color:#625f7d">Te atendió ${atendio.n.split(' ')[0]}${S.negocio.sucursales.length > 1 ? ' · ' + v.suc : ''}</span>`}
@@ -1272,7 +1272,7 @@ function CierreZ({ d, cerrar }) {
     cuerpo: html`<div style="border-radius:16px;background:#f7f6fc;color:#1a1733;padding:16px;display:flex;flex-direction:column;gap:7px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace">
       ${S.negocio.logo && html`<img src=${S.negocio.logo} alt="" style="display:block;margin:0 auto 2px;max-width:96px;max-height:56px;object-fit:contain" />`}
       <b style="text-align:center;font-size:14px">${S.negocio.nombre}</b>
-      ${S.negocio.fiscal && html`<span style="text-align:center;color:#625f7d">${S.negocio.razon || ''} · ${P.fiscal[0]} ${S.negocio.fiscal}</span>`}
+      ${S.negocio.fiscal && html`<span style="text-align:center;color:#625f7d">${[S.negocio.razon, P.fiscal[0] + ' ' + S.negocio.fiscal].filter(Boolean).join(' · ')}</span>`}
       <span style="text-align:center;color:#625f7d">CIERRE Z #${z.n || S.cierres.indexOf(z) + 1} · ${fechaCorta(z.t)} ${hora(z.t)}${quien ? ' · ' + quien : ''}</span>
       <span style="height:4px"></span>
       ${z.desde ? linea('Ventas', '#' + z.desde + ' a #' + z.hasta) : null}
