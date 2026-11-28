@@ -1349,3 +1349,19 @@ html.con-teclado .carro-flota, html.en-recorrido .carro-flota { opacity: 0; poin
 /* Al quedar pegada, una franja cubre la zona de la cámara del teléfono (antes ese espacio quedaba en blanco entre las pestañas y el buscador). */
 .tel .cabeza-pegada::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--sa-top); background: transparent; transition: background-color .35s var(--spring); pointer-events: none; }
 .tel .cabeza-pegada.pegada::before { background: color-mix(in srgb, var(--bg) 94%, transparent); }
+
+/* ---------- Teclado del teléfono abierto (js/teclado.js) ----------
+   La hoja ya sube justo encima (bottom: var(--teclado)); aquí usa casi todo lo que queda a la vista, la pantalla
+   de fondo se acorta hasta el teclado (así el último campo también se puede subir) y las barras flotantes se esconden. */
+html.con-teclado .hoja { max-height: calc(var(--alto-visible, 100dvh) - var(--sa-top) - 8px); }
+html.con-teclado .hoja.capa { max-height: calc(var(--alto-visible, 100dvh) - var(--sa-top) - 20px); }
+html.con-teclado .tel-raiz:not(.con-hoja) .app-fondo { bottom: var(--teclado, 0px); }
+.nav-tel { transition: height .35s var(--spring), transform .28s var(--spring), opacity .2s ease; }
+html.con-teclado .nav-tel { opacity: 0; pointer-events: none; transform: translateY(calc(100% + 24px)); }
+html.con-teclado .boton-orbe { opacity: 0; pointer-events: none; transform: translateY(90px) scale(.7); }
+html.con-teclado .aviso-toast { bottom: calc(var(--teclado, 0px) + 12px); }
+/* Al subir el campo, que no quede pegado al borde ni bajo lo de arriba (también cuando el navegador lo acomoda solo) */
+.hoja-cuerpo { scroll-padding: 14px 0 18px; }
+.tel-raiz .app-fondo { scroll-padding: calc(var(--sa-top) + 14px) 0 18px; }
+/* Computadora o tableta con teclado en pantalla: la ventana centrada se centra en lo que queda a la vista */
+html.pc.con-teclado .hoja { top: calc(var(--arriba-visible, 0px) + var(--alto-visible, 100vh) / 2); max-height: calc(var(--alto-visible, 100vh) - 24px); }

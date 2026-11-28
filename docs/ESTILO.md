@@ -96,6 +96,7 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
 - **Comillas:** usar “ ” en toda la app, nunca « ».
 - **Deshacer:** al borrar algo aparece un aviso con "Deshacer" por 7 s, solo en lo que no mueve dinero (gasto, producto, cliente, perfil, rol). Nunca en ventas, abonos, órdenes de trabajo ni nada que pueda servir para estafar.
 - **Colores por zona** (violeta cuenta, verde dinero, azul negocio, ámbar ventas, gris app) **solo en Ajustes**. Se probó en toda la app y el dueño pidió revertirlo.
+- **Con el teclado abierto** (`js/teclado.js`): el campo que se llena siempre a la vista con desplazamiento suave, la hoja justo encima del teclado y ninguna barra flotante (abajo, botón Orbe, carrito) encima.
 - **iPhone:**
   - Respetar las zonas seguras (`env(safe-area-inset-*)`).
   - Arreglo de la franja de abajo en la app instalada: `@media (display-mode: standalone){ html{ min-height: min(100lvh, calc(100% + env(safe-area-inset-top))) } }`.

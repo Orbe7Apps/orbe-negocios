@@ -1,6 +1,7 @@
 // Orbe Negocios · arranque. Decide si es teléfono o computadora, y arma la navegación.
 import { html, render, useState, useEffect } from './lib/preact-htm.js';
 import { Ctx } from './ctx.js';
+import { iniciarTeclado } from './teclado.js';
 import { iniciarDatos, useDatos, leer, cambiarNegocio, guardarTasa, guardarTasaExtra, tasaEuro, usaEuro, diaClave, bajoMinimo, deudores, porPagar, perfilActual, salir, guardarPerfil, ordenAtrasada } from './datos.js';
 import { CorrerTutorial, Tutoriales } from './tutoriales.js';
 import { ChipTasa } from './pantallas/tasas.js';
@@ -294,17 +295,8 @@ Promise.all([iniciarDatos(), versionLista()]).then(() => {
   iniciarNube();
   requestAnimationFrame(() => { if (window.__listo) window.__listo(); });
 });
-// Teclado del teléfono: en iPhone (y Android reciente) el teclado tapa la pantalla sin achicarla.
-// Se mide lo que tapa para que las hojas suban justo encima del teclado y la página no se mueva.
-if (window.visualViewport) {
-  const vv = window.visualViewport, raiz = document.documentElement.style;
-  const medir = () => {
-    const tapa = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop));
-    raiz.setProperty('--teclado', tapa > 80 ? tapa + 'px' : '0px'); document.documentElement.classList.toggle('con-teclado', tapa > 80);
-    raiz.setProperty('--alto-visible', Math.round(vv.height) + 'px');
-  };
-  vv.addEventListener('resize', medir); vv.addEventListener('scroll', medir); medir();
-}
+// Teclado del teléfono: hojas justo encima, barras flotantes escondidas y el campo siempre a la vista (js/teclado.js).
+iniciarTeclado();
 // iPhone no respeta “user-scalable=no”: se frena el zoom con dos dedos para que la app se quede de un solo tamaño.
 ['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 // Que el navegador no borre los datos por falta de espacio (sobre todo Safari en iPhone).
