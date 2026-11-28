@@ -4,12 +4,11 @@
 // Nunca enfoca un campo: ilumina y la persona toca.
 import { html, useState, useEffect, useRef } from './lib/preact-htm.js';
 import { useApp } from './ctx.js';
-import { GuiaVivo, usePortal, vecesGuia, contarGuia, terminarGuia } from './guia.js';
+import { GuiaVivo, usePortal, terminarGuia } from './guia.js';
 import { resumen, inicioDia, listaProductos } from './datos.js';
 
 const DIA = 86400000;
-// Cada guía se invita sola en su pantalla las 2 primeras visitas; después vive en el “?”.
-const VECES_INVITA = 2;
+// Cada guía vive en el “?” de su pantalla (“Guíame paso a paso”).
 const clave = k => 'pant-' + k;
 
 // ---------- pasos de cada pantalla ----------
@@ -199,15 +198,6 @@ export function GuiaPantallas() {
   const vista = g ? g.pasos.map((p, k) => Object.assign({}, p, { sel: selDe(p), texto: typeof p.texto === 'function' ? p.texto(app) : p.texto, espera: p.toca, ok: k === g.i ? g.ok : false })) : null;
   usePortal(g ? html`<${GuiaVivo} pasos=${vista} i=${g.i} onSig=${sig} onSalir=${() => setG(null)} />` : null);
   return null;
-}
-
-// ---------- botón “Guíame” ----------
-// Sale las primeras visitas a la pantalla; después la guía sigue en el “?”.
-export function BotonGuiame({ k }) {
-  const [ver] = useState(() => tieneGuia(k) && vecesGuia(clave(k)) < VECES_INVITA);
-  useEffect(() => { if (tieneGuia(k)) contarGuia(clave(k)); }, [k]);
-  if (!ver) return null;
-  return html`<button type="button" class="guiame toca" onClick=${e => { e.stopPropagation(); empezarGuia(k); }}><i class="guiame-pulso"></i>Guíame</button>`;
 }
 
 // ---------- la frase de cada pantalla ----------

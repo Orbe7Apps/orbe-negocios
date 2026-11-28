@@ -6,7 +6,7 @@ import { monedaEfectivo } from '../paises.js';
 import { Hoja, Icono, Chips, avisar, hora } from '../ui.js';
 import { numero, esEfectivo } from './pagos.js';
 import { ajustesImpresora, abrirCajon } from '../impresora.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 
 // Formas de pago en efectivo del negocio (cada una se cuenta en su moneda).
 export const efectivosDe = S => S.negocio.pays.filter(esEfectivo);
@@ -34,7 +34,7 @@ export function Caja({ d, cerrar }) {
     : html`Debe haber <b class="v num">${D.m(esperado)}</b> en efectivo${efect.length > 1 ? ', sumando todas las monedas' : ''}. Al terminar, cuéntalo y cierra.`}</${Frase}>`;
   return html`<${Hoja} titulo="Caja" onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`
-      <div class="fila" style="gap:8px;align-items:flex-start"><span class="crece">${FraseCaja}</span><${BotonGuiame} k="caja" /></div>
+      <div class="fila" style="gap:8px;align-items:flex-start"><span class="crece">${FraseCaja}</span></div>
       <div data-guia="caja-estado" class=${'tarjeta fila ' + (abierta ? '' : 'entra')} style=${{ boxShadow: 'none', gap: '12px', background: abierta ? 'var(--in-soft)' : 'var(--amber-soft)' }}>
         <span class=${'ic ' + (abierta ? 't-ver' : 't-amb')}><${Icono} n=${abierta ? 'check' : 'candado'} t=${18} g=${2.4} /></span>
         <span class="crece" style="display:flex;flex-direction:column;gap:2px"><b style="font-size:14px">${abierta ? 'Caja abierta' : 'Caja sin fondo'}</b>

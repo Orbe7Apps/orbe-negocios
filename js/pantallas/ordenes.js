@@ -3,7 +3,7 @@
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { Escena } from './empezar.js';
 import { ESTADOS_ORDEN, numeroOrden, anticipoDe, ordenAbierta, ordenAtrasada, nuevaOrden, editarOrden, estadoOrden, notaOrden, avisadoOrden, anticipoOrden, entregarOrden, cancelarOrden, listaProductos, listaClientes, nuevoCliente, vender } from '../datos.js';
 import { Hoja, Icono, Chips, avisar, iniciales, TONOS, hora, fechaCorta } from '../ui.js';
@@ -94,7 +94,7 @@ export function Ordenes() {
     : abiertas.length ? html`Tienes <b>${abiertas.length} ${abiertas.length === 1 ? 'orden abierta' : 'órdenes abiertas'}</b>${listas.length ? html`; <b class="v">${listas.length} ${listas.length === 1 ? 'está lista' : 'están listas'}</b> para entregar` : ''}.${porCobrar > 0 ? html` Falta cobrar <b class="num">${D.m(porCobrar)}</b>.` : ''}`
     : 'No hay órdenes abiertas. Todo entregado.'}</${Frase}>`;
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Órdenes</h1><${BotonGuiame} k="ordenes" /><${BotonAyuda} />${pp && html`<button type="button" class="btn2 chico lleno toca" data-tour="nueva-orden" onClick=${nueva}>+ Nueva orden</button>`}</div>
+    <div class="fila entra"><h1 class="titulo crece">Órdenes</h1><${BotonAyuda} />${pp && html`<button type="button" class="btn2 chico lleno toca" data-tour="nueva-orden" onClick=${nueva}>+ Nueva orden</button>`}</div>
     ${S.ordenes.length > 0 && html`${FraseOrdenes}${Cifras}${Buscador}
     <div data-guia="filtros"><${Chips} opciones=${opciones} valor=${filtro} onCambio=${setFiltro} desliza chico /></div>`}
     <div class="pila" data-tour="ordenes">${filtrada.length ? filtrada.map((o, i) => html`<${TarjetaOrden} key=${o.id} o=${o} i=${i} />`) : Vacio}</div>`;

@@ -10,7 +10,7 @@ import { COND_ORDEN } from '../ordenpdf.js';
 import { Funciones } from './funciones.js';
 import { BotonAyuda } from '../ayuda.js';
 import { tutorialesPara, hechos } from '../tutoriales.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { normal } from '../buscar.js';
 import { CuentaTema, Suscripcion, pedirCerrarSesion } from './cuenta.js';
 import { AjustesRecordatorios } from '../recordatorios.js';
@@ -93,7 +93,7 @@ function useTemas() {
       <${Interruptor} on=${!!n.taxOn} onCambio=${v => cambiarNegocio({ taxOn: v })} titulo=${'Cobrar ' + P.tax[0] + ' ' + (n.taxGen != null ? n.taxGen : P.tax[1]) + ' %'} sub=${P.tax[1] ? 'Sale en el recibo' : 'En tu país varía según la zona: escribe la tuya'} />
       ${n.taxOn && html`<div class="segmento" style="width:100%;margin-top:8px">${[[true, 'En el precio'], [false, 'Aparte']].map(o => html`<button type="button" style="flex:1" class=${n.taxIncl === o[0] ? 'on' : ''} onClick=${() => cambiarNegocio({ taxIncl: o[0] })}>${o[1]}</button>`)}</div>
         <div class="fila" style="gap:10px;margin-top:12px"><span class="sub crece" style="line-height:1.4">Tasa general. A cada producto le puedes poner una reducida o exento.</span>
-          <div class="pago-monto" style="width:110px;min-height:44px"><input class="num" type="text" inputmode="decimal" aria-label="Tasa general" placeholder=${String(P.tax[1])} value=${n.taxGen != null ? String(n.taxGen).replace('.', ',') : ''} onChange=${e => { const v = parseFloat(e.target.value.replace(',', '.')); cambiarNegocio({ taxGen: isFinite(v) && v >= 0 && v < 100 ? v : undefined }); }} /><span class="sub">%</span></div></div>`}` },
+          <div class="pago-monto campo-pct"><input class="num" type="text" inputmode="decimal" aria-label="Tasa general" placeholder=${String(P.tax[1])} value=${n.taxGen != null ? String(n.taxGen).replace('.', ',') : ''} onChange=${e => { const v = parseFloat(e.target.value.replace(',', '.')); cambiarNegocio({ taxGen: isFinite(v) && v >= 0 && v < 100 ? v : undefined }); }} /><span class="sub">%</span></div></div>`}` },
     aj && { k: 'impresora', g: 'Ventas y cobro', i: 'doc', c: 't-ver', n: 'Impresora de tickets', r: imp.ancho + ' mm · ' + (imp.modo === 'bluetooth' ? 'Bluetooth' : 'del sistema') + (imp.auto ? ' · imprime al cobrar' : ''), cuerpo: () => html`<${Impresora} />` },
     (puede('vender') || puede('clientes')) && { k: 'recordatorios', g: 'Ventas y cobro', i: 'movil', c: 't-ver', n: 'Recordatorios por WhatsApp', r: 'Citas, fiado, órdenes y cotizaciones', cuerpo: () => html`<${AjustesRecordatorios} />` },
     aj && T.mod('agenda') && { k: 'reservas', g: 'Tu negocio', i: 'online', c: 't-azu', n: 'Link de reservas', r: S.negocio.reservas && S.negocio.reservas.activa ? 'Activo · ' + S.negocio.reservas.slug : 'Tus clientes agendan solos', cuerpo: () => html`<${LinkReservas} />` },
@@ -167,7 +167,7 @@ export function Mas() {
     <div class="fila entra" style="gap:12px"><span class=${'ic ' + t.c}><${Icono} n=${t.i} t=${18} g=${2.2} /></span><h1 class="titulo crece">${t.n}</h1></div>
     <section class="tarjeta entra" style="--i:1">${t.cuerpo()}</section>`;
   return html`
-    <div class="fila entra"><h1 class="titulo crece">Más</h1><${BotonGuiame} k="mas" /><${BotonAyuda} k="mas" /></div>
+    <div class="fila entra"><h1 class="titulo crece">Más</h1><${BotonAyuda} k="mas" /></div>
     ${Buscador(q, setQ)}
     ${q.trim() ? (() => { const de = encontrar(temas, q); return de.length ? html`<section class="tarjeta menu-lista entra">${de.map(x => Fila(x, () => { setQ(''); x.solo ? x.ir() : setK(x.k); }))}</section>` : html`<p class="vacio">No encontré “${q}”. Prueba con otra palabra, como “impresora” o “pago móvil”.</p>`; })() : GRUPOS.map((g, gi) => { const de = temas.filter(x => x.g === g); return de.length ? html`<div class="pila entra" style=${{ gap: '8px', '--i': gi }} data-tour=${g === 'Dinero' ? 'mas-acciones' : undefined}>${g && html`<h2 class="grupo-menu">${g}</h2>`}
       <section class="tarjeta menu-lista">${de.map(x => Fila(x, () => x.solo ? x.ir() : setK(x.k)))}</section></div>` : null; })}

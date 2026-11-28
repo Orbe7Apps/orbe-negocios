@@ -35,7 +35,9 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
 
 - **Hojas** (ventanas que suben desde abajo): bordes de 28 px arriba, rayita para arrastrar, título y ✕ arriba.
   - El botón de confirmar va fijo abajo (`.sheet-foot`), separado por una línea suave.
-- **Tarjetas:** borde de 22 px, sin sombra fuerte, fondo `--surface`.
+- **Tarjetas:** borde de 16 px con un filete suave (`--shadow` es un borde de 1 px casi invisible, sin sombra grande), fondo `--surface`. La tarjeta del día (`.hero`) va con 18 px y sin sombra.
+- **Menos ruido (v130):** el color es solo para el dinero (verde entra, rojo sale o está atrasado). Los íconos (`.ic`) y las iniciales de productos van en gris (`--fill` + tinta); los íconos de colores solo en Ajustes y en el menú del botón central. El botón central de la barra es un “+” (mismo menú Orbe); el logo queda para la carga y el ícono. “Guíame paso a paso” vive solo en el “?”. La cabecera de Hoy es nombre + “?” (la píldora sale solo “Sin internet”) y la tarjeta del día va primero.
+- **Campo de porcentaje** (`.pago-monto.campo-pct`): caja fija de 96 px con el número y el “%” centrados juntos, nunca el “%” pegado al borde.
 - **Botones:**
   - Principal: lleno, alto mínimo 48–54 px, ancho completo.
   - Secundario: fondo `--fill` y forma de píldora.
@@ -50,7 +52,7 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
 
 - **Menú lateral** de 252 px con grupos (Día a día, Operación, Gestión) y contadores; debajo, el estado de conexión y la persona que usa la app.
 - **Barra de arriba fija** y semitransparente: título, buscador (Ctrl K), selector de sucursal en píldora y el botón principal.
-- **Tarjetas** de 22 px de borde en rejilla (4 cifras, luego 2/3 + 1/3, luego 3 columnas). Por debajo de 1180 px pasan a una columna, y por debajo de 820 px el menú se pone arriba.
+- **Tarjetas** de 16 px de borde en rejilla (4 cifras, luego 2/3 + 1/3, luego 3 columnas). Por debajo de 1180 px pasan a una columna, y por debajo de 820 px el menú se pone arriba.
 - **Tablas** dentro de una tarjeta: encabezado en `--muted` de 12 px, filas de 14 px que se aclaran al pasar el ratón y estados en píldoras de color.
 - **Ventanas centradas** de 460 px como máximo, en lugar de hojas. Entran subiendo un poco y aclarándose; el fondo se oscurece.
 - **Atajos de teclado** a la vista, en pequeñas teclas con borde.

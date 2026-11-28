@@ -2,7 +2,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { bajoMinimo, bajoMeta, resumen, inicioDia, listaProductos, promosVigentes, apartadas } from '../datos.js';
 import { verQ, FRACCIONES } from '../carrito.js';
 import { BarrasH, Reparto, color } from '../graficos.js';
@@ -45,17 +45,17 @@ export function Inventario() {
     const Graf = html`<section class="tarjeta entra"><div class="tarjeta-tit">Lo que más te dejan<span class="sub">30 días</span></div>
       <${BarrasH} total=${top.reduce((a, t) => a + t.v, 0)} datos=${top.slice(0, 6).map(t => ({ n: t.n, v: t.v, txt: D.m(t.v), sub: t.q + ' veces' }))} /></section>`;
     const Graf2 = top.length ? Graf : null;
-    if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
+    if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
     // La frase: cuántos servicios y cuál piden más.
     const masPedido = top[0];
     const FraseSvc = html`<${Frase}>Ofreces <b>${listaProductos().length} ${listaProductos().length === 1 ? 'servicio' : 'servicios'}</b>.${masPedido ? html` El que más te piden: <b>${masPedido.n}</b>, ${masPedido.q} ${masPedido.q === 1 ? 'vez' : 'veces'} en 30 días.` : ' Cada uno con su precio y lo que dura.'}</${Frase}>`;
-    if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} />${pp && html`<button type="button" class="btn2 chico acento toca" data-guia="agregar" onClick=${() => editarP({})}>+ Agregar</button>`}</div>
+    if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Servicios</h1><${BotonAyuda} />${pp && html`<button type="button" class="btn2 chico acento toca" data-guia="agregar" onClick=${() => editarP({})}>+ Agregar</button>`}</div>
       ${FraseSvc}${Buscador()}${Lista}${Graf2}`;
     return html`${FraseSvc}<div class="dos-uno"><div class="pila"><div class="fila"><span class="sub crece">Con su precio y lo que dura.</span>${pp && html`<button type="button" class="btn2 lleno toca" data-guia="agregar" onClick=${() => editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}>+ Servicio</button>`}</div>${Buscador()}${Lista}</div>${Graf2}</div>`;
   }
 
   // Cuenta nueva: sin productos todavía.
-  if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Inventario</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
+  if (!listaProductos().length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Inventario</h1><${BotonAyuda} /></div>` : null}<${CatalogoVacio} />`;
   const conStock = listaProductos().filter(p => p.q != null);
   // Servicios dentro de una tienda (mano de obra, instalación…): no llevan existencia.
   const servicios = elegir(listaProductos().filter(p => p.q == null));
@@ -104,7 +104,7 @@ export function Inventario() {
     ${pp && html`<button type="button" class="btn2 acento toca" style="align-self:center" onClick=${() => editarP({ svc: true })}>+ Servicio</button>`}</div>`;
 
   if (tel) return html`
-    <div class="fila entra" style="gap:8px"><h1 class="titulo crece">Inventario</h1><${BotonGuiame} k="inventario" /><${BotonAyuda} />${pp && html`<button type="button" data-guia="agregar" class="icono-btn toca boton-agregar" aria-label=${filtro === 'Servicios' ? 'Agregar servicio' : 'Agregar producto'} onClick=${() => filtro === 'Servicios' ? editarP({ svc: true }) : editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}><${Icono} n="mas1" t=${20} g=${2.6} /></button>`}</div>
+    <div class="fila entra" style="gap:8px"><h1 class="titulo crece">Inventario</h1><${BotonAyuda} />${pp && html`<button type="button" data-guia="agregar" class="icono-btn toca boton-agregar" aria-label=${filtro === 'Servicios' ? 'Agregar servicio' : 'Agregar producto'} onClick=${() => filtro === 'Servicios' ? editarP({ svc: true }) : editarP({ g: grupo && grupo !== 'sin' ? grupo : '' })}><${Icono} n="mas1" t=${20} g=${2.6} /></button>`}</div>
     ${FraseInv}
     ${Herramientas}
     ${Pestañas}
