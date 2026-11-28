@@ -5,17 +5,15 @@ import { totales } from './pantallas/vender.js';
 import { iniciales } from './ui.js';
 import { telInternacional } from './paises.js';
 import { esc, imgSegura } from './seguro.js';
+import { cargarPDF, nuevoPapel, membreteDe, montoEnLetras, textoTasa, papelDe, fechaHoraDoc } from './papel.js';
 
-const BASE = new URL('./lib/', import.meta.url).href;
-let cargando = null;
-export const cargarPDF = () => cargando || (cargando = window.jspdf ? Promise.resolve() : new Promise((ok, mal) => {
-  const s = document.createElement('script'); s.src = BASE + 'jspdf.umd.min.js'; s.onload = ok; s.onerror = () => { cargando = null; mal(new Error('jsPDF')); }; document.head.appendChild(s);
-}));
+export { cargarPDF };
 
-// Carta en América; A4 en el resto.
-const CARTA = ['US', 'CA', 'MX', 'GT', 'SV', 'HN', 'NI', 'CR', 'PA', 'DO', 'CO', 'VE', 'EC', 'PE', 'BO', 'CL', 'AR', 'UY', 'PY', 'BR', 'PH'];
 export const COND_COT = 'Precios válidos hasta la fecha indicada y sujetos a disponibilidad. Para confirmar, responda este mensaje o firme y devuelva este documento.';
 export const COND_ORDEN = 'Revise su orden al recibirla. Los trabajos y equipos no retirados en 30 días después de avisarle pueden generar cargos por guardarlos. Conserve este documento para retirar.';
+
+// Cédula o RIF del cliente, y cómo se llama ese dato.
+const docDe = (cli, P) => ({ cliDoc: cli.doc || '', cliDocTipo: P.id === 'VE' ? (/^[JGCE]-?/i.test(cli.doc || '') && !/^V/i.test(cli.doc || '') ? 'RIF' : 'Cédula') : P.fiscal[0] || 'Documento', cliDir: cli.dir || '' });
 
 // Todo lo que sale en el papel, igual para el PDF y para la impresión.
 export function datosOrden(o, ctx) {
@@ -37,7 +35,8 @@ export function datosOrden(o, ctx) {
     items: o.items.map(it => ({ n: it.n, q: it.q, p: D.m(it.p), t: D.m(it.q * it.p) })),
     impTxt: tt.txt ? tt.txt + ': ' + D.m(tt.imp) : '', total: D.m(total), totalOtra: D.dual ? D.s(total) : '', tasa: D.dual ? (P.id === 'VE' ? 'Bs' : 'US$') : '',
     anticipo: ant > 0 ? D.m(ant) : '', saldo: D.m(saldo), saldoN: saldo,
-    cond: n.condOrden != null ? n.condOrden : COND_ORDEN, papel: CARTA.includes(P.id) ? 'letter' : 'a4',
+    cond: n.condOrden != null ? n.condOrden : COND_ORDEN, papel: papelDe(P),
+    recibidaHora: fechaHoraDoc(o.t), respN: resp, totalN: total, imp: tt.imp, taxIncl: !!n.taxIncl, desglose: tt.desglose || [], ...docDe(cli, P),
     etqFecha: 'Recibida', cajaDer: 'ENTREGA ESTIMADA', queTit: o.tipo === 'pedido' ? 'PEDIDO' : 'EQUIPO O TRABAJO', firmaDer: 'Recibido por', colItem: 'TRABAJO O PRODUCTO'
   };
 }
@@ -55,7 +54,8 @@ function datosCot(o, { S, P, D }) {
     items: o.items.map(it => ({ n: it.n, q: it.u ? String(it.q).replace('.', ',') + ' ' + it.u : it.q, p: D.m(it.p), t: D.m(it.q * it.p) })),
     impTxt: tt.txt ? tt.txt + ': ' + D.m(tt.imp) : '', total: D.m(tt.total), totalOtra: D.dual ? D.s(tt.total) : '', tasa: D.dual ? (P.id === 'VE' ? 'Bs' : 'US$') : '',
     anticipo: '', saldo: D.m(tt.total), saldoN: tt.total,
-    cond: n.condCot != null ? n.condCot : COND_COT, papel: CARTA.includes(P.id) ? 'letter' : 'a4',
+    cond: n.condCot != null ? n.condCot : COND_COT, papel: papelDe(P),
+    recibidaHora: fechaHoraDoc(o.t), respN: resp, totalN: tt.total, imp: tt.imp, taxIncl: !!n.taxIncl, desglose: tt.desglose || [], ...docDe(cli, P),
     etqFecha: 'Emitida', cajaDer: 'VÁLIDA HASTA', queTit: 'NOTA', firmaDer: 'Por el negocio', colItem: 'PRODUCTO O SERVICIO'
   };
 }
@@ -70,84 +70,31 @@ export function mensajeOrden(o, ctx) {
 }
 export const enlaceWA = (tel, texto, pid) => 'https://wa.me/' + telInternacional(tel, pid) + '?text=' + encodeURIComponent(texto);
 
-// Las fuentes del PDF solo tienen letras latinas: se cambian los signos que no saldrían.
-const limpio = x => String(x == null ? '' : x).replace(/[—–]/g, '-').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/…/g, '...').replace(/[  ]/g, ' ').replace(/[^\n\x20-\x7E\xA0-\xFF€·]/g, '');
-
-// El logo puede estar en WebP: el PDF necesita PNG o JPG.
-function aPNG(src) {
-  return new Promise(ok => {
-    if (!src) { ok(null); return; }
-    const img = new Image();
-    img.onload = () => { const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight; cv.getContext('2d').drawImage(img, 0, 0); ok({ src: cv.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight }); };
-    img.onerror = () => ok(null); img.src = src;
-  });
-}
-
 export async function pdfOrden(o, ctx) {
-  await cargarPDF();
-  const x = datosOrden(o, ctx), { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'mm', format: x.papel }), W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 16;
-  const tinta = [26, 23, 51], gris = [98, 95, 125], suave = [140, 137, 166], violeta = [106, 92, 242], linea = [230, 228, 242], fondo = [247, 246, 252];
-  const T = (txt, px, py, op) => doc.text(limpio(txt), px, py, op);
-  let y = M;
-  // Encabezado: logo, negocio y número.
-  const logo = await aPNG(x.logo);
-  if (logo) { const k = Math.min(20 / logo.w, 20 / logo.h); doc.addImage(logo.src, 'PNG', M, y, logo.w * k, logo.h * k); }
-  else { doc.setFillColor(...violeta); doc.roundedRect(M, y, 18, 18, 5, 5, 'F'); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(12); T(x.inic, M + 9, y + 11.5, { align: 'center' }); }
-  doc.setTextColor(...tinta); doc.setFont('helvetica', 'bold'); doc.setFontSize(14); T(x.negocio, M + 24, y + 6);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...gris);
-  doc.splitTextToSize(limpio(x.datosNeg), 92).slice(0, 3).forEach((l, i) => doc.text(l, M + 24, y + 11 + i * 4));
-  doc.setTextColor(...violeta); doc.setFont('helvetica', 'bold'); doc.setFontSize(13); T(x.titulo, W - M, y + 6, { align: 'right' });
-  doc.setTextColor(...tinta); doc.setFontSize(12); T(x.numero, W - M, y + 12, { align: 'right' });
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...gris); T(x.etqFecha + ' ' + x.recibida + ' · ' + x.estado, W - M, y + 17, { align: 'right' });
-  y += 28;
-  // Cliente y entrega.
-  const caja = (px, w, tit, l1, l2) => {
-    doc.setFillColor(...fondo); doc.roundedRect(px, y, w, 19, 3, 3, 'F');
-    doc.setFontSize(7); doc.setTextColor(...suave); doc.setFont('helvetica', 'bold'); T(tit, px + 4, y + 5.5);
-    doc.setFontSize(10); doc.setTextColor(...tinta); T(l1, px + 4, y + 11);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...gris); T(l2, px + 4, y + 15.5);
-  };
-  const mitad = (W - 2 * M - 6) / 2;
-  caja(M, mitad, 'CLIENTE', x.cliente, x.telCli);
-  caja(M + mitad + 6, mitad, x.cajaDer, x.entrega, x.resp ? (o.cot ? x.resp : 'Responsable: ' + x.resp) : '');
-  y += 26;
-  // Qué se recibe o se pide.
-  if (x.que || x.det) { doc.setFontSize(7); doc.setTextColor(...suave); doc.setFont('helvetica', 'bold'); T(x.queTit, M, y);
-  doc.setFontSize(11); doc.setTextColor(...tinta); y += 5.5; }
-  if (x.que) doc.splitTextToSize(limpio(x.que), W - 2 * M).forEach(l => { doc.text(l, M, y); y += 5; });
-  if (x.det) { doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...gris); doc.splitTextToSize(limpio(x.det), W - 2 * M).slice(0, 8).forEach(l => { doc.text(l, M, y); y += 4.3; }); }
-  y += 4;
-  // Tabla de trabajos y productos.
-  const cCant = W - M - 62, cPrecio = W - M - 30, cTotal = W - M;
-  doc.setFontSize(7); doc.setTextColor(...suave); doc.setFont('helvetica', 'bold');
-  T(x.colItem, M, y); T('CANT.', cCant, y, { align: 'right' }); T('PRECIO', cPrecio, y, { align: 'right' }); T('TOTAL', cTotal, y, { align: 'right' });
-  y += 2.5; doc.setDrawColor(...linea); doc.setLineWidth(0.3); doc.line(M, y, W - M, y); y += 5;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...tinta);
-  if (!x.items.length) { doc.setTextColor(...gris); T('Sin trabajos anotados todavía', M, y); y += 7; }
-  x.items.forEach(it => {
-    const ls = doc.splitTextToSize(limpio(it.n), cCant - M - 16);
-    if (y + ls.length * 4.5 > H - 70) { doc.addPage(); y = M; }
-    ls.forEach((l, i) => doc.text(l, M, y + i * 4.5));
-    T(String(it.q), cCant, y, { align: 'right' }); T(it.p, cPrecio, y, { align: 'right' }); T(it.t, cTotal, y, { align: 'right' });
-    y += ls.length * 4.5 + 1.5; doc.line(M, y - 1, W - M, y - 1); y += 3.5;
-  });
-  // Totales.
-  y += 2; const cx0 = W - M - 70;
-  const fila = (a, b, fuerte) => { doc.setFont('helvetica', fuerte ? 'bold' : 'normal'); doc.setFontSize(fuerte ? 12 : 9.5); doc.setTextColor(...(fuerte ? tinta : gris)); T(a, cx0, y); T(b, W - M, y, { align: 'right' }); y += fuerte ? 7 : 5.2; };
-  fila('Total', x.total);
-  if (x.impTxt) { doc.setFontSize(8); doc.setTextColor(...suave); T(x.impTxt, W - M, y - 1.5, { align: 'right' }); y += 3.5; }
-  if (x.totalOtra) fila('En ' + x.tasa, x.totalOtra);
-  if (x.anticipo) fila('Anticipo', '-' + x.anticipo);
-  fila(x.anticipo ? 'Saldo' : 'A pagar', x.saldo, true);
-  // Condiciones y firmas.
-  y = Math.max(y + 6, H - 62);
-  if (x.cond) { doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8); doc.setTextColor(...gris); doc.splitTextToSize(limpio(x.cond), W - 2 * M).slice(0, 5).forEach(l => { doc.text(l, M, y); y += 3.6; }); }
-  y = H - 30; doc.setDrawColor(...tinta); doc.setLineWidth(0.3);
-  doc.line(M, y, M + mitad - 10, y); doc.line(M + mitad + 16, y, W - M, y);
-  doc.setFontSize(8.5); doc.setTextColor(...tinta); T('Firma del cliente', M + (mitad - 10) / 2, y + 5, { align: 'center' }); T(x.firmaDer, M + mitad + 16 + (W - M - (M + mitad + 16)) / 2, y + 5, { align: 'center' });
-  doc.setFontSize(7); doc.setTextColor(...suave); T(x.numero + ' · ' + x.negocio + ' · Documento no fiscal', M, H - 10); T('Hecho con Orbe Negocios', W - M, H - 10, { align: 'right' });
-  return doc.output('blob');
+  const x = datosOrden(o, ctx), { S, P, D } = ctx, tasa = textoTasa(S, P, D);
+  const pp = await nuevoPapel(x.papel);
+  const meta = o.cot ? [['Emitida', x.recibida], ['Válida hasta', x.entrega]].concat(x.estado ? [['Estado', x.estado]] : [])
+    : [['Recibida', x.recibidaHora], ['Entrega estimada', x.entrega], ['Estado', x.estado]];
+  await pp.membrete(membreteDe(S, P), x.titulo, x.numero, meta.filter(r => r[1]));
+  const cliente = { tit: 'Cliente', filas: [[x.cliDocTipo === 'RIF' ? 'Razón social' : 'Nombre', x.cliente], [x.cliDocTipo, x.cliDoc], ['Teléfono', x.telCli], ['Dirección', x.cliDir]] };
+  const der = o.cot ? { tit: 'Datos de la oferta', filas: [['Moneda', P.id === 'VE' ? 'Dólares (USD)' : ''], [tasa ? tasa.nombre : '', tasa ? tasa.valor + ' · ' + tasa.fecha : ''], ['Atendió', x.respN]] }
+    : { tit: o.tipo === 'pedido' ? 'Pedido' : 'Equipo o trabajo', filas: [[o.tipo === 'pedido' ? 'Qué pide' : 'Equipo o trabajo', x.que], ['Responsable', x.respN]] };
+  pp.partes(cliente, der);
+  if (x.det) pp.parrafo(o.cot ? 'Nota' : 'Detalles', x.det, { pt: 8.6 });
+  pp.tabla([{ t: 'N.º', w: 11, tenue: true }, { t: o.cot ? 'Descripción' : 'Trabajo o producto' }, { t: 'Cant.', w: 18, der: true }, { t: 'Precio unit.', w: 28, der: true }, { t: 'Importe', w: 28, der: true }],
+    x.items.map((it, i) => [String(i + 1), it.n, String(it.q), it.p, it.t]), { vacio: o.cot ? 'Sin productos' : 'Sin trabajos anotados todavía' });
+  const filas = [];
+  if (x.imp > 0.004) { filas.push([x.taxIncl ? 'Base imponible' : 'Subtotal', D.m(x.totalN - x.imp)]); x.desglose.filter(d => d.r).forEach(d => filas.push([P.tax[0] + ' (' + String(d.r).replace('.', ',') + ' %)', D.m(d.imp)])); }
+  if (x.anticipo) { if (!filas.length) filas.push(['Total', x.total]); else filas.push(['Total', x.total]); filas.push(['Anticipo recibido', '−' + x.anticipo]); filas.push(['Saldo', x.saldo, 'fuerte']); if (x.totalOtra) filas.push(['Saldo en ' + x.tasa, D.s(x.saldoN), 'bs']); }
+  else { filas.push([o.cot ? 'Total' : 'Total a pagar', x.total, 'fuerte']); if (x.totalOtra) filas.push(['Total en ' + x.tasa, x.totalOtra, 'bs']); }
+  const montoL = x.anticipo ? x.saldoN : x.totalN;
+  const nota = tasa ? (o.cot ? 'Equivalente en bolívares calculado a la ' + tasa.nombre.toLowerCase().replace('tasa bcv', 'tasa oficial del BCV') + ' del ' + tasa.fecha + ' (' + tasa.valor + '). El monto en Bs se ajusta a la tasa del día del pago.'
+    : tasa.nombre + ' del ' + tasa.fecha + ': ' + tasa.valor + '. El ' + (x.anticipo ? 'saldo' : 'total') + ' en Bs se calcula a la tasa del día del pago.') : '';
+  pp.totales(filas, montoEnLetras(montoL, P) + ' (' + D.m(montoL) + ')', nota);
+  pp.parrafo('Condiciones', x.cond);
+  const cli = x.cliente + (x.cliDoc ? ' · ' + x.cliDoc : '');
+  pp.firmas(o.cot ? ['Aceptado por el cliente', 'Nombre, C.I. y fecha'] : ['Firma del cliente', cli], [o.cot ? 'Por ' + x.negocio : x.firmaDer, x.respN || 'Nombre y firma']);
+  return pp.cerrar(x.numero + ' · Documento no fiscal');
 }
 
 // Compartir el PDF: en el teléfono se abre el menú para elegir WhatsApp con el archivo puesto.
@@ -172,18 +119,32 @@ export function descargar(blob, nombre) {
 export function imprimirOrden(o, ctx) {
   const x = datosOrden(o, ctx), logo = imgSegura(x.logo);
   const z = document.createElement('div'); z.className = 'zona-imprimir';
-  z.innerHTML = `<style>@page { size: ${x.papel === 'letter' ? 'letter' : 'A4'}; margin: 14mm; }</style>
+  const { S, P, D } = ctx, m = membreteDe(S, P), tasa = textoTasa(S, P, D);
+  const fila = (k, v) => v ? `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>` : '';
+  const meta = o.cot ? fila('Emitida', x.recibida) + fila('Válida hasta', x.entrega) : fila('Recibida', x.recibidaHora) + fila('Entrega estimada', x.entrega) + fila('Estado', x.estado);
+  const der = o.cot ? fila('Moneda', P.id === 'VE' ? 'Dólares (USD)' : '') + (tasa ? fila(tasa.nombre, tasa.valor + ' · ' + tasa.fecha) : '') + fila('Atendió', x.respN)
+    : fila(o.tipo === 'pedido' ? 'Qué pide' : 'Equipo o trabajo', x.que) + fila('Responsable', x.respN);
+  const tot = [];
+  if (x.imp > 0.004) { tot.push([x.taxIncl ? 'Base imponible' : 'Subtotal', D.m(x.totalN - x.imp)]); x.desglose.filter(d => d.r).forEach(d => tot.push([P.tax[0] + ' (' + String(d.r).replace('.', ',') + ' %)', D.m(d.imp)])); }
+  if (x.anticipo) tot.push(['Total', x.total], ['Anticipo recibido', '−' + x.anticipo], ['Saldo', x.saldo, 'f']);
+  else tot.push([o.cot ? 'Total' : 'Total a pagar', x.total, 'f']);
+  if (x.totalOtra) tot.push([(x.anticipo ? 'Saldo en ' : 'Total en ') + x.tasa, x.anticipo ? D.s(x.saldoN) : x.totalOtra, 'b']);
+  const montoL = x.anticipo ? x.saldoN : x.totalN;
+  z.innerHTML = `<style>@page { size: ${x.papel === 'letter' ? 'letter' : 'A4'}; margin: 14mm 16mm; }</style>
     <div class="imp-cab">${logo ? `<img src="${esc(logo)}" alt="" class="imp-logo">` : `<span class="imp-logo imp-inic">${esc(x.inic)}</span>`}
-      <div class="imp-neg"><b>${esc(x.negocio)}</b><span>${esc(x.datosNeg)}</span></div>
-      <div class="imp-num"><b>${esc(x.titulo)}</b><strong>${esc(x.numero)}</strong><span>${esc(x.etqFecha)} ${esc(x.recibida)} · ${esc(x.estado)}</span></div></div>
-    <div class="imp-dos"><div><small>CLIENTE</small><b>${esc(x.cliente)}</b><span>${esc(x.telCli)}</span></div><div><small>${esc(x.cajaDer)}</small><b>${esc(x.entrega)}</b><span>${x.resp ? (o.cot ? esc(x.resp) : 'Responsable: ' + esc(x.resp)) : ''}</span></div></div>
-    ${x.que || x.det ? `<div class="imp-que"><small>${esc(x.queTit)}</small>${x.que ? `<b>${esc(x.que)}</b>` : ''}${x.det ? `<span>${esc(x.det)}</span>` : ''}</div>` : ''}
-    <table><thead><tr><th>${o.cot ? 'Producto o servicio' : 'Trabajo o producto'}</th><th>Cant.</th><th>Precio</th><th>Total</th></tr></thead><tbody>
-      ${x.items.map(it => `<tr><td>${esc(it.n)}</td><td>${esc(it.q)}</td><td>${esc(it.p)}</td><td>${esc(it.t)}</td></tr>`).join('') || '<tr><td colspan="4">Sin trabajos anotados todavía</td></tr>'}</tbody></table>
-    <div class="imp-tot"><div><span>Total</span><span>${esc(x.total)}</span></div>${x.impTxt ? `<div style="font-size:8.5pt;justify-content:flex-end">${esc(x.impTxt)}</div>` : ''}${x.totalOtra ? `<div><span>En ${esc(x.tasa)}</span><span>${esc(x.totalOtra)}</span></div>` : ''}${x.anticipo ? `<div><span>Anticipo</span><span>-${esc(x.anticipo)}</span></div>` : ''}<div class="imp-saldo"><span>${x.anticipo ? 'Saldo' : 'A pagar'}</span><span>${esc(x.saldo)}</span></div></div>
-    ${x.cond ? `<p class="imp-cond">${esc(x.cond)}</p>` : ''}
-    <div class="imp-firmas"><span>Firma del cliente</span><span>${esc(x.firmaDer)}</span></div>
-    <p class="imp-cond" style="text-align:center;margin-top:14px">Documento no fiscal</p>`;
+      <div class="imp-neg"><b>${esc(x.negocio)}</b>${m.razon || m.fiscal ? `<span>${m.razon ? `<em>${esc(m.razon)}</em>` : ''}${m.razon && m.fiscal ? ' · ' : ''}${esc(m.fiscal)}</span>` : ''}${m.lineas.map(l => `<span>${esc(l)}</span>`).join('')}</div>
+      <div class="imp-num"><small>${esc(x.titulo)}</small><strong>${esc(x.numero)}</strong><dl>${meta}</dl></div></div>
+    <div class="imp-regla"></div>
+    <div class="imp-dos"><div><small>CLIENTE</small><dl>${fila(x.cliDocTipo === 'RIF' ? 'Razón social' : 'Nombre', x.cliente)}${fila(x.cliDocTipo, x.cliDoc)}${fila('Teléfono', x.telCli)}${fila('Dirección', x.cliDir)}</dl></div>
+      <div><small>${o.cot ? 'DATOS DE LA OFERTA' : o.tipo === 'pedido' ? 'PEDIDO' : 'EQUIPO O TRABAJO'}</small><dl>${der}</dl></div></div>
+    ${x.det ? `<div class="imp-que"><small>${o.cot ? 'NOTA' : 'DETALLES'}</small><span>${esc(x.det)}</span></div>` : ''}
+    <table><thead><tr><th class="imp-i">N.º</th><th>${o.cot ? 'Descripción' : 'Trabajo o producto'}</th><th>Cant.</th><th>Precio unit.</th><th>Importe</th></tr></thead><tbody>
+      ${x.items.map((it, i) => `<tr><td class="imp-i">${i + 1}</td><td>${esc(it.n)}</td><td>${esc(it.q)}</td><td>${esc(it.p)}</td><td>${esc(it.t)}</td></tr>`).join('') || '<tr><td colspan="5">Sin trabajos anotados todavía</td></tr>'}</tbody></table>
+    <div class="imp-cierre"><div class="imp-letras"><b>Son:</b> ${esc(montoEnLetras(montoL, P) + ' (' + D.m(montoL) + ')')}${tasa ? `<p>${esc(tasa.nombre + ' del ' + tasa.fecha + ': ' + tasa.valor + '. El monto en Bs se calcula a la tasa del día del pago.')}</p>` : ''}</div>
+      <div class="imp-tot">${tot.map(r => `<div class="${r[2] === 'f' ? 'imp-saldo' : r[2] === 'b' ? 'imp-bs' : ''}"><span>${esc(r[0])}</span><span>${esc(r[1])}</span></div>`).join('')}</div></div>
+    ${x.cond ? `<div class="imp-que"><small>CONDICIONES</small><p class="imp-cond">${esc(x.cond)}</p></div>` : ''}
+    <div class="imp-firmas"><span><b>${o.cot ? 'Aceptado por el cliente' : 'Firma del cliente'}</b>${esc(o.cot ? 'Nombre, C.I. y fecha' : x.cliente + (x.cliDoc ? ' · ' + x.cliDoc : ''))}</span><span><b>${esc(o.cot ? 'Por ' + x.negocio : x.firmaDer)}</b>${esc(x.respN || 'Nombre y firma')}</span></div>
+    <p class="imp-pie">${esc(x.numero)} · Documento no fiscal</p>`;
   // La hoja solo se ve al imprimir; si el aparato no avisa que terminó, se quita en la próxima impresión.
   document.querySelectorAll('.zona-imprimir').forEach(v => v.remove());
   document.body.appendChild(z); document.documentElement.classList.add('imprimiendo');

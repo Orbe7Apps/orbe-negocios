@@ -1268,6 +1268,12 @@ function CierreZ({ d, cerrar }) {
   const quien = (S.perfiles.find(p => p.id === z.por) || {}).n;
   const pp = (z.resumen && z.resumen.porPago) || {};
   const linea = (a, b, fuerte) => html`<span class="fila" style=${{ justifyContent: 'space-between', gap: '8px', fontWeight: fuerte ? 700 : 400, color: fuerte ? 'inherit' : '#625f7d' }}><span>${a}</span><span>${b}</span></span>`;
+  // El cierre como documento formal en PDF (para guardarlo, mandarlo o imprimirlo en carta).
+  const pdfZ = async x => {
+    try { const [{ pdfCierreZ }, { compartirArchivo }] = await Promise.all([import('../documentos.js'), import('../papel.js')]);
+      await compartirArchivo(await pdfCierreZ(x, { S, P, D }), 'Cierre-Z-' + (x.n || S.cierres.indexOf(x) + 1) + '.pdf'); }
+    catch (e) { avisar('No pude preparar el PDF. Prueba otra vez.'); }
+  };
   return html`<${Hoja} titulo=${'Cierre Z #' + (z.n || S.cierres.indexOf(z) + 1)} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`<div style="border-radius:16px;background:#f7f6fc;color:#1a1733;padding:16px;display:flex;flex-direction:column;gap:7px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace">
       ${S.negocio.logo && html`<img src=${S.negocio.logo} alt="" style="display:block;margin:0 auto 2px;max-width:96px;max-height:56px;object-fit:contain" />`}
@@ -1290,6 +1296,6 @@ function CierreZ({ d, cerrar }) {
       <span style="height:4px"></span>
       <span style="color:#8a87a6;font-size:11px;word-break:break-all">Firma ${(z.h || '').slice(0, 32)}</span>
     </div>`,
-    pie: html`<button type="button" class="btn toca" onClick=${() => imprimir(lineasZ(z, { S, P, D }), { logo: S.negocio.logo }).catch(() => avisar('No se pudo imprimir: revisa la impresora'))}><${Icono} n="doc" t=${16} />Imprimir</button>${Pie2('Listo', () => c())}`
+    pie: html`<div class="fila" style="gap:10px"><button type="button" class="btn2 toca crece" style="min-height:54px;border-radius:27px" onClick=${() => pdfZ(z)}><${Icono} n="doc" t=${16} />PDF</button><button type="button" class="btn toca crece" onClick=${() => imprimir(lineasZ(z, { S, P, D }), { logo: S.negocio.logo }).catch(() => avisar('No se pudo imprimir: revisa la impresora'))}><${Icono} n="doc" t=${16} />Imprimir</button></div>${Pie2('Listo', () => c())}`
   })} />`;
 }

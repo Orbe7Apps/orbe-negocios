@@ -98,6 +98,10 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
   - Respetar las zonas seguras (`env(safe-area-inset-*)`).
   - Arreglo de la franja de abajo en la app instalada: `@media (display-mode: standalone){ html{ min-height: min(100lvh, calc(100% + env(safe-area-inset-top))) } }`.
 
+## 5b. Documentos en PDF
+
+- Todos los PDF usan `js/papel.js`: papel formal en blanco y negro (nada del morado ni de las tarjetas de la app), letra Inter, filetes finos, tabla con cebra, total en $ y Bs con la tasa del día, monto en letras, firmas y “Página 1 de N”. Un documento nuevo se arma con sus piezas (`membrete`, `partes`, `tabla`, `totales`, `parrafo`, `cifras`, `firmas`, `cerrar`); nunca imprimiendo la pantalla.
+
 ## 6. Maquetas
 
 - Lienzo original “Orbe Negocios” (fase 1, octubre 2026): https://claude.ai/artifact/G5XgQd56oAYGYSxnKFB5j4. Es historia: la app ya superó esas maquetas.
