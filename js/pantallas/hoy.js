@@ -7,7 +7,6 @@ import { Barras, Linea, Reparto, Monto, Anillo, color } from '../graficos.js';
 import { Icono, LogoOrbe, iniciales, hora, fechaCorta, Bandera, MarcaNegocio, avisar, avisarDeshacer } from '../ui.js';
 import { nombreTasa } from '../paises.js';
 import { FilaVenta } from './hojas.js';
-import { OfertaRecorrido } from '../recorrido.js';
 import { OrdenesHoy } from './ordenes.js';
 import { CitasHoy, citasDelDia } from './agenda.js';
 import { PrimerosPasos } from './empezar.js';
@@ -15,7 +14,7 @@ import { AvisoPlan } from './cuenta.js';
 import { RecordatoriosHoy } from '../recordatorios.js';
 import { PlanesHoy } from './cuotas.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 
 const DIA = 86400000;
 // Avisos de “Para hacer hoy” que se quitaron con la equis: solo los de hoy, guardados en este aparato.
@@ -146,18 +145,16 @@ export function Hoy() {
         <${MarcaNegocio} n=${S.negocio} lapiz=${puede('ajustes')} />
         <span class="crece"><b class="corta">${S.negocio.nombre}</b><span class="sub corta">${new Date().toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' })} · <${Bandera} id=${P.id} t=${14} /> ${E ? (suc || 'Todos los locales') : T.n}</span></span>
       </button>
-      <${BotonGuiame} k="hoy" />
       <${BotonAyuda} k="hoy" />
-      <span class="pildora" style=${{ background: enLinea ? 'var(--in-soft)' : 'var(--amber-soft)', color: enLinea ? 'var(--in-text)' : 'var(--amber-text)' }}><span class="punto"></span>${enLinea ? 'En línea' : 'Sin internet'}</span>
+      ${!enLinea && html`<span class="pildora" style=${{ background: 'var(--amber-soft)', color: 'var(--amber-text)' }}><span class="punto"></span>Sin internet</span>`}
     </header>
+    ${E && html`<div class="chips desliza">${[''].concat(S.negocio.sucursales).map(x => html`<button type="button" class=${'chip chico toca' + (suc === x ? ' on' : '')} onClick=${() => setSuc(x)}>${x || 'Todas'}</button>`)}</div>`}
+    ${Hero(true, 64)}
     ${FraseHoy}
-    ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
     <${AvisoPlan} />
     ${T.mod('cuotas') && puede('fiado') && html`<${PlanesHoy} />`}
     <${RecordatoriosHoy} />
     <${PrimerosPasos} />
-    ${E && html`<div class="chips desliza">${[''].concat(S.negocio.sucursales).map(x => html`<button type="button" class=${'chip chico toca' + (suc === x ? ' on' : '')} onClick=${() => setSuc(x)}>${x || 'Todas'}</button>`)}</div>`}
-    ${Hero(true, 64)}
     ${T.mod('agenda') && html`<${CitasHoy} max=${3} />`}
     ${Pendientes}
     ${Recientes}`;
@@ -165,15 +162,14 @@ export function Hoy() {
   // ---------- computadora ----------
   return html`
     ${FraseHoy}
-    ${(S.negocio.pasosListos || S.ventas.length > 0) && html`<${OfertaRecorrido} />`}
-    <${AvisoPlan} />
-    ${T.mod('cuotas') && puede('fiado') && html`<${PlanesHoy} />`}
-    <${RecordatoriosHoy} />
-    <${PrimerosPasos} />
     <div class="panel-cifras">
       ${Hero(true, 48)}
       ${kpis.map((k, i) => html`<button type="button" class="tarjeta cifra entra toca" style=${{ '--i': i + 1, border: 0, textAlign: 'left', color: 'var(--ink)', cursor: k[3] ? 'pointer' : 'default' }} onClick=${k[3] || undefined}><span class="sub">${k[0]}${i === 0 ? ' de hoy' : ''}</span><b class=${'v num ' + ({ 'v-verde': 'in', 'v-ambar': 'amber', 'v-rojo': 'out' }[k[2]] || '')}>${k[1]}</b><span class="sub faint">${i === 0 ? (r.total ? Math.round(r.ganancia / r.total * 100) + ' % de lo vendido' : 'sin ventas todavía') : i === 1 ? deben.length + (deben.length === 1 ? ' cliente' : ' clientes') : puede('gastos') ? pp.length + (pp.length === 1 ? ' cuenta' : ' cuentas') + (pp[0] ? ' · ' + venceTxt(pp[0].vence).toLowerCase() : '') : 'anotado a clientes'}</span></button>`)}
     </div>
+    <${AvisoPlan} />
+    ${T.mod('cuotas') && puede('fiado') && html`<${PlanesHoy} />`}
+    <${RecordatoriosHoy} />
+    <${PrimerosPasos} />
     ${!S.ventas.length ? html`<div class="entra" style="--i:4">${Pendientes}</div>` : html`<div class="dos-uno">
       <section class="tarjeta entra llena" style="--i:4">
         <div class="tarjeta-tit">Ventas de los últimos ${E && !suc ? '14' : '30'} días<button type="button" class="enlace-tasa toca" onClick=${() => ir('reportes')}>Reportes →</button></div>

@@ -27,9 +27,11 @@ const PC = process.env.PC === '1';
         console.log(tag + ' · ' + sec + ': escena ' + esc + ', frases ' + frases);
         if (!esc) mal(sec + ' vacía sin escena');
         if (frases > 1) mal(sec + ' con ' + frases + ' frases');
-        const g = p.locator('.guiame').first();
-        if (await g.count()) {
-          await g.click(); await p.waitForTimeout(700);
+        // “Guíame paso a paso” vive dentro del “?”.
+        const q = p.locator('main .boton-ayuda, .barra-sup .boton-ayuda').first(); let g = false;
+        if (await q.count()) { await q.click(); await p.waitForTimeout(600); const b = p.locator('.guia-ayuda-btn'); if (await b.count()) { await b.click(); g = true; } else { await p.keyboard.press('Escape'); await p.waitForTimeout(300); } }
+        if (g) {
+          await p.waitForTimeout(700);
           for (let k = 0; k < 10 && await p.locator('.guia-tarjeta').count(); k++) { const s = p.locator('button.guia-sig:not([disabled])'); if (!(await s.count())) { mal(sec + ': paso sin “Siguiente”'); await p.keyboard.press('Escape'); break; } await s.click(); await p.waitForTimeout(600); }
           if (await p.locator('.guia').count()) mal(sec + ': la guía no terminó');
         }

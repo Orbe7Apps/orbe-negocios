@@ -1,4 +1,4 @@
-// Botón Orbe (celular): el logo en el centro de la barra de abajo. Al tocarlo sube un panel con
+// Botón “+” (celular), en el centro de la barra de abajo (antes llevaba el logo de Orbe). Al tocarlo sube un panel con
 // lo que se crea a diario (venta, orden, gasto…) y las secciones que no caben en la barra.
 // Solo aparecen las opciones que el perfil tiene permitidas.
 import { html, useState, useEffect } from '../lib/preact-htm.js';
@@ -50,7 +50,7 @@ export function BotonOrbe({ seccion, tabs = [] }) {
         <div class="orbe-ir">${irA.map((x, i) => html`<button type="button" key=${x[0]} data-ir=${x[0]} class=${'toca' + (seccion === x[0] ? ' on' : '')} style=${{ '--d': 180 + i * 25 + 'ms' }} tabindex=${abierto ? 0 : -1} onClick=${hacer(() => ir(x[0]))}><${Icono} n=${x[1]} t=${17} />${x[2]}${x[3] ? html`<em>${x[3]}</em>` : null}</button>`)}</div>`}
     </div>
     <button type="button" class=${'boton-orbe toca' + (abierto ? ' abierto' : '') + (dentro ? ' dentro' : '')} data-tour="boton-orbe" aria-label=${abierto ? 'Cerrar el menú' : 'Abrir el menú de Orbe'} aria-expanded=${abierto ? 'true' : 'false'} onClick=${() => setAbierto(!abierto)}>
-      <svg viewBox="0 0 92 92" width="44" height="44" aria-hidden="true"><g class="bo-logo"><circle cx="35" cy="39.7" r="23" stroke="#8f84ff" /><circle cx="57" cy="39.7" r="23" stroke="#3ddc9f" /><circle cx="46" cy="58.7" r="23" stroke="#f0a020" /></g></svg>
+      <svg viewBox="0 0 92 92" width="44" height="44" aria-hidden="true"><g class="bo-logo"><path d="M46 26v40M26 46h40" /></g></svg>
       <span class="bo-x"><${Icono} n="cerrar" t=${24} g=${2.4} c="#fff" /></span>
       ${atrasadas > 0 && !abierto && html`<i class="bo-punto" aria-label=${atrasadas + ' órdenes atrasadas'}></i>`}
     </button>`;

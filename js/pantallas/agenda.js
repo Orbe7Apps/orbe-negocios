@@ -3,7 +3,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { Escena } from './empezar.js';
 import { inicioDia, listaProductos, guardarCita, estadoCita, citaActiva, ESTADOS_CITA } from '../datos.js';
 import { Hoja, Icono, avisar, hora, iniciales } from '../ui.js';
@@ -91,7 +91,7 @@ export function Agenda() {
   const FraseAgenda = !activas.length ? null : html`<${Frase}>${!activas.length ? ''
     : html`Tienes <b>${activas.length} ${activas.length === 1 ? 'cita' : 'citas'}</b> ${nDia}${estimado > 0 ? html`, unos <b class="v num">${D.m(estimado)}</b> si vienen todos` : ''}.${proxima ? html` ${proxima.t <= ahora ? 'Ahora' : 'La próxima'}: <b>${(proxima.nom || 'Cliente').split(' ')[0]}</b>${proxima.t <= ahora ? '' : ' a las ' + hora(proxima.t)}.` : esHoy ? ' Ya no quedan por atender.' : ''}`}</${Frase}>`;
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Agenda</h1><${BotonGuiame} k="agenda" /><${BotonAyuda} /><button type="button" data-guia="nueva-cita" class="icono-btn toca boton-agregar" aria-label="Nueva cita" onClick=${() => nueva({ pro })}><${Icono} n="mas1" t=${20} g=${2.6} /></button></div>
+    <div class="fila entra"><h1 class="titulo crece">Agenda</h1><${BotonAyuda} /><button type="button" data-guia="nueva-cita" class="icono-btn toca boton-agregar" aria-label="Nueva cita" onClick=${() => nueva({ pro })}><${Icono} n="mas1" t=${20} g=${2.6} /></button></div>
     ${FraseAgenda}
     ${Dias}
     ${pros.length > 1 && html`<div class="chips desliza" data-guia="pros">${[{ id: '', n: 'Todos' }].concat(pros).map(p => html`<button type="button" key=${p.id} class=${'chip chico toca' + (pro === p.id ? ' on' : '')} onClick=${() => setPro(p.id)}>${p.id && html`<i class="punto-grupo" style=${{ background: colorPro(S, p.id) }}></i>`}${p.id ? p.n.split(' ')[0] : 'Todos'}</button>`)}</div>`}
