@@ -78,11 +78,17 @@ export function Reportes() {
     { l: 'Gastos', v: gastos, tip: 'Gastos · ' + fm(gastos), segs: [{ v: gastos, c: 'var(--c5)' }] },
     { l: 'Te queda', v: Math.max(0, real), tip: 'Ganancia real · ' + fm(real), segs: [{ v: Math.max(0, real), c: 'var(--c2)' }] }
   ];
+  // El reporte como documento formal (tablas con texto de verdad), no una foto de la pantalla.
+  const pdf = async () => {
+    try { const [{ pdfReporte }, { compartirArchivo }] = await Promise.all([import('../documentos.js'), import('../papel.js')]);
+      await compartirArchivo(await pdfReporte(per, suc, { S, P, D, E }), 'reporte-ventas-' + new Date(desde).toISOString().slice(0, 10) + '.pdf'); }
+    catch (e) { avisar('No pude preparar el PDF. Prueba otra vez.'); }
+  };
   const nombreArchivo = 'orbe-ventas-' + new Date(desde).toISOString().slice(0, 10) + '.csv';
   const Moneda = D.dual ? html`<div class="segmento" data-guia="moneda" role="group" aria-label="Moneda de los reportes">${[['p', P.id === 'VE' ? '$' : P.s], ['s', simb2]].concat(S.negocio.euro ? [['e', '€']] : []).map(o => html`<button type="button" class=${mon === o[0] ? 'on' : ''} aria-pressed=${mon === o[0] ? 'true' : 'false'} onClick=${() => setMon(o[0])}>${o[1]}</button>`)}</div>` : null;
   const Acciones = html`<div class="chips" data-guia="exportar">
     <button type="button" class="btn2 chico toca" onClick=${() => { descargar(nombreArchivo, ventasCSV(desde, hasta), 'text/csv;charset=utf-8'); avisar('Excel descargado'); }}><${Icono} n="descarga" t=${15} />Excel</button>
-    <button type="button" class="btn2 chico toca" onClick=${() => window.print()}><${Icono} n="doc" t=${15} />PDF</button>
+    <button type="button" class="btn2 chico toca" onClick=${pdf}><${Icono} n="doc" t=${15} />PDF</button>
   </div>`;
 
   const fv = flecha(tot(r), tot(ant)), fg = flecha(gan(r), gan(ant)), fgs = flecha(gastos, gastosAnt, true), fr = flecha(real, gan(ant) - gastosAnt);

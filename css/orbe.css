@@ -549,21 +549,30 @@ html.tel .oferta-btns .btn2 { flex: 1; min-height: 44px; }
 @media print {
   html.imprimiendo, html.imprimiendo body { background: #fff !important; }
   html.imprimiendo body > *:not(.zona-imprimir) { display: none !important; }
-  html.imprimiendo .zona-imprimir { display: flex; flex-direction: column; gap: 14px; color: #1a1733; font: 11pt/1.35 Inter, system-ui, sans-serif; }
+  /* Orden, pedido o cotización impresa: el mismo papel formal del PDF (blanco y negro, filetes finos). */
+  html.imprimiendo .zona-imprimir { display: flex; flex-direction: column; gap: 12px; color: #17161f; font: 9pt/1.4 Inter, system-ui, sans-serif; }
+  .zona-imprimir small { color: #8e8c9c; font-size: 7pt; font-weight: 600; letter-spacing: .14em; }
+  .zona-imprimir dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 4px 0 0; } .zona-imprimir dt { color: #5c5a6b; } .zona-imprimir dd { margin: 0; font-weight: 600; }
   .imp-cab { display: flex; gap: 14px; align-items: flex-start; }
-  .imp-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 14px; flex: none; }
-  .imp-inic { display: grid; place-items: center; background: #6a5cf2; color: #fff; font-weight: 700; font-size: 20px; }
-  .imp-neg { flex: 1; display: flex; flex-direction: column; gap: 2px; } .imp-neg b { font-size: 15pt; } .imp-neg span { color: #625f7d; font-size: 9pt; }
-  .imp-num { text-align: right; display: flex; flex-direction: column; } .imp-num b { color: #6a5cf2; font-size: 13pt; } .imp-num strong { font-size: 13pt; } .imp-num span { color: #625f7d; font-size: 9pt; }
-  .imp-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .imp-dos > div, .imp-que { display: flex; flex-direction: column; gap: 2px; } .imp-dos > div { background: #f7f6fc; border-radius: 10px; padding: 10px 12px; }
-  .zona-imprimir small { color: #8c89a6; font-size: 7.5pt; font-weight: 700; letter-spacing: .04em; }
-  .imp-que span { color: #625f7d; white-space: pre-wrap; }
-  .zona-imprimir table { width: 100%; border-collapse: collapse; } .zona-imprimir th { text-align: left; font-size: 7.5pt; color: #8c89a6; text-transform: uppercase; letter-spacing: .04em; }
-  .zona-imprimir th, .zona-imprimir td { padding: 7px 4px; border-bottom: 1px solid #e6e4f2; } .zona-imprimir th:not(:first-child), .zona-imprimir td:not(:first-child) { text-align: right; white-space: nowrap; }
-  .imp-tot { align-self: flex-end; width: 260px; display: flex; flex-direction: column; gap: 3px; } .imp-tot div { display: flex; justify-content: space-between; color: #625f7d; } .imp-tot .imp-saldo { color: #1a1733; font-weight: 700; font-size: 13pt; margin-top: 3px; }
-  .imp-cond { color: #625f7d; font-size: 8.5pt; margin: 6px 0 0; }
-  .imp-firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 48px; } .imp-firmas span { border-top: 1px solid #1a1733; padding-top: 6px; text-align: center; font-size: 9pt; }
+  .imp-logo { width: 54px; height: 54px; object-fit: contain; border-radius: 10px; flex: none; }
+  .imp-inic { -webkit-print-color-adjust: exact; print-color-adjust: exact; display: grid; place-items: center; background: #17161f; color: #fff; font-weight: 700; font-size: 18px; }
+  .imp-neg { flex: 1; display: flex; flex-direction: column; gap: 1px; } .imp-neg b { font-size: 14pt; margin-bottom: 3px; } .imp-neg span { color: #5c5a6b; font-size: 8.3pt; } .imp-neg em { font-style: normal; font-weight: 600; color: #17161f; }
+  .imp-num { text-align: right; display: flex; flex-direction: column; align-items: flex-end; } .imp-num strong { font-size: 18pt; line-height: 1.2; } .imp-num dl { font-size: 8.3pt; } .imp-num dt { color: #8e8c9c; text-align: right; } .imp-num dd { text-align: right; }
+  .imp-regla { border-top: 1.6pt solid #17161f; border-bottom: .6pt solid #17161f; height: 3pt; }
+  .imp-dos { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; } .imp-dos dl { grid-template-columns: 30mm 1fr; }
+  .imp-que { display: flex; flex-direction: column; gap: 3px; } .imp-que span { color: #5c5a6b; white-space: pre-wrap; }
+  .zona-imprimir table { width: 100%; border-collapse: collapse; border-top: .75pt solid #17161f; border-bottom: .75pt solid #17161f; }
+  .zona-imprimir th { text-align: left; font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; border-bottom: .75pt solid #17161f; }
+  .zona-imprimir th, .zona-imprimir td { padding: 5px 6px; } .zona-imprimir th:nth-child(n+3), .zona-imprimir td:nth-child(n+3) { text-align: right; white-space: nowrap; }
+  .zona-imprimir tbody tr:nth-child(even) td { background: #f5f5f8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .zona-imprimir .imp-i { color: #8e8c9c; width: 1%; }
+  .imp-cierre { display: grid; grid-template-columns: 1fr 70mm; gap: 8mm; align-items: start; }
+  .imp-letras { color: #5c5a6b; font-size: 8.3pt; } .imp-letras b { color: #17161f; } .imp-letras p { margin: 6px 0 0; padding-top: 6px; border-top: .5pt solid #d9d8e2; }
+  .imp-tot { display: flex; flex-direction: column; gap: 3px; } .imp-tot div { display: flex; justify-content: space-between; color: #5c5a6b; } .imp-tot div span:last-child { color: #17161f; font-weight: 600; }
+  .imp-tot .imp-saldo { color: #17161f; font-weight: 700; font-size: 10.5pt; border-top: 1pt solid #17161f; padding-top: 5px; margin-top: 3px; } .imp-tot .imp-bs { color: #17161f; font-weight: 600; }
+  .imp-cond { color: #5c5a6b; font-size: 8pt; margin: 0; }
+  .imp-firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 17mm; margin-top: 40px; } .imp-firmas span { border-top: .6pt solid #17161f; padding-top: 6px; font-size: 8pt; color: #8e8c9c; display: flex; flex-direction: column; } .imp-firmas b { color: #17161f; font-weight: 600; }
+  .imp-pie { color: #8e8c9c; font-size: 7pt; border-top: .5pt solid #d9d8e2; padding-top: 6px; margin: 10px 0 0; }
 }
 
 /* Órdenes de trabajo y pedidos */
