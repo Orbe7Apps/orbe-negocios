@@ -10,7 +10,7 @@ import { buscar } from '../buscar.js';
 import { BotonAyuda } from '../ayuda.js';
 import { Frase, BotonGuiame } from '../guias.js';
 import { Escena } from './empezar.js';
-import { esc, imgSegura } from '../seguro.js';
+import { compartirArchivo } from '../papel.js';
 
 export const CUOTAS_M = 'En cuotas', APARTADO_M = 'Apartado';
 const DIA = 86400000;
@@ -171,7 +171,7 @@ export function Plan({ d, cerrar }) {
         ${ab.map(a => html`<div class="fila" key=${a.id} style="justify-content:space-between;padding:6px 0;font-size:14px"><span>${fCorta(a.t)} · <span class="sub">${pagosDeAbono(a).map(x => x.m).join(' + ')}</span></span><b class="num" style=${{ color: a.v < 0 ? 'var(--out-text)' : 'var(--ink)' }}>${D.m(a.v)}</b></div>`)}`}
       <div class="chips" style="margin-top:4px">
         ${abierto && html`<button type="button" class="btn2 chico verde toca" onClick=${recordar}><${Icono} n="movil" t=${14} />Recordar</button>`}
-        <button type="button" class="btn2 chico toca" onClick=${() => imprimirAcuerdo(p, c, ctx)}><${Icono} n="doc" t=${14} />Acuerdo</button>
+        <button type="button" class="btn2 chico toca" onClick=${() => enviarAcuerdo(p, c, ctx)}><${Icono} n="doc" t=${14} />Acuerdo en PDF</button>
         ${abierto && apartado && !c.vencido && puede('fiado') && html`<button type="button" class="btn2 chico toca" onClick=${() => cc(() => abrir('apartadoVencido', { pid: p.id }))}>Más opciones</button>`}
         ${p.venta && html`<button type="button" class="btn2 chico toca" onClick=${() => { const v = S.ventas.find(x => x.id === p.venta); if (v) cc(() => abrir('recibo', { venta: v })); }}>Ver la venta</button>`}
       </div>`,
@@ -286,29 +286,12 @@ export function PlanesHoy() {
 }
 
 // ---------- acuerdo para firmar (cuotas o apartado) ----------
-export function imprimirAcuerdo(p, c, { S, D, P }) {
-  const n = S.negocio, cli = S.clientes.find(x => x.id === p.cli) || {}, apartado = p.tipo === 'apartado';
-  const fil = (a, b) => `<tr><td>${esc(a)}</td><td style="text-align:right">${esc(b)}</td></tr>`;
-  const acuerdo = (ACUERDOS_APARTADO.find(a => a.k === p.acuerdo) || ACUERDOS_APARTADO[0]).n.toLowerCase();
-  const z = document.createElement('div'); z.className = 'zona-imprimir';
-  z.innerHTML = `<style>@page { size: A4; margin: 14mm; } .zona-imprimir table { width: 100%; border-collapse: collapse; } .zona-imprimir td { padding: 5px 4px; border-bottom: 1px solid #e6e4f2; font-size: 10pt; }</style>
-    <div class="imp-cab">${imgSegura(n.logo) ? `<img src="${esc(imgSegura(n.logo))}" alt="" class="imp-logo">` : `<span class="imp-logo imp-inic">${esc(n.nombre.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`}
-      <div class="imp-neg"><b>${esc(n.nombre)}</b><span>${esc([n.razon, n.fiscal ? P.fiscal[0] + ' ' + n.fiscal : '', n.tel, n.dir].filter(Boolean).join(' · '))}</span></div>
-      <div class="imp-num"><b>${apartado ? 'ACUERDO DE APARTADO' : 'ACUERDO DE PAGO EN CUOTAS'}</b><strong>${esc(numeroPlan(p))}</strong><span>${esc(new Date(p.t).toLocaleDateString('es'))}</span></div></div>
-    <div class="imp-dos"><div><small>CLIENTE</small><b>${esc(cli.n || '')}</b><span>${esc([cli.tel, cli.doc].filter(Boolean).join(' · '))}</span></div><div><small>${apartado ? 'SE GUARDA HASTA' : 'CUOTAS'}</small><b>${esc(apartado ? new Date(p.vence).toLocaleDateString('es') : p.cuotas.length + ' · ' + ((FRECUENCIAS.find(f => f.k === p.cada) || {}).n || '').toLowerCase())}</b><span></span></div></div>
-    <table><thead><tr><th style="text-align:left">Producto</th><th>Cant.</th><th>Total</th></tr></thead><tbody>${p.items.map(it => `<tr><td>${esc(it.n)}</td><td style="text-align:center">${esc(it.q)}</td><td style="text-align:right">${esc(D.m(it.q * it.p))}</td></tr>`).join('')}</tbody></table>
-    <div class="imp-tot"><div><span>Total</span><span>${esc(D.m(p.total))}</span></div><div><span>${apartado ? 'Abonado' : 'Pagado'} a la fecha</span><span>${esc(D.m(c.pagado))}</span></div><div><span>Falta</span><span>${esc(D.m(c.falta))}</span></div></div>
-    ${apartado ? '' : `<p style="margin:12px 0 4px;font-weight:700;font-size:10pt">Calendario de pagos</p><table><tbody>${p.cuotas.map((q, i) => fil('Cuota ' + (i + 1) + ' · ' + new Date(q.f).toLocaleDateString('es'), D.m(q.v))).join('')}</tbody></table>`}
-    <p class="imp-cond">${apartado
-      ? esc('El producto queda separado a nombre del cliente hasta la fecha indicada y se entrega cuando el total esté pagado. Si no completa el pago antes de esa fecha, el negocio puede darle más tiempo o liberar el producto; en ese caso lo abonado ' + acuerdo + '.')
-      : esc('El cliente recibe el producto y se compromete a pagar cada cuota en la fecha indicada.' + (p.recargo > 0 ? ' El total incluye un recargo por financiar de ' + D.m(p.recargo) + ' (' + p.recargoPct + ' %).' : '') + ' Los pagos se pueden adelantar en cualquier momento.')}</p>
-    <div class="imp-firmas"><span>Firma del cliente</span><span>Por ${esc(n.nombre)}</span></div>
-    <p class="imp-cond" style="text-align:center;margin-top:14px">Documento no fiscal</p>`;
-  document.querySelectorAll('.zona-imprimir').forEach(v => v.remove());
-  document.body.appendChild(z); document.documentElement.classList.add('imprimiendo');
-  const fin = () => { document.documentElement.classList.remove('imprimiendo'); z.remove(); window.removeEventListener('afterprint', fin); };
-  window.addEventListener('afterprint', fin);
-  setTimeout(() => document.addEventListener('pointerdown', fin, { once: true }), 1500);
-  const img = z.querySelector('img'), ya = () => window.print();
-  if (img && !img.complete) { img.onload = ya; img.onerror = ya; } else setTimeout(ya, 60);
+// Un PDF formal para mandarlo por WhatsApp o imprimirlo y firmarlo.
+export async function enviarAcuerdo(p, c, ctx) {
+  try {
+    const { pdfAcuerdo } = await import('../documentos.js');
+    const cli = ctx.S.clientes.find(x => x.id === p.cli) || {}, num = numeroPlan(p);
+    const blob = await pdfAcuerdo(p, c, ctx);
+    await compartirArchivo(blob, num + '.pdf', 'Hola ' + primero(cli.n) + ', te envío el acuerdo ' + num + ' de ' + ctx.S.negocio.nombre + '.');
+  } catch (e) { avisar('No pude preparar el PDF. Prueba otra vez.'); }
 }
