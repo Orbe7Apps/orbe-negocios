@@ -8,7 +8,7 @@ import { usePagos, useMonto, numero } from './pagos.js';
 import { enlaceWA } from '../ordenpdf.js';
 import { buscar } from '../buscar.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { Escena } from './empezar.js';
 import { compartirArchivo } from '../papel.js';
 
@@ -107,7 +107,7 @@ export function Cuotas() {
   const nombre = p => (S.clientes.find(c => c.id === p.cli) || {}).n || 'Cliente';
   const lista = q.trim() ? buscar(base, q, p => [nombre(p), numeroPlan(p), queEs(p)], true) : base;
   return html`<div class="pila" style="gap:14px">
-    ${tel && html`<div class="fila entra"><h1 class="titulo crece">Cuotas</h1><${BotonGuiame} k="cuotas" /><${BotonAyuda} /></div>`}
+    ${tel && html`<div class="fila entra"><h1 class="titulo crece">Cuotas</h1><${BotonAyuda} /></div>`}
     ${planes.length > 0 && html`<${Frase}>${!planes.length ? ''
       : atrasados.length ? html`<b class="r">${atrasados.length === 1 ? '1 cliente atrasado' : atrasados.length + ' clientes atrasados'}</b> por <b class="num">${D.m(atrasado)}</b>.${semana.length ? html` Esta semana te toca cobrar a <b>${semana.length}</b>.` : ''}`
       : abiertos.length ? html`Te falta cobrar <b class="num">${D.m(porCobrar)}</b> en ${abiertos.length} ${abiertos.length === 1 ? 'plan' : 'planes'}. Nadie está atrasado.${semana.length ? html` Esta semana: <b>${semana.length}</b>.` : ''}`

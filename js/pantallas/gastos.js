@@ -2,7 +2,7 @@
 import { html } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { porPagar, gastosEntre, pagarGasto, inicioDia } from '../datos.js';
 import { Reparto, Monto, color } from '../graficos.js';
 import { Icono, avisar, fechaCorta, simbolo } from '../ui.js';
@@ -61,7 +61,7 @@ export function Gastos() {
   // La frase: lo que vence pronto primero; luego cuánto va del mes.
   const prox = pp[0], dProx = prox ? Math.round((inicioDia(prox.vence) - inicioDia(Date.now())) / 86400000) : 99;
   const FraseGastos = html`<${Frase}>${prox && dProx <= 3 ? html`<b class=${dProx <= 1 ? 'r' : 'a'}>${prox.n}</b> ${venceTxt(prox.vence).toLowerCase()}: <b class="num">${D.m(prox.v)}</b>. ` : ''}${gm.length ? html`Este mes llevas <b class="r num">${D.m(tot)}</b> en ${gm.length} ${gm.length === 1 ? 'gasto' : 'gastos'}.` : 'Este mes todavía no anotas gastos.'}${!pp.length ? ' No debes nada a nadie.' : ''}</${Frase}>`;
-  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Gastos</h1><${BotonGuiame} k="gastos" /><${BotonAyuda} /></div>
+  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Gastos</h1><${BotonAyuda} /></div>
     ${FraseGastos}
     <div class="rejilla-2">${cifras.slice(0, 2).map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="sub">${k[0]}</span><${Monto} v=${k[1]} f=${D.m} clase=${'v num ' + (i ? 'amber' : 'out')} /><span class="sub faint">${k[2]}</span></div>`)}</div>
     ${b.PorPagar}${b.Recientes}${b.Mes}`;

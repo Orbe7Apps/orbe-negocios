@@ -39,10 +39,12 @@ const PC = process.env.PC === '1', SOLO = (process.env.SOLO || '').split(',').fi
   const irTutoriales = () => p.evaluate(() => { location.hash = '#tutoriales'; });
   try {
     await p.goto('http://localhost:8765/?demo&prueba' + (PC ? '&vista=pc' : '')); await p.waitForTimeout(2500);
-    // El recorrido desde la tarjeta de la primera entrada
-    const oferta = p.locator('[data-tour-oferta] .lleno');
-    if (await oferta.count()) { await oferta.click(); const ps = await seguir('recorrido'); if (ps.length < 6) mal('recorrido corto: ' + ps.join(' → ')); }
-    else mal('no sale la oferta del recorrido en Hoy');
+    // El recorrido por la app, desde Tutoriales (la tarjeta “¿Primera vez?” ya no sale en Hoy).
+    if (await p.locator('[data-tour-oferta]').count()) mal('la tarjeta “¿Primera vez?” sigue saliendo en Hoy');
+    await irTutoriales(); await p.waitForTimeout(900);
+    const rec = p.locator('[data-tut=recorrido]').first();
+    if (await rec.count()) { await rec.click(); const ps = await seguir('recorrido'); if (ps.length < 6) mal('recorrido corto: ' + ps.join(' → ')); }
+    else mal('no sale el recorrido en Tutoriales');
     await p.waitForTimeout(800);
     if (!(await p.locator('[data-guia=tut-lista]').count())) mal('al terminar el recorrido no quedó en Tutoriales');
     if (!PC) { await p.evaluate(() => { location.hash = '#mas'; }); await p.waitForTimeout(800); if (!(await p.locator('.menu-lista [data-tema=tutoriales]').count())) mal('no sale Tutoriales en Más'); else { const orden = await p.locator('.menu-lista [data-tema]').evaluateAll(xs => xs.map(x => x.dataset.tema)); if (orden.indexOf('tutoriales') !== orden.indexOf('equipo') + 1) mal('Tutoriales no va debajo de Equipo: ' + orden.join(',')); } await foto('mas'); }

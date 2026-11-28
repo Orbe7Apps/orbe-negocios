@@ -1,4 +1,4 @@
-// Prueba de las guías en vivo de cada pantalla (“Guíame”) y la frase de arriba.
+// Prueba de las guías en vivo de cada pantalla (“Guíame paso a paso”, dentro del “?”) y la frase de arriba.
 // Para cada rubro: abre Hoy, revisa la frase, sigue la guía de Hoy y la de Vender como lo haría una persona
 // (tocando lo iluminado), hasta el recibo. Uso: node pruebas/guias.js "Ferretería,Barbería"   (PC=1 para computadora)
 const { chromium, devices } = require('playwright');
@@ -33,6 +33,13 @@ const PC = process.env.PC === '1';
       if (await p.locator('.guia').count()) mal('la guía de ' + nombre + ' no terminó');
       return pasos;
     };
+    // “Guíame paso a paso” vive dentro del “?” de cada pantalla (o de la hoja abierta).
+    const guiame = async (donde = '') => {
+      const q = p.locator(donde + ' .boton-ayuda').first(); if (!(await q.count())) return false;
+      await q.click(); await p.waitForTimeout(700);
+      const g = p.locator('.guia-ayuda-btn'); if (!(await g.count())) { await p.keyboard.press('Escape'); await p.waitForTimeout(400); return false; }
+      await g.click(); await p.waitForTimeout(900); return true;
+    };
     try {
       await p.goto('http://localhost:8765/?demo=elegir&prueba' + (PC ? '&vista=pc' : '')); await p.waitForTimeout(1300);
       await t('Empezar'); await t('Venezuela'); await t('Continuar'); await p.locator('.rubro-op', { hasText: rub }).first().click(); await p.waitForTimeout(300); await t('Continuar'); await t('Continuar'); await t('Continuar');
@@ -40,9 +47,8 @@ const PC = process.env.PC === '1';
       const frase = await p.locator('.frase-viva').first().innerText().catch(() => '');
       console.log(tag + ' · frase de Hoy: ' + frase);
       if (!frase || /undefined|NaN|\[object/.test(frase)) mal('frase de Hoy rara: ' + frase);
-      if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en Hoy');
-      await p.locator('.guiame').first().click(); await p.waitForTimeout(800);
-      await seguir('hoy');
+      if (!(await guiame())) mal('el “?” de Hoy no ofrece “Guíame paso a paso”');
+      else await seguir('hoy');
       // Vender
       await p.evaluate(() => { location.hash = '#vender'; }); await p.waitForTimeout(1200);
       const fv = await p.locator('.frase-viva').first().innerText().catch(() => '');
@@ -58,8 +64,8 @@ const PC = process.env.PC === '1';
       const fc = await p.locator('.frase-viva').first().innerText().catch(() => '');
       console.log(tag + ' · frase de Clientes: ' + fc);
       if (/undefined|NaN|\[object/.test(fc)) mal('frase de Clientes rara: ' + fc);
-      if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en Clientes');
-      else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir('clientes'); }
+      if (!(await guiame())) mal('el “?” de Clientes no ofrece “Guíame paso a paso”');
+      else await seguir('clientes');
       // Inventario (o Servicios) y Gastos.
       for (const sec of ['inventario', 'gastos', 'agenda', 'ordenes', 'cotizaciones', 'cuotas', 'reportes', 'equipo', 'mas']) {
         await p.evaluate(h => { location.hash = '#' + h; }, sec); await p.waitForTimeout(1200);
@@ -67,8 +73,8 @@ const PC = process.env.PC === '1';
         const fs = await p.locator('.frase-viva').first().innerText().catch(() => '');
         console.log(tag + ' · frase de ' + sec + ': ' + fs);
         if (sec !== 'mas' && (!fs && !(await p.locator('.escena').count()) || /undefined|NaN|\[object/.test(fs))) mal('frase de ' + sec + ' rara: ' + fs);
-        if (!(await p.locator('.guiame').count())) mal('no sale “Guíame” en ' + sec);
-        else { await p.locator('.guiame').first().click(); await p.waitForTimeout(800); await seguir(sec); }
+        if (!(await guiame())) mal('el “?” de ' + sec + ' no ofrece “Guíame paso a paso”');
+        else await seguir(sec);
       }
       // Buscador de Ajustes: “impresora” y “pago móvil” deben dar con su tema.
       await p.evaluate(() => { location.hash = '#mas'; }); await p.waitForTimeout(900);
@@ -84,8 +90,8 @@ const PC = process.env.PC === '1';
         if (await p.locator('.hoja .frase-viva').count()) {
           const fk = await p.locator('.hoja .frase-viva').innerText(); console.log(tag + ' · frase de Caja: ' + fk);
           if (/undefined|NaN|\[object/.test(fk)) mal('frase de Caja rara: ' + fk);
-          if (!(await p.locator('.hoja .guiame').count())) mal('no sale “Guíame” en Caja');
-          else { await p.locator('.hoja .guiame').click(); await p.waitForTimeout(800); await seguir('caja'); }
+          if (!(await guiame('.hoja'))) mal('el “?” de Caja no ofrece “Guíame paso a paso”');
+          else await seguir('caja');
           const dia = p.locator('[data-guia=caja-dia]');
           if (await dia.count()) {
             await dia.click(); await p.waitForTimeout(1500); await foto('cierre');

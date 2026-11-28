@@ -2,7 +2,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { resumen, serieDias, gastosEntre, inicioDia, leer, gastoAlt, gastoEur, vigentes } from '../datos.js';
 import { Barras, Linea, Reparto, BarrasH, Monto, color } from '../graficos.js';
 import { Icono, Chips, avisar, fechaCorta, iniciales, TONOS } from '../ui.js';
@@ -126,9 +126,9 @@ export function Reportes() {
   const DIAS_L = { Dom: 'domingo', Lun: 'lunes', Mar: 'martes', 'Mié': 'miércoles', Jue: 'jueves', Vie: 'viernes', 'Sáb': 'sábado' };
   const FraseRep = html`<${Frase}>${per === 'mes' ? 'Este mes' : 'En ' + dias + ' días'} vendiste <b class="num">${fm(tot(r))}</b>${ant.total && cambio ? html` (<b class=${cambio > 0 ? 'v' : 'r'}>${cambio > 0 ? '+' : '−'}${Math.abs(cambio)} %</b> que antes)` : ''} y te ${real >= 0 ? 'quedan' : 'faltan'} <b class=${'num ' + (real >= 0 ? 'v' : 'r')}>${fm(Math.abs(real))}</b> después de costos y gastos.${mejor.v > 0 ? ' Tu mejor día es el ' + DIAS_L[mejor.l] + '.' : ''}</${Frase}>`;
   // Cuenta nueva: todavía no hay nada que medir.
-  if (!S.ventas.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Reportes</h1><${BotonGuiame} k="reportes" /><${BotonAyuda} /></div>` : null}<${Vacio} i="grafico" e="reportes" t="Aquí verás cómo te va" s="Cuando empieces a vender: cuánto vendes cada día, lo que más se vende, tu ganancia real después de gastos y tus mejores horas.">${S.productos.length ? html`<button type="button" class="btn2 lleno toca" onClick=${() => ir('vender')}>Hacer una venta</button>` : null}</${Vacio}>`;
+  if (!S.ventas.length) return html`${tel ? html`<div class="fila entra"><h1 class="titulo crece">Reportes</h1><${BotonAyuda} /></div>` : null}<${Vacio} i="grafico" e="reportes" t="Aquí verás cómo te va" s="Cuando empieces a vender: cuánto vendes cada día, lo que más se vende, tu ganancia real después de gastos y tus mejores horas.">${S.productos.length ? html`<button type="button" class="btn2 lleno toca" onClick=${() => ir('vender')}>Hacer una venta</button>` : null}</${Vacio}>`;
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">Reportes</h1><${BotonGuiame} k="reportes" /><${BotonAyuda} /></div>
+    <div class="fila entra"><h1 class="titulo crece">Reportes</h1><${BotonAyuda} /></div>
     ${FraseRep}
     <div class="fila" style="gap:8px;flex-wrap:wrap"><span data-guia="periodo"><${Chips} opciones=${PERIODOS} valor=${per} onCambio=${setPer} chico /></span><span style="flex:1"></span>${Moneda}${Acciones}</div>
     <div class="rejilla-2" data-guia="cifras">${Cifras.map((k, i) => html`<div class="tarjeta cifra entra" style=${{ '--i': i }}><span class="fila" style="gap:8px"><span class="simb-c" style=${{ '--c': k[3] === 'var(--ink)' ? 'var(--c1)' : k[3] }}><${Icono} n=${k[5]} t=${14} g=${2.2} /></span><span class="sub">${k[0]}</span></span><${Monto} key=${mon} v=${k[1]} f=${fm} clase="v" /><span class="faint" style=${{ fontSize: '11px', color: k[4] }}>${k[2]}</span></div>`)}</div>

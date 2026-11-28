@@ -3,7 +3,7 @@
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { Escena } from './empezar.js';
 import { nuevaCotizacion, marcarCotizacion, borrarCotizacion, numeroCot, estadoCot, ESTADOS_COT, nuevoCliente } from '../datos.js';
 import { Hoja, Icono, Chips, avisar, fechaCorta } from '../ui.js';
@@ -119,7 +119,7 @@ export function Cotizaciones() {
     : hechas ? html`Ninguna espera respuesta. Se vendieron <b class="v">${Math.round(aceptadas.length / hechas * 100)} %</b> de las que cotizaste.` : 'Ninguna espera respuesta.'}</${Frase}>`;
   const Nueva = html`<button type="button" class="btn2 chico lleno toca" data-guia="nueva-cot" onClick=${() => { ir('vender'); avisar('Agrega los productos y toca “Cotizar”'); }}>+ Nueva cotización</button>`;
   return html`
-    ${tel ? html`<div class="fila entra" data-tour="cotizaciones"><h1 class="titulo crece">Cotizaciones</h1><${BotonGuiame} k="cotizaciones" /><${BotonAyuda} />${Nueva}</div>` : todas.length ? html`<div class="fila entra" data-tour="cotizaciones"><span class="crece"></span>${Nueva}</div>` : null}
+    ${tel ? html`<div class="fila entra" data-tour="cotizaciones"><h1 class="titulo crece">Cotizaciones</h1><${BotonAyuda} />${Nueva}</div>` : todas.length ? html`<div class="fila entra" data-tour="cotizaciones"><span class="crece"></span>${Nueva}</div>` : null}
     ${FraseCot}
     ${todas.length > 0 && html`    <div class="rejilla-2" style="gap:10px">
       <div class="tarjeta cifra entra"><span class="sub">Esperando respuesta</span><span class="v num" style="font-size:22px">${D.m(pendientes.reduce((a, c) => a + totalDe(c), 0))}</span><span class="sub faint">${pendientes.length} ${pendientes.length === 1 ? 'cotización' : 'cotizaciones'}</span></div>

@@ -3,7 +3,7 @@
 import { html, useState } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { cambiarPermiso, resumen, inicioDia } from '../datos.js';
 import { useNube, limitePerfiles, perfilesActivos } from '../nube.js';
 import { PERMISOS, rolDe, puedeEditarRol, puedeEditarPermiso } from '../permisos.js';
@@ -78,6 +78,6 @@ export function Equipo() {
     ${puedeBorrar(rolActual) && html`<button type="button" class="btn2 chico rojo toca" style="display:flex;margin:10px auto 0" onClick=${() => abrir('rolBorrar', { rid: rolActual.id })}>Borrar el rol ${rolActual.n}</button>`}
   </section>` : null;
 
-  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Equipo</h1><${BotonGuiame} k="equipo" /><${BotonAyuda} /></div>${FraseEquipo}${Personas}${Ventas}${PorRol}`;
+  if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Equipo</h1><${BotonAyuda} /></div>${FraseEquipo}${Personas}${Ventas}${PorRol}`;
   return html`${FraseEquipo}<div class="dos-uno" style="align-items:start">${Matriz}<div class="pila">${Personas}${Ventas}</div></div>`;
 }

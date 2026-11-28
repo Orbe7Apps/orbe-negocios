@@ -2,7 +2,7 @@
 import { html, useState, useEffect, useRef } from '../lib/preact-htm.js';
 import { useApp } from '../ctx.js';
 import { BotonAyuda } from '../ayuda.js';
-import { Frase, BotonGuiame } from '../guias.js';
+import { Frase } from '../guias.js';
 import { Icono, avisar, TONOS, hora, FotoProd, CabezaPegada, volarAlCarro } from '../ui.js';
 import { CatalogoVacio } from './empezar.js';
 import { estadoNube, estadoPlan } from '../nube.js';
@@ -199,7 +199,7 @@ export function Vender() {
     : html`Aún no hay ventas hoy. Toca lo que se lleva para empezar.`}</span>${tel && D.dual ? html` <${ChipTasa} chico />` : null}</${Frase}>`;
 
   if (tel) return html`
-    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonGuiame} k="vender" /><${BotonAyuda} /></div>
+    <div class="fila entra"><h1 class="titulo crece">${T.vender === 'Pedido' ? 'Nuevo pedido' : T.vender === 'Cobrar' ? 'Cobrar' : 'Nueva venta'}</h1><${BotonAyuda} /></div>
     <${CarroFlotante} n=${n} total=${total} cosa=${T.inv ? 'producto' : 'servicio'} visible=${!carroVisto} onVer=${() => tarjetaCarro.current && tarjetaCarro.current.scrollIntoView({ behavior: 'smooth', block: 'center' })} onCobrar=${cobrar} />
     ${FraseVender}
     ${Clases}
