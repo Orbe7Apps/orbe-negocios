@@ -1058,7 +1058,7 @@ function Tasa({ d, cerrar }) {
   const hist = (S.historialTasas || []).filter(h => h.f === (S.tasa.fuente || 'oficial')).slice(-30);
   const cambio = hist.length > 1 ? (hist[hist.length - 1].v / hist[hist.length - 2].v - 1) * 100 : 0;
   const mes = hist.length > 1 ? (hist[hist.length - 1].v / hist[0].v - 1) * 100 : 0;
-  // Campo para escribir una tasa, con “Leer” si se puede leer de internet.
+  // Campo para escribir una tasa, con “Leer” si se puede leer de internet (solo en “Otra”: arriba ya está “Actualizar de internet”).
   const CampoTasa = (k, auto) => html`<div class="fila entra" style="gap:8px">
     <div class="pago-monto crece" style="min-height:48px"><span class="pago-moneda" style="display:grid;place-items:center">${mon.trim()}</span><input class="num" type="text" inputmode="decimal" autocomplete="off" placeholder=${valorDe(k) ? nf.format(valorDe(k)) : 'Escribe la tasa'} value=${k === 'principal' ? valor : k === 'euro' ? euro : otras[k]} aria-label=${'Tasa ' + nomTasa(k)} onInput=${e => { ponDe(k, e.target.value); if (k === 'principal' && conFuente) setModo('manual'); }} /></div>
     ${auto && html`<button type="button" class=${'btn2 chico toca' + (leyendo === k ? ' apagado' : '')} style="min-height:48px" aria-label=${'Leer de internet la tasa ' + nomTasa(k)} onClick=${() => { if (k === 'principal') setModo('auto'); leerYa(k); }}><${Icono} n="refrescar" t=${14} />${leyendo === k ? 'Leyendo…' : 'Leer'}</button>`}
@@ -1094,7 +1094,7 @@ function Tasa({ d, cerrar }) {
       <div class="tasa-uso" data-guia="tasas-uso">
         <span class="sub">${enUso.length === 1 ? 'Hoy cobras con esta tasa' : 'Hoy cobras con estas ' + enUso.length + ' tasas'}</span>
         <div class="tasa-uso-lista">${enUso.map(Tarjeta)}</div>
-        ${editar && aMano && enUso.includes(aMano) && html`<div class="pila" style="gap:6px">${CampoTasa(aMano, aMano !== 'principal' && conFuente && (aMano === 'euro' || (extras.find(x => x.k === aMano) || {}).auto))}
+        ${editar && aMano && enUso.includes(aMano) && html`<div class="pila" style="gap:6px">${CampoTasa(aMano, false)}
           ${aMano === 'principal' && conFuente && modo === 'manual' && html`<button type="button" class="btn2 chico toca entra" style="align-self:center" onClick=${() => { setModo('auto'); leerYa('principal'); }}>Volver a la tasa automática</button>`}</div>`}
         ${editar && conFuente && html`<button type="button" class=${'btn2 lleno toca' + (leyendo ? ' apagado' : '')} onClick=${() => { setModo('auto'); leerTodas(); }}><${Icono} n="refrescar" t=${15} />${leyendo === 'todas' ? 'Leyendo…' : 'Actualizar de internet'}</button>`}
       </div>
