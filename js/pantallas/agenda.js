@@ -168,7 +168,7 @@ export function NuevaCita({ d, cerrar }) {
       <label class="campo"><span class="sr">Teléfono</span><input type="tel" inputmode="tel" value=${f.tel} placeholder="Teléfono (para avisarle por WhatsApp)" autocomplete="off" onInput=${e => pon({ tel: e.target.value })} /></label>
 
       <div class="paso-cita"><span class="paso-n">2</span><b>¿Qué se va a hacer?</b>${elegidos.length > 0 && html`<span class="sub">${dur} min · ${D.m(total)}</span>`}</div>
-      ${!srvs.length && html`<div class="tarjeta pila" style="box-shadow:none;background:var(--amber-soft);gap:8px"><b style="font-size:14px">Primero agrega tus servicios</b><span class="sub">Así la cita sabe cuánto dura y cuánto cobrar.</span><button type="button" class="btn2 chico lleno toca" style="align-self:flex-start" onClick=${() => c(() => abrir('sugerencias'))}>Agregar lo típico</button></div>`}
+      ${!srvs.length && html`<div class="tarjeta pila" style="box-shadow:none;background:var(--amber-soft);gap:8px"><b style="font-size:14px">Primero agrega tus servicios</b><span class="sub">Así la cita sabe cuánto dura y cuánto cobrar.</span><button type="button" class="btn2 chico lleno toca" style="align-self:center" onClick=${() => c(() => abrir('sugerencias'))}>Agregar lo típico</button></div>`}
       ${srvs.length > 0 && html`<div class="servicios-cita">${srvs.map(p => { const on = f.srv.includes(p.id); return html`
         <button type="button" key=${p.id} class=${'srv-cita toca' + (on ? ' on' : '')} aria-pressed=${on ? 'true' : 'false'} onClick=${() => pon({ srv: on ? f.srv.filter(x => x !== p.id) : f.srv.concat([p.id]) })}>
           <span class="marca-check">${on && html`<${Icono} n="check" t=${12} g=${3.2} c="#fff" />`}</span>

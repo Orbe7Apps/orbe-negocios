@@ -148,7 +148,7 @@ function PonerUsuario() {
     <b style="font-size:14px">Crea el usuario del negocio</b>
     <span class="sub" style="line-height:1.45;color:var(--ink)">Con el usuario y la contraseña entras tú. Tu equipo no la necesita: entra con un código de aparato.</span>
     <${CampoUsuario} valor=${u} crear onCambio=${setU} onEnter=${guardar} />
-    <button type="button" class=${'btn2 chico lleno toca' + (ocupado ? ' apagado' : '')} style="align-self:flex-start" onClick=${guardar}>Guardar usuario</button>
+    <button type="button" class=${'btn2 chico lleno toca' + (ocupado ? ' apagado' : '')} style="align-self:center" onClick=${guardar}>Guardar usuario</button>
   </div>`;
 }
 

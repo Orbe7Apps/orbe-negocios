@@ -178,7 +178,7 @@ export function Vender() {
     <b class="num" style="min-width:76px;text-align:right">${D.m(it.q * it.p)}</b>
   </div>`; }) : html`<p class="vacio">${tel ? 'Toca lo que vas a ' + (T.inv ? 'vender' : 'cobrar') + '.' : 'Pasa el lector o toca un producto. Cada lectura suma uno.'}</p>`}</div>`;
 
-  const BotonCargo = puede('vender') ? html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start" onClick=${cargo}>+ Servicio o cargo</button>` : null;
+  const BotonCargo = puede('vender') ? html`<button type="button" class="enlace-tasa toca" style="align-self:center" onClick=${cargo}>+ Servicio o cargo</button>` : null;
   const Total = html`<div class="fila" style="align-items:flex-end">
     <span class="crece" style="display:flex;flex-direction:column;gap:1px"><span class="sub">Total · ${n} ${n === 1 ? (T.inv ? 'producto' : 'servicio') : (T.inv ? 'productos' : 'servicios')}</span><b class="num" style="font-size:28px;letter-spacing:-0.02em">${D.m(total)}</b>
       ${D.dual && n ? html`<span class="sub num">${D.s(total)}</span>` : null}${tt.txt && n ? html`<span class="sub faint num">${tt.txt}: ${D.m(tt.imp)}</span>` : null}

@@ -87,6 +87,9 @@ Se definen como variables en `:root` y cambian solas entre modo claro y oscuro: 
 - **Nada nativo del teléfono:** ni `select`, ni `datalist`, ni calendario o reloj del sistema, ni `confirm()`/`alert()`. Se usan `js/elegir.js`, fichas de sugerencia y preguntas dentro de la misma pantalla. (Solo `admin.html` conserva lo suyo.)
 - **Equis con Deshacer** en todo lo que se puede quitar de una lista sin mover dinero (Para hacer hoy, recordatorios por enviar, plantillas).
 - **Toque cómodo:** en el teléfono los botones chicos (36 px) responden en 44 px o más sin verse más grandes.
+- **Centrado:** un botón o una píldora que queda solo en su fila va centrado, nunca pegado a un borde con espacio vacío al otro lado (salvo enlaces de “Volver” y textos que siguen la alineación del párrafo).
+- **Filas que se deslizan de lado** solo se mueven en horizontal (`overflow-y: hidden`).
+- **Animar con `transform` y `opacity`**, no con `width`, `left`, `filter` ni sombras: así va fluido en teléfonos sencillos.
 - **Sin líneas horizontales** separando filas en las listas (perfiles, Para hacer hoy, últimas ventas, órdenes, gastos…).
 - **Comillas:** usar “ ” en toda la app, nunca « ».
 - **Deshacer:** al borrar algo aparece un aviso con "Deshacer" por 7 s, solo en lo que no mueve dinero (gasto, producto, cliente, perfil, rol). Nunca en ventas, abonos, órdenes de trabajo ni nada que pueda servir para estafar.

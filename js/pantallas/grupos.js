@@ -24,7 +24,7 @@ export function FiltroGrupos({ valor, onCambio, lista, crear }) {
   const prods = lista || listaProductos();
   if (!S.grupos.length) {
     // Con muchos productos y sin grupos, se sugiere crearlos.
-    return prods.length > 12 && crear !== false && puede('productos') ? html`<button type="button" class="chip chico toca" style="align-self:flex-start;border:1.5px dashed var(--line);background:transparent" onClick=${() => abrir('grupos')}>+ Ordena tus ${prods.length} productos en grupos</button>` : null;
+    return prods.length > 12 && crear !== false && puede('productos') ? html`<button type="button" class="chip chico toca" style="align-self:center;border:1.5px dashed var(--line);background:transparent" onClick=${() => abrir('grupos')}>+ Ordena tus ${prods.length} productos en grupos</button>` : null;
   }
   const cuenta = id => prods.filter(p => id === 'sin' ? !p.g || !S.grupos.some(g => g.id === p.g) : p.g === id).length;
   const sinGrupo = cuenta('sin');

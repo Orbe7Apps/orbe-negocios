@@ -196,7 +196,7 @@ export function Orden({ d, cerrar }) {
         ${ant > 0 && html`<div class="fila sub num"><span class="crece">Anticipos y abonos</span><span>−${D.m(ant)}</span></div>`}
         ${o.estado !== 'cancelada' && html`<div class="fila"><b class="crece">${o.estado === 'entregada' ? 'Cobrada' : 'Debe'}</b><b class="num" style="font-size:18px">${D.m(o.estado === 'entregada' ? tot : deb)}</b></div>`}
         ${D.dual && o.estado !== 'entregada' && deb > 0 && html`<span class="sub num" style="text-align:right">${D.s(deb)}</span>`}
-        ${abierta && pp && deb > 0 && html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start" onClick=${() => c(() => abrir('abonoOrden', { oid: o.id }))}>+ Anotar un abono</button>`}
+        ${abierta && pp && deb > 0 && html`<button type="button" class="enlace-tasa toca" style="align-self:center" onClick=${() => c(() => abrir('abonoOrden', { oid: o.id }))}>+ Anotar un abono</button>`}
       </div>
       <div class="pila" style="gap:4px">
         <span class="sub">Cliente: <b style="color:var(--ink)">${cli.n || '—'}</b>${cli.tel ? ' · ' + cli.tel : ''}</span>
@@ -277,7 +277,7 @@ export function NuevaOrden({ d, cerrar }) {
               ${hallados.map(p => html`<button type="button" key=${p.id} class="item toca" style="color:var(--ink);padding:8px 2px;border:0;background:none;display:flex;gap:10px" onClick=${() => agregar({ pid: p.id, n: p.n, q: 1, p: p.p, c: p.c, ...(p.imp != null ? { imp: p.imp } : {}) })}><span class="crece corta" style="text-align:left">${p.n}</span>${p.q != null ? html`<span class="sub">${p.q} und</span>` : null}<b class="num">${D.m(p.p)}</b></button>`)}
               <div class="chips">${qp.trim() ? html`<button type="button" class="chip chico toca on" onClick=${() => libre(qp.trim())}>+ Agregar “${qp.trim()}”</button>` : ['Diagnóstico', 'Mano de obra', 'Revisión'].map(n => html`<button type="button" class="chip chico toca" onClick=${() => libre(n)}>+ ${n}</button>`)}<button type="button" class="chip chico toca" onClick=${() => { setAgregando(false); setQp(''); }}>Listo</button></div>
             </div>`
-          : html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start;padding:10px 0" onClick=${() => setAgregando(true)}>+ Agregar trabajo o producto</button>`}
+          : html`<button type="button" class="enlace-tasa toca" style="align-self:center;padding:10px 0" onClick=${() => setAgregando(true)}>+ Agregar trabajo o producto</button>`}
           ${f.items.length > 0 && html`<div class="fila" style="padding:9px 0 3px"><span class="crece sub">Total</span><b class="num">${D.m(total)}</b></div>`}
         </div>
         <span class="sub faint" style="font-size:12px">Puedes agregarlo después.</span>
