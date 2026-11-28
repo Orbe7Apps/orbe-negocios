@@ -166,7 +166,7 @@ export function usePagos(totalDe, metodos, inicial, ajuste, mo) {
           </div>
           ${pideRef(f.m) && html`<input class="pago-ref num" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="Referencia (opcional)" value=${f.ref || ''} aria-label=${'Referencia de ' + f.m} onInput=${e => pon(k, { ref: e.target.value.replace(/[^\dA-Za-z]/g, '') })} />`}
         </div>`; })}
-        ${filas.length < 5 && html`<button type="button" class="btn2 chico toca" style="align-self:flex-start" onClick=${() => setFilas(filas.concat([fila(metodos.find(x => !filas.some(f => f.m === x)) || metodos[0])]))}>+ Otra forma de pago</button>`}
+        ${filas.length < 5 && html`<button type="button" class="btn2 chico toca" style="align-self:center" onClick=${() => setFilas(filas.concat([fila(metodos.find(x => !filas.some(f => f.m === x)) || metodos[0])]))}>+ Otra forma de pago</button>`}
         <div class="pago-cuenta">
           <span class="barra-prog" style="height:8px"><i style=${{ width: Math.round(pagado / (total || 1) * 100) + '%', background: ok ? 'var(--in)' : 'var(--accent)' }}></i></span>
           <span class="fila num" style="justify-content:space-between;font-size:13px">

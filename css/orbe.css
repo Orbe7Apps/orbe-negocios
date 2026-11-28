@@ -62,6 +62,7 @@ h1, h2, h3 { margin: 0; letter-spacing: -0.02em; font-weight: 700; }
 @keyframes crece { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 @keyframes creceX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes traza { from { stroke-dashoffset: var(--largo, 2000); } to { stroke-dashoffset: 0; } }
+@keyframes elegido { 0% { transform: scale(.94); } 100% { transform: none; } }
 @keyframes latido { from { opacity: .5; transform: scale(.94); } to { opacity: 1; transform: none; } }
 .entra { animation: fadeUp .45s var(--spring) both; animation-delay: calc(var(--i, 0) * 25ms); }
 .toca { transition: transform .18s var(--spring), background-color .25s ease, border-color .25s ease, color .25s ease, opacity .25s ease; }
@@ -98,15 +99,17 @@ html.tel .icono-btn.chico::after, html.tel .btn2.chico::after, html.tel .chip.ch
 html.tel .boton-ayuda::after { content: ''; position: absolute; inset: -8px; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chips.desliza { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 2px 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
+.chips.desliza { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; margin: 0 -16px; padding: 2px 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
 .chips.desliza::-webkit-scrollbar { display: none; }
-.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1.5px solid transparent; background: var(--fill); color: var(--muted); font-size: 14px; font-weight: 600; }
+.chip { transition: background-color .25s ease, border-color .25s ease, color .25s ease, transform .18s var(--spring); flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1.5px solid transparent; background: var(--fill); color: var(--muted); font-size: 14px; font-weight: 600; }
 .chip.chico { min-height: 34px; padding: 0 12px; font-size: 13px; }
-.chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+.chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); animation: elegido .32s var(--bounce); }
 .chip.on.calido { background: var(--amber-soft); border-color: var(--amber); }
 
 .inter { width: 46px; height: 28px; border-radius: 14px; flex: none; position: relative; background: var(--line); transition: background-color .25s ease; }
-.inter::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .3s var(--spring); }
+.inter::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .34s var(--bounce); }
+.opcion:active .inter::after { transform: scaleX(1.18); transform-origin: left; }
+.opcion:active .inter.on::after { transform: translateX(18px) scaleX(1.18); transform-origin: right; }
 .inter.on { background: var(--in); }
 .inter.on::after { transform: translateX(18px); }
 .opcion { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; border: 0; background: none; padding: 0; text-align: left; }
@@ -156,6 +159,7 @@ button.item { width: 100%; background: none; border: 0; text-align: left; }
 .velo.sale { opacity: 0; }
 .hoja { position: fixed; left: 0; right: 0; bottom: var(--teclado, 0px); z-index: 61; max-height: 92vh; max-height: 92dvh; max-height: calc(var(--alto-visible, 100dvh) * .92); display: flex; flex-direction: column; background: var(--surface); border-radius: 28px 28px 0 0; animation: hojaSube .45s var(--spring) both; transition: transform .3s var(--spring); touch-action: pan-y; }
 .hoja.sale { transform: translateY(105%); }
+.tel .hoja { will-change: transform; }
 .hoja-cab { padding: 8px 18px 6px; display: flex; flex-direction: column; gap: 6px; touch-action: none; }
 .hoja-cab .rayita { align-self: center; width: 38px; height: 5px; border-radius: 3px; background: var(--line); }
 .hoja-cab .fila h2 { font-size: 20px; flex: 1; }
@@ -167,9 +171,9 @@ button.item { width: 100%; background: none; border: 0; text-align: left; }
 .pc .hoja-cab .rayita { display: none; }
 .pc .hoja-pie { padding-bottom: 18px; flex-direction: row; }
 .pc .hoja-pie > * { flex: 1; }
-.app-fondo { transition: transform .5s var(--spring), border-radius .5s var(--spring), filter .5s ease; transform-origin: 50% 50%; }
+.app-fondo { transition: transform .5s var(--spring), border-radius .5s var(--spring); transform-origin: 50% 50%; }
 .tel-raiz .app-fondo { position: fixed; inset: 0; overflow-y: auto; overscroll-behavior-y: contain; background: var(--bg); }
-.con-hoja .app-fondo { transform: scale(.94) translateY(10px); border-radius: 26px; overflow: hidden; filter: brightness(.85); }
+.con-hoja .app-fondo { transform: scale(.94) translateY(10px); border-radius: 26px; overflow: hidden; }
 
 /* ---------- teléfono ---------- */
 .tel .pantalla { min-height: 100%; padding: calc(16px + var(--sa-top)) 16px calc(var(--nav-alto) + 24px); display: flex; flex-direction: column; gap: 14px; max-width: 560px; margin: 0 auto; }
@@ -203,7 +207,7 @@ button.item { width: 100%; background: none; border: 0; text-align: left; }
 .tecla { font-size: 11px; color: var(--faint); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; font-weight: 600; white-space: nowrap; }
 .segmento { display: inline-flex; background: var(--fill); border-radius: 21px; padding: 4px; gap: 2px; }
 .segmento button { min-height: 34px; padding: 0 12px; border: 0; border-radius: 17px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; transition: background-color .25s ease, color .25s ease; }
-.segmento button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.segmento button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); animation: elegido .32s var(--bounce); }
 .contenido { padding: 22px 28px 48px; display: flex; flex-direction: column; gap: 16px; width: 100%; }
 .cifras { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .dos-uno { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; }
@@ -446,7 +450,7 @@ html.tel .oferta-btns .btn2 { flex: 1; min-height: 44px; }
 
 /* ---------- tasas a la vista ---------- */
 .barra-tasas { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 8px 8px 12px; border: 0; border-radius: 18px; background: var(--surface); box-shadow: var(--sombra, 0 1px 2px rgba(0,0,0,.04)); color: var(--ink); text-align: left; cursor: pointer; }
-.barra-tasas-lista { flex: 1; min-width: 0; display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; }
+.barra-tasas-lista { flex: 1; min-width: 0; display: flex; gap: 14px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
 .barra-tasas-lista::-webkit-scrollbar { display: none; }
 .tasa-mini { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
 .tasa-mini .sub { font-size: 11px; white-space: nowrap; }
@@ -809,7 +813,7 @@ html.en-recorrido .nav-tel { background: var(--oscuro); }
 }
 
 /* ---------- agenda de citas ---------- */
-.dias-agenda { gap: 8px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 2px 2px 6px; }
+.dias-agenda { gap: 8px; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; padding: 2px 2px 6px; }
 .dias-agenda::-webkit-scrollbar { display: none; }
 .dia-chip { flex: none; width: 56px; min-height: 76px; border: 0; border-radius: 18px; background: var(--surface); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; box-shadow: var(--shadow); position: relative; transition: background-color .25s ease, color .25s ease, transform .25s var(--spring); }
 .dia-chip small { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: capitalize; }
@@ -963,7 +967,7 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 .srv-cita .marca-check { position: absolute; left: 12px; top: 12px; width: 20px; height: 20px; border-radius: 7px; }
 .srv-cita.on { border-color: var(--accent); background: var(--accent-soft); }
 .srv-cita.on .marca-check { background: var(--accent); border-color: var(--accent); }
-.pros-cita { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.pros-cita { display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; padding-bottom: 2px; }
 .pro-cita { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 64px; padding: 8px 6px; border: 1.5px solid transparent; border-radius: 16px; background: none; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; }
 .pro-cita .logo { width: 44px; height: 44px; font-size: 15px; transition: transform .25s var(--spring); }
 .pro-cita.on { border-color: var(--accent); background: var(--accent-soft); }
@@ -1181,10 +1185,11 @@ details.avanzado[open] summary::after { transform: rotate(180deg); }
 }
 /* Botón “Guíame”: sale las primeras visitas a cada pantalla */
 .guiame { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 10px; border: 0; border-radius: 15px; background: var(--accent-soft); color: var(--accent-text, var(--accent)); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; animation: fadeUp .4s var(--spring) both; }
-.guiame-pulso { width: 7px; height: 7px; border-radius: 50%; background: var(--primary, var(--accent)); box-shadow: 0 0 0 0 rgba(106,92,242,.5); animation: guiamePulso 1.8s infinite; }
-@keyframes guiamePulso { 70% { box-shadow: 0 0 0 7px rgba(106,92,242,0); } 100% { box-shadow: 0 0 0 0 rgba(106,92,242,0); } }
+.guiame-pulso { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--primary, var(--accent)); }
+.guiame-pulso::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--primary, var(--accent)); animation: guiamePulso 1.8s var(--spring) infinite; }
+@keyframes guiamePulso { 0% { transform: scale(1); opacity: .5; } 70%, 100% { transform: scale(3); opacity: 0; } }
 h1 .guiame { vertical-align: middle; margin-left: 4px; }
-@media (prefers-reduced-motion: reduce) { .guiame-pulso { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .guiame-pulso::after { animation: none; opacity: 0; } }
 
 /* Escenas de las pantallas vacías: un dibujo corto que enseña qué va a pasar. */
 .escena { position: relative; width: 210px; height: 120px; margin: 0 auto 6px; }
@@ -1194,7 +1199,7 @@ h1 .guiame { vertical-align: middle; margin-left: 4px; }
 .es-barra { left: 14px; right: 14px; top: 78px; height: 32px; border-radius: 16px; background: var(--primary, var(--accent)); }
 .es-fila { left: 10px; right: 10px; height: 26px; border-radius: 10px; background: var(--fill2, var(--fill)); }
 .es-fila.alta { height: 52px; border-radius: 16px; }
-.es-llena { left: 12px; top: 10px; height: 6px; border-radius: 3px; background: var(--c); width: 0; animation: esLlena 3s var(--d, 0s) var(--spring) infinite; }
+.es-llena { left: 12px; top: 10px; height: 6px; border-radius: 3px; background: var(--c); width: var(--w); transform: scaleX(0); transform-origin: left center; animation: esLlena 3s var(--d, 0s) var(--spring) infinite; }
 .es-llena.pasos { animation-timing-function: steps(3, end); }
 .es-avatar { left: 12px; top: 12px; width: 28px; height: 28px; border-radius: 50%; background: var(--amber-soft); }
 .es-burbuja { right: 10px; top: 78px; padding: 8px 12px; border-radius: 14px 14px 4px 14px; background: var(--in-soft); color: var(--in-text, var(--in)); font-size: 12px; font-weight: 600; white-space: nowrap; }
@@ -1202,7 +1207,7 @@ h1 .guiame { vertical-align: middle; margin-left: 4px; }
 .es-col:nth-of-type(4) { background: var(--primary, var(--accent)); }
 .es-via { left: 22px; right: 22px; top: 50px; height: 4px; border-radius: 2px; background: var(--fill2, var(--fill)); }
 .es-punto { top: 45px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 3px var(--fill2, var(--fill)); }
-.es-ficha { top: 30px; width: 44px; height: 44px; margin-left: -22px; border-radius: 14px; background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--primary, var(--accent)); animation: esAvanza 3.6s var(--spring) infinite; }
+.es-ficha { top: 30px; left: 22px; width: 44px; height: 44px; margin-left: -22px; border-radius: 14px; background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--primary, var(--accent)); animation: esAvanza 3.6s var(--spring) infinite; }
 .es-pasos { position: absolute; left: 0; right: 0; top: 86px; display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: var(--muted); }
 .es-hueco { left: 14px; right: 14px; height: 26px; border-radius: 10px; border: 1.5px dashed var(--line); }
 .es-hueco.lleno { border: 0; background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--primary, var(--accent)); }
@@ -1215,9 +1220,9 @@ h1 .guiame { vertical-align: middle; margin-left: 4px; }
 .es-crece { animation: esCrece 3s var(--d, 0s) var(--spring) infinite both; }
 .es-pop { animation: esPop 3s .8s var(--bounce) infinite both; }
 @keyframes esCae { 0%, 6% { transform: translateY(-18px); opacity: 0; } 22%, 82% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
-@keyframes esLlena { 0%, 10% { width: 0; opacity: 1; } 50%, 85% { width: var(--w); opacity: 1; } 100% { width: var(--w); opacity: 0; } }
+@keyframes esLlena { 0%, 10% { transform: scaleX(0); opacity: 1; } 50%, 85% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
 @keyframes esCrece { 0%, 8% { transform: scaleY(0); opacity: 1; } 40%, 85% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
-@keyframes esAvanza { 0%, 15% { left: 22px; } 40%, 55% { left: 105px; } 80%, 100% { left: 188px; } }
+@keyframes esAvanza { 0%, 15% { transform: translateX(0); } 40%, 55% { transform: translateX(83px); } 80%, 100% { transform: translateX(166px); } }
 @keyframes esPop { 0%, 10% { transform: scale(0); opacity: 1; } 30%, 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .escena * { animation: none !important; } .es-llena { width: var(--w); } }
 
@@ -1308,11 +1313,11 @@ h1 .guiame { vertical-align: middle; margin-left: 4px; }
 .tut-nuevo { font-size: 11px; font-weight: 700; color: var(--accent-text); background: var(--accent-soft); padding: 2px 7px; border-radius: 8px; margin-left: 4px; vertical-align: 1px; }
 /* Celular: buscador y filtros pegados arriba al bajar (Vender e Inventario). No cambian de alto: nada salta. */
 .cabeza-pegada { display: flex; flex-direction: column; gap: 10px; }
-.tel .cabeza-pegada { position: sticky; top: 0; z-index: 20; margin: -6px -16px 0; padding: calc(6px + var(--sa-top)) 16px 8px; border-radius: 0 0 22px 22px; background: transparent; transition: background-color .35s var(--spring), box-shadow .35s var(--spring); }
+.tel .cabeza-pegada { position: sticky; top: var(--sa-top); z-index: 20; margin: -6px -16px 0; padding: 6px 16px 8px; border-radius: 0 0 22px 22px; background: transparent; transition: background-color .35s var(--spring), box-shadow .35s var(--spring); }
 .tel .cabeza-pegada.pegada { background: color-mix(in srgb, var(--bg) 84%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4); box-shadow: 0 10px 24px -16px rgba(26, 23, 51, .45); }
 html.en-recorrido .cabeza-pegada { position: static; }
 /* La tasa del día, como píldora dentro de la frase de Vender */
-.chip-tasa.chico { display: flex; width: fit-content; margin-top: 8px; min-height: 32px; padding: 0 10px; gap: 10px; border: 0; border-radius: 16px; background: var(--fill); font-size: 12.5px; position: relative; }
+.chip-tasa.chico { display: flex; width: fit-content; margin: 8px auto 0; left: -9px; min-height: 32px; padding: 0 10px; gap: 10px; border: 0; border-radius: 16px; background: var(--fill); font-size: 12.5px; position: relative; }
 .chip-tasa.chico::after { content: ""; position: absolute; inset: -6px -2px; }
 .frase-viva .chip-tasa.chico b { color: var(--ink); }
 /* Barra flotante del carrito (celular) */
@@ -1336,3 +1341,6 @@ html.con-teclado .carro-flota, html.en-recorrido .carro-flota { opacity: 0; poin
 .inv-fila > .tarjeta { flex: 1; min-width: 0; }
 .llegaron { flex: none; width: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 0; border-radius: 18px; background: var(--in-soft); color: var(--in-text, var(--in)); font: inherit; cursor: pointer; }
 .llegaron small { font-size: 10.5px; font-weight: 700; }
+/* Al quedar pegada, una franja cubre la zona de la cámara del teléfono (antes ese espacio quedaba en blanco entre las pestañas y el buscador). */
+.tel .cabeza-pegada::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: var(--sa-top); background: transparent; transition: background-color .35s var(--spring); pointer-events: none; }
+.tel .cabeza-pegada.pegada::before { background: color-mix(in srgb, var(--bg) 94%, transparent); }

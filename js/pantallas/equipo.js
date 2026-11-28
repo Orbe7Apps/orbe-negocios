@@ -75,7 +75,7 @@ export function Equipo() {
         <span class=${'inter' + (on ? ' on' : '')}></span>
       </button>`; })}</div>
     <span class="sub faint" style="display:block;margin-top:8px">El dueño siempre puede todo. Un administrador no puede cambiar a otros administradores.</span>
-    ${puedeBorrar(rolActual) && html`<button type="button" class="btn2 chico rojo toca" style="margin-top:10px" onClick=${() => abrir('rolBorrar', { rid: rolActual.id })}>Borrar el rol ${rolActual.n}</button>`}
+    ${puedeBorrar(rolActual) && html`<button type="button" class="btn2 chico rojo toca" style="display:flex;margin:10px auto 0" onClick=${() => abrir('rolBorrar', { rid: rolActual.id })}>Borrar el rol ${rolActual.n}</button>`}
   </section>` : null;
 
   if (tel) return html`<div class="fila entra"><h1 class="titulo crece">Equipo</h1><${BotonGuiame} k="equipo" /><${BotonAyuda} /></div>${FraseEquipo}${Personas}${Ventas}${PorRol}`;

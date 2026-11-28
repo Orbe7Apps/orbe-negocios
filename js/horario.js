@@ -72,6 +72,6 @@ export function EditorAusencias({ lista, onCambio }) {
       <div class="fila" style="gap:8px"><input type="text" class="crece" value=${a.motivo || ''} placeholder="Motivo (opcional): vacaciones, médico…" style="min-height:44px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);padding:0 12px;font:inherit" onInput=${e => pon(i, { motivo: e.target.value })} />
         <button type="button" class="btn2 chico rojo toca" onClick=${() => onCambio(lista.filter((_, k) => k !== i))}>Quitar</button></div>
     </div>`)}
-    <button type="button" class="btn2 chico toca" style="align-self:flex-start" onClick=${() => onCambio(lista.concat([{ desde: hoy.getTime() + DIA, hasta: hoy.getTime() + 7 * DIA, motivo: 'Vacaciones' }]))}>+ Vacaciones o día libre</button>
+    <button type="button" class="btn2 chico toca" style="align-self:center" onClick=${() => onCambio(lista.concat([{ desde: hoy.getTime() + DIA, hasta: hoy.getTime() + 7 * DIA, motivo: 'Vacaciones' }]))}>+ Vacaciones o día libre</button>
   </div>`;
 }

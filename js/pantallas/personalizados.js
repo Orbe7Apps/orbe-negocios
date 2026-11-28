@@ -101,7 +101,7 @@ export function Armar({ d, cerrar }) {
             <button type="button" class="icono-btn chico toca armar-btn" aria-label=${'Agregar una ' + p.n} onClick=${() => { if (q >= hay) { avisar(hay <= 0 ? p.n + ': no quedan' : 'Solo quedan ' + hay + ' de ' + p.n); return; } cambiaPiezas(Object.assign({}, b, { [p.id]: q + 1 })); }}><${Icono} n="mas1" t=${14} g=${2.6} /></button>
           </span>
         </div>`; })}</div>`
-      : html`<div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);gap:8px"><span class="sub" style="line-height:1.45">Todavía no tienes piezas. En Inventario, abre un producto y en “En personalizados” elige <b>Es una pieza</b>${torta ? ' (por ejemplo, Torta base 1 kg)' : ''}.</span></div>`}
+      : html`<div class="tarjeta pila" style="box-shadow:none;background:var(--fill2);gap:8px"><span class="sub" style="line-height:1.45">Todavía no tienes piezas. En Inventario, abre un producto y enciende <b>Es una pieza</b>${torta ? ' (por ejemplo, Torta base 1 kg)' : ''}.</span></div>`}
     </div>`;
 
   const Paso2 = html`<div class="campo"><span>¿Qué le pones?</span>
@@ -112,8 +112,8 @@ export function Armar({ d, cerrar }) {
       <div class="rejilla-2" style="gap:8px"><input type="text" value=${nuevo.n} placeholder="Ej.: Velas" aria-label="Nombre del extra" autocomplete="off" onInput=${ev => setNuevo(Object.assign({}, nuevo, { n: ev.target.value }))} />
         <input class="num" type="text" inputmode="decimal" value=${nuevo.p} placeholder="Precio" aria-label="Precio del extra" onInput=${ev => setNuevo(Object.assign({}, nuevo, { p: ev.target.value }))} /></div>
       <div class="chips"><button type="button" class="chip chico toca on" onClick=${() => { const n = nuevo.n.trim(), p = D.redondo(numero(nuevo.p)); if (!n || !(p > 0)) { avisar('Escribe el nombre y el precio'); return; } const id = 'x' + Math.random().toString(36).slice(2, 7); setOtros(otros.concat([{ id, n, p, c: 0, q: null, libre: true }])); setE(e.concat([id])); setPrecio(null); setNuevo(null); if (document.activeElement) document.activeElement.blur(); }}>Agregar</button><button type="button" class="chip chico toca" onClick=${() => setNuevo(null)}>Cancelar</button></div>
-      <span class="sub faint" style="font-size:12px">Solo para esta venta. Para tenerlo siempre, créalo en Inventario como “Es un extra”.</span></div>`}
-    ${!extras.length && !otros.length && html`<span class="sub faint" style="font-size:12px;line-height:1.4">Para que salgan aquí, en Inventario marca servicios o productos como <b>Es un extra</b> (relleno, cubierta, letrero…).</span>`}
+      <span class="sub faint" style="font-size:12px">Solo para esta venta. Para tenerlo siempre, créalo en Inventario y enciende “Es un extra”.</span></div>`}
+    ${!extras.length && !otros.length && html`<span class="sub faint" style="font-size:12px;line-height:1.4">Para que salgan aquí, en Inventario abre un servicio y enciende <b>Es un extra</b> (relleno, cubierta, letrero…).</span>`}
   </div>`;
 
   const redondeos = [...new Set([sug, Math.ceil(sug / 5) * 5, Math.ceil(sug / 5) * 5 + 5])].filter(v => v > 0);
@@ -133,7 +133,7 @@ export function Armar({ d, cerrar }) {
       <span class="sub" style="line-height:1.4">${tipo === 'encargo' ? 'Se crea un pedido con abono y fecha de entrega. Las piezas quedan apartadas y bajan del inventario al entregar.' : 'Va al pedido como una línea. Las piezas bajan del inventario al cobrar.'}</span></div>`}
     <${Interruptor} on=${conPl} onCambio=${setConPl} titulo="Guardar como plantilla" sub=${desde && !conPl ? 'Viene de “' + desde + '”' : 'Para armarlo igual con un toque'} />
     ${conPl && html`<label class="campo entra"><span>Nombre de la plantilla</span><input type="text" value=${nombrePl} placeholder=${plAuto()} aria-label="Nombre de la plantilla" autocomplete="off" onInput=${ev => setNombrePl(ev.target.value)} /></label>`}
-    ${desde && html`<button type="button" class="enlace-tasa toca" style="align-self:flex-start;color:var(--out-text)" onClick=${() => { const u = conDeshacer(() => borrarPlantilla(per.id, desde), 'Plantilla borrada'); setDesde(''); avisarDeshacer('Plantilla borrada', u); }}>Borrar la plantilla “${desde}”</button>`}`;
+    ${desde && html`<button type="button" class="enlace-tasa toca" style="align-self:center;color:var(--out-text)" onClick=${() => { const u = conDeshacer(() => borrarPlantilla(per.id, desde), 'Plantilla borrada'); setDesde(''); avisarDeshacer('Plantilla borrada', u); }}>Borrar la plantilla “${desde}”</button>`}`;
 
   return html`<${Hoja} titulo=${per.n} onCerrar=${cerrar} contenido=${c => ({
     cuerpo: html`${Pasos}<div class="armar-vista" key=${paso}>${paso === 1 ? Paso1 : paso === 2 ? Paso2 : Paso3}</div>`,

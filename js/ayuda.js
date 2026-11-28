@@ -37,8 +37,8 @@ export const AYUDAS = {
     g: ['productos', 'reponer', 'factura', 'medidas', 'promo', 'deshacer'] }),
   servicios: { t: 'Tus servicios', img: 'servicios', q: 'Lo que cobras, con su precio y lo que dura.', p: ['Toca “+ Agregar” para crear un servicio.', 'Toca uno para cambiar su precio, su duración o su foto.'], c: ['La duración se usa en la agenda para saber cuánto tiempo apartar.'], g: ['productos', 'cita'] },
   producto: x => ({ t: x.T.inv ? 'Agregar un producto' : 'Agregar un servicio', guiame: 'producto', q: 'Primero eliges qué es y después llenas lo esencial. Lo demás está en “Más opciones”.',
-    p: ['Elige qué vas a agregar' + (x.T.mod('personalizados') ? ' (también “Se arma a la medida” para lo personalizado)' : '') + '.', 'Escribe el nombre y el precio: es lo único obligatorio.', 'El costo es opcional: con él, Orbe te dice cuánto ganas.'].concat(x.T.inv ? ['En “Cantidad” va cuánto tienes; en “Avisar al quedar”, cuándo quieres que Orbe te avise.'] : [], ['Toca “Guardar”.']),
-    c: ['Ponle foto: así lo reconoces rápido al vender.', 'En “Más opciones” cada fila se abre sola: grupo' + (x.S.negocio.taxOn ? ', impuesto' : '') + (x.T.mod('variantes') ? ', variantes' : '') + (x.T.inv ? ', código' : '') + (x.T.mod('garantia') ? ', garantía' : '') + '.'], g: ['productos', 'medidas'] }),
+    p: ['Elige qué vas a agregar' + (x.T.mod('personalizados') ? ' (también “Para armar a la medida” para lo personalizado; una pieza o un extra es un producto o servicio normal con su interruptor)' : '') + '.', 'Escribe el nombre y el precio: es lo único obligatorio.', 'El costo es opcional: con él, Orbe te dice cuánto ganas.'].concat(x.T.inv ? ['En “Cantidad” va cuánto tienes; en “Avisar al quedar”, cuándo quieres que Orbe te avise.'] : [], ['Toca “Guardar”.']),
+    c: ['Ponle foto: así lo reconoces rápido al vender.', (x.S.negocio.taxOn ? 'El ' + (x.P && x.P.tax ? x.P.tax[0] : 'impuesto') + ' de cada producto se elige debajo de la cantidad (general, reducido o exento). ' : '') + 'En “Más opciones” cada fila se abre sola: grupo' + (x.T.mod('variantes') ? ', variantes' : '') + (x.T.inv ? ', código' : '') + (x.T.mod('garantia') ? ', garantía' : '') + '.'], g: ['productos', 'medidas'] }),
   clientes: x => ({ t: 'Clientes', img: 'clientes', q: 'Tus clientes con su teléfono, lo que te han comprado' + (x.T.mod('fiado') ? ' y lo que te deben.' : '.'),
     p: ['Toca “+ Cliente” para agregar uno (o anótalo al cobrar).', 'Toca un cliente para ver su historial, mandarle un mensaje' + (x.T.mod('fiado') ? ' o anotar un abono.' : '.')].concat(x.T.mod('fiado') ? ['Arriba ves cuánto te deben en total y quién debe desde hace más tiempo.'] : []),
     c: ['Con su teléfono le mandas el recibo y los recordatorios por WhatsApp.', 'Si un cliente te pide borrar sus datos, ábrelo y toca “Borrar”: sus compras quedan en los reportes sin su nombre.'], g: ['fiar', 'recordatorios'] }),
@@ -160,7 +160,7 @@ export function PanelAyuda({ k, cerrar }) {
       </div>
       <div class="hoja-cuerpo">
         ${!G && a && (a.guiame || tieneGuia(k)) && html`<button type="button" class="btn toca guia-ayuda-btn" onClick=${() => fin(() => window.dispatchEvent(new CustomEvent('orbe-guiame', { detail: a.guiame || k })))}><${Icono} n="info" t=${18} />Guíame paso a paso</button>`}
-        ${G ? html`${Pasos(G.p)}${(G.ir || G.abrir) && html`<button type="button" class="btn2 lleno toca" style="align-self:flex-start" onClick=${() => llevar(G)}>Llévame ahí</button>`}`
+        ${G ? html`${Pasos(G.p)}${(G.ir || G.abrir) && html`<button type="button" class="btn2 lleno toca" style="align-self:center" onClick=${() => llevar(G)}>Llévame ahí</button>`}`
         : a ? html`
           <p class="ayuda-que">${a.q}</p>
           ${a.img && html`<div class="ayuda-img"><img src=${'img/ayuda/' + a.img + '.webp'} alt=${'Así se ve: ' + a.t} loading="lazy" onError=${e => { e.target.parentNode.style.display = 'none'; }} /></div>`}
